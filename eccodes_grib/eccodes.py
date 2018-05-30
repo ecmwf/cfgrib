@@ -495,9 +495,10 @@ def codes_get_array(handle, key, key_type=None):
         raise RuntimeError("Unknown GRIB key type: %r" % key_type)
 
 
-def codes_get(handle, key, strict=True):
-    # type: (cffi.FFI.CData, bytes, bool) -> typing.Any
-    key_type = codes_get_native_type(handle, key)
+def codes_get(handle, key, key_type=None, strict=True):
+    # type: (cffi.FFI.CData, bytes, int, bool) -> typing.Any
+    if key_type is None:
+        key_type = codes_get_native_type(handle, key)
 
     if key_type == CODES_TYPE_LONG:
         return codes_get_long(handle, key, strict)
