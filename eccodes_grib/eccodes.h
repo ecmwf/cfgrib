@@ -2,16 +2,6 @@
  * declarations from grib_api.h
  */
 
-typedef struct grib_handle    grib_handle;
-typedef struct grib_context   grib_context;
-
-const char* grib_get_error_message(int code);
-int grib_get_gaussian_latitudes(long truncation,double* latitudes);
-
-#define GRIB_SUCCESS		0
-#define GRIB_END_OF_FILE		-1
-#define GRIB_END_OF_INDEX		-43
-
 /* Types */
 /*  undefined */
 #define GRIB_TYPE_UNDEFINED 0
@@ -30,6 +20,15 @@ int grib_get_gaussian_latitudes(long truncation,double* latitudes);
 /*  missing */
 #define GRIB_TYPE_MISSING 7
 
+typedef struct grib_handle    grib_handle;
+typedef struct grib_context   grib_context;
+
+const char* grib_get_error_message(int code);
+int grib_get_gaussian_latitudes(long truncation,double* latitudes);
+
+#define GRIB_SUCCESS		0
+#define GRIB_END_OF_FILE		-1
+/#define GRIB_END_OF_INDEX		-43
 
 /*
  * declarations from eccodes.h
@@ -51,15 +50,16 @@ int codes_index_select_string(codes_index* index,const char* key,char* value);
 codes_handle* codes_handle_new_from_index(codes_index* index,int *err);
 void codes_index_delete(codes_index* index);
 
-int codes_get_message(codes_handle* h ,const void** message, size_t *message_length  );
+
 int codes_write_message(codes_handle* h,const char* file,const char* mode);
 codes_handle* codes_grib_handle_new_from_samples (codes_context* c, const char* sample_name);
 
 int codes_handle_delete(codes_handle* h);
+int codes_get_message(codes_handle* h ,const void** message, size_t *message_length  );
 int codes_grib_get_data(codes_handle *h, double *lats, double *lons, double *values);
 int codes_get_size(codes_handle* h, const char* key,size_t *size);
 int codes_get_length(codes_handle* h, const char* key,size_t *length);
-int codes_get_string_array(codes_handle* h, const char* name, char** val, size_t *length);
+int codes_get_string_array(codes_handle* h, const char* key, char** vals, size_t *length);
 int codes_get_double_array(codes_handle* h, const char* key, double* vals, size_t *length);
 int codes_get_long_array(codes_handle* h, const char* key, long* vals, size_t *length);
 
@@ -68,12 +68,12 @@ int codes_set_double(codes_handle* h, const char* key, double val);
 int codes_set_string(codes_handle* h, const char*  key , const char* mesg, size_t *length);
 int codes_set_double_array(codes_handle* h, const char* key, const double* vals, size_t length);
 
-int codes_get_native_type(codes_handle* h, const char* name,int* type);
-
 codes_keys_iterator* codes_keys_iterator_new(codes_handle* h,unsigned long filter_flags, const char* name_space);
 int codes_keys_iterator_next(codes_keys_iterator *kiter);
 const char* codes_keys_iterator_get_name(codes_keys_iterator *kiter);
 int codes_keys_iterator_delete( codes_keys_iterator* kiter);
+int codes_get_native_type(codes_handle* h, const char* name,int* type);
+
 /*
  * definitions from grib_api_prototypes.h
  */
