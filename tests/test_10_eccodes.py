@@ -123,3 +123,16 @@ def test_codes_get_length():
 
     assert result[0] == 1025
     assert result[1] == 8
+
+
+def test_codes_keys_iterator():
+    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+
+    iterator = eccodes.codes_keys_iterator_new(grib)
+
+    assert eccodes.codes_keys_iterator_next(iterator) == 1
+    assert eccodes.codes_keys_iterator_get_name(iterator) == b'globalDomain'
+    assert eccodes.codes_keys_iterator_next(iterator) == 1
+    assert eccodes.codes_keys_iterator_get_name(iterator) == b'GRIBEditionNumber'
+
+    eccodes.codes_keys_iterator_delete(iterator)
