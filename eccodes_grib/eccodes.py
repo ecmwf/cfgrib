@@ -519,8 +519,7 @@ def codes_keys_iterator_new(handle, namespace=None):
 
 
 def codes_keys_iterator_next(iterator_id):
-    codes_keys_iterator_next = lib.codes_keys_iterator_next
-    return codes_keys_iterator_next(iterator_id)
+    return lib.codes_keys_iterator_next(iterator_id)
 
 
 def codes_keys_iterator_get_name(iterator):
@@ -530,7 +529,7 @@ def codes_keys_iterator_get_name(iterator):
 
 def codes_keys_iterator_delete(iterator_id):
     codes_keys_iterator_delete = check_return(lib.codes_keys_iterator_delete)
-    return codes_keys_iterator_delete(iterator_id)
+    codes_keys_iterator_delete(iterator_id)
 
 
 def codes_grib_get_data(message_id):
