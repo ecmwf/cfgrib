@@ -28,7 +28,7 @@ int grib_get_gaussian_latitudes(long truncation,double* latitudes);
 
 #define GRIB_SUCCESS		0
 #define GRIB_END_OF_FILE		-1
-/#define GRIB_END_OF_INDEX		-43
+#define GRIB_END_OF_INDEX		-43
 
 /*
  * declarations from eccodes.h
