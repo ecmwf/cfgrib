@@ -171,6 +171,7 @@ def codes_new_from_file(fileobj, product_kind, headers_only=False):
 
 
 codes_index_delete = lib.codes_index_delete
+codes_handle_delete = lib.codes_handle_delete
 
 
 def codes_new_from_index(indexid):
