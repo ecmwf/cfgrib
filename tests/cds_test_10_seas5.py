@@ -55,5 +55,4 @@ def test_ecmwf_monthly_mean_Stream():
 def test_ecmwf_monthly_mean_Dataset():
     path = ensure_data(DATASET, REQUEST)
 
-    res = eccodes_grib.Dataset(path)
-    assert res.msg_count == 1224
+    eccodes_grib.Dataset(path)

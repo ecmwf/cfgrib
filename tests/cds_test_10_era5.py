@@ -51,3 +51,10 @@ def test_reanalysis_Stream():
     leader = stream.first()
     assert len(leader) == 191
     assert sum(1 for _ in stream) == 168
+
+
+def test_reanalysis_Dataset():
+    path = ensure_data(DATASET, REQUEST)
+
+    res = eccodes_grib.Dataset(path)
+    assert len(res.variables) == 1
