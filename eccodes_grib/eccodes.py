@@ -23,7 +23,6 @@ import pkgutil
 import typing as T  # noqa
 
 import cffi
-import numpy as np
 
 LOG = logging.getLogger(__name__)
 
@@ -258,8 +257,8 @@ def codes_index_get_string(indexid, key):
 
 
 def codes_index_get(indexid, key, ktype=bytes):
-    # type: (cffi.FFI.CData, bytes, type) -> np.ndarray
-    result = None  # type: np.ndarray
+    # type: (cffi.FFI.CData, bytes, type) -> list
+    result = None  # type: list
     if ktype is int:
         result = codes_index_get_long(indexid, key)
     elif ktype is float:
@@ -319,9 +318,9 @@ def codes_index_select(indexid, key, value):
     :param str key: key to be selected
     :param str value: value of the key to select
     """
-    if isinstance(value, (int, np.integer)):
+    if isinstance(value, int):
         codes_index_select_long(indexid, key, value)
-    elif isinstance(value, float) or isinstance(value, np.float64):
+    elif isinstance(value, float):
         codes_index_select_double(indexid, key, value)
     elif isinstance(value, bytes):
         codes_index_select_string(indexid, key, value)
@@ -615,7 +614,7 @@ def codes_set_string(msgid, key, value):
 
 def codes_set(msgid, key, value):
     """"""
-    if isinstance(value, (int, np.integer)):
+    if isinstance(value, int):
         codes_set_long(msgid, key, value)
     elif isinstance(value, float):
         codes_set_double(msgid, key, value)

@@ -46,7 +46,6 @@ setuptools.setup(
     install_requires=[
         'cffi',
         'future',
-        'numpy',
         'typing',
     ],
     tests_require=[
