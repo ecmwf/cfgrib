@@ -14,9 +14,11 @@ class GribMessage(collections.Mapping):
 
     def message_get(self, item, key_type=None, strict=True):
         """Get value of a given key as its native or specified type."""
-        if eccodes.codes_get_size(self.codes_id, item) > 1:
+        ret = None
+        size = eccodes.codes_get_size(self.codes_id, item)
+        if size > 1:
             ret = eccodes.codes_get_array(self.codes_id, item, key_type=key_type)
-        else:
+        elif size == 1:
             ret = eccodes.codes_get(self.codes_id, item, key_type=key_type, strict=strict)
         return ret
 

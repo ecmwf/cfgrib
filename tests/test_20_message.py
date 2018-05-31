@@ -19,4 +19,5 @@ def test_GribMessage():
     assert list(res)[0] == 'globalDomain'
     assert 'paramId' in res
     assert len(res) == 192
+
     print(list(res.items()))
