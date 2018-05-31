@@ -18,11 +18,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import int, float, bytes
 
 import functools
+import logging
 import pkgutil
 import typing as T  # noqa
 
 import cffi
 import numpy as np
+
+LOG = logging.getLogger(__name__)
 
 
 ffi = cffi.FFI()
@@ -518,8 +521,8 @@ def codes_get_native_type(handle, key):
     return grib_type[0]
 
 
-def codes_get_array(handle, key, key_type=None):
-    # type: (cffi.FFI.CData, bytes, int) -> T.Any
+def codes_get_array(handle, key, key_type=None, log=LOG):
+    # type: (cffi.FFI.CData, bytes, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
@@ -532,11 +535,11 @@ def codes_get_array(handle, key, key_type=None):
     elif key_type == CODES_TYPE_BYTES:
         return codes_get_bytes_array(handle, key)
     else:
-        raise RuntimeError("Unknown GRIB key type: %r" % key_type)
+        log.warning("Unknown GRIB key type: %r", key_type)
 
 
-def codes_get(handle, key, key_type=None, strict=True):
-    # type: (cffi.FFI.CData, bytes, int, bool) -> T.Any
+def codes_get(handle, key, key_type=None, strict=True, log=LOG):
+    # type: (cffi.FFI.CData, bytes, int, bool, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
@@ -549,7 +552,7 @@ def codes_get(handle, key, key_type=None, strict=True):
     elif key_type == CODES_TYPE_BYTES:
         return codes_get_bytes(handle, key)
     else:
-        raise RuntimeError("Unknown GRIB key type: %r" % key_type)
+        log.warning("Unknown GRIB key type: %r", key_type)
 
 
 def codes_keys_iterator_new(handle, namespace=None):
