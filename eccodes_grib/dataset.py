@@ -23,6 +23,7 @@ import typing as T  # noqa
 
 import attr
 
+from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
@@ -44,25 +45,26 @@ class Variable(object):
     pass
 
 
-EXCLUDES = ('latitudes', 'longitudes', 'values', '7777')
+EXCLUDES = ('latitudes', 'latLonValues', 'longitudes', 'values', '7777')
 
 
-def index_file(file, includes=None, excludes=EXCLUDES, log=LOG):
-    # type: (messages.File, T.Iterable[str], T.Iterable[str], logging.Logger) -> T.Dict[str, T.Any]
-    index = {}
+def index_file(stream, includes=None, excludes=EXCLUDES, log=LOG):
+    # type: (messages.Stream, T.Iterable[str], T.Iterable[str], logging.Logger) -> list
+    index = []
     includes_set = set(includes) if includes else None
     excludes_set = set(excludes)
-    with file as stream:
-        for msg in stream:
-            for key in msg:
-                if (includes_set is None or key in includes_set) and key not in excludes_set:
-                    try:
-                        value = msg[key]
-                        if isinstance(value, list):
-                            value = tuple(value)
-                        index.setdefault(key, set()).add(value)
-                    except TypeError:
-                        log.warning('Skipping %r', key)
+    for msg in stream:
+        index_keys = {}
+        for key in msg:
+            if (includes_set is None or key in includes_set) and key not in excludes_set:
+                try:
+                    value = msg[key]
+                    if isinstance(value, list):
+                        value = tuple(value)
+                    index_keys[key] = value
+                except (TypeError, eccodes.EcCodesError):
+                    log.info('Skipping %r', key)
+        index.append((msg.offset, index_keys))
     return index
 
 
@@ -70,14 +72,9 @@ def index_file(file, includes=None, excludes=EXCLUDES, log=LOG):
 class Dataset(object):
     filename = attr.attrib(type=str)
     mode = attr.attrib(default='r')
-    file = attr.attrib(default=None, init=False)
 
     def __attrs_post_init__(self):
-        self.file = messages.File(self.filename, mode=self.mode)
-        self.index = index_file(self.file)
-        self.attrs = {k: v.pop() for k, v in self.index.items() if len(v) == 1 and None not in v}
-
-    @property
-    @cached
-    def variables(self):
-        return {}
+        self.stream = messages.Stream(self.filename, mode=self.mode)
+        self.index = index_file(self.stream)
+        # self.attrs = {k: v.pop() for k, v in self.index.items() if len(v) == 1 and None not in v}
+        # self.coords = {k: sorted(v) for k, v in self.index.items() if len(v) > 1}

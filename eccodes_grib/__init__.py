@@ -17,6 +17,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .dataset import Dataset
-from .messages import File
+from .eccodes import EcCodesError
+from .messages import Stream
 
-__all__ = ['Dataset', 'File']
+__all__ = ['Dataset', 'EcCodesError', 'Stream']
