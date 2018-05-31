@@ -21,7 +21,7 @@ def test_Message():
     assert 'paramId' in res
     assert len(res) == 192
 
-    print(list(res.items()))
+    list(res.items())
 
 
 def test_File():
