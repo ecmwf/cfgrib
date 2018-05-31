@@ -27,17 +27,26 @@ from . import eccodes
 
 @attr.attrs()
 class Message(collections.Mapping):
-    file = attr.attrib()
+    file = attr.attrib(default=None)
+    codes_index = attr.attrib(default=None)
+    offset = attr.attrib(default=None)
+    path = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
 
     def __attrs_post_init__(self):
-        self.offset = self.file.tell()
-        self.path = self.file.name
-        self.codes_id = eccodes.codes_new_from_file(self.file, eccodes.CODES_PRODUCT_GRIB)
-        if self.codes_id is None:
-            raise EOFError("end-of-file reached.")
-        self.file = None
+        if self.file:
+            self.offset = self.file.tell()
+            self.path = self.file.name
+            self.codes_id = eccodes.codes_new_from_file(self.file, eccodes.CODES_PRODUCT_GRIB)
+            if self.codes_id is None:
+                raise EOFError("end-of-file reached.")
+            self.file = None
+        elif self.codes_index:
+            self.codes_id = eccodes.codes_new_from_index(self.codes_index)
+        else:
+            raise ValueError("creating an empty message is not supported.")
+
 
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
@@ -121,10 +130,11 @@ class Index(collections.Mapping):
             raise ValueError("all index keys must have a value.")
         for key, value in query.items():
             bkey = key.encode(self.key_encoding)
-            eccodes.codes_index_select(self.codes_index, bkey, value)
+            bvalue = value.encode(self.value_encoding)
+            eccodes.codes_index_select(self.codes_index, bkey, bvalue)
         while True:
             try:
-                yield eccodes.codes_new_from_index(self.codes_index)
+                yield Message(codes_index=self.codes_index)
             except eccodes.EcCodesError:
                 break
 
@@ -149,4 +159,4 @@ class Stream(collections.Iterable):
 
     def index(self, keys):
         # type: (T.Iterable[str]) -> Index
-        return Index(self.path, self.mode, keys)
+        return Index(path=self.path, keys=keys)
