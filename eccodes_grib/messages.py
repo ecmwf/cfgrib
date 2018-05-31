@@ -79,30 +79,19 @@ class Message(collections.Mapping):
 
 
 @attr.attrs()
-class File(collections.Iterator):
+class Stream(collections.Iterable):
     path = attr.attrib()
     mode = attr.attrib(default='r')
-    file_handle = attr.attrib(default=None, init=False)
 
-    def __enter__(self):
-        self.file_handle = open(self.path, mode=self.mode)
-        return self
+    def __iter__(self):
+        # type: () -> T.Generator[Message, None, None]
+        with open(self.path, self.mode) as file:
+            while True:
+                offset = file.tell()
+                codes_id = eccodes.codes_new_from_file(file, eccodes.CODES_PRODUCT_GRIB)
+                if not codes_id:
+                    break
+                yield Message(codes_id=codes_id, path=self.path, offset=offset)
 
-    def __exit__(self, *args, **kwargs):
-        self.file_handle.close()
-        self.file_handle = None
-
-    def __next__(self):
-        # type: () -> Message
-        if self.file_handle is None:
-            raise RuntimeError("GRIB messages only available inside a 'with' statement")
-        codes_id = eccodes.codes_new_from_file(self.file_handle, eccodes.CODES_PRODUCT_GRIB)
-        if codes_id:
-            return Message(codes_id=codes_id)
-        else:
-            raise StopIteration
-
-    # python2 compatibility
-    def next(self):
-        # type: () -> Message
-        return self.__next__()
+    def first(self):
+        return next(iter(self))

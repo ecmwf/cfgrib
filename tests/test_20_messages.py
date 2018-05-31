@@ -3,8 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os.path
 
-import pytest
-
 from eccodes_grib import eccodes
 from eccodes_grib import messages
 
@@ -24,18 +22,7 @@ def test_Message():
     list(res.items())
 
 
-def test_File():
-    # file_handle on File init
-    with pytest.raises(RuntimeError):
-        next(messages.File(TEST_DATA))
-
-    with messages.File(TEST_DATA) as res:
-        assert sum(1 for _ in res) == 72
-
-    # file_handle reset
-    with pytest.raises(RuntimeError):
-        next(messages.File(TEST_DATA))
-
-    # run after reset
-    with messages.File(TEST_DATA) as res:
-        assert sum(1 for _ in res) == 72
+def test_Stream():
+    res = messages.Stream(TEST_DATA)
+    assert len(res.first()) == 192
+    assert sum(1 for _ in res) == 72
