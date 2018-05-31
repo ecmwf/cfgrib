@@ -27,37 +27,44 @@ from . import eccodes
 
 @attr.attrs()
 class Message(collections.Mapping):
-    codes_id = attr.attrib()
-    path = attr.attrib(default=None)
-    offset = attr.attrib(default=None)
+    file = attr.attrib()
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
+
+    def __attrs_post_init__(self):
+        self.offset = self.file.tell()
+        self.path = self.file.name
+        self.codes_id = eccodes.codes_new_from_file(self.file, eccodes.CODES_PRODUCT_GRIB)
+        if self.codes_id is None:
+            raise EOFError("end-of-file reached.")
+        self.file = None
 
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
 
     def message_get(self, item, key_type=None, strict=True):
-        # type: (bytes, int, bool) -> T.Any
+        # type: (str, int, bool) -> T.Any
         """Get value of a given key as its native or specified type."""
+        key = item.encode(self.key_encoding)
+        size = eccodes.codes_get_size(self.codes_id, key)
         ret = None
-        size = eccodes.codes_get_size(self.codes_id, item)
         if size > 1:
-            ret = eccodes.codes_get_array(self.codes_id, item, key_type=key_type)
+            ret = eccodes.codes_get_array(self.codes_id, key, key_type=key_type)
         elif size == 1:
-            ret = eccodes.codes_get(self.codes_id, item, key_type=key_type, strict=strict)
+            ret = eccodes.codes_get(self.codes_id, key, key_type=key_type, strict=strict)
         return ret
 
     def message_iterkeys(self, namespace=None):
-        # type: (bytes) -> T.Generator[bytes, None, None]
-        iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=namespace)
+        # type: (str) -> T.Generator[bytes, None, None]
+        bnamespace = namespace.encode(self.key_encoding) if namespace else namespace
+        iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator)
         eccodes.codes_keys_iterator_delete(iterator)
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
-        key = item.encode(self.key_encoding)
-        value = self.message_get(key)
+        value = self.message_get(item)
         if isinstance(value, bytes):
             return value.decode(self.value_encoding)
         elif isinstance(value, list) and value and isinstance(value[0], bytes):
@@ -113,11 +120,10 @@ class Stream(collections.Iterable):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, self.mode) as file:
             while True:
-                offset = file.tell()
-                codes_id = eccodes.codes_new_from_file(file, eccodes.CODES_PRODUCT_GRIB)
-                if not codes_id:
+                try:
+                    yield Message(file)
+                except (EOFError, eccodes.EcCodesError):
                     break
-                yield Message(codes_id=codes_id, path=self.path, offset=offset)
 
     def first(self):
         # type: () -> Message

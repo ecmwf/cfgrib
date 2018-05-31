@@ -5,7 +5,6 @@ import os.path
 
 import pytest
 
-from eccodes_grib import eccodes
 from eccodes_grib import messages
 
 
@@ -13,8 +12,8 @@ TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.
 
 
 def test_Message():
-    codes_id = eccodes.grib_new_from_file(open(TEST_DATA))
-    res = messages.Message(codes_id=codes_id)
+    with open(TEST_DATA) as file:
+        res = messages.Message(file)
 
     assert res['paramId'] == 130
     assert list(res)[0] == 'globalDomain'
