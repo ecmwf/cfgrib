@@ -10,7 +10,7 @@ from . import eccodes
 
 
 @attr.attrs()
-class GribMessage(collections.Mapping):
+class Message(collections.Mapping):
     codes_id = attr.attrib()
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
@@ -52,3 +52,33 @@ class GribMessage(collections.Mapping):
     def __len__(self):
         # type: () -> int
         return sum(1 for _ in self)
+
+
+@attr.attrs()
+class File(collections.Iterator):
+    path = attr.attrib()
+    mode = attr.attrib(default='rb')
+    file_handle = attr.attrib(default=None, init=False)
+
+    def __enter__(self):
+        self.file_handle = open(self.path, mode=self.mode)
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.file_handle.close()
+        self.file_handle = None
+
+    def __next__(self):
+        # type: () -> Message
+        if self.file_handle is None:
+            raise RuntimeError("GRIB messages only available inside a 'with' statement")
+        codes_id = eccodes.codes_new_from_file(self.file_handle, eccodes.CODES_PRODUCT_GRIB)
+        if codes_id:
+            return Message(codes_id=codes_id)
+        else:
+            raise StopIteration
+
+    # python2 compatibility
+    def next(self):
+        # type: () -> Message
+        return self.__next__()
