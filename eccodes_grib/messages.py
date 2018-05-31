@@ -34,10 +34,7 @@ class Message(collections.Mapping):
     value_encoding = attr.attrib(default='ascii')
 
     def __del__(self):
-        try:
-            eccodes.codes_handle_delete(self.codes_id)
-        except:
-            pass
+        eccodes.codes_handle_delete(self.codes_id)
 
     def message_get(self, item, key_type=None, strict=True):
         # type: (bytes, int, bool) -> T.Any
