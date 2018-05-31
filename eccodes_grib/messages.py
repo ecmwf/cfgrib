@@ -47,7 +47,6 @@ class Message(collections.Mapping):
         else:
             raise ValueError("creating an empty message is not supported.")
 
-
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
 
