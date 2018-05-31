@@ -28,8 +28,16 @@ from . import eccodes
 @attr.attrs()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
+    path = attr.attrib(default=None)
+    offset = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
+
+    def __del__(self):
+        try:
+            eccodes.codes_handle_delete(self.codes_id)
+        except:
+            pass
 
     def message_get(self, item, key_type=None, strict=True):
         # type: (bytes, int, bool) -> T.Any
