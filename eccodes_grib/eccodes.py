@@ -19,7 +19,7 @@ from builtins import int, float, bytes
 
 import functools
 import pkgutil
-import typing  # noqa
+import typing as T  # noqa
 
 import cffi
 import numpy as np
@@ -135,7 +135,7 @@ def grib_get_gaussian_latitudes(truncation):
 
 
 def codes_index_new_from_file(path, keys):
-    # type: (bytes, typing.Iterable[bytes]) -> cffi.FFI.CData
+    # type: (bytes, T.Iterable[bytes]) -> cffi.FFI.CData
     keys_enc = b','.join(keys)
     return check_last(lib.codes_index_new_from_file)(ffi.NULL, path, keys_enc)
 
@@ -199,7 +199,7 @@ def codes_index_get_size(indexid, key):
 
 
 def codes_index_get_long(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[int]
+    # type: (cffi.FFI.CData, bytes) -> T.List[int]
     """
     Get the list of integer values associated to a key.
     The index must be created with such a key (possibly together with other
@@ -217,7 +217,7 @@ def codes_index_get_long(indexid, key):
 
 
 def codes_index_get_double(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[float]
+    # type: (cffi.FFI.CData, bytes) -> T.List[float]
     """
     Get the list of double values associated to a key.
     The index must be created with such a key (possibly together with other
@@ -235,7 +235,7 @@ def codes_index_get_double(indexid, key):
 
 
 def codes_index_get_string(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[str]
+    # type: (cffi.FFI.CData, bytes) -> T.List[str]
     """
     Get the list of string values associated to a key.
     The index must be created with such a key (possibly together with other
@@ -306,7 +306,7 @@ def codes_index_select_string(indexid, key, value):
 
 
 def codes_index_select(indexid, key, value):
-    # type: (cffi.FFI.CData, bytes, typing.Any) -> None
+    # type: (cffi.FFI.CData, bytes, T.Any) -> None
     """
     Select the message subset with key==value.
 
@@ -358,7 +358,7 @@ def codes_get_length(handle, key):
 
 
 def codes_get_bytes_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[int]
+    # type: (cffi.FFI.CData, bytes) -> T.List[int]
     """
     Get unsigned chars array values from a key.
 
@@ -375,7 +375,7 @@ def codes_get_bytes_array(handle, key):
 
 
 def codes_get_long_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[int]
+    # type: (cffi.FFI.CData, bytes) -> T.List[int]
     """
     Get long array values from a key.
 
@@ -392,13 +392,13 @@ def codes_get_long_array(handle, key):
 
 
 def codes_get_double_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[float]
+    # type: (cffi.FFI.CData, bytes) -> T.List[float]
     """
     Get double array values from a key.
 
     :param str key: the keyword whose value(s) are to be extracted
 
-    :rtype: typing.List(float)
+    :rtype: T.List(float)
     """
     size = codes_get_size(handle, key)
     values = ffi.new('double[]', size)
@@ -409,13 +409,13 @@ def codes_get_double_array(handle, key):
 
 
 def codes_get_string_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> typing.List[bytes]
+    # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
     """
     Get string array values from a key.
 
     :param str key: the keyword whose value(s) are to be extracted
 
-    :rtype: typing.List(str)
+    :rtype: T.List(str)
     """
     size = codes_get_size(handle, key)
     length = codes_get_length(handle, key)
@@ -519,7 +519,7 @@ def codes_get_native_type(handle, key):
 
 
 def codes_get_array(handle, key, key_type=None):
-    # type: (cffi.FFI.CData, bytes, int) -> typing.Any
+    # type: (cffi.FFI.CData, bytes, int) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
@@ -536,7 +536,7 @@ def codes_get_array(handle, key, key_type=None):
 
 
 def codes_get(handle, key, key_type=None, strict=True):
-    # type: (cffi.FFI.CData, bytes, int, bool) -> typing.Any
+    # type: (cffi.FFI.CData, bytes, int, bool) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
@@ -575,7 +575,7 @@ def codes_keys_iterator_delete(iterator_id):
 
 
 def codes_grib_get_data(message_id):
-    # type: (cffi.FFI.CData) -> typing.Iterable[typing.Tuple[float, float, float]]
+    # type: (cffi.FFI.CData) -> T.Iterable[T.Tuple[float, float, float]]
     """
     Retrieves the field values in each message and outputs three lists of
     equal length containing, for each index, the latitude, longitude and
@@ -622,7 +622,7 @@ def codes_set(msgid, key, value):
 
 
 def codes_set_double_array(msgid, key, values):
-    # type: (cffi.FFI.CData, bytes, typing.List[float]) -> None
+    # type: (cffi.FFI.CData, bytes, T.List[float]) -> None
     size = len(values)
     c_values = ffi.new("double []", values)
     codes_set_double_array = check_return(lib.codes_set_double_array)
@@ -630,7 +630,7 @@ def codes_set_double_array(msgid, key, values):
 
 
 def codes_set_array(msgid, key, values):
-    # type: (cffi.FFI.CData, bytes, typing.List[typing.Any]) -> None
+    # type: (cffi.FFI.CData, bytes, T.List[T.Any]) -> None
     if len(values) > 0:
         if isinstance(values[0], float):
             codes_set_double_array(msgid, key, values)
@@ -641,7 +641,7 @@ def codes_set_array(msgid, key, values):
 
 
 def codes_write(handle, outfile):
-    # type: (cffi.FFI.CData, typing.BinaryIO) -> None
+    # type: (cffi.FFI.CData, T.BinaryIO) -> None
     """
     Write a coded message to a file. If the file does not exist, it is created.
 
