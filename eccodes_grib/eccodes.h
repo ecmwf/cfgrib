@@ -60,12 +60,14 @@ int codes_grib_get_data(codes_handle *h, double *lats, double *lons, double *val
 int codes_get_size(codes_handle* h, const char* key,size_t *size);
 int codes_get_length(codes_handle* h, const char* key,size_t *length);
 int codes_get_string_array(codes_handle* h, const char* key, char** vals, size_t *length);
+int codes_get_bytes(codes_handle* h, const char* key, unsigned char* bytes, size_t *length);
 int codes_get_double_array(codes_handle* h, const char* key, double* vals, size_t *length);
 int codes_get_long_array(codes_handle* h, const char* key, long* vals, size_t *length);
 
 int codes_set_long(codes_handle* h, const char* key, long val);
 int codes_set_double(codes_handle* h, const char* key, double val);
 int codes_set_string(codes_handle* h, const char*  key , const char* mesg, size_t *length);
+int codes_set_bytes(codes_handle* h, const char*  key, const unsigned char* bytes, size_t *length);
 int codes_set_double_array(codes_handle* h, const char* key, const double* vals, size_t length);
 
 codes_keys_iterator* codes_keys_iterator_new(codes_handle* h,unsigned long filter_flags, const char* name_space);

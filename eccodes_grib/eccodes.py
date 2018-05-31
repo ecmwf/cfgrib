@@ -357,6 +357,23 @@ def codes_get_length(handle, key):
     return size[0]
 
 
+def codes_get_bytes_array(handle, key):
+    # type: (cffi.FFI.CData, bytes) -> typing.List[int]
+    """
+    Get unsigned chars array values from a key.
+
+    :param str key: the keyword whose value(s) are to be extracted
+
+    :rtype: List(int)
+    """
+    size = codes_get_size(handle, key)
+    values = ffi.new('unsigned char[]', size)
+    size_p = ffi.new('size_t *', size)
+    codes_get_bytes = check_return(lib.codes_get_bytes)
+    codes_get_bytes(handle, key, values, size_p)
+    return list(values)
+
+
 def codes_get_long_array(handle, key):
     # type: (cffi.FFI.CData, bytes) -> typing.List[int]
     """
@@ -407,6 +424,27 @@ def codes_get_string_array(handle, key):
     codes_get_string_array = check_return(lib.codes_get_string_array)
     codes_get_string_array(handle, key, values, length_p)
     return [ffi.string(values[i]) for i in range(length_p[0])]
+
+
+def codes_get_bytes(handle, key, strict=True):
+    # type: (cffi.FFI.CData, bytes, bool) -> int
+    """
+    Get unsigned char element from a key.
+    It may or may not fail in case there are more than one key in a message.
+    Outputs the last element.
+
+    :param str key: the keyword to select the value of
+    :param bool strict: flag to select if the method should fail in case of
+        more than one key in single message
+
+    :rtype: int
+    """
+    values = codes_get_bytes_array(handle, key)
+    if len(values) == 0:
+        raise ValueError('No value for key %r' % key)
+    elif len(values) > 1 and strict:
+        raise ValueError('More than one value for key %r: %r' % (key, values))
+    return values[-1]
 
 
 def codes_get_long(handle, key, strict=True):
@@ -491,6 +529,8 @@ def codes_get_array(handle, key, key_type=None):
         return codes_get_double_array(handle, key)
     elif key_type == CODES_TYPE_STRING:
         return codes_get_string_array(handle, key)
+    elif key_type == CODES_TYPE_BYTES:
+        return codes_get_bytes_array(handle, key)
     else:
         raise RuntimeError("Unknown GRIB key type: %r" % key_type)
 
@@ -506,6 +546,8 @@ def codes_get(handle, key, key_type=None, strict=True):
         return codes_get_double(handle, key, strict)
     elif key_type == CODES_TYPE_STRING:
         return codes_get_string(handle, key, strict)
+    elif key_type == CODES_TYPE_BYTES:
+        return codes_get_bytes(handle, key)
     else:
         raise RuntimeError("Unknown GRIB key type: %r" % key_type)
 
