@@ -42,7 +42,8 @@ def cached(method):
 
 @attr.attrs()
 class Variable(object):
-    pass
+    name = attr.attrib()
+    paramId = attr.attrib()
 
 
 EXCLUDES = ('latitudes', 'latLonValues', 'longitudes', 'values', '7777')
@@ -70,11 +71,19 @@ def index_file(stream, includes=None, excludes=EXCLUDES, log=LOG):
 
 @attr.attrs()
 class Dataset(object):
-    filename = attr.attrib(type=str)
+    path = attr.attrib(type=str)
     mode = attr.attrib(default='r')
 
     def __attrs_post_init__(self):
-        self.stream = messages.Stream(self.filename, mode=self.mode)
-        self.index = index_file(self.stream)
-        # self.attrs = {k: v.pop() for k, v in self.index.items() if len(v) == 1 and None not in v}
-        # self.coords = {k: sorted(v) for k, v in self.index.items() if len(v) > 1}
+        self.stream = messages.Stream(self.path, mode=self.mode)
+
+    @property
+    @cached
+    def variables(self):
+        index = self.stream.index(['paramId'])
+        variables = {}
+        for param_id in index['paramId']:
+            msg = next(iter(index.select({'paramId': param_id})))
+            name = msg.get('shortName', 'paramId%s' % param_id)
+            variables[name] = Variable(name=name, paramId=param_id)
+        return variables

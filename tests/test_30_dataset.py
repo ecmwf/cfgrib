@@ -7,8 +7,9 @@ TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.
 
 
 def test_Variable():
-    dataset.Variable()
+    dataset.Variable('tas', 130)
 
 
 def test_Dataset():
-    dataset.Dataset(TEST_DATA)
+    res = dataset.Dataset(TEST_DATA)
+    assert len(res.variables) == 3
