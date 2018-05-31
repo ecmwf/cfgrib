@@ -44,6 +44,7 @@ setuptools.setup(
         'pytest-runner',
     ],
     install_requires=[
+        'attrs',
         'cffi',
         'future',
         'typing',
