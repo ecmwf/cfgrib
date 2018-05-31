@@ -83,11 +83,12 @@ class Message(collections.Mapping):
 
 
 @attr.attrs()
-class Index(object):
+class Index(collections.Mapping):
     path = attr.attrib()
     keys = attr.attrib()
     codes_index = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
+    value_encoding = attr.attrib(default='ascii')
 
     def __attrs_post_init__(self):
         bkeys = [key.encode(self.key_encoding) for key in self.keys]
@@ -96,6 +97,23 @@ class Index(object):
 
     def __del__(self):
         eccodes.codes_index_delete(self.codes_index)
+
+    def __getitem__(self, item):
+        # type: (str) -> list
+        key = item.encode(self.key_encoding)
+        bvalues = eccodes.codes_index_get(self.codes_index, key)
+        values = []
+        for value in bvalues:
+            if isinstance(value, bytes):
+                value = value.decode(self.value_encoding)
+            values.append(value)
+        return values
+
+    def __iter__(self):
+        return self.keys
+
+    def __len__(self):
+        return len(self.keys)
 
     def select(self, query):
         # type: (T.Dict[str, T.Any]) -> T.Generator[Message, None, None]

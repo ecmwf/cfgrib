@@ -25,6 +25,7 @@ def test_Message():
 
 def test_Index():
     res = messages.Index(TEST_DATA, ['paramId'])
+    assert res.get('paramId') == ['130', '131', '132']
     assert sum(1 for _ in res.select({'paramId': 130})) == 24
 
     with pytest.raises(ValueError):
