@@ -32,7 +32,7 @@ version = '0.0.1.dev0'
 setuptools.setup(
     name='eccodes-grib',
     version=version,
-    description='Python interface to the ecCodes C library to read and write GRIB files.',
+    description='Python interface to read and write GRIB files via the ECMWF ecCodes C library.',
     long_description=read('README.rst'),
     author='European Centre for Medium-Range Weather Forecasts (ECMWF)',
     author_email='software.support@ecmwf.int',
