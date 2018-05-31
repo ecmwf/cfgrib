@@ -25,8 +25,17 @@ def test_Message():
 
 
 def test_File():
+    # check File init
+    with pytest.raises(RuntimeError):
+        next(message.File(TEST_DATA))
+
     with message.File(TEST_DATA) as res:
         assert sum(1 for _ in res) == 72
 
+    # check file_handle reset
     with pytest.raises(RuntimeError):
         next(message.File(TEST_DATA))
+
+    # run after reset
+    with message.File(TEST_DATA) as res:
+        assert sum(1 for _ in res) == 72
