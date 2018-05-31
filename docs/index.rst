@@ -20,4 +20,4 @@ possible.
     :caption: Table of Contents
 
     eccodes
-    message
+    messages

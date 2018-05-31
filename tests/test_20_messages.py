@@ -6,7 +6,7 @@ import os.path
 import pytest
 
 from eccodes_grib import eccodes
-from eccodes_grib import message
+from eccodes_grib import messages
 
 
 TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.grib')
@@ -14,7 +14,7 @@ TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.
 
 def test_Message():
     codes_id = eccodes.grib_new_from_file(open(TEST_DATA))
-    res = message.Message(codes_id=codes_id)
+    res = messages.Message(codes_id=codes_id)
 
     assert res['paramId'] == 130
     assert list(res)[0] == 'globalDomain'
@@ -25,17 +25,17 @@ def test_Message():
 
 
 def test_File():
-    # check File init
+    # file_handle on File init
     with pytest.raises(RuntimeError):
-        next(message.File(TEST_DATA))
+        next(messages.File(TEST_DATA))
 
-    with message.File(TEST_DATA) as res:
+    with messages.File(TEST_DATA) as res:
         assert sum(1 for _ in res) == 72
 
-    # check file_handle reset
+    # file_handle reset
     with pytest.raises(RuntimeError):
-        next(message.File(TEST_DATA))
+        next(messages.File(TEST_DATA))
 
     # run after reset
-    with message.File(TEST_DATA) as res:
+    with messages.File(TEST_DATA) as res:
         assert sum(1 for _ in res) == 72
