@@ -10,18 +10,17 @@ import eccodes_grib
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 
-DATASET = 'reanalysis-era5-single-levels'
+DATASET = 'seasonal-postprocessed-single-levels'
 REQUEST = {
-    'variable': '2m_temperature',
-    'product_type': 'reanalysis',
-    'year': '2017',
-    'month': '01',
-    'day': ['01', '02', '03', '04', '05', '06', '07'],
-    'time': [
-        '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00',
-        '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-        '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
+    'originating_centre': 'ecmwf',
+    'variable': [
+        'maximum_2m_temperature_in_the_last_24_hours_anomaly',
+        'minimum_2m_temperature_in_the_last_24_hours_anomaly'
     ],
+    'product_type': 'monthly_mean',
+    'year': '2018',
+    'month': ['04', '05'],
+    'leadtime_month': ['1', '2', '3', '4', '5', '6'],
     'grid': [3, 3],
     'format': 'grib'
 }
@@ -44,10 +43,17 @@ def ensure_data(dataset, request, folder=SAMPLE_DATA_FOLDER):
     return path
 
 
-def test_reanalysis_Stream():
+def test_ecmwf_monthly_mean_Stream():
     path = ensure_data(DATASET, REQUEST)
 
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
-    assert len(leader) == 191
-    assert sum(1 for _ in stream) == 168
+    assert len(leader) == 210
+    assert sum(1 for _ in stream) == 1224
+
+
+def test_ecmwf_monthly_mean_Dataset():
+    path = ensure_data(DATASET, REQUEST)
+
+    res = eccodes_grib.Dataset(path)
+    assert res.msg_count == 1224
