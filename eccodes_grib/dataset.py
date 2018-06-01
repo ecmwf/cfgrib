@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 # edition independent keys. see: https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
-PARAMETER_KEYS = {'centre', 'paramId', 'shortName', 'name'}
+PARAMETER_KEYS = {'centre', 'paramId', 'shortName', 'units', 'name'}
 TIME_KEYS = {
     'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
     'validityTime', 'stepType',
@@ -91,7 +91,7 @@ class IndexedVariable(object):
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
         self.significant_keys = sniff_significant_keys(leader)
-
+        self.significant_index = messages.Index(self.index.path, self.significant_keys)
 
 @attr.attrs()
 class Dataset(object):
