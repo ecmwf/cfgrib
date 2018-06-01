@@ -15,7 +15,7 @@ REQUESTS = {
         'day': '01',
         'time': ['00:00', '12:00'],
         'grid': [3, 3],
-        'format': 'grib'
+        'format': 'grib',
     },
     'reanalysis-era5-pressure-levels': {
         'variable': 'temperature',
