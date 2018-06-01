@@ -39,5 +39,6 @@ def test_Index():
 
 def test_Stream():
     res = messages.Stream(TEST_DATA)
-    assert len(res.first()) == 192
-    assert sum(1 for _ in res) == 40
+    leader = res.first()
+    assert len(leader) == 192
+    assert sum(1 for _ in res) == leader['count']

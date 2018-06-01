@@ -40,7 +40,7 @@ def test_reanalysis_Stream(dataset):
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
     assert len(leader) in (191, 192)
-    assert sum(1 for _ in stream) == cdscommon.message_count(dataset, request)
+    assert sum(1 for _ in stream) == leader['count']
 
 
 @pytest.mark.parametrize('dataset', REQUESTS.keys())
