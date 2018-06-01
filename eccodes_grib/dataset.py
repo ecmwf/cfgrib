@@ -93,6 +93,7 @@ class IndexedVariable(object):
         self.significant_keys = sniff_significant_keys(leader)
         self.significant_index = messages.Index(self.index.path, self.significant_keys)
 
+
 @attr.attrs()
 class Dataset(object):
     path = attr.attrib()
