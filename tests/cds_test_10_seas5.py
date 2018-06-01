@@ -11,11 +11,9 @@ REQUESTS = {
         'originating_centre': 'ecmwf',
         'variable': 'maximum_2m_temperature_in_the_last_24_hours',
         'year': '2018',
-        'month': '05',
+        'month': ['04', '05'],
         'day': '01',
-        'leadtime_hour': [
-            '120', '144', '168', '192', '216', '24', '240', '48', '72', '96',
-        ],
+        'leadtime_hour': ['24', '48'],
         'grid': [3, 3],
         'format': 'grib',
     },
@@ -25,9 +23,19 @@ REQUESTS = {
         'product_type': 'monthly_mean',
         'year': '2018',
         'month': ['04', '05'],
-        'leadtime_month': ['1', '2', '3', '4', '5', '6'],
+        'leadtime_month': ['1', '2'],
         'grid': [3, 3],
         'format': 'grib',
+    },
+    'seasonal-monthly-single-levels': {
+        'originating_centre': 'ecmwf',
+        'variable': 'maximum_2m_temperature_in_the_last_24_hours',
+        'product_type': 'monthly_mean',
+        'year': '2018',
+        'month': ['04', '05'],
+        'leadtime_month': ['1', '2'],
+        'grid': [3, 3],
+        'format': 'grib'
     },
 }
 EUROPE_EXTENT = {'latitude': slice(65, 30), 'longitude': slice(0, 40)}

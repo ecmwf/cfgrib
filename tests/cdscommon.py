@@ -33,8 +33,7 @@ def message_count(dataset, request, count=1):
         count = 20
     elif dataset == 'seasonal-original-single-levels':
         count = 51
-    elif dataset == 'seasonal-postprocessed-single-levels' \
-            and request.get('product_type') == 'monthly_mean':
+    elif dataset.startswith('seasonal-') and request.get('product_type') == 'monthly_mean':
         count = 51
     for key in ['year', 'month', 'day', 'time', 'leadtime_hour', 'leadtime_month']:
         value = request.get(key)
