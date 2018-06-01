@@ -92,15 +92,15 @@ class Message(collections.Mapping):
 @attr.attrs()
 class Index(collections.Mapping):
     path = attr.attrib()
-    keys = attr.attrib()
+    index_keys = attr.attrib()
     codes_index = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
 
     def __attrs_post_init__(self):
-        bkeys = [key.encode(self.key_encoding) for key in self.keys]
+        bindex_keys = [key.encode(self.key_encoding) for key in self.index_keys]
         bpath = self.path.encode(self.key_encoding)
-        self.codes_index = eccodes.codes_index_new_from_file(bpath, bkeys)
+        self.codes_index = eccodes.codes_index_new_from_file(bpath, bindex_keys)
 
     def __del__(self):
         eccodes.codes_index_delete(self.codes_index)
@@ -117,14 +117,14 @@ class Index(collections.Mapping):
         return values
 
     def __iter__(self):
-        return self.keys
+        return iter(self.index_keys)
 
     def __len__(self):
-        return len(self.keys)
+        return len(self.index_keys)
 
     def select(self, query):
         # type: (T.Dict[str, T.Any]) -> T.Generator[Message, None, None]
-        if set(query) != set(self.keys):
+        if set(query) != set(self.index_keys):
             raise ValueError("all index keys must have a value.")
         for key, value in query.items():
             bkey = key.encode(self.key_encoding)
@@ -157,4 +157,4 @@ class Stream(collections.Iterable):
 
     def index(self, keys):
         # type: (T.Iterable[str]) -> Index
-        return Index(path=self.path, keys=keys)
+        return Index(path=self.path, index_keys=keys)
