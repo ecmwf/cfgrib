@@ -28,18 +28,16 @@ from . import eccodes
 @attr.attrs()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
-    offset = attr.attrib(default=None)
     path = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
 
     @classmethod
     def fromfile(cls, file, *args, **kwargs):
-        offset = file.tell()
         codes_id = eccodes.codes_new_from_file(file, eccodes.CODES_PRODUCT_GRIB)
         if codes_id is None:
             raise EOFError("end-of-file reached.")
-        return cls(codes_id=codes_id, path=file.name, offset=offset, *args, **kwargs)
+        return cls(codes_id=codes_id, path=file.name, *args, **kwargs)
 
     @classmethod
     def fromindex(cls, codes_index, *args, **kwargs):
