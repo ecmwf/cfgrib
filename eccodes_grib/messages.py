@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes
+from builtins import bytes, isinstance, str
 
 import collections
 import typing as T  # noqa
@@ -122,14 +122,16 @@ class Index(collections.Mapping):
     def __len__(self):
         return len(self.index_keys)
 
-    def select(self, query):
+    def select(self, dict_query={}, **query):
         # type: (T.Dict[str, T.Any]) -> T.Generator[Message, None, None]
+        query.update(dict_query)
         if set(query) != set(self.index_keys):
             raise ValueError("all index keys must have a value.")
         for key, value in query.items():
             bkey = key.encode(self.key_encoding)
-            bvalue = value.encode(self.value_encoding)
-            eccodes.codes_index_select(self.codes_index, bkey, bvalue)
+            if isinstance(value, str):
+                value = value.encode(self.value_encoding)
+            eccodes.codes_index_select(self.codes_index, bkey, value)
         while True:
             try:
                 yield Message.fromindex(codes_index=self.codes_index)
