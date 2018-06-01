@@ -27,25 +27,24 @@ from . import eccodes
 
 @attr.attrs()
 class Message(collections.Mapping):
-    file = attr.attrib(default=None)
-    codes_index = attr.attrib(default=None)
+    codes_id = attr.attrib()
     offset = attr.attrib(default=None)
     path = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii')
     value_encoding = attr.attrib(default='ascii')
 
-    def __attrs_post_init__(self):
-        if self.file:
-            self.offset = self.file.tell()
-            self.path = self.file.name
-            self.codes_id = eccodes.codes_new_from_file(self.file, eccodes.CODES_PRODUCT_GRIB)
-            if self.codes_id is None:
-                raise EOFError("end-of-file reached.")
-            self.file = None
-        elif self.codes_index:
-            self.codes_id = eccodes.codes_new_from_index(self.codes_index)
-        else:
-            raise ValueError("creating an empty message is not supported.")
+    @classmethod
+    def fromfile(cls, file, *args, **kwargs):
+        offset = file.tell()
+        codes_id = eccodes.codes_new_from_file(file, eccodes.CODES_PRODUCT_GRIB)
+        if codes_id is None:
+            raise EOFError("end-of-file reached.")
+        return cls(codes_id=codes_id, path=file.name, offset=offset, *args, **kwargs)
+
+    @classmethod
+    def fromindex(cls, codes_index, *args, **kwargs):
+        codes_id = eccodes.codes_new_from_index(codes_index)
+        return cls(codes_id=codes_id, *args, **kwargs)
 
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
@@ -133,7 +132,7 @@ class Index(collections.Mapping):
             eccodes.codes_index_select(self.codes_index, bkey, bvalue)
         while True:
             try:
-                yield Message(codes_index=self.codes_index)
+                yield Message.fromindex(codes_index=self.codes_index)
             except eccodes.EcCodesError:
                 break
 
@@ -148,7 +147,7 @@ class Stream(collections.Iterable):
         with open(self.path, self.mode) as file:
             while True:
                 try:
-                    yield Message(file)
+                    yield Message.fromfile(file=file)
                 except (EOFError, eccodes.EcCodesError):
                     break
 

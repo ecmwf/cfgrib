@@ -13,7 +13,7 @@ TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.
 
 def test_Message():
     with open(TEST_DATA) as file:
-        res = messages.Message(file)
+        res = messages.Message.fromfile(file)
 
     assert res['paramId'] == 130
     assert list(res)[0] == 'globalDomain'
