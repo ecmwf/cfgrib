@@ -17,7 +17,7 @@ REQUESTS = {
             '120', '144', '168', '192', '216', '24', '240', '48', '72', '96',
         ],
         'grid': [3, 3],
-        'format':'grib',
+        'format': 'grib',
     },
     'seasonal-postprocessed-single-levels': {
         'originating_centre': 'ecmwf',
