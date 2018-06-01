@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import object
+from builtins import isinstance, object
 
 import functools
 import logging
@@ -41,9 +41,15 @@ def cached(method):
 
 
 @attr.attrs()
-class Variable(object):
-    name = attr.attrib()
+class IndexedVariable(object):
     paramId = attr.attrib()
+    index = attr.attrib()
+    name = attr.attrib(default=None)
+
+    def __attrs_post_init__(self):
+        leader = next(self.index.select(paramId=self.paramId))
+        if self.name is None:
+            self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
 
 
 EXCLUDES = ('latitudes', 'latLonValues', 'longitudes', 'values', '7777')
@@ -71,7 +77,7 @@ def index_file(stream, includes=None, excludes=EXCLUDES, log=LOG):
 
 @attr.attrs()
 class Dataset(object):
-    path = attr.attrib(type=str)
+    path = attr.attrib()
     mode = attr.attrib(default='r')
 
     def __attrs_post_init__(self):
@@ -82,8 +88,11 @@ class Dataset(object):
     def variables(self):
         index = self.stream.index(['paramId'])
         variables = {}
+        if len(index['paramId']) == 1:
+            variable_class = IndexedVariable
+        else:
+            raise NotImplementedError("GRIB must have only one variable.")
         for param_id in index['paramId']:
-            msg = next(iter(index.select({'paramId': param_id})))
-            name = msg.get('shortName', 'paramId%s' % param_id)
-            variables[name] = Variable(name=name, paramId=param_id)
+            variable = variable_class(paramId=param_id, index=index)
+            variables[variable.name] = variable
         return variables

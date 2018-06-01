@@ -12,14 +12,21 @@ REQUESTS = {
         'product_type': 'reanalysis',
         'year': '2017',
         'month': '01',
-        'day': ['01', '02', '03', '04', '05', '06', '07'],
-        'time': [
-            '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00',
-            '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-            '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-        ],
+        'day': '01',
+        'time': ['00:00', '12:00'],
         'grid': [3, 3],
         'format': 'grib'
+    },
+    'reanalysis-era5-pressure-levels': {
+        'variable': 'temperature',
+        'pressure_level': ['500', '850'],
+        'product_type': 'ensemble_members',
+        'year': '2017',
+        'month': '01',
+        'day': '01',
+        'time': ['00:00', '12:00'],
+        'grid': [3, 3],
+        'format': 'grib',
     },
 }
 EUROPE_EXTENT = {'latitude': slice(65, 30), 'longitude': slice(0, 40)}
@@ -32,8 +39,8 @@ def test_reanalysis_Stream(dataset):
 
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
-    assert len(leader) == 191
-    assert sum(1 for _ in stream) == cdscommon.message_count(request)
+    assert len(leader) in (191, 192)
+    assert sum(1 for _ in stream) == cdscommon.message_count(dataset, request)
 
 
 @pytest.mark.parametrize('dataset', REQUESTS.keys())

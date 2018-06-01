@@ -24,7 +24,18 @@ def ensure_data(dataset, request, folder=SAMPLE_DATA_FOLDER):
     return path
 
 
-def message_count(request, count=1):
+def message_count(dataset, request, count=1):
+    if dataset == 'reanalysis-era5-single-levels' \
+            and request.get('product_type') == 'ensemble_members':
+        count = 20
+    elif dataset == 'reanalysis-era5-pressure-levels' \
+            and request.get('product_type') == 'ensemble_members':
+        count = 20
+    elif dataset == 'seasonal-original-single-levels':
+        count = 51
+    elif dataset == 'seasonal-postprocessed-single-levels' \
+            and request.get('product_type') == 'monthly_mean':
+        count = 51
     for key in ['year', 'month', 'day', 'time', 'leadtime_hour', 'leadtime_month']:
         value = request.get(key)
         if isinstance(value, list):

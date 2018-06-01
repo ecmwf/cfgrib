@@ -41,7 +41,7 @@ def test_ecmwf_monthly_mean_Stream(dataset):
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
     assert len(leader) > 10
-    assert sum(1 for _ in stream) == cdscommon.message_count(request, count=51)
+    assert sum(1 for _ in stream) == cdscommon.message_count(dataset, request)
 
 
 @pytest.mark.parametrize('dataset', REQUESTS.keys())
