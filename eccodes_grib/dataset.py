@@ -28,7 +28,10 @@ from . import messages
 LOG = logging.getLogger(__name__)
 
 
-# edition independent keys. see: https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
+#
+# Edition-independent keys in ecCodes namespaces. Documented in:
+#   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
+#
 PARAMETER_KEYS = {'centre', 'paramId', 'shortName', 'units', 'name'}
 TIME_KEYS = {
     'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
@@ -36,8 +39,8 @@ TIME_KEYS = {
 }
 GEOGRAPHY_KEYS = {'gridType'}
 VERTICAL_KEYS = {'bottomLevel', 'level', 'pv', 'topLevel', 'typeOfLevel'}
-DATA_KEYS = {'packingType'}
-NAMESPACE_KEYS = PARAMETER_KEYS | TIME_KEYS | GEOGRAPHY_KEYS | VERTICAL_KEYS | DATA_KEYS
+
+NAMESPACE_KEYS = PARAMETER_KEYS | TIME_KEYS | GEOGRAPHY_KEYS | VERTICAL_KEYS
 
 GRID_TYPE_MAP = {
     'regular_ll': {
@@ -54,9 +57,22 @@ GRID_TYPE_MAP = {
     },
 }
 
+#
+# Other edition-independent keys documented in ecCodes presentations
+#
+DATA_KEYS = {'numberOfDataPoints', 'packingType'}
+
+#
+# Undocumented, apparently edition-independent keys
+#
+ENSEMBLE_KEYS = {'number'}
+
+
+EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS | DATA_KEYS | ENSEMBLE_KEYS
+
 
 def sniff_significant_keys(
-        message, namespace_keys=NAMESPACE_KEYS, grid_type_map=GRID_TYPE_MAP, log=LOG
+        message, ei_keys=EDITION_INDEPENDENT_KEYS, grid_type_map=GRID_TYPE_MAP, log=LOG
 ):
     # type: (messages.Message, T.Set, T.Dict[str, T.Set], logging.Logger) -> T.List[str]
     grid_type = message.get('gridType')
@@ -65,7 +81,7 @@ def sniff_significant_keys(
     else:
         log.warning("unknown gridType %r", grid_type)
         grid_type_keys = {}
-    all_significant_keys = namespace_keys | grid_type_keys
+    all_significant_keys = ei_keys | grid_type_keys
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
