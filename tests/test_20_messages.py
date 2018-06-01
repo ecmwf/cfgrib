@@ -20,6 +20,9 @@ def test_Message():
     assert 'paramId' in res
     assert len(res) == 192
 
+    with pytest.raises(KeyError):
+        res['non-existent-key']
+
     list(res.items())
 
 

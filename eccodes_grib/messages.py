@@ -71,7 +71,10 @@ class Message(collections.Mapping):
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
-        value = self.message_get(item)
+        try:
+            value = self.message_get(item)
+        except eccodes.EcCodesError:
+            raise KeyError(item)
         if isinstance(value, bytes):
             return value.decode(self.value_encoding)
         elif isinstance(value, list) and value and isinstance(value[0], bytes):
