@@ -1,14 +1,8 @@
 
-import hashlib
-import os
-import shutil
-
-import cdsapi
-
 import eccodes_grib
 
+import cdscommon
 
-SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 
 DATASET = 'reanalysis-era5-single-levels'
 REQUEST = {
@@ -28,33 +22,17 @@ REQUEST = {
 EUROPE_EXTENT = {'latitude': slice(65, 30), 'longitude': slice(0, 40)}
 
 
-def ensure_data(dataset, request, folder=SAMPLE_DATA_FOLDER):
-    request_text = str(sorted(request.items())).encode('utf-8')
-    uuid = hashlib.sha3_224(request_text).hexdigest()[:10]
-    name = 'cds-{dataset}-{uuid}.grib'.format(**locals())
-    path = os.path.join(SAMPLE_DATA_FOLDER, name)
-    if not os.path.exists(path):
-        c = cdsapi.Client()
-        try:
-            c.retrieve(dataset, request, target=path + '.tmp')
-            shutil.move(path + '.tmp', path)
-        except:
-            os.unlink(path + '.tmp')
-            raise
-    return path
-
-
 def test_reanalysis_Stream():
-    path = ensure_data(DATASET, REQUEST)
+    path = cdscommon.ensure_data(DATASET, REQUEST)
 
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
     assert len(leader) == 191
-    assert sum(1 for _ in stream) == 168
+    assert sum(1 for _ in stream) == cdscommon.message_count(REQUEST)
 
 
 def test_reanalysis_Dataset():
-    path = ensure_data(DATASET, REQUEST)
+    path = cdscommon.ensure_data(DATASET, REQUEST)
 
     res = eccodes_grib.Dataset(path)
     assert len(res.variables) == 1
