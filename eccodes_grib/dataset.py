@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import isinstance, object
+from builtins import object
 
 import functools
 import logging
@@ -23,10 +23,50 @@ import typing as T  # noqa
 
 import attr
 
-from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
+
+
+# edition independent keys. see: https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
+PARAMETER_KEYS = {'centre', 'paramId', 'shortName', 'name'}
+TIME_KEYS = {
+    'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
+    'validityTime', 'stepType',
+}
+GEOGRAPHY_KEYS = {'gridType'}
+VERTICAL_KEYS = {'bottomLevel', 'level', 'pv', 'topLevel', 'typeOfLevel'}
+DATA_KEYS = {'packingType'}
+NAMESPACE_KEYS = PARAMETER_KEYS | TIME_KEYS | GEOGRAPHY_KEYS | VERTICAL_KEYS | DATA_KEYS
+
+GRID_TYPE_MAP = {
+    'regular_ll': {
+        'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+    },
+    'regular_gg': {
+        'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'N', 'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+    },
+}
+
+
+def sniff_significant_keys(
+        message, namespace_keys=NAMESPACE_KEYS, grid_type_map=GRID_TYPE_MAP, log=LOG
+):
+    # type: (messages.Message, T.Set, T.Dict[str, T.Set], logging.Logger) -> T.List[str]
+    grid_type = message.get('gridType')
+    if grid_type in grid_type_map:
+        grid_type_keys = grid_type_map[grid_type]
+    else:
+        log.warning("unknown gridType %r", grid_type)
+        grid_type_keys = {}
+    all_significant_keys = namespace_keys | grid_type_keys
+    return [key for key in all_significant_keys if message.get(key) is not None]
 
 
 def cached(method):
@@ -50,29 +90,7 @@ class IndexedVariable(object):
         leader = next(self.index.select(paramId=self.paramId))
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
-
-
-EXCLUDES = ('latitudes', 'latLonValues', 'longitudes', 'values', '7777')
-
-
-def index_file(stream, includes=None, excludes=EXCLUDES, log=LOG):
-    # type: (messages.Stream, T.Iterable[str], T.Iterable[str], logging.Logger) -> list
-    index = []
-    includes_set = set(includes) if includes else None
-    excludes_set = set(excludes)
-    for msg in stream:
-        index_keys = {}
-        for key in msg:
-            if (includes_set is None or key in includes_set) and key not in excludes_set:
-                try:
-                    value = msg[key]
-                    if isinstance(value, list):
-                        value = tuple(value)
-                    index_keys[key] = value
-                except (TypeError, eccodes.EcCodesError):
-                    log.info('Skipping %r', key)
-        index.append((msg.offset, index_keys))
-    return index
+        self.significant_keys = sniff_significant_keys(leader)
 
 
 @attr.attrs()
