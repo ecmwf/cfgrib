@@ -43,7 +43,7 @@ TEST_FILES = {
 @pytest.mark.parametrize('test_file', TEST_FILES.keys())
 def test_reanalysis_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
-    path = cdscommon.ensure_data(dataset, request, name=test_file + '.grib')
+    path = cdscommon.ensure_data(dataset, request, name=test_file + '{ext}')
 
     stream = eccodes_grib.Stream(path)
     leader = stream.first()
