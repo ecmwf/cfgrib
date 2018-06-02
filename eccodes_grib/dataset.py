@@ -93,6 +93,7 @@ def sniff_significant_keys(
 ATTRS_KEYS = [
     'centre', 'paramId', 'shortName', 'units', 'name',
     'stepUnits', 'stepType',
+    'typeOfLevel',  # NOTE: we don't support mixed 'isobaricInPa' and 'isobaricInhPa', for now.
     'gridType',
     'numberOfDataPoints',
 ]
