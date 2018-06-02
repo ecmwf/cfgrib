@@ -19,7 +19,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        192,
+        191,
     ],
     'era5-single-levels-ensemble_members': [
         'reanalysis-era5-single-levels',
@@ -48,7 +48,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        192,
+        191,
     ],
     'era5-pressure-levels-ensemble_members': [
         'reanalysis-era5-pressure-levels',
