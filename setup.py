@@ -47,6 +47,7 @@ setuptools.setup(
         'attrs',
         'cffi',
         'future',
+        'numpy',
         'typing',
     ],
     tests_require=[

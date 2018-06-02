@@ -127,10 +127,10 @@ class Variable(object):
         self.significant_keys = sniff_significant_keys(leader)
         self.significant_index = messages.Index(self.dataset.path, self.significant_keys)
 
-        self.coordinatates, self.attrs = sniff_coordinates_and_attrs(self.significant_index)
-        self.dimensions = [name for name, coord in self.coordinatates.items() if len(coord) > 1]
+        self.coordinates, self.attrs = sniff_coordinates_and_attrs(self.significant_index)
+        self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
         self.ndim = len(self.dimensions)
-        self.shape = [len(coord) for coord in self.coordinatates.values() if len(coord) > 1]
+        self.shape = [len(coord) for coord in self.coordinates.values() if len(coord) > 1]
 
         # Variable attributes
         self.dtype = np.dtype('float32')
@@ -138,7 +138,15 @@ class Variable(object):
         self.mask = False
         self.size = leader['numberOfDataPoints']
 
+    def ncattrs(self):
+        return self.attrs.copy()
 
+    @cached
+    def build_array(self):
+        return np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+
+    def __getitem__(self, item):
+        return self.build_array()[item]
 
 
 @attr.attrs()
