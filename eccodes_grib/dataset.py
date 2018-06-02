@@ -20,6 +20,7 @@ from builtins import object
 import functools
 import itertools
 import logging
+import pkg_resources
 import typing as T  # noqa
 
 import attr
@@ -28,13 +29,13 @@ import numpy as np
 from . import messages
 
 LOG = logging.getLogger(__name__)
-
+VERSION = pkg_resources.get_distribution("eccodes_grib").version
 
 #
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-PARAMETER_KEYS = ['centre', 'paramId', 'shortName', 'units', 'name']
+PARAMETER_KEYS = ['centre', 'centreDescription', 'paramId', 'shortName', 'units', 'name']
 TIME_KEYS = [
     'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
     'validityTime', 'stepType',
@@ -68,9 +69,9 @@ DATA_KEYS = ['numberOfDataPoints', 'packingType']
 # Undocumented, apparently edition-independent keys
 #
 ENSEMBLE_KEYS = ['number']
+GRIB_KEYS = ['editionNumber']
 
-
-EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
+EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS + GRIB_KEYS
 
 
 def sniff_significant_keys(
@@ -99,19 +100,18 @@ VARIABLE_ATTRIBUTES_KEYS = [
 ]
 
 
-def sniff_variable_attributes(
-        significant_index,  # type: T.Mapping[str, T.Any]
-        attributes_keys=VARIABLE_ATTRIBUTES_KEYS,  # type: T.Iterable[str]
-        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+def enforce_unique_attributes(
+        index,  # type: T.Mapping[str, T.Any]
+        attributes_keys,  # type: T.Iterable[str]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    grid_type = significant_index.get('gridType', [None])[0]
     attributes = {}
-    for key in itertools.chain(attributes_keys, grid_type_map.get(grid_type, [])):
-        value = significant_index[key]
-        if len(value) > 1:
-            raise NotImplementedError("GRIB has multiple values for key %r: %r" % (key, value))
-        attributes[key] = value[0]
+    for key in attributes_keys:
+        values = index[key]
+        if len(values) > 1:
+            raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
+        if values and values[0] != 'undef':
+            attributes[key] = values[0]
     return attributes
 
 
@@ -142,7 +142,12 @@ def cached(method):
 
 
 @attr.attrs()
-class Variable(object):
+class CoordinateVariable(object):
+    stream = attr.attrib()
+
+
+@attr.attrs()
+class DataVariable(object):
     stream = attr.attrib()
     paramId = attr.attrib()
     name = attr.attrib(default=None)
@@ -161,7 +166,7 @@ class Variable(object):
         self.significant_keys = sniff_significant_keys(leader)
         self.significant_index = messages.Index(self.stream.path, self.significant_keys)
 
-        self.attributes = sniff_variable_attributes(self.significant_index)
+        self.attributes = enforce_unique_attributes(self.significant_index, VARIABLE_ATTRIBUTES_KEYS)
 
         self.coordinates = sniff_raw_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
@@ -184,23 +189,33 @@ class Variable(object):
 
 
 def build_variable_components(stream, param_id):
-    return {}, {}, {}
+    return {}, {}
 
 
 def dict_merge(master, update):
-    pass
+    for key, value in update.items():
+        if key not in master:
+            master[key] = value
+        elif master[key] == value:
+            pass
+        else:
+            raise ValueError("key present and new value is different: "
+                             "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream):
+GLOBAL_ATTRIBUTES_KEYS = ['editionNumber', 'centre', 'centreDescription']
+
+
+def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
     param_ids = stream.index(['paramId'])['paramId']
     dimensions = {}
     variables = {}
-    attributes = {}
     for param_id in param_ids:
-        dims, vars, attrs = build_variable_components(stream, param_id)
+        dims, vars = build_variable_components(stream, param_id)
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
-        dict_merge(attributes, attrs)
+    attributes = enforce_unique_attributes(stream.index(global_attributes_keys), global_attributes_keys)
+    attributes['eccodesGribVersion'] = VERSION
     return dimensions, variables, attributes
 
 
@@ -215,5 +230,5 @@ class Dataset(object):
     def __attrs_post_init__(self):
         dimensions, variables, attributes = build_dataset_components(self.stream)
         self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
-        self.variables = variables  # type: T.Dict[str, Variable]
+        self.variables = variables  # type: T.Dict[str, T.Union[CoordinateVariable, DataVariable]]
         self.attributes = attributes  # type: T.Dict[str, T.Any]
