@@ -124,7 +124,7 @@ class Index(collections.Mapping):
         return len(self.index_keys)
 
     def select(self, dict_query={}, **query):
-        # type: (T.Dict[str, T.Any]) -> T.Generator[Message, None, None]
+        # type: (T.Mapping[str, T.Any], T.Any) -> T.Generator[Message, None, None]
         query.update(dict_query)
         if set(query) != set(self.index_keys):
             raise ValueError("all index keys must have a value.")

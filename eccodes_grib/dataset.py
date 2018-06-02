@@ -72,15 +72,18 @@ EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS | DATA_KEYS | ENSEMBLE_KEYS
 
 
 def sniff_significant_keys(
-        message, ei_keys=EDITION_INDEPENDENT_KEYS, grid_type_map=GRID_TYPE_MAP, log=LOG
+        message,  # type: T.Mapping[str, T.Any]
+        ei_keys=EDITION_INDEPENDENT_KEYS,  # type: T.Set[str]
+        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Set[str]]
+        log=LOG    # type: logging.Logger
 ):
-    # type: (messages.Message, T.Set, T.Dict[str, T.Set], logging.Logger) -> T.List[str]
+    # type: (...) -> T.List[str]
     grid_type = message.get('gridType')
     if grid_type in grid_type_map:
         grid_type_keys = grid_type_map[grid_type]
     else:
         log.warning("unknown gridType %r", grid_type)
-        grid_type_keys = {}
+        grid_type_keys = set()
     all_significant_keys = ei_keys | grid_type_keys
     return [key for key in all_significant_keys if message.get(key) is not None]
 
