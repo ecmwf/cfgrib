@@ -6,7 +6,7 @@ import eccodes_grib
 import cdscommon
 
 
-TEST_FIƒ131LES = {
+TEST_FILES = {
     'era5-levels-members-one_var': [
         'reanalysis-era5-pressure-levels',
         {
