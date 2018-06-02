@@ -258,15 +258,27 @@ def codes_index_get_string(indexid, key):
 
 def codes_index_get(indexid, key, ktype=bytes):
     # type: (cffi.FFI.CData, bytes, type) -> list
-    result = None  # type: list
     if ktype is int:
         result = codes_index_get_long(indexid, key)
     elif ktype is float:
         result = codes_index_get_double(indexid, key)
     elif ktype is bytes:
         result = codes_index_get_string(indexid, key)
-
+    else:
+        raise TypeError("ktype not supported %r" % ktype)
     return result
+
+
+def codes_index_get_autotype(indexid, key):
+    # type: (cffi.FFI.CData, bytes) -> list
+    try:
+        return codes_index_get_long(indexid, key)
+    except EcCodesError:
+        pass
+    try:
+        return codes_index_get_double(indexid, key)
+    except EcCodesError:
+        return codes_index_get_string(indexid, key)
 
 
 def codes_index_select_long(indexid, key, value):
