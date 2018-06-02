@@ -9,7 +9,7 @@ import pytest
 from eccodes_grib import eccodes
 
 
-TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_levels.grib')
+TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'era5-levels-members-many_vars.grib')
 TEST_DATA_B = TEST_DATA.encode('ASCII')
 
 
@@ -56,8 +56,8 @@ def test_codes_index_get_size():
 
 
 @pytest.mark.parametrize('key, ktype, expected_value', [
-    (b'numberOfDataPoints', int, 3066),
-    (b'latitudeOfFirstGridPointInDegrees', float, 74.0),
+    (b'numberOfDataPoints', int, 7320),
+    (b'latitudeOfFirstGridPointInDegrees', float, 90.0),
     (b'gridType', bytes, b'regular_ll'),
 ])
 def test_codes_index_get(key, ktype, expected_value):
@@ -71,8 +71,7 @@ def test_codes_index_get(key, ktype, expected_value):
 
 
 @pytest.mark.parametrize('key, expected_value', [
-    (b'numberOfDataPoints', [3066]),
-    (b'average', [201.7859183533551]),
+    (b'numberOfDataPoints', [7320]),
     (b'gridType', [b'regular_ll']),
 ])
 def test_codes_get_array(key, expected_value):
@@ -84,8 +83,7 @@ def test_codes_get_array(key, expected_value):
 
 
 @pytest.mark.parametrize('key, expected_value', [
-    (b'numberOfDataPoints', 3066),
-    (b'average', 201.7859183533551),
+    (b'numberOfDataPoints', 7320),
     (b'gridType', b'regular_ll'),
 ])
 def test_codes_get(key, expected_value):
@@ -97,8 +95,7 @@ def test_codes_get(key, expected_value):
 
 
 @pytest.mark.parametrize('key, value', [
-    (b'numberOfDataPoints', 3066),
-    (b'average', 201.7859183533551),
+    (b'numberOfDataPoints', 7320),
     (b'gridType', b'regular_ll'),
 ])
 def test_codes_index_select(key, value):
@@ -114,7 +111,7 @@ def test_codes_index_select(key, value):
 
 def test_codes_get_length():
     grib_index = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'paramId'])
-    eccodes.codes_index_select(grib_index, b'paramId', 131)
+    eccodes.codes_index_select(grib_index, b'paramId', 130)
     grib_handle = eccodes.codes_new_from_index(grib_index)
 
     result = []

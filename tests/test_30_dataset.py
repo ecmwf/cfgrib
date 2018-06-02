@@ -4,7 +4,7 @@ import os.path
 from eccodes_grib import dataset
 from eccodes_grib import messages
 
-TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_one-variable_levels.grib')
+TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'era5-levels-members-one_var.grib')
 
 
 def test_Variable():

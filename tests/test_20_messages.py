@@ -8,14 +8,14 @@ import pytest
 from eccodes_grib import messages
 
 
-TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_one-variable_levels.grib')
+TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'era5-levels-members-many_vars.grib')
 
 
 def test_Message():
     with open(TEST_DATA) as file:
         res = messages.Message.fromfile(file)
 
-    assert res['paramId'] == 130
+    assert res['paramId'] == 129
     assert list(res)[0] == 'globalDomain'
     assert 'paramId' in res
     assert len(res) == 192
@@ -28,7 +28,7 @@ def test_Message():
 
 def test_Index():
     res = messages.Index(TEST_DATA, ['paramId'])
-    assert res.get('paramId') == ['130']
+    assert res.get('paramId') == ['129', '130']
     assert sum(1 for _ in res.select(paramId='130')) == 40
     assert len(res) == 1
     assert list(res) == ['paramId']
