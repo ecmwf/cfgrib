@@ -259,7 +259,7 @@ def codes_index_get_string(indexid, key):
 def codes_index_get(indexid, key, ktype=bytes):
     # type: (cffi.FFI.CData, bytes, type) -> list
     if ktype is int:
-        result = codes_index_get_long(indexid, key)
+        result = codes_index_get_long(indexid, key)  # type: T.List[T.Any]
     elif ktype is float:
         result = codes_index_get_double(indexid, key)
     elif ktype is bytes:

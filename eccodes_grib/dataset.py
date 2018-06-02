@@ -86,7 +86,7 @@ def sniff_significant_keys(
     else:
         log.warning("unknown gridType %r", grid_type)
         grid_type_keys = set()
-    all_significant_keys = ei_keys + grid_type_keys
+    all_significant_keys = itertools.chain(ei_keys, grid_type_keys)
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
