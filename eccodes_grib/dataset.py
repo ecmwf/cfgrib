@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import object
 
 import functools
+import itertools
 import logging
 import typing as T  # noqa
 
@@ -33,50 +34,50 @@ LOG = logging.getLogger(__name__)
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-PARAMETER_KEYS = {'centre', 'paramId', 'shortName', 'units', 'name'}
-TIME_KEYS = {
+PARAMETER_KEYS = ['centre', 'paramId', 'shortName', 'units', 'name']
+TIME_KEYS = [
     'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
     'validityTime', 'stepType',
-}
-GEOGRAPHY_KEYS = {'gridType'}
-VERTICAL_KEYS = {'bottomLevel', 'level', 'pv', 'topLevel', 'typeOfLevel'}
+]
+GEOGRAPHY_KEYS = ['gridType']
+VERTICAL_KEYS = ['bottomLevel', 'level', 'pv', 'topLevel', 'typeOfLevel']
 
-NAMESPACE_KEYS = PARAMETER_KEYS | TIME_KEYS | GEOGRAPHY_KEYS | VERTICAL_KEYS
+NAMESPACE_KEYS = PARAMETER_KEYS + TIME_KEYS + GEOGRAPHY_KEYS + VERTICAL_KEYS
 
 GRID_TYPE_MAP = {
-    'regular_ll': {
+    'regular_ll': [
         'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
-    },
-    'regular_gg': {
+    ],
+    'regular_gg': [
         'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'N', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
-    },
+    ],
 }
 
 #
 # Other edition-independent keys documented in ecCodes presentations
 #
-DATA_KEYS = {'numberOfDataPoints', 'packingType'}
+DATA_KEYS = ['numberOfDataPoints', 'packingType']
 
 #
 # Undocumented, apparently edition-independent keys
 #
-ENSEMBLE_KEYS = {'number'}
+ENSEMBLE_KEYS = ['number']
 
 
-EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS | DATA_KEYS | ENSEMBLE_KEYS
+EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
 
 def sniff_significant_keys(
         message,  # type: T.Mapping[str, T.Any]
-        ei_keys=EDITION_INDEPENDENT_KEYS,  # type: T.Set[str]
-        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Set[str]]
-        log=LOG    # type: logging.Logger
+        ei_keys=EDITION_INDEPENDENT_KEYS,  # type: T.Iterable[str]
+        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+        log=LOG,  # type: logging.Logger
 ):
     # type: (...) -> T.List[str]
     grid_type = message.get('gridType')
@@ -85,19 +86,52 @@ def sniff_significant_keys(
     else:
         log.warning("unknown gridType %r", grid_type)
         grid_type_keys = set()
-    all_significant_keys = ei_keys | grid_type_keys
+    all_significant_keys = ei_keys + grid_type_keys
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
-def sniff_coordinates_and_attrs(significant_index):
-    coordinates = {}
+ATTRS_KEYS = [
+    'centre', 'paramId', 'shortName', 'units', 'name',
+    'stepUnits', 'stepType',
+    'gridType',
+    'numberOfDataPoints',
+]
+
+
+def sniff_attrs(
+        significant_index,  # type: T.Mapping[str, T.Any]
+        attrs_keys=ATTRS_KEYS,  # type: T.Iterable[str]
+        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+):
+    # type: (...) -> T.Dict[str, T.Any]
+    grid_type = significant_index.get('gridType', [None])[0]
     attrs = {}
-    for key, value in significant_index.items():
+    for key in itertools.chain(attrs_keys, grid_type_map.get(grid_type, [])):
+        value = significant_index[key]
         if len(value) > 1:
-            coordinates[key] = value
-        elif len(value) == 1:
-            attrs[key] = value[0]
-    return coordinates, attrs
+            raise NotImplementedError("GRIB has multiple values for key %r: %r" % (key, value))
+        attrs[key] = value[0]
+    return attrs
+
+
+COORDINATES_KEYS = [
+    'number',
+    'dataDate', 'dataTime',
+    'endStep',
+    'topLevel',
+]
+
+
+def sniff_coordinates(
+        significant_index,  # type: T.Mapping[str, T.Any]
+        coordinates_keys=COORDINATES_KEYS,  # type: T.Iterable[str]
+        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+):
+    # type: (...) -> T.Dict[str, T.Any]
+    coordinates = {}
+    for key in coordinates_keys:
+        coordinates[key] = significant_index[key]
+    return coordinates
 
 
 def cached(method):
@@ -127,7 +161,9 @@ class Variable(object):
         self.significant_keys = sniff_significant_keys(leader)
         self.significant_index = messages.Index(self.dataset.path, self.significant_keys)
 
-        self.coordinates, self.attrs = sniff_coordinates_and_attrs(self.significant_index)
+        self.attrs = sniff_attrs(self.significant_index)
+
+        self.coordinates = sniff_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
         self.ndim = len(self.dimensions)
         self.shape = [len(coord) for coord in self.coordinates.values() if len(coord) > 1]
@@ -139,10 +175,12 @@ class Variable(object):
         self.size = leader['numberOfDataPoints']
 
     def ncattrs(self):
+        # type: () -> T.Dict[str, T.Any]
         return self.attrs.copy()
 
     @cached
     def build_array(self):
+        # type: () -> np.ndarray
         return np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
 
     def __getitem__(self, item):
