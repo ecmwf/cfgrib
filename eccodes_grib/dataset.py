@@ -119,7 +119,7 @@ RAW_COORDINATES_KEYS = ['number', 'dataDate', 'dataTime', 'endStep', 'topLevel']
 
 def sniff_raw_coordinates(
         significant_index,  # type: T.Mapping[str, T.Any]
-        raw_coordinates_keys=COORDINATES_KEYS,  # type: T.Iterable[str]
+        raw_coordinates_keys=RAW_COORDINATES_KEYS,  # type: T.Iterable[str]
         grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
 ):
     # type: (...) -> T.Dict[str, T.Any]
@@ -158,7 +158,7 @@ class Variable(object):
 
         self.attrs = sniff_attrs(self.significant_index)
 
-        self.coordinates = sniff_coordinates(self.significant_index)
+        self.coordinates = sniff_raw_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
         self.ndim = len(self.dimensions)
         self.shape = [len(coord) for coord in self.coordinates.values() if len(coord) > 1]
