@@ -34,6 +34,9 @@ def test_Index():
     assert len(res) == 1
     assert list(res) == ['paramId']
 
+    with pytest.raises(KeyError):
+        res['non-existent-key']
+
     with pytest.raises(ValueError):
         list(res.select())
 

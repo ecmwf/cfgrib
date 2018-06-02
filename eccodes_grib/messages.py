@@ -109,7 +109,10 @@ class Index(collections.Mapping):
     def __getitem__(self, item):
         # type: (str) -> list
         key = item.encode(self.key_encoding)
-        bvalues = eccodes.codes_index_get(self.codes_index, key)
+        try:
+            bvalues = eccodes.codes_index_get(self.codes_index, key)
+        except eccodes.EcCodesError:
+            raise KeyError(item)
         values = []
         for value in bvalues:
             if isinstance(value, bytes):
