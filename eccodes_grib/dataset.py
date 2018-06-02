@@ -143,9 +143,13 @@ def cached(method):
 
 @attr.attrs()
 class Variable(object):
-    paramId = attr.attrib()
     stream = attr.attrib()
+    paramId = attr.attrib()
     name = attr.attrib(default=None)
+
+    @classmethod
+    def fromstream(cls, paramId, name=None, *args, **kwargs):
+        return cls(stream=messages.Stream(*args, **kwargs), paramId=paramId, name=name)
 
     def __attrs_post_init__(self):
         self.paramId_index = self.stream.index(['paramId'])
@@ -202,11 +206,13 @@ def build_dataset_components(stream):
 
 @attr.attrs()
 class Dataset(object):
-    path = attr.attrib()
-    mode = attr.attrib(default='r')
+    stream = attr.attrib()
+
+    @classmethod
+    def fromstream(cls, *args, **kwagrs):
+        return cls(stream=messages.Stream(*args, **kwagrs))
 
     def __attrs_post_init__(self):
-        self.stream = messages.Stream(self.path, mode=self.mode)
         dimensions, variables, attributes = build_dataset_components(self.stream)
         self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
         self.variables = variables  # type: T.Dict[str, Variable]
