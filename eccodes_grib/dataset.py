@@ -90,7 +90,7 @@ def sniff_significant_keys(
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
-VARIABLE_ATTRS_KEYS = [
+VARIABLE_ATTRIBUTES_KEYS = [
     'centre', 'paramId', 'shortName', 'units', 'name',
     'stepUnits', 'stepType',
     'typeOfLevel',  # NOTE: we don't support mixed 'isobaricInPa' and 'isobaricInhPa', for now.
@@ -99,20 +99,20 @@ VARIABLE_ATTRS_KEYS = [
 ]
 
 
-def sniff_variable_attrs(
+def sniff_variable_attributes(
         significant_index,  # type: T.Mapping[str, T.Any]
-        attrs_keys=VARIABLE_ATTRS_KEYS,  # type: T.Iterable[str]
+        attributes_keys=VARIABLE_ATTRIBUTES_KEYS,  # type: T.Iterable[str]
         grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
 ):
     # type: (...) -> T.Dict[str, T.Any]
     grid_type = significant_index.get('gridType', [None])[0]
-    attrs = {}
-    for key in itertools.chain(attrs_keys, grid_type_map.get(grid_type, [])):
+    attributes = {}
+    for key in itertools.chain(attributes_keys, grid_type_map.get(grid_type, [])):
         value = significant_index[key]
         if len(value) > 1:
             raise NotImplementedError("GRIB has multiple values for key %r: %r" % (key, value))
-        attrs[key] = value[0]
-    return attrs
+        attributes[key] = value[0]
+    return attributes
 
 
 RAW_COORDINATES_KEYS = ['number', 'dataDate', 'dataTime', 'endStep', 'topLevel']
@@ -157,7 +157,7 @@ class Variable(object):
         self.significant_keys = sniff_significant_keys(leader)
         self.significant_index = messages.Index(self.stream.path, self.significant_keys)
 
-        self.attrs = sniff_variable_attrs(self.significant_index)
+        self.attributes = sniff_variable_attributes(self.significant_index)
 
         self.coordinates = sniff_raw_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
@@ -170,10 +170,6 @@ class Variable(object):
         self.mask = False
         self.size = leader['numberOfDataPoints']
 
-    def ncattrs(self):
-        # type: () -> T.Dict[str, T.Any]
-        return self.attrs.copy()
-
     @cached
     def build_array(self):
         # type: () -> np.ndarray
@@ -183,6 +179,27 @@ class Variable(object):
         return self.build_array()[item]
 
 
+def build_variable_components(stream, param_id):
+    return {}, {}, {}
+
+
+def dict_merge(master, update):
+    pass
+
+
+def build_dataset_components(stream):
+    param_ids = stream.index(['paramId'])['paramId']
+    dimensions = {}
+    variables = {}
+    attributes = {}
+    for param_id in param_ids:
+        dims, vars, attrs = build_variable_components(stream, param_id)
+        dict_merge(dimensions, dims)
+        dict_merge(variables, vars)
+        dict_merge(attributes, attrs)
+    return dimensions, variables, attributes
+
+
 @attr.attrs()
 class Dataset(object):
     path = attr.attrib()
@@ -190,13 +207,7 @@ class Dataset(object):
 
     def __attrs_post_init__(self):
         self.stream = messages.Stream(self.path, mode=self.mode)
-
-    @property
-    @cached
-    def variables(self):
-        index = self.stream.index(['paramId'])
-        variables = {}
-        for param_id in index['paramId']:
-            variable = Variable(paramId=param_id, dataset=self)
-            variables[variable.name] = variable
-        return variables
+        dimensions, variables, attributes = build_dataset_components(self.stream)
+        self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
+        self.variables = variables  # type: T.Dict[str, Variable]
+        self.attributes = attributes  # type: T.Dict[str, T.Any]
