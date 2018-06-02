@@ -114,24 +114,19 @@ def sniff_attrs(
     return attrs
 
 
-COORDINATES_KEYS = [
-    'number',
-    'dataDate', 'dataTime',
-    'endStep',
-    'topLevel',
-]
+RAW_COORDINATES_KEYS = ['number', 'dataDate', 'dataTime', 'endStep', 'topLevel']
 
 
-def sniff_coordinates(
+def sniff_raw_coordinates(
         significant_index,  # type: T.Mapping[str, T.Any]
-        coordinates_keys=COORDINATES_KEYS,  # type: T.Iterable[str]
+        raw_coordinates_keys=COORDINATES_KEYS,  # type: T.Iterable[str]
         grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    coordinates = {}
-    for key in coordinates_keys:
-        coordinates[key] = significant_index[key]
-    return coordinates
+    raw_coordinates = {}
+    for key in raw_coordinates_keys:
+        raw_coordinates[key] = significant_index[key]
+    return raw_coordinates
 
 
 def cached(method):
