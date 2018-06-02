@@ -110,7 +110,7 @@ class Index(collections.Mapping):
         # type: (str) -> list
         key = item.encode(self.key_encoding)
         try:
-            bvalues = eccodes.codes_index_get(self.codes_index, key)
+            bvalues = eccodes.codes_index_get_autotype(self.codes_index, key)
         except eccodes.EcCodesError:
             raise KeyError(item)
         values = []
