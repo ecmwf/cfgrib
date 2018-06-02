@@ -22,6 +22,7 @@ import logging
 import typing as T  # noqa
 
 import attr
+import numpy as np
 
 from . import messages
 
@@ -88,6 +89,17 @@ def sniff_significant_keys(
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
+def sniff_coordinates_and_attrs(significant_index):
+    coordinates = {}
+    attrs = {}
+    for key, value in significant_index.items():
+        if len(value) > 1:
+            coordinates[key] = value
+        elif len(value) == 1:
+            attrs[key] = value[0]
+    return coordinates, attrs
+
+
 def cached(method):
     # type: (T.Callable) -> T.Callable
     @functools.wraps(method)
@@ -102,17 +114,31 @@ def cached(method):
 @attr.attrs()
 class Variable(object):
     paramId = attr.attrib()
-    index = attr.attrib()
+    dataset = attr.attrib()
     name = attr.attrib(default=None)
 
     def __attrs_post_init__(self):
-        if len(self.index['paramId']) > 1:
+        self.paramId_index = self.dataset.stream.index(['paramId'])
+        if len(self.paramId_index) > 1:
             raise NotImplementedError("GRIB must have only one variable")
-        leader = next(self.index.select(paramId=self.paramId))
+        leader = next(self.paramId_index.select(paramId=self.paramId))
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
         self.significant_keys = sniff_significant_keys(leader)
-        self.significant_index = messages.Index(self.index.path, self.significant_keys)
+        self.significant_index = messages.Index(self.dataset.path, self.significant_keys)
+
+        self.coordinatates, self.attrs = sniff_coordinates_and_attrs(self.significant_index)
+        self.dimensions = [name for name, coord in self.coordinatates.items() if len(coord) > 1]
+        self.ndim = len(self.dimensions)
+        self.shape = [len(coord) for coord in self.coordinatates.values() if len(coord) > 1]
+
+        # Variable attributes
+        self.dtype = np.dtype('float32')
+        self.scale = True
+        self.mask = False
+        self.size = leader['numberOfDataPoints']
+
+
 
 
 @attr.attrs()
@@ -129,6 +155,6 @@ class Dataset(object):
         index = self.stream.index(['paramId'])
         variables = {}
         for param_id in index['paramId']:
-            variable = Variable(paramId=param_id, index=index)
+            variable = Variable(paramId=param_id, dataset=self)
             variables[variable.name] = variable
         return variables
