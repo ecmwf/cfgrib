@@ -58,12 +58,40 @@ TEST_FILES = {
         },
         210,
     ],
-    'seasonal-monthly-single-levels-ecmwf': [
+    'seasonal-monthly-single-levels-monthly_mean-ecmwf': [
         'seasonal-monthly-single-levels',
         {
             'originating_centre': 'ecmwf',
             'variable': 'maximum_2m_temperature_in_the_last_24_hours',
             'product_type': 'monthly_mean',
+            'year': '2018',
+            'month': ['04', '05'],
+            'leadtime_month': ['1', '2'],
+            'grid': ['3', '3'],
+            'format': 'grib',
+        },
+        210,
+    ],
+    'seasonal-monthly-single-levels-ensemble_mean-ecmwf': [
+        'seasonal-monthly-single-levels',
+        {
+            'originating_centre': 'ecmwf',
+            'variable': 'maximum_2m_temperature_in_the_last_24_hours',
+            'product_type': 'ensemble_mean',
+            'year': '2018',
+            'month': ['04', '05'],
+            'leadtime_month': ['1', '2'],
+            'grid': ['3', '3'],
+            'format': 'grib',
+        },
+        210,
+    ],
+    'seasonal-monthly-single-levels-hindcast_climate_mean-ecmwf': [
+        'seasonal-monthly-single-levels',
+        {
+            'originating_centre': 'ecmwf',
+            'variable': 'maximum_2m_temperature_in_the_last_24_hours',
+            'product_type': 'hindcast_climate_mean',
             'year': '2018',
             'month': ['04', '05'],
             'leadtime_month': ['1', '2'],
