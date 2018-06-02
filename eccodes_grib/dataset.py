@@ -97,12 +97,14 @@ def cached(method):
 
 
 @attr.attrs()
-class IndexedVariable(object):
+class Variable(object):
     paramId = attr.attrib()
     index = attr.attrib()
     name = attr.attrib(default=None)
 
     def __attrs_post_init__(self):
+        if len(self.index['paramId']) > 1:
+            raise NotImplementedError("GRIB must have only one variable")
         leader = next(self.index.select(paramId=self.paramId))
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
@@ -123,11 +125,7 @@ class Dataset(object):
     def variables(self):
         index = self.stream.index(['paramId'])
         variables = {}
-        if len(index['paramId']) == 1:
-            variable_class = IndexedVariable
-        else:
-            raise NotImplementedError("GRIB must have only one variable.")
         for param_id in index['paramId']:
-            variable = variable_class(paramId=param_id, index=index)
+            variable = Variable(paramId=param_id, index=index)
             variables[variable.name] = variable
         return variables

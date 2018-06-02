@@ -7,9 +7,9 @@ from eccodes_grib import messages
 TEST_DATA = os.path.join(os.path.dirname(__file__), 'sample-data', 'ERA5_one-variable_levels.grib')
 
 
-def test_IndexedVariable():
+def test_Variable():
     index = messages.Index(path=TEST_DATA, index_keys=['paramId'])
-    dataset.IndexedVariable(name='tas', paramId=130, index=index)
+    dataset.Variable(name='tas', paramId=130, index=index)
 
 
 def test_Dataset():
