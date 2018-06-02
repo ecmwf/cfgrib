@@ -13,5 +13,5 @@ def test_Dataset():
 
 def test_Variable():
     ds = dataset.Dataset(TEST_DATA)
-    res = dataset.Variable(name='tas', paramId=130, dataset=ds)
+    res = dataset.Variable(name='tas', paramId=130, stream=ds.stream)
     assert res.name == 'tas'

@@ -90,7 +90,7 @@ def sniff_significant_keys(
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
-ATTRS_KEYS = [
+VARIABLE_ATTRS_KEYS = [
     'centre', 'paramId', 'shortName', 'units', 'name',
     'stepUnits', 'stepType',
     'typeOfLevel',  # NOTE: we don't support mixed 'isobaricInPa' and 'isobaricInhPa', for now.
@@ -99,9 +99,9 @@ ATTRS_KEYS = [
 ]
 
 
-def sniff_attrs(
+def sniff_variable_attrs(
         significant_index,  # type: T.Mapping[str, T.Any]
-        attrs_keys=ATTRS_KEYS,  # type: T.Iterable[str]
+        attrs_keys=VARIABLE_ATTRS_KEYS,  # type: T.Iterable[str]
         grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
 ):
     # type: (...) -> T.Dict[str, T.Any]
@@ -144,20 +144,20 @@ def cached(method):
 @attr.attrs()
 class Variable(object):
     paramId = attr.attrib()
-    dataset = attr.attrib()
+    stream = attr.attrib()
     name = attr.attrib(default=None)
 
     def __attrs_post_init__(self):
-        self.paramId_index = self.dataset.stream.index(['paramId'])
+        self.paramId_index = self.stream.index(['paramId'])
         if len(self.paramId_index) > 1:
             raise NotImplementedError("GRIB must have only one variable")
         leader = next(self.paramId_index.select(paramId=self.paramId))
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
         self.significant_keys = sniff_significant_keys(leader)
-        self.significant_index = messages.Index(self.dataset.path, self.significant_keys)
+        self.significant_index = messages.Index(self.stream.path, self.significant_keys)
 
-        self.attrs = sniff_attrs(self.significant_index)
+        self.attrs = sniff_variable_attrs(self.significant_index)
 
         self.coordinates = sniff_raw_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
