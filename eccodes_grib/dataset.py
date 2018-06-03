@@ -48,17 +48,32 @@ NAMESPACE_KEYS = PARAMETER_KEYS + TIME_KEYS + GEOGRAPHY_KEYS + VERTICAL_KEYS
 
 GRID_TYPE_MAP = {
     'regular_ll': [
-        'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
-        'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+        'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+    ],
+    'reduced_ll': [
+        'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        # FIXME: 'pl' is an array and needs special handling
     ],
     'regular_gg': [
-        'Ni', 'Nj', 'iDirectionIncrementInDegrees', 'iScansNegatively',
-        'N', 'jPointsAreConsecutive', 'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+        'N',
     ],
+    'lambert': [
+        'LaDInDegrees', 'LoVInDegrees', 'iScansNegatively',
+        'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfSouthernPoleInDegrees',
+        'longitudeOfFirstGridPointInDegrees', 'longitudeOfSouthernPoleInDegrees',
+        'DyInMetres', 'DxInMetres', 'Latin2InDegrees', 'Latin1InDegrees', 'Ny', 'Nx',
+    ],
+    'reduced_gg': [
+        'N',  # FIXME: 'pl' is an array and needs special handling
+    ],
+    'sh': ['M', 'K', 'J'],
 }
 
 #
@@ -73,7 +88,8 @@ ENSEMBLE_KEYS = ['number', 'totalNumber']
 
 EDITION_INDEPENDENT_KEYS = LS_KEYS + NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
-VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'dataType']
+# NOTE: 'dataType' may have multiple values, i.e. ['an', 'fc']
+VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName']
 
 
 def enforce_unique_attributes(
@@ -106,6 +122,10 @@ class AbstractCoordinateVariable(object):
     pass
 
 
+class CoordinateNotFound(Exception):
+    pass
+
+
 @attr.attrs()
 class HeaderCoordinateVariable(AbstractCoordinateVariable):
     stream = attr.attrib()
@@ -116,7 +136,7 @@ class HeaderCoordinateVariable(AbstractCoordinateVariable):
     def __attrs_post_init__(self):
         values = self.stream.index([self.coordinate_key])[self.coordinate_key]
         if len(values) == 1 and values[0] == 'undef':
-            raise ValueError("coordinate not present in GRIB stream")
+            raise CoordinateNotFound("coordinate not present in GRIB stream: %r" % self.coordinate_key)
 
         self.attributes = enforce_unique_attributes(self.stream, self.attributes_keys)
         if not self.name:
@@ -174,7 +194,7 @@ class DataVariable(AbstractCoordinateVariable):
                 self.coordinates[coord_key] = HeaderCoordinateVariable(
                     stream=self.stream, coordinate_key=coord_key, attributes_keys=attrs_keys,
                 )
-            except ValueError:
+            except CoordinateNotFound:
                 log.exception("coordinate %r failed", coord_key)
 
         # FIXME: move to a function
@@ -190,17 +210,26 @@ class DataVariable(AbstractCoordinateVariable):
         self.scale = True
         self.mask = False
         self.size = functools.reduce(lambda x, y: x * y, self.shape, 1)
-        self.data = self.build_array()
+
+    @property
+    def data(self):
+        if not hasattr(self, '_data'):
+            self._data = self.build_array()
+        return self._data
 
     def build_array(self):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream.index(['paramId']).select(paramId=self.paramId):
-            header_coordinate_indexes = []  # type: T.List[int]
-            for dim in self.dimensions[:-1]:
-                header_coordinate_indexes.append(self.coordinates[dim].data.index(message[dim]))
-            # NOTE: fill a single field as found in the message
-            data[header_coordinate_indexes] = message['values']
+            if self.ndim > 1:
+                header_coordinate_indexes = []  # type: T.List[int]
+                for dim in self.dimensions[:-1]:
+                    header_coordinate_indexes.append(self.coordinates[dim].data.index(message[dim]))
+                # NOTE: fill a single field as found in the message
+                data[header_coordinate_indexes] = message['values']
+            else:
+                data[:] = message['values']
+        data[data == 9999.] = np.nan
         return data
 
     def __getitem__(self, item):
