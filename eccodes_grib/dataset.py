@@ -17,6 +17,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import object
 
+import collections
 import functools
 import itertools
 import logging
@@ -105,7 +106,7 @@ def enforce_unique_attributes(
         attributes_keys,  # type: T.Iterable[str]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    attributes = {}
+    attributes = collections.OrderedDict()
     for key in attributes_keys:
         values = index.get(key, [])
         if len(values) > 1:
@@ -115,20 +116,18 @@ def enforce_unique_attributes(
     return attributes
 
 
-RAW_COORDINATES_KEYS = ['number', 'dataDate', 'dataTime', 'endStep', 'topLevel']
+HEADER_COORDINATES_KEYS = ['number', 'dataDate', 'dataTime', 'endStep', 'topLevel']
 
 
-def sniff_raw_coordinates(
+def sniff_header_coordinates(
         significant_index,  # type: T.Mapping[str, T.Any]
-        raw_coordinates_keys=RAW_COORDINATES_KEYS,  # type: T.Iterable[str]
-        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+        header_coordinates_keys=HEADER_COORDINATES_KEYS,  # type: T.Iterable[str]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    raw_coordinates = {}
-    for key in raw_coordinates_keys:
-        raw_coordinates[key] = significant_index[key]
-    raw_coordinates['i'] = list(range(significant_index['numberOfDataPoints'][0]))
-    return raw_coordinates
+    header_coordinates = collections.OrderedDict()
+    for key in header_coordinates_keys:
+        header_coordinates[key] = significant_index[key]
+    return header_coordinates
 
 
 def cached(method):
@@ -163,22 +162,24 @@ class DataVariable(object):
         return cls(stream=messages.Stream(*args, **kwargs), paramId=paramId, name=name)
 
     def __attrs_post_init__(self):
-        self.paramId_index = self.stream.index(['paramId'])
-        if len(self.paramId_index) > 1:
+        paramId_index = self.stream.index(['paramId'])
+        if len(paramId_index) > 1:
             raise NotImplementedError("GRIB must have only one variable")
-        leader = next(self.paramId_index.select(paramId=self.paramId))
+        leader = next(paramId_index.select(paramId=self.paramId))
         if self.name is None:
             self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
         self.significant_keys = sniff_significant_keys(leader)
-        self.significant_index = messages.Index(self.stream.path, self.significant_keys)
+        significant_index = messages.Index(self.stream.path, self.significant_keys)
 
-        self.attributes = enforce_unique_attributes(self.significant_index, VARIABLE_ATTRIBUTES_KEYS)
-        self.coordinates = sniff_raw_coordinates(self.significant_index)
-        self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
-        self.attributes['coordinates'] = ' '.join(k for k, v in self.coordinates.items() if len(v) == 1)
+        self.attributes = enforce_unique_attributes(significant_index, VARIABLE_ATTRIBUTES_KEYS)
+        self.coordinates = sniff_header_coordinates(significant_index)
+        # FIXME: move to a function
+        self.coordinates['i'] = list(range(significant_index['numberOfDataPoints'][0]))
+        self.dimensions = tuple(dim for dim, values in self.coordinates.items() if len(values) > 1)
+        self.attributes['coordinates'] = ' '.join(self.coordinates.keys())
 
         self.ndim = len(self.dimensions)
-        self.shape = [len(coord) for coord in self.coordinates.values() if len(coord) > 1]
+        self.shape = tuple(len(values) for values in self.coordinates.values() if len(values) > 1)
 
         # Variable attributes
         self.dtype = np.dtype('float32')
@@ -211,14 +212,19 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
 def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
     param_ids = stream.index(['paramId'])['paramId']
-    dimensions = {}
-    variables = {}
+    dimensions = collections.OrderedDict()
+    variables = collections.OrderedDict()
     for param_id in param_ids:
         data_variable = DataVariable(stream=stream, paramId=param_id)
-        vars = {data_variable.name: data_variable}
-        coordinate_variables = {k: CoordinateVariable(name=k, values=v) for k, v in data_variable.coordinates.items()}
+        vars = collections.OrderedDict()
+        vars[data_variable.name] = data_variable
+        coordinate_variables = collections.OrderedDict()
+        for k, v in data_variable.coordinates.items():
+            coordinate_variables[k] = CoordinateVariable(name=k, values=v)
         vars.update(coordinate_variables)
-        dims = {dim: coordinate_variables[dim].size for dim in data_variable.dimensions}
+        dims = collections.OrderedDict()
+        for dim in data_variable.dimensions:
+            dims[dim] = coordinate_variables[dim].size
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     index = stream.index(global_attributes_keys)

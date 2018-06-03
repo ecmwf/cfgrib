@@ -23,6 +23,9 @@ def test_dict_merge():
 def test_DataVariable():
     res = dataset.DataVariable.fromstream(path=TEST_DATA, paramId=130, name='tas')
     assert res.name == 'tas'
+    assert res.dimensions == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+    assert res.shape == (10, 2, 2, 2, 7320)
+    assert res[:].shape == res.shape
 
 
 def test_Dataset():
