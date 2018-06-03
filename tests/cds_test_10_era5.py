@@ -85,4 +85,4 @@ def test_reanalysis_Dataset(test_file):
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
     res = eccodes_grib.Dataset.fromstream(path)
-    assert len(res.variables) == 1
+    assert len(res.variables) == 7

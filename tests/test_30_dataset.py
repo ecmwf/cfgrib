@@ -20,10 +20,13 @@ def test_dict_merge():
         dataset.dict_merge(master, {'two': 3})
 
 
-def test_Dataset():
-    dataset.Dataset.fromstream(TEST_DATA)
-
-
 def test_DataVariable():
     res = dataset.DataVariable.fromstream(path=TEST_DATA, paramId=130, name='tas')
     assert res.name == 'tas'
+
+
+def test_Dataset():
+    res = dataset.Dataset.fromstream(TEST_DATA)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert len(res.variables) == 7

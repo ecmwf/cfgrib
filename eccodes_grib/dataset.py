@@ -35,13 +35,14 @@ VERSION = pkg_resources.get_distribution("eccodes_grib").version
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-PARAMETER_KEYS = ['centre', 'centreDescription', 'paramId', 'shortName', 'units', 'name']
+LS_KEYS = ['edition', 'centre', 'centreDescription', 'dataType', 'level']
+PARAMETER_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName']
 TIME_KEYS = [
     'dataDate', 'endStep', 'startStep', 'stepRange', 'stepUnits', 'dataTime', 'validityDate',
     'validityTime', 'stepType',
 ]
 GEOGRAPHY_KEYS = ['gridType']
-VERTICAL_KEYS = ['bottomLevel', 'level', 'pv', 'topLevel', 'typeOfLevel']
+VERTICAL_KEYS = ['bottomLevel', 'pv', 'topLevel', 'typeOfLevel']
 
 NAMESPACE_KEYS = PARAMETER_KEYS + TIME_KEYS + GEOGRAPHY_KEYS + VERTICAL_KEYS
 
@@ -68,10 +69,9 @@ DATA_KEYS = ['numberOfDataPoints', 'packingType']
 #
 # Undocumented, apparently edition-independent keys
 #
-ENSEMBLE_KEYS = ['number']
-GRIB_KEYS = ['editionNumber']
+ENSEMBLE_KEYS = ['number', 'totalNumber']
 
-EDITION_INDEPENDENT_KEYS = NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS + GRIB_KEYS
+EDITION_INDEPENDENT_KEYS = LS_KEYS + NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
 
 def sniff_significant_keys(
@@ -91,8 +91,8 @@ def sniff_significant_keys(
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
-VARIABLE_ATTRIBUTES_KEYS = [
-    'centre', 'paramId', 'shortName', 'units', 'name',
+VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'dataType']
+COORDINATES_ATTRIBUTES_KEYS = [
     'stepUnits', 'stepType',
     'typeOfLevel',  # NOTE: we don't support mixed 'isobaricInPa' and 'isobaricInhPa', for now.
     'gridType',
@@ -107,7 +107,7 @@ def enforce_unique_attributes(
     # type: (...) -> T.Dict[str, T.Any]
     attributes = {}
     for key in attributes_keys:
-        values = index[key]
+        values = index.get(key, [])
         if len(values) > 1:
             raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
         if values and values[0] != 'undef':
@@ -127,6 +127,7 @@ def sniff_raw_coordinates(
     raw_coordinates = {}
     for key in raw_coordinates_keys:
         raw_coordinates[key] = significant_index[key]
+    raw_coordinates['i'] = list(range(significant_index['numberOfDataPoints'][0]))
     return raw_coordinates
 
 
@@ -143,7 +144,12 @@ def cached(method):
 
 @attr.attrs()
 class CoordinateVariable(object):
-    stream = attr.attrib()
+    name = attr.attrib()
+    values = attr.attrib()
+
+    @property
+    def size(self):
+        return len(self.values)
 
 
 @attr.attrs()
@@ -167,9 +173,10 @@ class DataVariable(object):
         self.significant_index = messages.Index(self.stream.path, self.significant_keys)
 
         self.attributes = enforce_unique_attributes(self.significant_index, VARIABLE_ATTRIBUTES_KEYS)
-
         self.coordinates = sniff_raw_coordinates(self.significant_index)
         self.dimensions = [name for name, coord in self.coordinates.items() if len(coord) > 1]
+        self.attributes['coordinates'] = ' '.join(k for k, v in self.coordinates.items() if len(v) == 1)
+
         self.ndim = len(self.dimensions)
         self.shape = [len(coord) for coord in self.coordinates.values() if len(coord) > 1]
 
@@ -188,10 +195,6 @@ class DataVariable(object):
         return self.build_array()[item]
 
 
-def build_variable_components(stream, param_id):
-    return {}, {}
-
-
 def dict_merge(master, update):
     for key, value in update.items():
         if key not in master:
@@ -203,7 +206,7 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-GLOBAL_ATTRIBUTES_KEYS = ['editionNumber', 'centre', 'centreDescription']
+GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
 
 def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
@@ -211,10 +214,15 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
     dimensions = {}
     variables = {}
     for param_id in param_ids:
-        dims, vars = build_variable_components(stream, param_id)
+        data_variable = DataVariable(stream=stream, paramId=param_id)
+        vars = {data_variable.name: data_variable}
+        coordinate_variables = {k: CoordinateVariable(name=k, values=v) for k, v in data_variable.coordinates.items()}
+        vars.update(coordinate_variables)
+        dims = {dim: coordinate_variables[dim].size for dim in data_variable.dimensions}
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
-    attributes = enforce_unique_attributes(stream.index(global_attributes_keys), global_attributes_keys)
+    index = stream.index(global_attributes_keys)
+    attributes = enforce_unique_attributes(index, global_attributes_keys)
     attributes['eccodesGribVersion'] = VERSION
     return dimensions, variables, attributes
 
