@@ -12,6 +12,8 @@ execnet==1.5.0            # via pytest-cache
 future==0.16.0
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==4.1.0     # via pytest
+numpy==1.14.3
+pandas==0.22.0            # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.6.0             # via pytest
 py==1.5.3                 # via pytest
@@ -24,5 +26,8 @@ pytest-mccabe==0.1
 pytest-pep8==1.0.6
 pytest-runner==4.2
 pytest==3.5.0
-six==1.11.0               # via more-itertools, pytest
+python-dateutil==2.7.3    # via pandas
+pytz==2018.4              # via pandas
+six==1.11.0               # via more-itertools, pytest, python-dateutil
 typing==3.6.4
+xarray==0.10.6

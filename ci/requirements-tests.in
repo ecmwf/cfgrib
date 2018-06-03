@@ -4,3 +4,4 @@ pytest-flakes
 pytest-mccabe
 pytest-pep8
 pytest-runner
+xarray
