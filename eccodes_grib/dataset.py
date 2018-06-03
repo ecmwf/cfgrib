@@ -129,17 +129,6 @@ def sniff_header_coordinates(
     return header_coordinates
 
 
-def cached(method):
-    # type: (T.Callable) -> T.Callable
-    @functools.wraps(method)
-    def cached_method(self):
-        cache_name = '_' + method.__name__
-        if not hasattr(self, cache_name):
-            setattr(self, cache_name, method(self))
-        return getattr(self, cache_name)
-    return cached_method
-
-
 @attr.attrs()
 class CoordinateVariable(object):
     name = attr.attrib(type=str)
