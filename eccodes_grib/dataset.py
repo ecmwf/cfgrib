@@ -145,6 +145,17 @@ class CoordinateVariable(object):
     name = attr.attrib(type=str)
     values = attr.attrib(type=T.List[T.Any])
 
+    def __attrs_post_init__(self):
+        self.attributes = {}
+        if len(self.values) > 1:
+            self.dimensions = (self.name,)
+            self.data = self.values
+            self.shape = (len(self.values))
+        else:
+            self.dimensions = ()
+            self.data = self.values[0]
+            self.shape = ()
+
     @property
     def size(self):
         return len(self.values)
@@ -185,21 +196,21 @@ class DataVariable(object):
         self.scale = True
         self.mask = False
         self.size = functools.reduce(lambda x, y: x * y, self.shape, 1)
+        self.data = self.build_array()
 
-    @cached
     def build_array(self):
         # type: () -> np.ndarray
-        array = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+        data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream.index(['paramId']).select(paramId=self.paramId):
             header_coordinate_indexes = []  # type: T.List[int]
             for dim in self.dimensions[:-1]:
                 header_coordinate_indexes.append(self.coordinates[dim].index(message[dim]))
             # NOTE: fill a single field as found in the message
-            array[header_coordinate_indexes] = message['values']
-        return array
+            data[header_coordinate_indexes] = message['values']
+        return data
 
     def __getitem__(self, item):
-        return self.build_array()[item]
+        return self.data[item]
 
 
 def dict_merge(master, update):
