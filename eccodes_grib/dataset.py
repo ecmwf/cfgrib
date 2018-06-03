@@ -15,11 +15,10 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import object
+from builtins import object, str
 
 import collections
 import functools
-import itertools
 import logging
 import pkg_resources
 import typing as T  # noqa
@@ -77,8 +76,8 @@ EDITION_INDEPENDENT_KEYS = LS_KEYS + NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
 def sniff_significant_keys(
         message,  # type: T.Mapping[str, T.Any]
-        ei_keys=EDITION_INDEPENDENT_KEYS,  # type: T.Iterable[str]
-        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.Iterable[str]]
+        ei_keys=EDITION_INDEPENDENT_KEYS,  # type: T.List[str]
+        grid_type_map=GRID_TYPE_MAP,  # type: T.Mapping[str, T.List[str]]
         log=LOG,  # type: logging.Logger
 ):
     # type: (...) -> T.List[str]
@@ -87,8 +86,8 @@ def sniff_significant_keys(
         grid_type_keys = grid_type_map[grid_type]
     else:
         log.warning("unknown gridType %r", grid_type)
-        grid_type_keys = set()
-    all_significant_keys = itertools.chain(ei_keys, grid_type_keys)
+        grid_type_keys = []
+    all_significant_keys = ei_keys + grid_type_keys
     return [key for key in all_significant_keys if message.get(key) is not None]
 
 
@@ -106,7 +105,7 @@ def enforce_unique_attributes(
         attributes_keys,  # type: T.Iterable[str]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    attributes = collections.OrderedDict()
+    attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index.get(key, [])
         if len(values) > 1:
@@ -123,8 +122,8 @@ def sniff_header_coordinates(
         significant_index,  # type: T.Mapping[str, T.Any]
         header_coordinates_keys=HEADER_COORDINATES_KEYS,  # type: T.Iterable[str]
 ):
-    # type: (...) -> T.Dict[str, T.Any]
-    header_coordinates = collections.OrderedDict()
+    # type: (...) -> T.Dict[str, T.List[T.Any]]
+    header_coordinates = collections.OrderedDict()    # type: T.Dict[str, T.List[T.Any]]
     for key in header_coordinates_keys:
         header_coordinates[key] = significant_index[key]
     return header_coordinates
@@ -143,8 +142,8 @@ def cached(method):
 
 @attr.attrs()
 class CoordinateVariable(object):
-    name = attr.attrib()
-    values = attr.attrib()
+    name = attr.attrib(type=str)
+    values = attr.attrib(type=T.List[T.Any])
 
     @property
     def size(self):
@@ -155,7 +154,7 @@ class CoordinateVariable(object):
 class DataVariable(object):
     stream = attr.attrib()
     paramId = attr.attrib()
-    name = attr.attrib(default=None)
+    name = attr.attrib(default=None, type=str)
 
     @classmethod
     def fromstream(cls, paramId, name=None, *args, **kwargs):
@@ -185,7 +184,7 @@ class DataVariable(object):
         self.dtype = np.dtype('float32')
         self.scale = True
         self.mask = False
-        self.size = leader['numberOfDataPoints']
+        self.size = functools.reduce(lambda x, y: x * y, self.shape, 1)
 
     @cached
     def build_array(self):

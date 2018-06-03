@@ -25,7 +25,9 @@ def test_DataVariable():
     assert res.name == 'tas'
     assert res.dimensions == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
     assert res.shape == (10, 2, 2, 2, 7320)
-    assert res[:].shape == res.shape
+
+    assert res.shape == res[:].shape
+    assert res.size == res[:].size
 
 
 def test_Dataset():

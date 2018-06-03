@@ -28,9 +28,9 @@ from . import eccodes
 @attr.attrs()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
-    path = attr.attrib(default=None)
-    key_encoding = attr.attrib(default='ascii')
-    value_encoding = attr.attrib(default='ascii')
+    path = attr.attrib(default=None, type=str)
+    key_encoding = attr.attrib(default='ascii', type=str)
+    value_encoding = attr.attrib(default='ascii', type=str)
 
     @classmethod
     def fromfile(cls, file, *args, **kwargs):
@@ -92,11 +92,11 @@ class Message(collections.Mapping):
 
 @attr.attrs()
 class Index(collections.Mapping):
-    path = attr.attrib()
-    index_keys = attr.attrib()
+    path = attr.attrib(type=str)
+    index_keys = attr.attrib(type=T.List[str])
     codes_index = attr.attrib(default=None)
-    key_encoding = attr.attrib(default='ascii')
-    value_encoding = attr.attrib(default='ascii')
+    key_encoding = attr.attrib(default='ascii', type=str)
+    value_encoding = attr.attrib(default='ascii', type=str)
 
     def __attrs_post_init__(self):
         bindex_keys = [key.encode(self.key_encoding) for key in self.index_keys]
@@ -145,8 +145,8 @@ class Index(collections.Mapping):
 
 @attr.attrs()
 class Stream(collections.Iterable):
-    path = attr.attrib()
-    mode = attr.attrib(default='r')
+    path = attr.attrib(type=str)
+    mode = attr.attrib(default='r', type=str)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
