@@ -29,6 +29,8 @@ def test_DataVariable():
     assert res.shape == res[:].shape
     assert res.size == res[:].size
 
+    assert res[:].mean() > 0.  # equivalent ot not np.isnan without importing numpy
+
 
 def test_Dataset():
     res = dataset.Dataset.fromstream(TEST_DATA)

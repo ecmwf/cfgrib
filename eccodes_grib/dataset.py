@@ -189,7 +189,14 @@ class DataVariable(object):
     @cached
     def build_array(self):
         # type: () -> np.ndarray
-        return np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+        array = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+        for message in self.stream.index(['paramId']).select(paramId=self.paramId):
+            header_coordinate_indexes = []  # type: T.List[int]
+            for dim in self.dimensions[:-1]:
+                header_coordinate_indexes.append(self.coordinates[dim].index(message[dim]))
+            # NOTE: fill a single field as found in the message
+            array[header_coordinate_indexes] = message['values']
+        return array
 
     def __getitem__(self, item):
         return self.build_array()[item]
