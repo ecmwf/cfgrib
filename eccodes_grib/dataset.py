@@ -89,7 +89,7 @@ ENSEMBLE_KEYS = ['number', 'totalNumber']
 EDITION_INDEPENDENT_KEYS = LS_KEYS + NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
 # NOTE: 'dataType' may have multiple values, i.e. ['an', 'fc']
-VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName']
+VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
 
 
 def enforce_unique_attributes(
@@ -136,7 +136,7 @@ class HeaderCoordinateVariable(AbstractCoordinateVariable):
     def __attrs_post_init__(self):
         values = self.stream.index([self.coordinate_key])[self.coordinate_key]
         if len(values) == 1 and values[0] == 'undef':
-            raise CoordinateNotFound("coordinate not present in GRIB stream: %r" % self.coordinate_key)
+            raise CoordinateNotFound("missing from GRIB stream: %r" % self.coordinate_key)
 
         self.attributes = enforce_unique_attributes(self.stream, self.attributes_keys)
         if not self.name:
@@ -222,14 +222,15 @@ class DataVariable(AbstractCoordinateVariable):
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream.index(['paramId']).select(paramId=self.paramId):
             if self.ndim > 1:
-                header_coordinate_indexes = []  # type: T.List[int]
+                header_indexes = []  # type: T.List[int]
                 for dim in self.dimensions[:-1]:
-                    header_coordinate_indexes.append(self.coordinates[dim].data.index(message[dim]))
+                    header_indexes.append(self.coordinates[dim].data.index(message[dim]))
                 # NOTE: fill a single field as found in the message
-                data[header_coordinate_indexes] = message['values']
+                data[header_indexes] = message['values']
             else:
                 data[:] = message['values']
-        data[data == 9999.] = np.nan
+        missing_value = self.attributes.get('missingValue', 9999)
+        data[data == missing_value] = np.nan
         return data
 
     def __getitem__(self, item):
