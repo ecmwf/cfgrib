@@ -69,7 +69,7 @@ TEST_FILES = {
 
 
 @pytest.mark.parametrize('test_file', TEST_FILES.keys())
-def test_reanalysis_Stream(test_file):
+def test_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
@@ -80,9 +80,21 @@ def test_reanalysis_Stream(test_file):
 
 
 @pytest.mark.parametrize('test_file', TEST_FILES.keys())
-def test_reanalysis_Dataset(test_file):
+def test_Dataset(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
+
+    res = eccodes_grib.Dataset.fromstream(path)
+    assert len(res.variables) == 7
+
+
+@pytest.mark.skip()
+def test_large_Dataset():
+    dataset, request, key_count = TEST_FILES['era5-pressure-levels-ensemble_members']
+    # make the request large
+    request['day'] = list(range(1, 32))
+    request['time'] = list(['%02d:00' % h for h in range(0, 24, 3)])
+    path = cdscommon.ensure_data(dataset, request, name='cds-era5-pressure-levels-ensemble_members-LARGE-{uuid}.grib')
 
     res = eccodes_grib.Dataset.fromstream(path)
     assert len(res.variables) == 7
