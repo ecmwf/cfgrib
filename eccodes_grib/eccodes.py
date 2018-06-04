@@ -583,7 +583,7 @@ def codes_keys_iterator_new(handle, flags=CODES_KEYS_ITERATOR_ALL_KEYS, namespac
         namespace = ffi.NULL
 
     codes_keys_iterator_new = lib.codes_keys_iterator_new
-    return codes_keys_iterator_new(handle, 0, namespace)
+    return codes_keys_iterator_new(handle, flags, namespace)
 
 
 def codes_keys_iterator_next(iterator_id):
