@@ -247,8 +247,8 @@ def codes_index_get_double(indexid, key):
     return list(values)
 
 
-def codes_index_get_string(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
+def codes_index_get_string(indexid, key, length=256):
+    # type: (cffi.FFI.CData, bytes, int) -> T.List[bytes]
     """
     Get the list of string values associated to a key.
     The index must be created with such a key (possibly together with other
@@ -259,11 +259,12 @@ def codes_index_get_string(indexid, key):
     :rtype: List(int)
     """
     size = codes_index_get_size(indexid, key)
-    values = ffi.new('const char*[]', size)
+    values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
+    values = ffi.new('const char *[]', values_keepalive)
     size_p = ffi.new('size_t *', size)
     codes_index_get_string = check_return(lib.codes_index_get_string)
     codes_index_get_string(indexid, key, values, size_p)
-    return [ffi.string(value) for value in values]
+    return [ffi.string(values[i]) for i in range(size_p[0])]
 
 
 def codes_index_get(indexid, key, ktype=bytes):
@@ -444,11 +445,12 @@ def codes_get_string_array(handle, key):
     """
     size = codes_get_size(handle, key)
     length = codes_get_length(handle, key)
-    values = ffi.new('char*[]', size)
-    length_p = ffi.new('size_t *', length)
+    values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
+    values = ffi.new('char*[]', values_keepalive)
+    size_p = ffi.new('size_t *', size)
     codes_get_string_array = check_return(lib.codes_get_string_array)
-    codes_get_string_array(handle, key, values, length_p)
-    return [ffi.string(values[i]) for i in range(length_p[0])]
+    codes_get_string_array(handle, key, values, size_p)
+    return [ffi.string(values[i]) for i in range(size_p[0])]
 
 
 def codes_get_bytes(handle, key, strict=True):
