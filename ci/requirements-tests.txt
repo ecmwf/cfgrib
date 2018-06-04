@@ -13,7 +13,7 @@ future==0.16.0
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==4.1.0     # via pytest
 numpy==1.14.3
-pandas==0.22.0            # via xarray
+pandas==0.23.0            # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.6.0             # via pytest
 py==1.5.3                 # via pytest
