@@ -201,7 +201,7 @@ def codes_index_get_size(indexid, key):
     Get the number of coded value from a key.
     If several keys of the same name are present, the total sum is returned.
 
-    :param str key: the keyword to get the size of
+    :param bytes key: the keyword to get the size of
 
     :rtype: int
     """
@@ -218,7 +218,7 @@ def codes_index_get_long(indexid, key):
     The index must be created with such a key (possibly together with other
     keys).
 
-    :param str key: the keyword whose list of values has to be retrieved
+    :param bytes key: the keyword whose list of values has to be retrieved
 
     :rtype: List(int)
     """
@@ -236,7 +236,7 @@ def codes_index_get_double(indexid, key):
     The index must be created with such a key (possibly together with other
     keys).
 
-    :param str key: the keyword whose list of values has to be retrieved
+    :param bytes key: the keyword whose list of values has to be retrieved
 
     :rtype: List(int)
     """
@@ -248,13 +248,13 @@ def codes_index_get_double(indexid, key):
 
 
 def codes_index_get_string(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> T.List[str]
+    # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
     """
     Get the list of string values associated to a key.
     The index must be created with such a key (possibly together with other
     keys).
 
-    :param str key: the keyword whose list of values has to be retrieved
+    :param bytes key: the keyword whose list of values has to be retrieved
 
     :rtype: List(int)
     """
@@ -297,7 +297,7 @@ def codes_index_select_long(indexid, key, value):
     Properly fix the index on a specific integer value of key. The key must
     be one of those the index has been endowed with.
 
-    :param str key: the key to select
+    :param bytes key: the key to select
     :param int value: the value which has to be selected to use the index
     """
     codes_index_select_long = check_return(lib.codes_index_select_long)
@@ -310,7 +310,7 @@ def codes_index_select_double(indexid, key, value):
     Properly fix the index on a specific float value of key. The key must
     be one of those the index has been endowed with.
 
-    :param str key: the key to select
+    :param bytes key: the key to select
     :param float value: the value which has to be selected to use the index
     """
     codes_index_select_double = check_return(lib.codes_index_select_double)
@@ -323,8 +323,8 @@ def codes_index_select_string(indexid, key, value):
     Properly fix the index on a specific string value of key. The key must
     be one of those the index has been endowed with.
 
-    :param str key: the key to select
-    :param str value: the value which has to be selected to use the index
+    :param bytes key: the key to select
+    :param bytes value: the value which has to be selected to use the index
     """
     codes_index_select_string = check_return(lib.codes_index_select_string)
     codes_index_select_string(indexid, key, value)
@@ -337,8 +337,8 @@ def codes_index_select(indexid, key, value):
 
     :param indexid: id of an index created from a file.
         The index must have been created with the key in argument.
-    :param str key: key to be selected
-    :param str value: value of the key to select
+    :param bytes key: key to be selected
+    :param bytes value: value of the key to select
     """
     if isinstance(value, int):
         codes_index_select_long(indexid, key, value)
@@ -356,7 +356,7 @@ def codes_get_size(handle, key):
     Get the number of coded value from a key.
     If several keys of the same name are present, the total sum is returned.
 
-    :param str key: the keyword to get the size of
+    :param bytes key: the keyword to get the size of
 
     :rtype: int
     """
@@ -372,7 +372,7 @@ def codes_get_length(handle, key):
     Get the length of the string representation of the key.
     If several keys of the same name are present, the maximum length is returned.
 
-    :param str key: the keyword to get the string representation size of.
+    :param bytes key: the keyword to get the string representation size of.
 
     :rtype: int
     """
@@ -387,7 +387,7 @@ def codes_get_bytes_array(handle, key):
     """
     Get unsigned chars array values from a key.
 
-    :param str key: the keyword whose value(s) are to be extracted
+    :param bytes key: the keyword whose value(s) are to be extracted
 
     :rtype: List(int)
     """
@@ -404,7 +404,7 @@ def codes_get_long_array(handle, key):
     """
     Get long array values from a key.
 
-    :param str key: the keyword whose value(s) are to be extracted
+    :param bytes key: the keyword whose value(s) are to be extracted
 
     :rtype: List(int)
     """
@@ -421,7 +421,7 @@ def codes_get_double_array(handle, key):
     """
     Get double array values from a key.
 
-    :param str key: the keyword whose value(s) are to be extracted
+    :param bytes key: the keyword whose value(s) are to be extracted
 
     :rtype: T.List(float)
     """
@@ -438,9 +438,9 @@ def codes_get_string_array(handle, key):
     """
     Get string array values from a key.
 
-    :param str key: the keyword whose value(s) are to be extracted
+    :param bytes key: the keyword whose value(s) are to be extracted
 
-    :rtype: T.List(str)
+    :rtype: T.List[bytes]
     """
     size = codes_get_size(handle, key)
     length = codes_get_length(handle, key)
@@ -458,7 +458,7 @@ def codes_get_bytes(handle, key, strict=True):
     It may or may not fail in case there are more than one key in a message.
     Outputs the last element.
 
-    :param str key: the keyword to select the value of
+    :param bytes key: the keyword to select the value of
     :param bool strict: flag to select if the method should fail in case of
         more than one key in single message
 
@@ -479,7 +479,7 @@ def codes_get_long(handle, key, strict=True):
     It may or may not fail in case there are more than one key in a message.
     Outputs the last element.
 
-    :param str key: the keyword to select the value of
+    :param bytes key: the keyword to select the value of
     :param bool strict: flag to select if the method should fail in case of
         more than one key in single message
 
@@ -500,7 +500,7 @@ def codes_get_double(handle, key, strict=True):
     It may or may not fail in case there are more than one key in a message.
     Outputs the last element.
 
-    :param str key: the keyword to select the value of
+    :param bytes key: the keyword to select the value of
     :param bool strict: flag to select if the method should fail in case of
         more than one key in single message
 
@@ -521,7 +521,7 @@ def codes_get_string(handle, key, strict=True):
     It may or may not fail in case there are more than one key in a message.
     Outputs the last element.
 
-    :param str key: the keyword to select the value of
+    :param bytes key: the keyword to select the value of
     :param bool strict: flag to select if the method should fail in case of
         more than one key in single message
 
@@ -671,7 +671,7 @@ def codes_write(handle, outfile):
     """
     Write a coded message to a file. If the file does not exist, it is created.
 
-    :param str path: (optional) the path to the GRIB file;
+    :param file outfile: (optional) the path to the GRIB file;
         defaults to the one of the open index.
     """
     mess = ffi.new('const void **')
