@@ -52,6 +52,7 @@ setuptools.setup(
     ],
     tests_require=[
         'pytest',
+        'xarray',
     ],
     test_suite='tests',
     zip_safe=True,
