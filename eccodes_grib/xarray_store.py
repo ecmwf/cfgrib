@@ -18,8 +18,25 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import attr
 from xarray import Variable
+from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
-from xarray.backends.common import AbstractDataStore
+from xarray.backends.common import AbstractDataStore, BackendArray
+
+
+class WrapGrib(BackendArray):
+    def __init__(self, variable):
+        self.variable = variable
+
+    def __getitem__(self, item):
+        return indexing.NumpyIndexingAdapter(self.variable.data)[item]
+
+    @property
+    def shape(self):
+        return self.variable.shape
+
+    @property
+    def dtype(self):
+        return self.variable.dtype
 
 
 @attr.attrs()
@@ -32,9 +49,14 @@ class GribDataStore(AbstractDataStore):
         return cls(ds=eccodes_grib.Dataset.fromstream(*args, **kwargs))
 
     def open_store_variable(self, name, var):
+        from eccodes_grib import dataset
+
+        if isinstance(var, dataset.DataVariable):
+            data = indexing.LazilyOuterIndexedArray(WrapGrib(var))
+        else:
+            data = var.data
 
         dimensions = var.dimensions
-        data = var.data
         attrs = var.attributes
 
         encoding = {}
