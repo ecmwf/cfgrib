@@ -7,22 +7,7 @@ import cdscommon
 
 
 TEST_FILES = {
-    'era5-levels-members-one_var': [
-        'reanalysis-era5-pressure-levels',
-        {
-            'variable': 'temperature',
-            'pressure_level': ['500', '850'],
-            'product_type': 'ensemble_members',
-            'year': '2017',
-            'month': '01',
-            'day': ['01', '02'],
-            'time': ['00:00', '12:00'],
-            'grid': ['3', '3'],
-            'format': 'grib',
-        },
-        192,
-    ],
-    'era5-levels-members-many_vars': [
+    'era5-levels-members': [
         'reanalysis-era5-pressure-levels',
         {
             'variable': ['geopotential', 'temperature'],

@@ -165,9 +165,9 @@ class SpatialCoordinateVariable(AbstractCoordinateVariable):
 
     def __attrs_post_init__(self):
         grid_type = self.index['gridType'][0]
-        attribute_keys = FIELD_ATTRIBUTES_KEYS.copy()
-        attribute_keys.extend(GRID_TYPE_MAP.get(grid_type, []))
-        self.attributes = enforce_unique_attributes(self.index, attribute_keys)
+        attributes_keys = FIELD_ATTRIBUTES_KEYS.copy()
+        attributes_keys.extend(GRID_TYPE_MAP.get(grid_type, []))
+        self.attributes = enforce_unique_attributes(self.index, attributes_keys)
         self.data = list(range(self.attributes['numberOfDataPoints']))
         self.size = len(self.data)
         self.dimensions = (self.name,)
@@ -188,13 +188,13 @@ class DataVariable(AbstractCoordinateVariable):
         return cls(index=index, stream=stream, paramId=paramId, name=name)
 
     def __attrs_post_init__(self, log=LOG):
-        if len(self.index['paramId']) > 1:
-            raise NotImplementedError("GRIB must have only one variable")
-
         if self.name is None:
-            self.name = self.index['shortName'][0]
+            self.name = 'paramId_%s' % self.paramId
+            for paramId, shortName in zip(self.index['paramId'], self.index['shortName']):
+                if paramId == self.paramId:
+                    self.name = shortName
 
-        self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+        self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_DEF:
             try:
@@ -228,6 +228,8 @@ class DataVariable(AbstractCoordinateVariable):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream:
+            if message['paramId'] != self.paramId:
+                continue
             header_indexes = []  # type: T.List[int]
             header_values = []
             for dim in self.dimensions[:-1]:

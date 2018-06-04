@@ -10,7 +10,7 @@ from eccodes_grib import eccodes
 
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
-TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members-many_vars.grib')
+TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_DATA_B = TEST_DATA.encode('ASCII')
 
 

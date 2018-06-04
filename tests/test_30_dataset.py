@@ -8,7 +8,7 @@ import pytest
 from eccodes_grib import dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
-TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members-one_var.grib')
+TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
 def test_dict_merge():
@@ -38,4 +38,4 @@ def test_Dataset():
     res = dataset.Dataset.fromstream(TEST_DATA)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert len(res.variables) == 7
+    assert len(res.variables) == 8

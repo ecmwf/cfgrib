@@ -9,7 +9,7 @@ from eccodes_grib import messages
 
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
-TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members-many_vars.grib')
+TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
 def test_Message():
@@ -31,6 +31,7 @@ def test_Index():
     res = messages.Index(TEST_DATA, ['paramId'])
     assert res.get('paramId') == [129, 130]
     assert sum(1 for _ in res.select(paramId='130')) == 80
+    assert sum(1 for _ in res.select(paramId=130)) == 80
     assert len(res) == 1
     assert list(res) == ['paramId']
 
