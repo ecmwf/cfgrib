@@ -115,11 +115,13 @@ HEADER_COORDINATES_DEF = [
     ('endStep', ['stepUnits', 'stepType']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
-HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_DEF] + [k for _, ks in HEADER_COORDINATES_DEF for k in ks]
+HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_DEF]
+HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_DEF for k in ks]
 FIELD_ATTRIBUTES_KEYS = ['gridType', 'numberOfDataPoints']
 GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + HEADER_COORDINATES_KEYS + GRID_TYPE_KEYS
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + \
+    HEADER_COORDINATES_KEYS + GRID_TYPE_KEYS
 
 
 class AbstractCoordinateVariable(object):
