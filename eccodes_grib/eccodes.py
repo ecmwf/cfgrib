@@ -83,6 +83,16 @@ CODES_TYPE_SECTION = lib.GRIB_TYPE_SECTION
 CODES_TYPE_LABEL = lib.GRIB_TYPE_LABEL
 CODES_TYPE_MISSING = lib.GRIB_TYPE_MISSING
 
+CODES_KEYS_ITERATOR_ALL_KEYS = 0
+CODES_KEYS_ITERATOR_SKIP_READ_ONLY = (1 << 0)
+CODES_KEYS_ITERATOR_SKIP_OPTIONAL = (1 << 1)
+CODES_KEYS_ITERATOR_SKIP_EDITION_SPECIFIC = (1 << 2)
+CODES_KEYS_ITERATOR_SKIP_CODED = (1 << 3)
+CODES_KEYS_ITERATOR_SKIP_COMPUTED = (1 << 4)
+CODES_KEYS_ITERATOR_SKIP_DUPLICATES = (1 << 5)
+CODES_KEYS_ITERATOR_SKIP_FUNCTION = (1 << 6)
+CODES_KEYS_ITERATOR_DUMP_ONLY = (1 << 7)
+
 
 #
 # Helper functions for error reporting
@@ -567,12 +577,13 @@ def codes_get(handle, key, key_type=None, strict=True, log=LOG):
         log.warning("Unknown GRIB key type: %r", key_type)
 
 
-def codes_keys_iterator_new(handle, namespace=None):
-    if namespace is not None:
-        raise NotImplemented("Namespace support not implemented")
+def codes_keys_iterator_new(handle, flags=CODES_KEYS_ITERATOR_ALL_KEYS, namespace=None):
+    # type: (cffi.FFI.CData, int, bytes) -> cffi.FFI.CData
+    if namespace is None:
+        namespace = ffi.NULL
 
     codes_keys_iterator_new = lib.codes_keys_iterator_new
-    return codes_keys_iterator_new(handle, 0, ffi.NULL)
+    return codes_keys_iterator_new(handle, 0, namespace)
 
 
 def codes_keys_iterator_next(iterator_id):

@@ -134,3 +134,12 @@ def test_codes_keys_iterator():
     assert eccodes.codes_keys_iterator_get_name(iterator) == b'GRIBEditionNumber'
 
     eccodes.codes_keys_iterator_delete(iterator)
+
+    iterator = eccodes.codes_keys_iterator_new(grib, namespace=b'time')
+
+    assert eccodes.codes_keys_iterator_next(iterator) == 1
+    assert eccodes.codes_keys_iterator_get_name(iterator) == b'dataDate'
+    assert eccodes.codes_keys_iterator_next(iterator) == 1
+    assert eccodes.codes_keys_iterator_get_name(iterator) == b'dataTime'
+
+    eccodes.codes_keys_iterator_delete(iterator)
