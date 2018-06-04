@@ -42,6 +42,20 @@ def test_Index():
         list(res.select())
 
 
+def test_PyIndex():
+    res = messages.PyIndex.frompath(TEST_DATA, ['paramId'])
+    assert res.get('paramId') == [129, 130]
+    assert sum(1 for _ in res.select(paramId=130)) == 80
+    assert len(res) == 1
+    assert list(res) == ['paramId']
+
+    with pytest.raises(KeyError):
+        res['non-existent-key']
+
+    with pytest.raises(ValueError):
+        list(res.select())
+
+
 def test_Stream():
     res = messages.Stream(TEST_DATA)
     leader = res.first()

@@ -91,12 +91,66 @@ class Message(collections.Mapping):
 
 
 @attr.attrs()
+class PyIndex(collections.Mapping):
+    stream = attr.attrib(type=str)
+    index_keys = attr.attrib(type=T.List[str])
+    codes_index = attr.attrib(default=None)
+    key_encoding = attr.attrib(default='ascii', type=str)
+    value_encoding = attr.attrib(default='ascii', type=str)
+
+    def __iter__(self):
+        return iter(self.index_keys)
+
+    def __len__(self):
+        return len(self.index_keys)
+
+    def __attrs_post_init__(self):
+        self.offsets = {}
+        self.values = {}
+        for message in self.stream:
+            header_values = []
+            for key in self.index_keys:
+                value = message.get(key, 'undef')
+                header_values.append(value)
+                values = self.values.setdefault(key, [])
+                if value not in values:
+                    values.append(value)
+            self.offsets.setdefault(tuple(header_values), []).append(message['offset'])
+
+    def __getitem__(self, item):
+        # type: (str) -> list
+        return self.values[item]
+
+    def select(self, dict_query={}, **query):
+        # type: (T.Mapping[str, T.Any], T.Any) -> T.Generator[Message, None, None]
+        query.update(dict_query)
+        if set(query) != set(self.index_keys):
+            raise ValueError("all index keys must have a value.")
+        header_values = tuple(query[key] for key in self.index_keys)
+        for offset in self.offsets[header_values]:
+            file = open(self.stream.path)
+            file.seek(offset)
+            yield Message.fromfile(file)
+
+    @classmethod
+    def frompath(cls, path, *args, **kwargs):
+        stream = Stream(path)
+        return cls(stream, *args, **kwargs)
+
+
+@attr.attrs()
 class Index(collections.Mapping):
     path = attr.attrib(type=str)
     index_keys = attr.attrib(type=T.List[str])
     codes_index = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii', type=str)
     value_encoding = attr.attrib(default='ascii', type=str)
+
+    def __iter__(self):
+        return iter(self.index_keys)
+
+    def __len__(self):
+        return len(self.index_keys)
 
     def __attrs_post_init__(self):
         bindex_keys = [key.encode(self.key_encoding) for key in self.index_keys]
@@ -119,12 +173,6 @@ class Index(collections.Mapping):
                 value = value.decode(self.value_encoding)
             values.append(value)
         return values
-
-    def __iter__(self):
-        return iter(self.index_keys)
-
-    def __len__(self):
-        return len(self.index_keys)
 
     def select(self, dict_query={}, **query):
         # type: (T.Mapping[str, T.Any], T.Any) -> T.Generator[Message, None, None]
@@ -163,4 +211,5 @@ class Stream(collections.Iterable):
 
     def index(self, keys):
         # type: (T.Iterable[str]) -> Index
+        # return PyIndex(stream=self, index_keys=keys)
         return Index(path=self.path, index_keys=keys)
