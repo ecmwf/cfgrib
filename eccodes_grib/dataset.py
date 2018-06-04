@@ -75,6 +75,7 @@ GRID_TYPE_MAP = {
     ],
     'sh': ['M', 'K', 'J'],
 }
+GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 #
 # Other edition-independent keys documented in ecCodes presentations
@@ -93,14 +94,13 @@ VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', '
 
 
 def enforce_unique_attributes(
-        stream,  # type: messages.Stream
+        index,  # type: messages.Index
         attributes_keys,  # type: T.Sequence[str]
 ):
     # type: (...) -> T.Dict[str, T.Any]
-    index = stream.index(attributes_keys)
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
-        values = index.get(key, [])
+        values = index[key]
         if len(values) > 1:
             raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
         if values:
@@ -115,7 +115,11 @@ HEADER_COORDINATES_DEF = [
     ('endStep', ['stepUnits', 'stepType']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
+HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_DEF] + [k for _, ks in HEADER_COORDINATES_DEF for k in ks]
 FIELD_ATTRIBUTES_KEYS = ['gridType', 'numberOfDataPoints']
+GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
+
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + HEADER_COORDINATES_KEYS + GRID_TYPE_KEYS
 
 
 class AbstractCoordinateVariable(object):
@@ -128,17 +132,17 @@ class CoordinateNotFound(Exception):
 
 @attr.attrs()
 class HeaderCoordinateVariable(AbstractCoordinateVariable):
-    stream = attr.attrib()
+    index = attr.attrib()
     coordinate_key = attr.attrib(type=str)
     attributes_keys = attr.attrib(default=(), type=T.List[str])
     name = attr.attrib(default=None, type=str)
 
     def __attrs_post_init__(self):
-        values = self.stream.index([self.coordinate_key])[self.coordinate_key]
+        values = self.index[self.coordinate_key]
         if len(values) == 1 and values[0] == 'undef':
             raise CoordinateNotFound("missing from GRIB stream: %r" % self.coordinate_key)
 
-        self.attributes = enforce_unique_attributes(self.stream, self.attributes_keys)
+        self.attributes = enforce_unique_attributes(self.index, self.attributes_keys)
         if not self.name:
             self.name = self.coordinate_key
         self.size = len(values)
@@ -154,14 +158,14 @@ class HeaderCoordinateVariable(AbstractCoordinateVariable):
 
 @attr.attrs()
 class SpatialCoordinateVariable(AbstractCoordinateVariable):
-    stream = attr.attrib()
+    index = attr.attrib()
     name = attr.attrib(default='i', type=str)
 
     def __attrs_post_init__(self):
-        grid_type = self.stream.first().get('gridType')
+        grid_type = self.index['gridType'][0]
         attribute_keys = FIELD_ATTRIBUTES_KEYS.copy()
         attribute_keys.extend(GRID_TYPE_MAP.get(grid_type, []))
-        self.attributes = enforce_unique_attributes(self.stream, attribute_keys)
+        self.attributes = enforce_unique_attributes(self.index, attribute_keys)
         self.data = list(range(self.attributes['numberOfDataPoints']))
         self.size = len(self.data)
         self.dimensions = (self.name,)
@@ -170,35 +174,36 @@ class SpatialCoordinateVariable(AbstractCoordinateVariable):
 
 @attr.attrs()
 class DataVariable(AbstractCoordinateVariable):
+    index = attr.attrib()
     stream = attr.attrib()
     paramId = attr.attrib()
     name = attr.attrib(default=None, type=str)
 
     @classmethod
     def fromstream(cls, paramId, name=None, *args, **kwargs):
-        return cls(stream=messages.Stream(*args, **kwargs), paramId=paramId, name=name)
+        stream = messages.Stream(*args, **kwargs)
+        index = stream.index(ALL_KEYS)
+        return cls(index=index, stream=stream, paramId=paramId, name=name)
 
     def __attrs_post_init__(self, log=LOG):
-        paramId_index = self.stream.index(['paramId'])
-        if len(paramId_index) > 1:
+        if len(self.index['paramId']) > 1:
             raise NotImplementedError("GRIB must have only one variable")
 
-        leader = next(paramId_index.select(paramId=self.paramId))
         if self.name is None:
-            self.name = leader.get('shortName', 'paramId==%s' % self.paramId)
+            self.name = self.index['shortName'][0]
 
-        self.attributes = enforce_unique_attributes(self.stream, VARIABLE_ATTRIBUTES_KEYS)
+        self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_DEF:
             try:
                 self.coordinates[coord_key] = HeaderCoordinateVariable(
-                    stream=self.stream, coordinate_key=coord_key, attributes_keys=attrs_keys,
+                    self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
                 )
             except CoordinateNotFound:
                 log.exception("coordinate %r failed", coord_key)
 
         # FIXME: move to a function
-        self.coordinates['i'] = SpatialCoordinateVariable(stream=self.stream)
+        self.coordinates['i'] = SpatialCoordinateVariable(self.index)
         self.dimensions = tuple(dim for dim, coord in self.coordinates.items() if coord.size > 1)
         self.attributes['coordinates'] = ' '.join(self.coordinates.keys())
 
@@ -220,15 +225,14 @@ class DataVariable(AbstractCoordinateVariable):
     def build_array(self):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
-        for message in self.stream.index(['paramId']).select(paramId=self.paramId):
-            if self.ndim > 1:
-                header_indexes = []  # type: T.List[int]
-                for dim in self.dimensions[:-1]:
-                    header_indexes.append(self.coordinates[dim].data.index(message[dim]))
-                # NOTE: fill a single field as found in the message
-                data[header_indexes] = message['values']
-            else:
-                data[:] = message['values']
+        for message in self.stream:
+            header_indexes = []  # type: T.List[int]
+            header_values = []
+            for dim in self.dimensions[:-1]:
+                header_values.append(message[dim])
+                header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
+            # NOTE: fill a single field as found in the message
+            data.__setitem__(tuple(header_indexes + [slice(None, None)]), message['values'])
         missing_value = self.attributes.get('missingValue', 9999)
         data[data == missing_value] = np.nan
         return data
@@ -248,15 +252,13 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
-
-
 def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
-    param_ids = stream.index(['paramId'])['paramId']
+    index = stream.index(ALL_KEYS)
+    param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     for param_id in param_ids:
-        data_variable = DataVariable(stream=stream, paramId=param_id)
+        data_variable = DataVariable(index=index, stream=stream, paramId=param_id)
         vars = collections.OrderedDict([(data_variable.name, data_variable)])
         vars.update(data_variable.coordinates)
         dims = collections.OrderedDict()
@@ -264,7 +266,7 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
             dims[dim] = vars[dim].size
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
-    attributes = enforce_unique_attributes(stream, global_attributes_keys)
+    attributes = enforce_unique_attributes(index, global_attributes_keys)
     attributes['eccodesGribVersion'] = VERSION
     return dimensions, variables, attributes
 
