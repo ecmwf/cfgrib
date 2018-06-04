@@ -25,4 +25,4 @@ def test_xarray_open_dataset():
     assert res.i.attrs['gridType'] == 'regular_ll'
     assert res.t.attrs['units'] == 'K'
 
-    assert res.mean() > 0.
+    assert res['t'].mean() > 0.

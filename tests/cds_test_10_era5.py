@@ -94,7 +94,7 @@ def test_large_Dataset():
     # make the request large
     request['day'] = list(range(1, 32))
     request['time'] = list(['%02d:00' % h for h in range(0, 24, 3)])
-    path = cdscommon.ensure_data(dataset, request, name='cds-era5-pressure-levels-ensemble_members-LARGE-{uuid}.grib')
+    path = cdscommon.ensure_data(dataset, request, name='cds-' + dataset + '-LARGE-{uuid}.grib')
 
     res = eccodes_grib.Dataset.fromstream(path)
     assert len(res.variables) == 7
