@@ -19,14 +19,15 @@ TEST_DATA_B = TEST_DATA.encode('ASCII')
     (-43, 'End of index reached'),  # eccodes.lib.GRIB_END_OF_INDEX
 ])
 def test_grib_get_error_message(code, message):
-    result = eccodes.grib_get_error_message(code)
+    res = eccodes.grib_get_error_message(code)
 
-    assert result == message
+    assert res == message
 
 
 def test_check_last():
     codes_index_new_from_file = eccodes.check_last(eccodes.lib.codes_index_new_from_file)
     codes_index_new_from_file(eccodes.ffi.NULL, TEST_DATA_B, b'')
+
     with pytest.raises(eccodes.EcCodesError):
         codes_index_new_from_file(eccodes.ffi.NULL, b'', b'')
 
@@ -36,24 +37,24 @@ def test_check_return():
         return code
 
     eccodes.check_return(identity)(0)
+
     with pytest.raises(eccodes.EcCodesError):
         eccodes.check_return(identity)(-1)
 
 
 def test_codes_index_new_from_file():
-    result = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
+    res = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
 
-    assert isinstance(result, eccodes.ffi.CData)
-    assert "'codes_index *'" in repr(result)
+    assert isinstance(res, eccodes.ffi.CData)
+    assert "'codes_index *'" in repr(res)
 
 
 def test_codes_index_get_size():
     grib_index = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
 
-    result = eccodes.codes_index_get_size(grib_index, b'gridType')
+    res = eccodes.codes_index_get_size(grib_index, b'gridType')
 
-    assert isinstance(result, int)
-    assert result == 1
+    assert res == 1
 
 
 @pytest.mark.parametrize('key, ktype, expected_value', [
@@ -64,11 +65,11 @@ def test_codes_index_get_size():
 def test_codes_index_get(key, ktype, expected_value):
     grib_index = eccodes.codes_index_new_from_file(TEST_DATA_B, [key])
 
-    result = eccodes.codes_index_get(grib_index, key, ktype=ktype)
+    res = eccodes.codes_index_get(grib_index, key, ktype=ktype)
 
-    assert len(result) == 1
-    assert isinstance(result[0], ktype)
-    assert result[0] == expected_value
+    assert len(res) == 1
+    assert isinstance(res[0], ktype)
+    assert res[0] == expected_value
 
 
 @pytest.mark.parametrize('key, expected_value', [
