@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import object, str
+from builtins import list, object, str
 
 import collections
 import functools
@@ -117,7 +117,7 @@ HEADER_COORDINATES_DEF = [
 ]
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_DEF]
 HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_DEF for k in ks]
-FIELD_ATTRIBUTES_KEYS = ['gridType', 'numberOfDataPoints']
+FIELD_ATTRIBUTES_KEYS = list(('gridType', 'numberOfDataPoints'))  # NOTE: .copy() for python2
 GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + \
