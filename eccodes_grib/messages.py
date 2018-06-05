@@ -130,10 +130,6 @@ class PyIndex(collections.Mapping):
                     value = message.message_get(key, *args)
                 except eccodes.EcCodesError:
                     value = 'undef'
-                if isinstance(value, bytes):
-                    value = value.decode(self.value_encoding)
-                elif isinstance(value, list) and value and isinstance(value[0], bytes):
-                    value = [v.decode(self.value_encoding) for v in value]
                 header_values.append(value)
                 values = self.header_values.setdefault(key, [])
                 if value not in values:
