@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import list, object, str
+from builtins import bytes, int, float, list, object, str
 
 import collections
 import functools
@@ -90,7 +90,39 @@ ENSEMBLE_KEYS = ['number', 'totalNumber']
 EDITION_INDEPENDENT_KEYS = LS_KEYS + NAMESPACE_KEYS + DATA_KEYS + ENSEMBLE_KEYS
 
 # NOTE: 'dataType' may have multiple values, i.e. ['an', 'fc']
-VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
+VARIABLE_ATTRIBUTES_DEF = [
+    ('paramId', int), ('shortName', bytes, 100), ('units', bytes, 100),
+    ('name', bytes, 256), ('cfName', bytes, 100), ('missingValue', int),
+]
+VARIABLE_ATTRIBUTES_KEYS = [k if isinstance(k, str) else k[0] for k in VARIABLE_ATTRIBUTES_DEF]
+
+HEADER_COORDINATES_MAP = [
+    ('number', ['totalNumber']),
+    ('dataDate', []),
+    ('dataTime', []),
+    ('endStep', ['stepUnits', 'stepType']),
+    ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
+]
+HEADER_COORDINATES_DEF = [(k, int) for k, _ in HEADER_COORDINATES_MAP]
+HEADER_COORDINATES_DEF += [(k, bytes, 20) if k=='typeOfLevel' else (k, int) for _, ks in HEADER_COORDINATES_MAP for k in ks]
+HEADER_COORDINATES_KEYS = [k if isinstance(k, str) else k[0] for k in HEADER_COORDINATES_DEF]
+FIELD_ATTRIBUTES_DEF = list((('gridType', bytes, 20), ('numberOfDataPoints', int)))  # NOTE: .copy() for python2
+FIELD_ATTRIBUTES_KEYS = list(k if isinstance(k, str) else k[0] for k in FIELD_ATTRIBUTES_DEF)
+
+GLOBAL_ATTRIBUTES_DEF = [('edition', int), ('centre', bytes, 20), ('centreDescription', bytes, 100)]
+GLOBAL_ATTRIBUTES_KEYS = [k if isinstance(k, str) else k[0] for k in GLOBAL_ATTRIBUTES_DEF]
+
+ALL_DEF = GLOBAL_ATTRIBUTES_DEF + VARIABLE_ATTRIBUTES_DEF + FIELD_ATTRIBUTES_DEF + \
+          HEADER_COORDINATES_DEF + [(k, float) for k in GRID_TYPE_KEYS]
+ALL_KEYS = [k if isinstance(k, str) else k[0] for k in ALL_DEF]
+
+
+class AbstractCoordinateVariable(object):
+    pass
+
+
+class CoordinateNotFound(Exception):
+    pass
 
 
 def enforce_unique_attributes(
@@ -106,30 +138,6 @@ def enforce_unique_attributes(
         if values:
             attributes[key] = values[0]
     return attributes
-
-
-HEADER_COORDINATES_DEF = [
-    ('number', ['totalNumber']),
-    ('dataDate', []),
-    ('dataTime', []),
-    ('endStep', ['stepUnits', 'stepType']),
-    ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
-]
-HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_DEF]
-HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_DEF for k in ks]
-FIELD_ATTRIBUTES_KEYS = list(('gridType', 'numberOfDataPoints'))  # NOTE: .copy() for python2
-GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
-
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + \
-    HEADER_COORDINATES_KEYS + GRID_TYPE_KEYS
-
-
-class AbstractCoordinateVariable(object):
-    pass
-
-
-class CoordinateNotFound(Exception):
-    pass
 
 
 @attr.attrs()
@@ -196,7 +204,7 @@ class DataVariable(AbstractCoordinateVariable):
 
         self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
         self.coordinates = collections.OrderedDict()
-        for coord_key, attrs_keys in HEADER_COORDINATES_DEF:
+        for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
                 self.coordinates[coord_key] = HeaderCoordinateVariable(
                     self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
@@ -256,8 +264,11 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
-    index = stream.index(ALL_KEYS)
+def build_dataset_components(stream, py_index=False, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
+    if py_index:
+        index = stream.py_index(ALL_DEF)
+    else:
+        index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
@@ -278,13 +289,14 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
+    py_index = attr.attrib(default=False)
 
     @classmethod
-    def fromstream(cls, *args, **kwagrs):
-        return cls(stream=messages.Stream(*args, **kwagrs))
+    def fromstream(cls, path, py_index=False, **kwagrs):
+        return cls(stream=messages.Stream(path, **kwagrs), py_index=py_index)
 
     def __attrs_post_init__(self):
-        dimensions, variables, attributes = build_dataset_components(self.stream)
+        dimensions, variables, attributes = build_dataset_components(self.stream, self.py_index)
         self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
         self.variables = variables  # type: T.Dict[str, AbstractCoordinateVariable]
         self.attributes = attributes  # type: T.Dict[str, T.Any]

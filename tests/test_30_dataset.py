@@ -39,3 +39,10 @@ def test_Dataset():
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 8
+
+
+def test_Dataset_py_index():
+    res = dataset.Dataset.fromstream(TEST_DATA, py_index=True)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert len(res.variables) == 8

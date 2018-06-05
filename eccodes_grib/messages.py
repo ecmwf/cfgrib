@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, isinstance, str
+from builtins import bytes, int, isinstance, str
 
 import collections
 import typing as T  # noqa
@@ -93,7 +93,7 @@ class Message(collections.Mapping):
 @attr.attrs()
 class PyIndex(collections.Mapping):
     stream = attr.attrib(type=str)
-    index_keys = attr.attrib(type=T.List[str])
+    index_def = attr.attrib(type=T.List[T.Union[str, tuple]])
     codes_index = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii', type=str)
     value_encoding = attr.attrib(default='ascii', type=str)
@@ -105,17 +105,25 @@ class PyIndex(collections.Mapping):
         return len(self.index_keys)
 
     def __attrs_post_init__(self):
+        self.index_keys = [k if isinstance(k, str) else k[0] for k in self.index_def]
         self.offsets = {}
         self.values = {}
         for message in self.stream:
             header_values = []
-            for key in self.index_keys:
-                value = message.get(key, 'undef')
+            for args in self.index_def:
+                key = args[0]
+                try:
+                    value = message.message_get(*args)
+                except eccodes.EcCodesError:
+                    value = 'undef'
+                if isinstance(value, bytes):
+                    value = value.decode(self.value_encoding)
                 header_values.append(value)
                 values = self.values.setdefault(key, [])
                 if value not in values:
                     values.append(value)
-            self.offsets.setdefault(tuple(header_values), []).append(int(message['offset']))
+            offset = message.message_get('offset', int)
+            self.offsets.setdefault(tuple(header_values), []).append(offset)
 
     def __getitem__(self, item):
         # type: (str) -> list
@@ -209,7 +217,9 @@ class Stream(collections.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, keys):
+    def index(self, index_keys):
         # type: (T.Iterable[str]) -> Index
-        return PyIndex(stream=self, index_keys=keys)
-        # return Index(path=self.path, index_keys=keys)
+        return Index(path=self.path, index_keys=index_keys)
+
+    def py_index(self, index_def):
+        return PyIndex(stream=self, index_def=index_def)
