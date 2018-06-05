@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, int, isinstance, str
+from builtins import bytes, isinstance, str
 
 import collections
 import typing as T  # noqa
@@ -47,53 +47,68 @@ class Message(collections.Mapping):
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
 
-    def message_get(self, item, ktype=None, length=None):
+    def message_get(self, item, key_type=None, size=None, length=None):
         # type: (str, type) -> T.Any
         """Get value of a given key as its native or specified type."""
         key = item.encode(self.key_encoding)
-        size = eccodes.codes_get_size(self.codes_id, key)
-        ret = None
-        if size > 1:
-            ret = eccodes.codes_get_array(self.codes_id, key, ktype=ktype, size=size, length=length)
-        elif size == 1:
-            ret = eccodes.codes_get(self.codes_id, key, ktype=ktype, length=length)
-        return ret
+        if size is None:
+            size = eccodes.codes_get_size(self.codes_id, key)
+        if size == 0:
+            return None
+        values = eccodes.codes_get_array(self.codes_id, key, key_type, size, length)
+        if values and isinstance(values[0], bytes):
+            values = [v.decode(self.value_encoding) for v in values]
+        if size == 1:
+            return values[0]
+        return values
 
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[bytes, None, None]
         bnamespace = namespace.encode(self.key_encoding) if namespace else namespace
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
         while eccodes.codes_keys_iterator_next(iterator):
-            yield eccodes.codes_keys_iterator_get_name(iterator)
+            yield eccodes.codes_keys_iterator_get_name(iterator).decode(self.key_encoding)
         eccodes.codes_keys_iterator_delete(iterator)
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
         try:
-            value = self.message_get(item)
+            return self.message_get(item)
         except eccodes.EcCodesError:
             raise KeyError(item)
-        if isinstance(value, bytes):
-            return value.decode(self.value_encoding)
-        elif isinstance(value, list) and value and isinstance(value[0], bytes):
-            return [v.decode(self.value_encoding) for v in value]
-        else:
-            return value
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
         for key in self.message_iterkeys():
-            yield key.decode(self.key_encoding)
+            yield key
 
     def __len__(self):
         # type: () -> int
         return sum(1 for _ in self)
 
 
+def make_message_schema(message, schema_keys, encoding='ascii'):
+    schema = collections.OrderedDict()
+    for key in schema_keys:
+        bkey = key.encode(encoding)
+        try:
+            key_type = eccodes.codes_get_native_type(message.codes_id, bkey)
+        except eccodes.EcCodesError:
+            schema[key] = ()
+            continue
+        size = eccodes.codes_get_size(message.codes_id, bkey)
+        if key_type == eccodes.CODES_TYPE_STRING:
+            length = eccodes.codes_get_length(message.codes_id, bkey)
+            schema[key] = (key_type, size, length)
+        else:
+            schema[key] = (key_type, size)
+    return schema
+
+
 @attr.attrs()
 class PyIndex(collections.Mapping):
     stream = attr.attrib(type=str)
-    index_def = attr.attrib(type=T.List[T.Union[str, tuple]])
+    index_keys = attr.attrib(type=T.List[str])
     codes_index = attr.attrib(default=None)
     key_encoding = attr.attrib(default='ascii', type=str)
     value_encoding = attr.attrib(default='ascii', type=str)
@@ -105,29 +120,30 @@ class PyIndex(collections.Mapping):
         return len(self.index_keys)
 
     def __attrs_post_init__(self):
-        self.index_keys = [k if isinstance(k, str) else k[0] for k in self.index_def]
+        self.schema = make_message_schema(next(iter(self.stream)), self.index_keys)
+        self.header_values = {}
         self.offsets = {}
-        self.values = {}
         for message in self.stream:
             header_values = []
-            for args in self.index_def:
-                key = args[0]
+            for key, args in self.schema.items():
                 try:
-                    value = message.message_get(*args)
+                    value = message.message_get(key, *args)
                 except eccodes.EcCodesError:
                     value = 'undef'
                 if isinstance(value, bytes):
                     value = value.decode(self.value_encoding)
+                elif isinstance(value, list) and value and isinstance(value[0], bytes):
+                    value = [v.decode(self.value_encoding) for v in value]
                 header_values.append(value)
-                values = self.values.setdefault(key, [])
+                values = self.header_values.setdefault(key, [])
                 if value not in values:
                     values.append(value)
-            offset = message.message_get('offset', int)
+            offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             self.offsets.setdefault(tuple(header_values), []).append(offset)
 
     def __getitem__(self, item):
         # type: (str) -> list
-        return self.values[item]
+        return self.header_values[item]
 
     def select(self, dict_query={}, **query):
         # type: (T.Mapping[str, T.Any], T.Any) -> T.Generator[Message, None, None]
@@ -221,5 +237,5 @@ class Stream(collections.Iterable):
         # type: (T.Iterable[str]) -> Index
         return Index(path=self.path, index_keys=index_keys)
 
-    def py_index(self, index_def):
-        return PyIndex(stream=self, index_def=index_def)
+    def py_index(self, index_keys):
+        return PyIndex(stream=self, index_keys=index_keys)

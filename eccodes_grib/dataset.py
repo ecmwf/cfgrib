@@ -26,6 +26,7 @@ import typing as T  # noqa
 import attr
 import numpy as np
 
+from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
@@ -202,7 +203,7 @@ class DataVariable(AbstractCoordinateVariable):
                 if paramId == self.paramId:
                     self.name = shortName
 
-        self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+        self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
@@ -236,15 +237,15 @@ class DataVariable(AbstractCoordinateVariable):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream:
-            if message.message_get('paramId', int) != self.paramId:
+            if message.message_get('paramId', eccodes.CODES_TYPE_LONG) != self.paramId:
                 continue
             header_indexes = []  # type: T.List[int]
             header_values = []
             for dim in self.dimensions[:-1]:
-                header_values.append(message.message_get(dim, int))
+                header_values.append(message.message_get(dim, eccodes.CODES_TYPE_LONG))
                 header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
             # NOTE: fill a single field as found in the message
-            values = message.message_get('values', ktype=float)
+            values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
             data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
         missing_value = self.attributes.get('missingValue', 9999)
         data[data == missing_value] = np.nan
@@ -267,7 +268,7 @@ def dict_merge(master, update):
 
 def build_dataset_components(stream, py_index=False, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
     if py_index:
-        index = stream.py_index(ALL_DEF)
+        index = stream.py_index(ALL_KEYS)
     else:
         index = stream.index(ALL_KEYS)
     param_ids = index['paramId']

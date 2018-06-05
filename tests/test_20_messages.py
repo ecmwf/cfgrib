@@ -5,6 +5,7 @@ import os.path
 
 import pytest
 
+from eccodes_grib import eccodes
 from eccodes_grib import messages
 
 
@@ -42,8 +43,20 @@ def test_Index():
         list(res.select())
 
 
+def test_make_message_schema():
+    with open(TEST_DATA) as file:
+        message = messages.Message.fromfile(file)
+
+    res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
+
+    assert res['paramId'] == (eccodes.CODES_TYPE_LONG, 1)
+    assert res['shortName'] == (eccodes.CODES_TYPE_STRING, 1, 256)
+    assert res['values'] == (eccodes.CODES_TYPE_DOUBLE, 7320)
+    assert res['non-existent'] == ()
+
+
 def test_PyIndex():
-    res = messages.PyIndex.frompath(TEST_DATA, [('paramId', int)])
+    res = messages.PyIndex.frompath(TEST_DATA, ['paramId'])
     assert res.get('paramId') == [129, 130]
     assert sum(1 for _ in res.select(paramId=130)) == 80
     assert len(res) == 1
