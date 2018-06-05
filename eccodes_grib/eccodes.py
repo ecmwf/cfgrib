@@ -389,8 +389,8 @@ def codes_get_length(handle, key):
     return size[0]
 
 
-def codes_get_bytes_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> T.List[int]
+def codes_get_bytes_array(handle, key, size=None):
+    # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
     """
     Get unsigned chars array values from a key.
 
@@ -398,7 +398,8 @@ def codes_get_bytes_array(handle, key):
 
     :rtype: List(int)
     """
-    size = codes_get_size(handle, key)
+    if size is None:
+        size = codes_get_size(handle, key)
     values = ffi.new('unsigned char[]', size)
     size_p = ffi.new('size_t *', size)
     codes_get_bytes = check_return(lib.codes_get_bytes)
@@ -406,8 +407,8 @@ def codes_get_bytes_array(handle, key):
     return list(values)
 
 
-def codes_get_long_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> T.List[int]
+def codes_get_long_array(handle, key, size=None):
+    # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
     """
     Get long array values from a key.
 
@@ -415,7 +416,8 @@ def codes_get_long_array(handle, key):
 
     :rtype: List(int)
     """
-    size = codes_get_size(handle, key)
+    if size is None:
+        size = codes_get_size(handle, key)
     values = ffi.new('long[]', size)
     size_p = ffi.new('size_t *', size)
     codes_get_long_array = check_return(lib.codes_get_long_array)
@@ -423,8 +425,8 @@ def codes_get_long_array(handle, key):
     return list(values)
 
 
-def codes_get_double_array(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> T.List[float]
+def codes_get_double_array(handle, key, size=None):
+    # type: (cffi.FFI.CData, bytes, int) -> T.List[float]
     """
     Get double array values from a key.
 
@@ -432,7 +434,8 @@ def codes_get_double_array(handle, key):
 
     :rtype: T.List(float)
     """
-    size = codes_get_size(handle, key)
+    if size is None:
+        size = codes_get_size(handle, key)
     values = ffi.new('double[]', size)
     size_p = ffi.new('size_t *', size)
     codes_get_double_array = check_return(lib.codes_get_double_array)
@@ -440,7 +443,7 @@ def codes_get_double_array(handle, key):
     return list(values)
 
 
-def codes_get_string_array(handle, key, length=None):
+def codes_get_string_array(handle, key, size=None, length=None):
     # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
     """
     Get string array values from a key.
@@ -449,7 +452,8 @@ def codes_get_string_array(handle, key, length=None):
 
     :rtype: T.List[bytes]
     """
-    size = codes_get_size(handle, key)
+    if size is not None:
+        size = codes_get_size(handle, key)
     if length is None:
         length = codes_get_length(handle, key)
     values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
@@ -460,7 +464,7 @@ def codes_get_string_array(handle, key, length=None):
     return [ffi.string(values[i]) for i in range(size_p[0])]
 
 
-def codes_get_bytes(handle, key, strict=True):
+def codes_get_bytes(handle, key):
     # type: (cffi.FFI.CData, bytes, bool) -> int
     """
     Get unsigned char element from a key.
@@ -476,50 +480,6 @@ def codes_get_bytes(handle, key, strict=True):
     values = codes_get_bytes_array(handle, key)
     if len(values) == 0:
         raise ValueError('No value for key %r' % key)
-    elif len(values) > 1 and strict:
-        raise ValueError('More than one value for key %r: %r' % (key, values))
-    return values[-1]
-
-
-def codes_get_long(handle, key, strict=True):
-    # type: (cffi.FFI.CData, bytes, bool) -> int
-    """
-    Get long element from a key.
-    It may or may not fail in case there are more than one key in a message.
-    Outputs the last element.
-
-    :param bytes key: the keyword to select the value of
-    :param bool strict: flag to select if the method should fail in case of
-        more than one key in single message
-
-    :rtype: int
-    """
-    values = codes_get_long_array(handle, key)
-    if len(values) == 0:
-        raise ValueError('No value for key %r' % key)
-    elif len(values) > 1 and strict:
-        raise ValueError('More than one value for key %r: %r' % (key, values))
-    return values[-1]
-
-
-def codes_get_double(handle, key, strict=True):
-    # type: (cffi.FFI.CData, bytes, bool) -> float
-    """
-    Get double element from a key.
-    It may or may not fail in case there are more than one key in a message.
-    Outputs the last element.
-
-    :param bytes key: the keyword to select the value of
-    :param bool strict: flag to select if the method should fail in case of
-        more than one key in single message
-
-    :rtype: float
-    """
-    values = codes_get_double_array(handle, key)
-    if len(values) == 0:
-        raise ValueError('No value for key %r' % key)
-    elif len(values) > 1 and strict:
-        raise ValueError('More than one value for key %r: %r' % (key, values))
     return values[-1]
 
 
@@ -553,21 +513,21 @@ def codes_get_native_type(handle, key):
     return grib_type[0]
 
 
-def codes_get_array(handle, key, ktype=None, length=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, type, logging.Logger) -> T.Any
+def codes_get_array(handle, key, ktype=None, size=None, length=None, log=LOG):
+    # type: (cffi.FFI.CData, bytes, type, int, int, logging.Logger) -> T.Any
     if ktype is None:
         key_type = codes_get_native_type(handle, key)
     else:
         key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
-        return codes_get_long_array(handle, key)
+        return codes_get_long_array(handle, key, size=size)
     elif key_type == CODES_TYPE_DOUBLE:
-        return codes_get_double_array(handle, key)
+        return codes_get_double_array(handle, key, size=size)
     elif key_type == CODES_TYPE_STRING:
-        return codes_get_string_array(handle, key, length=length)
+        return codes_get_string_array(handle, key, size=size, length=length)
     elif key_type == CODES_TYPE_BYTES:
-        return codes_get_bytes_array(handle, key)
+        return codes_get_bytes_array(handle, key, size=size)
     else:
         log.warning("Unknown GRIB key type: %r", key_type)
 
@@ -580,9 +540,11 @@ def codes_get(handle, key, ktype=None, length=None, log=LOG):
         key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
-        return codes_get_long(handle, key)
+        values = codes_get_long_array(handle, key, size=1)
+        return values[0]
     elif key_type == CODES_TYPE_DOUBLE:
-        return codes_get_double(handle, key)
+        values = codes_get_double_array(handle, key, size=1)
+        return values[0]
     elif key_type == CODES_TYPE_STRING:
         return codes_get_string(handle, key, length=length)
     elif key_type == CODES_TYPE_BYTES:
