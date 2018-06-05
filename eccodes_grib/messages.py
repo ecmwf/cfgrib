@@ -54,7 +54,7 @@ class Message(collections.Mapping):
         size = eccodes.codes_get_size(self.codes_id, key)
         ret = None
         if size > 1:
-            ret = eccodes.codes_get_array(self.codes_id, key, ktype=ktype, length=length)
+            ret = eccodes.codes_get_array(self.codes_id, key, ktype=ktype, size=size, length=length)
         elif size == 1:
             ret = eccodes.codes_get(self.codes_id, key, ktype=ktype, length=length)
         return ret
