@@ -43,7 +43,7 @@ def test_Index():
 
 
 def test_PyIndex():
-    res = messages.PyIndex.frompath(TEST_DATA, ['paramId'])
+    res = messages.PyIndex.frompath(TEST_DATA, [('paramId', int)])
     assert res.get('paramId') == [129, 130]
     assert sum(1 for _ in res.select(paramId=130)) == 80
     assert len(res) == 1
