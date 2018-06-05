@@ -174,14 +174,6 @@ def grib_new_from_file(fileobj, headers_only=False):
 def codes_new_from_file(fileobj, product_kind, headers_only=False):
     if product_kind == CODES_PRODUCT_GRIB:
         return grib_new_from_file(fileobj, headers_only)
-    if product_kind == CODES_PRODUCT_BUFR:
-        raise NotImplemented("Support for BUFR not yet implemented.")
-    if product_kind == CODES_PRODUCT_METAR:
-        raise NotImplemented("Support for METAR not yet implemented.")
-    if product_kind == CODES_PRODUCT_GTS:
-        raise NotImplemented("Support for GTS not yet implemented.")
-    if product_kind == CODES_PRODUCT_ANY:
-        raise NotImplemented("Support not yet implemented for this filetype.")
     raise Exception("Invalid product kind: " + product_kind)
 
 
@@ -452,7 +444,7 @@ def codes_get_string_array(handle, key, size=None, length=None):
 
     :rtype: T.List[bytes]
     """
-    if size is not None:
+    if size is None:
         size = codes_get_size(handle, key)
     if length is None:
         length = codes_get_length(handle, key)
@@ -513,12 +505,10 @@ def codes_get_native_type(handle, key):
     return grib_type[0]
 
 
-def codes_get_array(handle, key, ktype=None, size=None, length=None, log=LOG):
+def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG):
     # type: (cffi.FFI.CData, bytes, type, int, int, logging.Logger) -> T.Any
-    if ktype is None:
+    if key_type is None:
         key_type = codes_get_native_type(handle, key)
-    else:
-        key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
         return codes_get_long_array(handle, key, size=size)
@@ -532,12 +522,10 @@ def codes_get_array(handle, key, ktype=None, size=None, length=None, log=LOG):
         log.warning("Unknown GRIB key type: %r", key_type)
 
 
-def codes_get(handle, key, ktype=None, length=None, log=LOG):
+def codes_get(handle, key, key_type=None, length=None, log=LOG):
     # type: (cffi.FFI.CData, bytes, type, bool, logging.Logger) -> T.Any
-    if ktype is None:
+    if key_type is None:
         key_type = codes_get_native_type(handle, key)
-    else:
-        key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
         values = codes_get_long_array(handle, key, size=1)
@@ -590,69 +578,3 @@ def codes_grib_get_data(message_id):
     codes_grib_get_data = check_return(lib.codes_grib_get_data)
     codes_grib_get_data(message_id, latitude, longitude, data)
     return zip(latitude, longitude, data)
-
-
-def codes_set_long(msgid, key, value):
-    # type: (cffi.FFI.CData, bytes, int) -> None
-    codes_set_long = check_return(lib.codes_set_long)
-    codes_set_long(msgid, key, value)
-
-
-def codes_set_double(msgid, key, value):
-    # type: (cffi.FFI.CData, bytes, float) -> None
-    codes_set_double = check_return(lib.codes_set_double)
-    codes_set_double(msgid, key, value)
-
-
-def codes_set_string(msgid, key, value):
-    # type: (cffi.FFI.CData, bytes, bytes) -> None
-    size = ffi.new('size_t *', len(value))
-    codes_set_string = check_return(lib.codes_set_string)
-    codes_set_string(msgid, key, value, size)
-
-
-def codes_set(msgid, key, value):
-    """"""
-    if isinstance(value, int):
-        codes_set_long(msgid, key, value)
-    elif isinstance(value, float):
-        codes_set_double(msgid, key, value)
-    elif isinstance(value, bytes):
-        codes_set_string(msgid, key, value)
-    else:
-        raise TypeError('Unsupported type %r' % type(value))
-
-
-def codes_set_double_array(msgid, key, values):
-    # type: (cffi.FFI.CData, bytes, T.List[float]) -> None
-    size = len(values)
-    c_values = ffi.new("double []", values)
-    codes_set_double_array = check_return(lib.codes_set_double_array)
-    codes_set_double_array(msgid, key, c_values, size)
-
-
-def codes_set_array(msgid, key, values):
-    # type: (cffi.FFI.CData, bytes, T.List[T.Any]) -> None
-    if len(values) > 0:
-        if isinstance(values[0], float):
-            codes_set_double_array(msgid, key, values)
-        else:
-            raise NotImplemented
-    else:
-        raise ValueError("Cannot provide an empty list.")
-
-
-def codes_write(handle, outfile):
-    # type: (cffi.FFI.CData, T.BinaryIO) -> None
-    """
-    Write a coded message to a file. If the file does not exist, it is created.
-
-    :param file outfile: (optional) the path to the GRIB file;
-        defaults to the one of the open index.
-    """
-    mess = ffi.new('const void **')
-    mess_len = ffi.new('size_t*')
-    codes_get_message = check_return(lib.codes_get_message)
-    codes_get_message(handle, mess, mess_len)
-    message = ffi.buffer(mess[0], size=mess_len[0])
-    outfile.write(message)
