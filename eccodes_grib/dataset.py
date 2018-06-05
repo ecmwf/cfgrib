@@ -236,15 +236,16 @@ class DataVariable(AbstractCoordinateVariable):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for message in self.stream:
-            if message['paramId'] != self.paramId:
+            if message.message_get('paramId', int) != self.paramId:
                 continue
             header_indexes = []  # type: T.List[int]
             header_values = []
             for dim in self.dimensions[:-1]:
-                header_values.append(message[dim])
+                header_values.append(message.message_get(dim, int))
                 header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
             # NOTE: fill a single field as found in the message
-            data.__setitem__(tuple(header_indexes + [slice(None, None)]), message['values'])
+            values = message.message_get('values', ktype=float)
+            data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
         missing_value = self.attributes.get('missingValue', 9999)
         data[data == missing_value] = np.nan
         return data
