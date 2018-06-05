@@ -83,6 +83,12 @@ CODES_TYPE_SECTION = lib.GRIB_TYPE_SECTION
 CODES_TYPE_LABEL = lib.GRIB_TYPE_LABEL
 CODES_TYPE_MISSING = lib.GRIB_TYPE_MISSING
 
+KEY_TYPES = {
+    int: CODES_TYPE_LONG,
+    float: CODES_TYPE_DOUBLE,
+    bytes: CODES_TYPE_STRING,
+}
+
 CODES_KEYS_ITERATOR_ALL_KEYS = 0
 CODES_KEYS_ITERATOR_SKIP_READ_ONLY = (1 << 0)
 CODES_KEYS_ITERATOR_SKIP_OPTIONAL = (1 << 1)
@@ -434,7 +440,7 @@ def codes_get_double_array(handle, key):
     return list(values)
 
 
-def codes_get_string_array(handle, key):
+def codes_get_string_array(handle, key, length=None):
     # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
     """
     Get string array values from a key.
@@ -444,7 +450,8 @@ def codes_get_string_array(handle, key):
     :rtype: T.List[bytes]
     """
     size = codes_get_size(handle, key)
-    length = codes_get_length(handle, key)
+    if length is None:
+        length = codes_get_length(handle, key)
     values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
     values = ffi.new('char*[]', values_keepalive)
     size_p = ffi.new('size_t *', size)
@@ -516,8 +523,8 @@ def codes_get_double(handle, key, strict=True):
     return values[-1]
 
 
-def codes_get_string(handle, key, strict=True):
-    # type: (cffi.FFI.CData, bytes, bool) -> bytes
+def codes_get_string(handle, key, length=None):
+    # type: (cffi.FFI.CData, bytes, int) -> bytes
     """
     Get string element from a key.
     It may or may not fail in case there are more than one key in a message.
@@ -527,14 +534,15 @@ def codes_get_string(handle, key, strict=True):
     :param bool strict: flag to select if the method should fail in case of
         more than one key in single message
 
-    :rtype: float
+    :rtype: bytes
     """
-    values = codes_get_string_array(handle, key)
-    if len(values) == 0:
-        raise ValueError('No value for key %r' % key)
-    elif len(values) > 1 and strict:
-        raise ValueError('More than one value for key %r: %r' % (key, values))
-    return values[-1]
+    if length is None:
+        length = codes_get_length(handle, key)
+    values = ffi.new('char[]', length)
+    length_p = ffi.new('size_t *', length)
+    codes_get_string = check_return(lib.codes_get_string)
+    codes_get_string(handle, key, values, length_p)
+    return ffi.string(values, length_p[0])
 
 
 def codes_get_native_type(handle, key):
@@ -545,34 +553,38 @@ def codes_get_native_type(handle, key):
     return grib_type[0]
 
 
-def codes_get_array(handle, key, key_type=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, int, logging.Logger) -> T.Any
-    if key_type is None:
+def codes_get_array(handle, key, ktype=None, length=None, log=LOG):
+    # type: (cffi.FFI.CData, bytes, type, logging.Logger) -> T.Any
+    if ktype is None:
         key_type = codes_get_native_type(handle, key)
+    else:
+        key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
         return codes_get_long_array(handle, key)
     elif key_type == CODES_TYPE_DOUBLE:
         return codes_get_double_array(handle, key)
     elif key_type == CODES_TYPE_STRING:
-        return codes_get_string_array(handle, key)
+        return codes_get_string_array(handle, key, length=length)
     elif key_type == CODES_TYPE_BYTES:
         return codes_get_bytes_array(handle, key)
     else:
         log.warning("Unknown GRIB key type: %r", key_type)
 
 
-def codes_get(handle, key, key_type=None, strict=True, log=LOG):
-    # type: (cffi.FFI.CData, bytes, int, bool, logging.Logger) -> T.Any
-    if key_type is None:
+def codes_get(handle, key, ktype=None, length=None, log=LOG):
+    # type: (cffi.FFI.CData, bytes, type, bool, logging.Logger) -> T.Any
+    if ktype is None:
         key_type = codes_get_native_type(handle, key)
+    else:
+        key_type = KEY_TYPES[ktype]
 
     if key_type == CODES_TYPE_LONG:
-        return codes_get_long(handle, key, strict)
+        return codes_get_long(handle, key)
     elif key_type == CODES_TYPE_DOUBLE:
-        return codes_get_double(handle, key, strict)
+        return codes_get_double(handle, key)
     elif key_type == CODES_TYPE_STRING:
-        return codes_get_string(handle, key, strict)
+        return codes_get_string(handle, key, length=length)
     elif key_type == CODES_TYPE_BYTES:
         return codes_get_bytes(handle, key)
     else:

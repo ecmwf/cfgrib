@@ -47,16 +47,16 @@ class Message(collections.Mapping):
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
 
-    def message_get(self, item, key_type=None, strict=True):
-        # type: (str, int, bool) -> T.Any
+    def message_get(self, item, ktype=None, length=None):
+        # type: (str, type) -> T.Any
         """Get value of a given key as its native or specified type."""
         key = item.encode(self.key_encoding)
         size = eccodes.codes_get_size(self.codes_id, key)
         ret = None
         if size > 1:
-            ret = eccodes.codes_get_array(self.codes_id, key, key_type=key_type)
+            ret = eccodes.codes_get_array(self.codes_id, key, ktype=ktype, length=length)
         elif size == 1:
-            ret = eccodes.codes_get(self.codes_id, key, key_type=key_type, strict=strict)
+            ret = eccodes.codes_get(self.codes_id, key, ktype=ktype, length=length)
         return ret
 
     def message_iterkeys(self, namespace=None):
@@ -115,7 +115,7 @@ class PyIndex(collections.Mapping):
                 values = self.values.setdefault(key, [])
                 if value not in values:
                     values.append(value)
-            self.offsets.setdefault(tuple(header_values), []).append(message['offset'])
+            self.offsets.setdefault(tuple(header_values), []).append(int(message['offset']))
 
     def __getitem__(self, item):
         # type: (str) -> list
@@ -211,5 +211,5 @@ class Stream(collections.Iterable):
 
     def index(self, keys):
         # type: (T.Iterable[str]) -> Index
-        # return PyIndex(stream=self, index_keys=keys)
-        return Index(path=self.path, index_keys=keys)
+        return PyIndex(stream=self, index_keys=keys)
+        # return Index(path=self.path, index_keys=keys)
