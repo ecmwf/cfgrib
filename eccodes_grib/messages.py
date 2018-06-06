@@ -128,8 +128,11 @@ class PyIndex(collections.Mapping):
             for key, args in self.schema.items():
                 try:
                     value = message.message_get(key, *args)
-                except eccodes.EcCodesError:
-                    value = 'undef'
+                except eccodes.EcCodesError as ex:
+                    if ex.code == eccodes.lib.GRIB_NOT_FOUND:
+                        value = 'undef'
+                    else:
+                        raise
                 header_values.append(value)
                 values = self.header_values.setdefault(key, [])
                 if value not in values:
