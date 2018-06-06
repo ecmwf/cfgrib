@@ -83,12 +83,6 @@ CODES_TYPE_SECTION = lib.GRIB_TYPE_SECTION
 CODES_TYPE_LABEL = lib.GRIB_TYPE_LABEL
 CODES_TYPE_MISSING = lib.GRIB_TYPE_MISSING
 
-KEY_TYPES = {
-    int: CODES_TYPE_LONG,
-    float: CODES_TYPE_DOUBLE,
-    bytes: CODES_TYPE_STRING,
-}
-
 CODES_KEYS_ITERATOR_ALL_KEYS = 0
 CODES_KEYS_ITERATOR_SKIP_READ_ONLY = (1 << 0)
 CODES_KEYS_ITERATOR_SKIP_OPTIONAL = (1 << 1)
@@ -524,7 +518,7 @@ def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG
 
 
 def codes_get(handle, key, key_type=None, length=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, type, bool, logging.Logger) -> T.Any
+    # type: (cffi.FFI.CData, bytes, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
