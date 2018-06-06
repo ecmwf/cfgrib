@@ -22,7 +22,7 @@ def test_xarray_open_dataset():
     res = xr.open_dataset(datastore)
 
     assert res.attrs['edition'] == 1
-    assert res.i.attrs['gridType'] == 'regular_ll'
+    assert res['t'].attrs['gridType'] == 'regular_ll'
     # assert res['paramId_130'].attrs['units'] == 'K'
 
     assert res['t'].mean() > 0.

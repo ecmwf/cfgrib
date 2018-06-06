@@ -111,6 +111,21 @@ def enforce_unique_attributes(
 
 
 @attr.attrs()
+class SimpleCoordinateVariable(AbstractCoordinateVariable):
+    name = attr.attrib()
+    data = attr.attrib()
+    dimensions = attr.attrib()
+    attributes = attr.attrib()
+
+    def __attrs_post_init__(self):
+        self.shape = len(self.data)
+
+    @property
+    def size(self):
+        return len(self.data)
+
+
+@attr.attrs()
 class HeaderCoordinateVariable(AbstractCoordinateVariable):
     index = attr.attrib()
     coordinate_key = attr.attrib(type=str)
@@ -172,7 +187,14 @@ class DataVariable(AbstractCoordinateVariable):
                 if paramId == self.paramId:
                     self.name = shortName
 
+        # FIXME: the order of the instructions until the end of the function is significant.
+        #   A refactor is sorely needed.
+        leader = next(iter(self.stream))
+
         self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+        spatial_attributes_keys = FIELD_ATTRIBUTES_KEYS.copy()
+        spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
+        self.attributes.update(enforce_unique_attributes(self.index, spatial_attributes_keys))
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
@@ -183,12 +205,21 @@ class DataVariable(AbstractCoordinateVariable):
                 log.exception("coordinate %r failed", coord_key)
 
         # FIXME: move to a function
-        self.coordinates['i'] = SpatialCoordinateVariable(self.index)
-        self.dimensions = tuple(dim for dim, coord in self.coordinates.items() if coord.size > 1)
-        self.attributes['coordinates'] = ' '.join(self.coordinates.keys())
-
+        self.attributes['coordinates'] = ' '.join(self.coordinates.keys()) + ' lat lon'
+        self.dimensions = tuple(d for d, c in self.coordinates.items() if c.size > 1) + ('i',)
         self.ndim = len(self.dimensions)
-        self.shape = tuple(coord.size for coord in self.coordinates.values() if coord.size > 1)
+        self.shape = tuple(self.coordinates[d].size for d in self.dimensions[:-1])
+        self.shape += (leader['numberOfDataPoints'],)
+
+        # add secondary coordinates
+        latitude = leader['latitudes']
+        self.coordinates['lat'] = SimpleCoordinateVariable(
+            name='lat', data=latitude, dimensions=('i',), attributes={'units': 'degrees_north'},
+        )
+        longitude = leader['longitudes']
+        self.coordinates['lon'] = SimpleCoordinateVariable(
+            name='lon', data=longitude, dimensions=('i',), attributes={'units': 'degrees_east'},
+        )
 
         # Variable attributes
         self.dtype = np.dtype('float32')
@@ -244,9 +275,7 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
         data_variable = DataVariable(index=index, stream=stream, paramId=param_id)
         vars = collections.OrderedDict([(data_variable.name, data_variable)])
         vars.update(data_variable.coordinates)
-        dims = collections.OrderedDict()
-        for dim in data_variable.dimensions:
-            dims[dim] = vars[dim].size
+        dims = collections.OrderedDict((d, s) for d, s in zip(data_variable.dimensions, data_variable.shape))
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, global_attributes_keys)
