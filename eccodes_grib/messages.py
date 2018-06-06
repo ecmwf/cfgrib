@@ -74,8 +74,11 @@ class Message(collections.Mapping):
         # type: (str) -> T.Any
         try:
             return self.message_get(item)
-        except eccodes.EcCodesError:
-            raise KeyError(item)
+        except eccodes.EcCodesError as ex:
+            if ex.code == eccodes.lib.GRIB_NOT_FOUND:
+                raise KeyError(item)
+            else:
+                raise
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
@@ -210,8 +213,11 @@ class Index(collections.Mapping):
         while True:
             try:
                 yield Message.fromindex(codes_index=self.codes_index)
-            except eccodes.EcCodesError:
-                break
+            except eccodes.EcCodesError as ex:
+                if ex.code == eccodes.lib.GRIB_END_OF_INDEX:
+                    break
+                else:
+                    raise
 
 
 @attr.attrs()
