@@ -84,6 +84,18 @@ def test_codes_get_array(key, expected_value):
     assert result == expected_value
 
 
+def test_codes_get_array_errors():
+    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+
+    with pytest.raises(eccodes.EcCodesError) as err:
+        eccodes.codes_get_array(grib, b'values', size=1)  # too short
+    assert err.value.code == eccodes.lib.GRIB_ARRAY_TOO_SMALL
+
+    with pytest.raises(eccodes.EcCodesError) as err:
+        eccodes.codes_get_array(grib, b'values', key_type=eccodes.CODES_TYPE_LONG)  # wrong type
+    assert err.value.code == eccodes.lib.GRIB_NOT_IMPLEMENTED
+
+
 @pytest.mark.parametrize('key, expected_value', [
     (b'numberOfDataPoints', 7320),
     (b'gridType', b'regular_ll'),
@@ -94,6 +106,14 @@ def test_codes_get(key, expected_value):
     result = eccodes.codes_get(grib, key)
 
     assert result == expected_value
+
+
+def test_codes_get_errors():
+    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+
+    with pytest.raises(eccodes.EcCodesError) as err:
+        eccodes.codes_get(grib, b'gridType', length=1)  # too short
+    assert err.value.code == eccodes.lib.GRIB_BUFFER_TOO_SMALL
 
 
 @pytest.mark.parametrize('key, value', [
