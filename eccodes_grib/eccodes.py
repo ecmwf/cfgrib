@@ -146,12 +146,6 @@ def check_return(func):
 #
 # CFFI reimplementation of gribapi.py functions with codes names
 #
-def grib_get_gaussian_latitudes(truncation):
-    latitudes = ffi.new('double[]', truncation * 2)
-    check_return(lib.grib_get_gaussian_latitudes)(truncation, latitudes)
-    return list(latitudes)
-
-
 def codes_index_new_from_file(path, keys):
     # type: (bytes, T.Iterable[bytes]) -> cffi.FFI.CData
     keys_enc = b','.join(keys)
@@ -184,13 +178,6 @@ codes_handle_delete = lib.codes_handle_delete
 def codes_new_from_index(indexid):
     # type: (cffi.FFI.CData) -> cffi.FFI.CData
     return check_last(lib.codes_handle_new_from_index)(indexid)
-
-
-def codes_new_from_samples(samplename, product_kind):
-    # type: (bytes, int) -> cffi.FFI.CData
-    if product_kind != CODES_PRODUCT_GRIB:
-        raise NotImplemented("Support implemented only for GRIB.")
-    return lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
 
 
 def codes_index_get_size(indexid, key):
@@ -576,19 +563,3 @@ def codes_keys_iterator_get_name(iterator):
 def codes_keys_iterator_delete(iterator_id):
     codes_keys_iterator_delete = check_return(lib.codes_keys_iterator_delete)
     codes_keys_iterator_delete(iterator_id)
-
-
-def codes_grib_get_data(message_id):
-    # type: (cffi.FFI.CData) -> T.Iterable[T.Tuple[float, float, float]]
-    """
-    Retrieves the field values in each message and outputs three lists of
-    equal length containing, for each index, the latitude, longitude and
-    field value.
-    """
-    size = codes_get(message_id, b'numberOfPoints')
-    latitude = ffi.new('double[]', size)
-    longitude = ffi.new('double[]', size)
-    data = ffi.new('double[]', size)
-    codes_grib_get_data = check_return(lib.codes_grib_get_data)
-    codes_grib_get_data(message_id, latitude, longitude, data)
-    return zip(latitude, longitude, data)
