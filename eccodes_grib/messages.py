@@ -25,6 +25,9 @@ import attr
 from . import eccodes
 
 
+_MARKER = object()
+
+
 @attr.attrs()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
@@ -47,18 +50,23 @@ class Message(collections.Mapping):
     def __del__(self):
         eccodes.codes_handle_delete(self.codes_id)
 
-    def message_get(self, item, key_type=None, size=None, length=None):
+    def message_get(self, item, key_type=None, size=None, length=None, default=_MARKER):
         # type: (str, type) -> T.Any
         """Get value of a given key as its native or specified type."""
         key = item.encode(self.key_encoding)
-        if size is None:
-            size = eccodes.codes_get_size(self.codes_id, key)
-        if size == 0:
-            return None
-        values = eccodes.codes_get_array(self.codes_id, key, key_type, size, length)
+        try:
+            values = eccodes.codes_get_array(self.codes_id, key, key_type, size, length)
+        except eccodes.EcCodesError as ex:
+            if ex.code == eccodes.lib.GRIB_NOT_FOUND:
+                if default is _MARKER:
+                    raise KeyError(item)
+                else:
+                    return default
+            else:
+                raise
         if values and isinstance(values[0], bytes):
             values = [v.decode(self.value_encoding) for v in values]
-        if size == 1:
+        if len(values) == 1:
             return values[0]
         return values
 
@@ -72,13 +80,7 @@ class Message(collections.Mapping):
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
-        try:
-            return self.message_get(item)
-        except eccodes.EcCodesError as ex:
-            if ex.code == eccodes.lib.GRIB_NOT_FOUND:
-                raise KeyError(item)
-            else:
-                raise
+        return self.message_get(item)
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
@@ -129,13 +131,7 @@ class PyIndex(collections.Mapping):
         for message in self.stream:
             header_values = []
             for key, args in self.schema.items():
-                try:
-                    value = message.message_get(key, *args)
-                except eccodes.EcCodesError as ex:
-                    if ex.code == eccodes.lib.GRIB_NOT_FOUND:
-                        value = 'undef'
-                    else:
-                        raise
+                value = message.message_get(key, *args, default='undef')
                 header_values.append(value)
                 values = self.header_values.setdefault(key, [])
                 if value not in values:
