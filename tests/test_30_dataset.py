@@ -43,7 +43,16 @@ def test_DataVariable():
 
 
 def test_Dataset():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode=False)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert len(res.variables) == 9
+    assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+
+
+def test_Dataset_encode():
     res = dataset.Dataset.fromstream(TEST_DATA)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 9
+    assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')

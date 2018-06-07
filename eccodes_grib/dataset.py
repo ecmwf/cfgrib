@@ -252,20 +252,37 @@ class DataVariable(AbstractCoordinateVariable):
     def build_array(self):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
-        for message in self.stream:
-            if message.message_get('paramId', eccodes.CODES_TYPE_LONG) != self.paramId:
-                continue
-            header_indexes = []  # type: T.List[int]
-            header_values = []
-            for dim in self.dimensions[:-1]:
-                header_values.append(message.message_get(dim, eccodes.CODES_TYPE_LONG))
-                header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
-            # NOTE: fill a single field as found in the message
-            values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-            data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
+        with open(self.stream.path) as file:
+            for header_values, offset in sorted(self.index.offsets.items(), key=lambda x: x[1]):
+                header_indexes = []  # type: T.List[int]
+                for dim in self.dimensions[:-1]:
+                    header_value = header_values[self.index.index_keys.index(dim)]
+                    header_indexes.append(self.coordinates[dim].data.index(header_value))
+                # NOTE: fill a single field as found in the message
+                message = messages.Message.fromfile(file, offset=offset[0])
+                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+                data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
         missing_value = self.attributes.get('missingValue', 9999)
         data[data == missing_value] = np.nan
         return data
+
+    # def build_array(self):
+    #     # type: () -> np.ndarray
+    #     data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+    #     for message in self.stream:
+    #         if message.message_get('paramId', eccodes.CODES_TYPE_LONG) != self.paramId:
+    #             continue
+    #         header_indexes = []  # type: T.List[int]
+    #         header_values = []
+    #         for dim in self.dimensions[:-1]:
+    #             header_values.append(message.message_get(dim, eccodes.CODES_TYPE_LONG))
+    #             header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
+    #         # NOTE: fill a single field as found in the message
+    #         values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+    #         data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
+    #     missing_value = self.attributes.get('missingValue', 9999)
+    #     data[data == missing_value] = np.nan
+    #     return data
 
     def __getitem__(self, item):
         return self.data[item]
@@ -302,10 +319,11 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
+    encode = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, **kwagrs):
-        return cls(stream=messages.Stream(path, **kwagrs))
+    def fromstream(cls, path, encode=True, **kwagrs):
+        return cls(stream=messages.Stream(path, **kwagrs), encode=encode)
 
     def __attrs_post_init__(self):
         dimensions, variables, attributes = build_dataset_components(self.stream)
