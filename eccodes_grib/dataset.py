@@ -113,14 +113,18 @@ def enforce_unique_attributes(
 class SimpleCoordinateVariable(AbstractCoordinateVariable):
     name = attr.attrib()
     data = attr.attrib()
-    dimensions = attr.attrib(default=None)
+    dimensions = attr.attrib(default=())
     attributes = attr.attrib(default={})
 
     def __attrs_post_init__(self):
-        if self.dimensions is None:
-            self.dimensions = (self.name,)
         self.size = len(self.data)
-        self.shape = (self.size,)
+        if self.size > 1:
+            if len(self.dimensions) == 0:
+                self.dimensions = (self.name,)
+            self.shape = (self.size,)
+        else:
+            self.data = self.data[0]
+            self.shape = ()
 
 
 def header_coordinate(index, coordinate_key, attributes_keys):
