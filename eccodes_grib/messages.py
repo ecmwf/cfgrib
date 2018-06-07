@@ -159,10 +159,17 @@ class Index(collections.Mapping):
             file.seek(offset)
             yield Message.fromfile(file)
 
-    @classmethod
-    def frompath(cls, path, *args, **kwargs):
-        stream = Stream(path)
-        return cls(stream, *args, **kwargs)
+    def subindex(self, dict_query={}, **query):
+        query.update(dict_query)
+        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
+        offsets = {}
+        for header_values in self.offsets:
+            for idx, val in raw_query:
+                if header_values[idx] != val:
+                    break
+            else:
+                offsets[header_values] = self.offsets[header_values]
+        return type(self)(index_keys=self.index_keys, offsets=offsets)
 
 
 @attr.attrs()

@@ -69,6 +69,17 @@ def test_Index():
         list(res.select())
 
 
+def test_Index_subindex():
+    index = messages.Index.fromstream(messages.Stream(TEST_DATA), ['paramId'])
+    assert index.get('paramId') == [129, 130]
+    # assert sum(1 for _ in res.select(paramId=130)) == 80
+
+    res = index.subindex(paramId=130)
+
+    assert res.get('paramId') == [130]
+    assert len(res) == 1
+
+
 def test_Stream():
     res = messages.Stream(TEST_DATA)
     leader = res.first()
