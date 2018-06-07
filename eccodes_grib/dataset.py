@@ -87,10 +87,6 @@ ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + \
     SPATIAL_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS
 
 
-class AbstractCoordinateVariable(object):
-    pass
-
-
 class CoordinateNotFound(Exception):
     pass
 
@@ -108,24 +104,6 @@ def enforce_unique_attributes(
         if values:
             attributes[key] = values[0]
     return attributes
-
-
-@attr.attrs()
-class SimpleCoordinateVariable(AbstractCoordinateVariable):
-    name = attr.attrib()
-    data = attr.attrib()
-    dimensions = attr.attrib(default=())
-    attributes = attr.attrib(default={})
-
-    def __attrs_post_init__(self):
-        self.size = len(self.data)
-        if self.size > 1:
-            if len(self.dimensions) == 0:
-                self.dimensions = (self.name,)
-            self.shape = (self.size,)
-        else:
-            self.data = self.data[0]
-            self.shape = ()
 
 
 def simple_header_coordinate(index, coordinate_key, attributes_keys):
@@ -181,8 +159,21 @@ def data_date_time(index):
     return data, attributes, reverse_index
 
 
+@attr.attrs(cmp=False)
+class Variable(object):
+    dimensions = attr.attrib(type=T.Sequence[str])
+    data = attr.attrib(type=np.ndarray)
+    attributes = attr.attrib(default={}, type=T.Mapping[str, T.Any])
+
+    def __eq__(self, other):
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        equal = (self.dimensions, self.attributes) == (other.dimensions, other.attributes)
+        return equal and np.array_equal(self.data, other.data)
+
+
 @attr.attrs()
-class DataVariable(AbstractCoordinateVariable):
+class DataVariable(object):
     index = attr.attrib()
     stream = attr.attrib()
     paramId = attr.attrib()
@@ -211,30 +202,36 @@ class DataVariable(AbstractCoordinateVariable):
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
-                data, attributes = simple_header_coordinate(
+                values, attributes = simple_header_coordinate(
                     self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
-                )
-                self.coordinates[coord_key] = SimpleCoordinateVariable(
-                    name=coord_key, data=data, attributes=attributes,
                 )
             except CoordinateNotFound:
                 log.exception("coordinate %r failed", coord_key)
+                continue
+            data = np.array(values)
+            dimensions = (coord_key,)
+            if len(values) == 1:
+                data = data[0]
+                dimensions = ()
+            self.coordinates[coord_key] = Variable(
+                dimensions=dimensions, data=data, attributes=attributes,
+            )
 
         # FIXME: move to a function
         self.attributes['coordinates'] = ' '.join(self.coordinates.keys()) + ' lat lon'
-        self.dimensions = tuple(d for d, c in self.coordinates.items() if c.size > 1) + ('i',)
+        self.dimensions = tuple(d for d, c in self.coordinates.items() if c.data.size > 1) + ('i',)
         self.ndim = len(self.dimensions)
-        self.shape = tuple(self.coordinates[d].size for d in self.dimensions[:-1])
+        self.shape = tuple(self.coordinates[d].data.size for d in self.dimensions[:-1])
         self.shape += (leader['numberOfPoints'],)
 
         # add secondary coordinates
         latitude = leader['latitudes']
-        self.coordinates['lat'] = SimpleCoordinateVariable(
-            name='lat', data=latitude, dimensions=('i',), attributes={'units': 'degrees_north'},
+        self.coordinates['lat'] = Variable(
+            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
         )
         longitude = leader['longitudes']
-        self.coordinates['lon'] = SimpleCoordinateVariable(
-            name='lon', data=longitude, dimensions=('i',), attributes={'units': 'degrees_east'},
+        self.coordinates['lon'] = Variable(
+            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
         )
 
         # Variable attributes
@@ -257,7 +254,7 @@ class DataVariable(AbstractCoordinateVariable):
                 header_indexes = []  # type: T.List[int]
                 for dim in self.dimensions[:-1]:
                     header_value = header_values[self.index.index_keys.index(dim)]
-                    header_indexes.append(self.coordinates[dim].data.index(header_value))
+                    header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
                 # NOTE: fill a single field as found in the message
                 message = messages.Message.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
@@ -328,5 +325,5 @@ class Dataset(object):
     def __attrs_post_init__(self):
         dimensions, variables, attributes = build_dataset_components(self.stream)
         self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
-        self.variables = variables  # type: T.Dict[str, AbstractCoordinateVariable]
+        self.variables = variables  # type: T.Dict[str, Variable]
         self.attributes = attributes  # type: T.Dict[str, T.Any]

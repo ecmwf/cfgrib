@@ -62,7 +62,7 @@ class GribDataStore(AbstractDataStore):
         encoding = {}
         # save source so __repr__ can detect if it's local or not
         encoding['source'] = self.ds.stream.path
-        encoding['original_shape'] = var.shape
+        encoding['original_shape'] = var.data.shape
 
         return Variable(dimensions, data, attrs, encoding)
 
