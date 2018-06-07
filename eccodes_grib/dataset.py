@@ -127,7 +127,7 @@ class SimpleCoordinateVariable(AbstractCoordinateVariable):
             self.shape = ()
 
 
-def header_coordinate(index, coordinate_key, attributes_keys):
+def simple_header_coordinate(index, coordinate_key, attributes_keys):
     data = index[coordinate_key]
     if len(data) == 1 and data[0] == 'undef':
         raise CoordinateNotFound("missing from GRIB stream: %r" % coordinate_key)
@@ -158,13 +158,15 @@ class DataVariable(AbstractCoordinateVariable):
         leader = next(iter(self.stream))
 
         self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+
         spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
         spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
         self.attributes.update(enforce_unique_attributes(self.index, spatial_attributes_keys))
+
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
-                data, attributes = header_coordinate(
+                data, attributes = simple_header_coordinate(
                     self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
                 )
                 self.coordinates[coord_key] = SimpleCoordinateVariable(
