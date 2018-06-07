@@ -112,11 +112,23 @@ def make_message_schema(message, schema_keys, encoding='ascii'):
 
 @attr.attrs()
 class Index(collections.Mapping):
-    stream = attr.attrib(type=str)
-    index_keys = attr.attrib(type=T.List[str])
-    codes_index = attr.attrib(default=None)
+    index_keys = attr.attrib(type=T.List[str], repr=False)
+    offsets = attr.attrib(repr=False)
     key_encoding = attr.attrib(default='ascii', type=str)
     value_encoding = attr.attrib(default='ascii', type=str)
+
+    @classmethod
+    def fromstream(cls, stream, index_keys):
+        schema = make_message_schema(next(iter(stream)), index_keys)
+        offsets = collections.OrderedDict()
+        for message in stream:
+            header_values = []
+            for key, args in schema.items():
+                value = message.message_get(key, *args, default='undef')
+                header_values.append(value)
+            offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
+            offsets.setdefault(tuple(header_values), []).append(offset)
+        return cls(index_keys=index_keys, offsets=offsets)
 
     def __iter__(self):
         return iter(self.index_keys)
@@ -125,19 +137,12 @@ class Index(collections.Mapping):
         return len(self.index_keys)
 
     def __attrs_post_init__(self):
-        self.schema = make_message_schema(next(iter(self.stream)), self.index_keys)
         self.header_values = {}
-        self.offsets = {}
-        for message in self.stream:
-            header_values = []
-            for key, args in self.schema.items():
-                value = message.message_get(key, *args, default='undef')
-                header_values.append(value)
-                values = self.header_values.setdefault(key, [])
+        for header_values in self.offsets:
+            for i, value in enumerate(header_values):
+                values = self.header_values.setdefault(self.index_keys[i], [])
                 if value not in values:
                     values.append(value)
-            offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
-            self.offsets.setdefault(tuple(header_values), []).append(offset)
 
     def __getitem__(self, item):
         # type: (str) -> list
@@ -239,4 +244,4 @@ class Stream(collections.Iterable):
         return EcCodesIndex(path=self.path, index_keys=index_keys)
 
     def index(self, index_keys):
-        return Index(stream=self, index_keys=index_keys)
+        return Index.fromstream(stream=self, index_keys=index_keys)
