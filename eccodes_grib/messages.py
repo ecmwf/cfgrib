@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import bytes, isinstance, str
 
 import collections
+import logging
 import typing as T  # noqa
 
 import attr
@@ -25,6 +26,7 @@ import attr
 from . import eccodes
 
 
+LOG = logging.getLogger(__name__)
 _MARKER = object()
 
 
@@ -68,7 +70,7 @@ class Message(collections.Mapping):
             values = [v.decode(self.value_encoding) for v in values]
         if len(values) == 1:
             return values[0]
-        return values
+        return tuple(values)
 
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[bytes, None, None]
@@ -92,13 +94,15 @@ class Message(collections.Mapping):
         return sum(1 for _ in self)
 
 
-def make_message_schema(message, schema_keys, encoding='ascii'):
+def make_message_schema(message, schema_keys, encoding='ascii', log=LOG):
     schema = collections.OrderedDict()
     for key in schema_keys:
         bkey = key.encode(encoding)
         try:
             key_type = eccodes.codes_get_native_type(message.codes_id, bkey)
-        except eccodes.EcCodesError:
+        except eccodes.EcCodesError as ex:
+            if ex.code != eccodes.lib.GRIB_NOT_FOUND:
+                log.exception("key %r failed", key)
             schema[key] = ()
             continue
         size = eccodes.codes_get_size(message.codes_id, bkey)
