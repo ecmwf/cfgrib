@@ -11,6 +11,14 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
+def test_from_grib_date_time():
+    datein = 20160706
+    timein = 1944
+    result = dataset.from_grib_date_time(datein, timein)
+
+    assert result == 1467834240
+
+
 def test_dict_merge():
     master = {'one': 1}
     dataset.dict_merge(master, {'two': 2})

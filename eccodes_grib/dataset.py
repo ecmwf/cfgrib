@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import list, object, str
 
 import collections
+import datetime
 import functools
 import logging
 import pkg_resources
@@ -134,6 +135,50 @@ def simple_header_coordinate(index, coordinate_key, attributes_keys):
 
     attributes = enforce_unique_attributes(index, attributes_keys)
     return data, attributes
+
+
+def from_grib_date_time(date, time):
+    # type: (int, int) -> int
+    """
+    Convert the date and time as encoded in a GRIB file in standard numpy-compatible
+    datetime64 string.
+
+    :param int date: the content of "dataDate" key
+    :param int time: the content of "dataTime" key
+
+    :rtype: str
+    """
+    # (int, int) -> int
+    hour = time // 100
+    minute = time % 100
+    year = date // 10000
+    month = date // 100 % 100
+    day = date % 100
+    data_datetime = datetime.datetime(year, month, day, hour, minute)
+    # Python 2 compatible timestamp implementation without timezone hurdle
+    # see: https://docs.python.org/3/library/datetime.html#datetime.datetime.timestamp
+    return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
+
+
+def data_date_time(index):
+    reverse_index = {}
+    data = []
+    idate = index.index_keys.index('dataDate')
+    itime = index.index_keys.index('dataTime')
+    for header_values in index.offsets:
+        date = header_values[idate]
+        time = header_values[itime]
+        seconds = from_grib_date_time(date, time)
+        if seconds not in data:
+            data.append(seconds)
+        reverse_index[seconds] = (date, time)
+    attributes = {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00',
+        'calendar': 'proleptic_gregorian',
+        'axis': 'T',
+        'standard_name': 'forecast_reference_time',
+    }
+    return data, attributes, reverse_index
 
 
 @attr.attrs()
