@@ -173,22 +173,48 @@ class Variable(object):
 
 
 @attr.attrs()
-class DataVariable(object):
+class DataArray(object):
+    # array_index = attr.attrib(default=None)
+
+    @property
+    def data(self):
+        if not hasattr(self, '_data'):
+            self._data = self.build_array()
+        return self._data
+
+    def build_array(self):
+        # type: () -> np.ndarray
+        data = np.full(self.array_index.shape, fill_value=np.nan, dtype='float32')
+        with open(self.array_index.path) as file:
+            for header_values, offset in sorted(self.array_index.offsets.items(), key=lambda x: x[1]):
+                header_indexes = []  # type: T.List[int]
+                for dim in self.dimensions[:-1]:
+                    header_value = header_values[self.array_index.index_keys.index(dim)]
+                    header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
+                # NOTE: fill a single field as found in the message
+                message = messages.Message.fromfile(file, offset=offset[0])
+                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+                data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
+        missing_value = self.attributes.get('missingValue', 9999)
+        data[data == missing_value] = np.nan
+        return data
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+
+@attr.attrs()
+class DataVariable(DataArray):
     index = attr.attrib()
     stream = attr.attrib()
-    paramId = attr.attrib()
-    name = attr.attrib(default=None, type=str)
 
     @classmethod
-    def fromstream(cls, paramId, name=None, *args, **kwargs):
+    def fromstream(cls, paramId, *args, **kwargs):
         stream = messages.Stream(*args, **kwargs)
         index = stream.index(ALL_KEYS).subindex(paramId=paramId)
-        return cls(index=index, stream=stream, paramId=paramId, name=name)
+        return cls(index=index, stream=stream)
 
     def __attrs_post_init__(self, log=LOG):
-        if self.name is None:
-            self.name = self.index['shortName'][0]
-
         # FIXME: the order of the instructions until the end of the function is significant.
         #   A refactor is sorely needed.
         leader = next(iter(self.stream))
@@ -240,12 +266,6 @@ class DataVariable(object):
         self.mask = False
         self.size = functools.reduce(lambda x, y: x * y, self.shape, 1)
 
-    @property
-    def data(self):
-        if not hasattr(self, '_data'):
-            self._data = self.build_array()
-        return self._data
-
     def build_array(self):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
@@ -281,9 +301,6 @@ class DataVariable(object):
     #     data[data == missing_value] = np.nan
     #     return data
 
-    def __getitem__(self, item):
-        return self.data[item]
-
 
 def dict_merge(master, update):
     for key, value in update.items():
@@ -301,9 +318,9 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
-    for param_id in param_ids:
-        var = DataVariable(index=index.subindex(paramId=param_id), stream=stream, paramId=param_id)
-        vars = collections.OrderedDict([(var.name, var)])
+    for param_id, short_name in zip(param_ids, index['shortName']):
+        var = DataVariable(index=index.subindex(paramId=param_id), stream=stream)
+        vars = collections.OrderedDict([(short_name, var)])
         vars.update(var.coordinates)
         dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.shape))
         dict_merge(dimensions, dims)
