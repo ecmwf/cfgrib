@@ -36,6 +36,13 @@ VERSION = pkg_resources.get_distribution("eccodes_grib").version
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
+GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
+
+# NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
+VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
+
+SPATIAL_COORDINATES_ATTRIBUTES_KEYS = ['gridType', 'numberOfPoints']
+
 GRID_TYPE_MAP = {
     'regular_ll': [
         'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
@@ -67,9 +74,6 @@ GRID_TYPE_MAP = {
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-# NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
-VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
-
 HEADER_COORDINATES_MAP = [
     ('number', ['totalNumber']),
     ('dataDate', []),
@@ -79,12 +83,9 @@ HEADER_COORDINATES_MAP = [
 ]
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
 HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
-FIELD_ATTRIBUTES_KEYS = list(['gridType', 'numberOfDataPoints'])  # NOTE: .copy() for python2
 
-GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
-
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + FIELD_ATTRIBUTES_KEYS + \
-          HEADER_COORDINATES_KEYS + GRID_TYPE_KEYS
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + \
+    SPATIAL_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS
 
 
 class AbstractCoordinateVariable(object):
@@ -152,22 +153,6 @@ class HeaderCoordinateVariable(AbstractCoordinateVariable):
 
 
 @attr.attrs()
-class SpatialCoordinateVariable(AbstractCoordinateVariable):
-    index = attr.attrib()
-    name = attr.attrib(default='i', type=str)
-
-    def __attrs_post_init__(self):
-        grid_type = self.index['gridType'][0]
-        attributes_keys = FIELD_ATTRIBUTES_KEYS.copy()
-        attributes_keys.extend(GRID_TYPE_MAP.get(grid_type, []))
-        self.attributes = enforce_unique_attributes(self.index, attributes_keys)
-        self.data = list(range(self.attributes['numberOfDataPoints']))
-        self.size = len(self.data)
-        self.dimensions = (self.name,)
-        self.shape = (self.size,)
-
-
-@attr.attrs()
 class DataVariable(AbstractCoordinateVariable):
     index = attr.attrib()
     stream = attr.attrib()
@@ -192,7 +177,7 @@ class DataVariable(AbstractCoordinateVariable):
         leader = next(iter(self.stream))
 
         self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
-        spatial_attributes_keys = FIELD_ATTRIBUTES_KEYS.copy()
+        spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
         spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
         self.attributes.update(enforce_unique_attributes(self.index, spatial_attributes_keys))
         self.coordinates = collections.OrderedDict()
@@ -209,7 +194,7 @@ class DataVariable(AbstractCoordinateVariable):
         self.dimensions = tuple(d for d, c in self.coordinates.items() if c.size > 1) + ('i',)
         self.ndim = len(self.dimensions)
         self.shape = tuple(self.coordinates[d].size for d in self.dimensions[:-1])
-        self.shape += (leader['numberOfDataPoints'],)
+        self.shape += (leader['numberOfPoints'],)
 
         # add secondary coordinates
         latitude = leader['latitudes']
@@ -272,10 +257,10 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     for param_id in param_ids:
-        data_variable = DataVariable(index=index, stream=stream, paramId=param_id)
-        vars = collections.OrderedDict([(data_variable.name, data_variable)])
-        vars.update(data_variable.coordinates)
-        dims = collections.OrderedDict((d, s) for d, s in zip(data_variable.dimensions, data_variable.shape))
+        var = DataVariable(index=index, stream=stream, paramId=param_id)
+        vars = collections.OrderedDict([(var.name, var)])
+        vars.update(var.coordinates)
+        dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.shape))
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, global_attributes_keys)
