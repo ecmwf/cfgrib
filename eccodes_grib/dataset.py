@@ -123,35 +123,13 @@ class SimpleCoordinateVariable(AbstractCoordinateVariable):
         self.shape = (self.size,)
 
 
-@attr.attrs(cmp=False)
-class HeaderCoordinateVariable(AbstractCoordinateVariable):
-    index = attr.attrib()
-    coordinate_key = attr.attrib(type=str)
-    attributes_keys = attr.attrib(default=(), type=T.List[str])
-    name = attr.attrib(default=None, type=str)
+def header_coordinate(index, coordinate_key, attributes_keys):
+    data = index[coordinate_key]
+    if len(data) == 1 and data[0] == 'undef':
+        raise CoordinateNotFound("missing from GRIB stream: %r" % coordinate_key)
 
-    def __attrs_post_init__(self):
-        values = self.index[self.coordinate_key]
-        if len(values) == 1 and values[0] == 'undef':
-            raise CoordinateNotFound("missing from GRIB stream: %r" % self.coordinate_key)
-
-        self.attributes = enforce_unique_attributes(self.index, self.attributes_keys)
-        if not self.name:
-            self.name = self.coordinate_key
-        self.size = len(values)
-        if self.size > 1:
-            self.dimensions = (self.name,)
-            self.data = values
-            self.shape = (self.size,)
-        else:
-            self.dimensions = ()
-            self.data = values[0]
-            self.shape = ()
-
-    def __eq__(self, other):
-        if isinstance(other, HeaderCoordinateVariable) and self.data == other.data:
-            return True
-        return False
+    attributes = enforce_unique_attributes(index, attributes_keys)
+    return data, attributes
 
 
 @attr.attrs()
@@ -182,8 +160,11 @@ class DataVariable(AbstractCoordinateVariable):
         self.coordinates = collections.OrderedDict()
         for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
             try:
-                self.coordinates[coord_key] = HeaderCoordinateVariable(
+                data, attributes = header_coordinate(
                     self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
+                )
+                self.coordinates[coord_key] = SimpleCoordinateVariable(
+                    name=coord_key, data=data, attributes=attributes,
                 )
             except CoordinateNotFound:
                 log.exception("coordinate %r failed", coord_key)
