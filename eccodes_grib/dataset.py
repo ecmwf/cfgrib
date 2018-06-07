@@ -53,7 +53,7 @@ GRID_TYPE_MAP = {
     'reduced_ll': [
         'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
-        # FIXME: 'pl' is an array and needs special handling
+        'pl',
     ],
     'regular_gg': [
         'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
@@ -67,9 +67,7 @@ GRID_TYPE_MAP = {
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfSouthernPoleInDegrees',
         'DyInMetres', 'DxInMetres', 'Latin2InDegrees', 'Latin1InDegrees', 'Ny', 'Nx',
     ],
-    'reduced_gg': [
-        'N',  # FIXME: 'pl' is an array and needs special handling
-    ],
+    'reduced_gg': ['N',  'pl'],
     'sh': ['M', 'K', 'J'],
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
