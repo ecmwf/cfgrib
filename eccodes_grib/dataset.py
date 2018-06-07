@@ -251,7 +251,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
-    index = stream.py_index(ALL_KEYS)
+    index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()

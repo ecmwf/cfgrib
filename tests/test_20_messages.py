@@ -28,8 +28,8 @@ def test_Message():
     list(res.items())
 
 
-def test_Index():
-    res = messages.Index(TEST_DATA, ['paramId'])
+def test_EcCodesIndex():
+    res = messages.EcCodesIndex(TEST_DATA, ['paramId'])
     assert res.get('paramId') == [129, 130]
     assert sum(1 for _ in res.select(paramId='130')) == 80
     assert sum(1 for _ in res.select(paramId=130)) == 80
@@ -55,8 +55,8 @@ def test_make_message_schema():
     assert res['non-existent'] == ()
 
 
-def test_PyIndex():
-    res = messages.PyIndex.frompath(TEST_DATA, ['paramId'])
+def test_Index():
+    res = messages.Index.frompath(TEST_DATA, ['paramId'])
     assert res.get('paramId') == [129, 130]
     assert sum(1 for _ in res.select(paramId=130)) == 80
     assert len(res) == 1

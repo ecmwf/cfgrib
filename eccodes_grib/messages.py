@@ -111,7 +111,7 @@ def make_message_schema(message, schema_keys, encoding='ascii'):
 
 
 @attr.attrs()
-class PyIndex(collections.Mapping):
+class Index(collections.Mapping):
     stream = attr.attrib(type=str)
     index_keys = attr.attrib(type=T.List[str])
     codes_index = attr.attrib(default=None)
@@ -161,7 +161,7 @@ class PyIndex(collections.Mapping):
 
 
 @attr.attrs()
-class Index(collections.Mapping):
+class EcCodesIndex(collections.Mapping):
     path = attr.attrib(type=str)
     index_keys = attr.attrib(type=T.List[str])
     codes_index = attr.attrib(default=None)
@@ -234,9 +234,9 @@ class Stream(collections.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, index_keys):
-        # type: (T.Iterable[str]) -> Index
-        return Index(path=self.path, index_keys=index_keys)
+    def eccodes_index(self, index_keys):
+        # type: (T.Iterable[str]) -> EcCodesIndex
+        return EcCodesIndex(path=self.path, index_keys=index_keys)
 
-    def py_index(self, index_keys):
-        return PyIndex(stream=self, index_keys=index_keys)
+    def index(self, index_keys):
+        return Index(stream=self, index_keys=index_keys)
