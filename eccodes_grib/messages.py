@@ -38,7 +38,9 @@ class Message(collections.Mapping):
     value_encoding = attr.attrib(default='ascii', type=str)
 
     @classmethod
-    def fromfile(cls, file, *args, **kwargs):
+    def fromfile(cls, file, offset=None, *args, **kwargs):
+        if offset is not None:
+            file.seek(offset)
         codes_id = eccodes.codes_new_from_file(file, eccodes.CODES_PRODUCT_GRIB)
         if codes_id is None:
             raise EOFError("end-of-file reached.")
