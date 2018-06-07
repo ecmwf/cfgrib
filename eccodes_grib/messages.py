@@ -70,7 +70,7 @@ class Message(collections.Mapping):
             values = [v.decode(self.value_encoding) for v in values]
         if len(values) == 1:
             return values[0]
-        return tuple(values)
+        return values
 
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[bytes, None, None]
@@ -166,7 +166,7 @@ class Index(collections.Mapping):
     def subindex(self, dict_query={}, **query):
         query.update(dict_query)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = {}
+        offsets = collections.OrderedDict()
         for header_values in self.offsets:
             for idx, val in raw_query:
                 if header_values[idx] != val:
