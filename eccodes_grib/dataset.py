@@ -125,7 +125,7 @@ class SimpleCoordinateVariable(AbstractCoordinateVariable):
         self.shape = (self.size,)
 
 
-@attr.attrs()
+@attr.attrs(cmp=False)
 class HeaderCoordinateVariable(AbstractCoordinateVariable):
     index = attr.attrib()
     coordinate_key = attr.attrib(type=str)
@@ -150,6 +150,11 @@ class HeaderCoordinateVariable(AbstractCoordinateVariable):
             self.data = values[0]
             self.shape = ()
 
+    def __eq__(self, other):
+        if isinstance(other, HeaderCoordinateVariable) and self.data == other.data:
+            return True
+        return False
+
 
 @attr.attrs()
 class DataVariable(AbstractCoordinateVariable):
@@ -161,21 +166,18 @@ class DataVariable(AbstractCoordinateVariable):
     @classmethod
     def fromstream(cls, paramId, name=None, *args, **kwargs):
         stream = messages.Stream(*args, **kwargs)
-        index = stream.index(ALL_KEYS)
+        index = stream.index(ALL_KEYS).subindex(paramId=paramId)
         return cls(index=index, stream=stream, paramId=paramId, name=name)
 
     def __attrs_post_init__(self, log=LOG):
         if self.name is None:
-            self.name = 'paramId_%s' % self.paramId
-            for paramId, shortName in zip(self.index['paramId'], self.index['shortName']):
-                if paramId == self.paramId:
-                    self.name = shortName
+            self.name = self.index['shortName'][0]
 
         # FIXME: the order of the instructions until the end of the function is significant.
         #   A refactor is sorely needed.
         leader = next(iter(self.stream))
 
-        self.attributes = {}  # enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+        self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
         spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
         spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
         self.attributes.update(enforce_unique_attributes(self.index, spatial_attributes_keys))
@@ -256,7 +258,7 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     for param_id in param_ids:
-        var = DataVariable(index=index, stream=stream, paramId=param_id)
+        var = DataVariable(index=index.subindex(paramId=param_id), stream=stream, paramId=param_id)
         vars = collections.OrderedDict([(var.name, var)])
         vars.update(var.coordinates)
         dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.shape))
