@@ -104,4 +104,4 @@ venv.bak/
 .mypy_cache/
 
 # test files
-tests/cds*.grib
+tests/sample-data/cds*.grib
