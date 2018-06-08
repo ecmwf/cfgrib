@@ -186,7 +186,7 @@ class DataArray(object):
                 # NOTE: fill a single field as found in the message
                 message = messages.Message.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-                data.__setitem__(header_indexes + (slice(None, None),), values)
+                data.__getitem__(header_indexes).flat[:] = values
         data[data == self.missing_value] = np.nan
         return data
 
@@ -199,12 +199,9 @@ class DataArray(object):
 
 
 def build_data_var_components(path, index, encode_datetime=False, log=LOG, **kwargs):
-    stream = messages.Stream(path=path, **kwargs)
-
-    # FIXME: the order of the instructions until the end of the function is significant.
-    #   A refactor is sorely needed.
-    leader = next(iter(stream))
-
+    # FIXME: This function is a monster. It must die... but not today :/
+    # BEWARE: The order of the instructions in the function is significant.
+    leader = next(iter(messages.Stream(path=path, **kwargs)))
     attributes = enforce_unique_attributes(index, VARIABLE_ATTRIBUTES_KEYS)
 
     spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
@@ -250,23 +247,37 @@ def build_data_var_components(path, index, encode_datetime=False, log=LOG, **kwa
 
     # FIXME: move to a function
     attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
-    dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1) + ('i',)
-    shape = tuple(coord_vars[d].data.size for d in dimensions[:-1])
-    shape += (leader['numberOfPoints'],)
+    dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
+    shape = tuple(coord_vars[d].data.size for d in dimensions)
+    if leader['gridType'] == 'regular_ll':
+        spacial_ndim = 2
+        shape += (leader['Nj'], leader['Ni'],)
+        coord_vars['lat'] = Variable(
+            dimensions=('lat',), data=np.linspace(-90., 90., leader['Nj']), attributes={'units': 'degrees_north'},
+        )
+        coord_vars['lon'] = Variable(
+            dimensions=('lon',), data=np.linspace(0., 360, leader['Ni'], endpoint=False), attributes={'units': 'degrees_north'},
+        )
+        dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
 
-    # add secondary coordinates
-    latitude = leader['latitudes']
-    coord_vars['lat'] = Variable(
-        dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
-    )
-    longitude = leader['longitudes']
-    coord_vars['lon'] = Variable(
-        dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
-    )
+    else:
+        spacial_ndim = 1
+        dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1) + ('i',)
+        shape += (leader['numberOfPoints'],)
+
+        # add secondary coordinates
+        latitude = leader['latitudes']
+        coord_vars['lat'] = Variable(
+            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
+        )
+        longitude = leader['longitudes']
+        coord_vars['lon'] = Variable(
+            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
+        )
     offsets = collections.OrderedDict()
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
-        for dim in dimensions[:-1]:
+        for dim in dimensions[:-spacial_ndim]:
             if encode_datetime and dim == 'ref_time':
                 date = header_values[index.index_keys.index('dataDate')]
                 time = header_values[index.index_keys.index('dataTime')]
