@@ -51,7 +51,7 @@ class GribDataStore(AbstractDataStore):
     def open_store_variable(self, name, var):
         from eccodes_grib import dataset
 
-        if isinstance(var, dataset.DataVariable):
+        if isinstance(var.data, dataset.DataArray):
             data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data

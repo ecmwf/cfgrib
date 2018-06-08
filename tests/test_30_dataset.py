@@ -5,6 +5,7 @@ import os.path
 
 import pytest
 
+from eccodes_grib import messages
 from eccodes_grib import dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
@@ -30,12 +31,13 @@ def test_dict_merge():
         dataset.dict_merge(master, {'two': 3})
 
 
-def test_DataVariable():
-    res = dataset.DataVariable.fromstream(path=TEST_DATA, paramId=130)
-    assert res.dimensions == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
-    assert res.data.shape == (10, 2, 2, 2, 7320)
+def test_build_data_var_components():
+    index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
+    dims, data_var, coord_vars = dataset.build_data_var_components(path=TEST_DATA, index=index)
+    assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
+    assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
-    assert res.data[:].mean() > 0.  # equivalent ot not np.isnan without importing numpy
+    assert data_var.data[:].mean() > 0.  # equivalent ot not np.isnan without importing numpy
 
 
 def test_Dataset():

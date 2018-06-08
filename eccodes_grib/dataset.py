@@ -175,7 +175,7 @@ class Variable(object):
 class DataArray(object):
     path = attr.attrib()
     shape = attr.attrib()
-    offsets = attr.attrib()
+    offsets = attr.attrib(repr=False)
     missing_value = attr.attrib()
 
     @property
@@ -204,108 +204,66 @@ class DataArray(object):
         return self.data.dtype
 
 
-@attr.attrs()
-class DataVariable(object):
-    index = attr.attrib()
-    stream = attr.attrib()
+def build_data_var_components(path, index, log=LOG, **kwargs):
+    stream = messages.Stream(path=path, **kwargs)
 
-    @classmethod
-    def fromstream(cls, paramId, *args, **kwargs):
-        stream = messages.Stream(*args, **kwargs)
-        index = stream.index(ALL_KEYS).subindex(paramId=paramId)
-        return cls(index=index, stream=stream)
+    # FIXME: the order of the instructions until the end of the function is significant.
+    #   A refactor is sorely needed.
+    leader = next(iter(stream))
 
-    def __attrs_post_init__(self, log=LOG):
-        # FIXME: the order of the instructions until the end of the function is significant.
-        #   A refactor is sorely needed.
-        leader = next(iter(self.stream))
+    attributes = enforce_unique_attributes(index, VARIABLE_ATTRIBUTES_KEYS)
 
-        self.attributes = enforce_unique_attributes(self.index, VARIABLE_ATTRIBUTES_KEYS)
+    spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
+    spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
+    attributes.update(enforce_unique_attributes(index, spatial_attributes_keys))
 
-        spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
-        spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
-        self.attributes.update(enforce_unique_attributes(self.index, spatial_attributes_keys))
-
-        self.coordinates = collections.OrderedDict()
-        for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
-            try:
-                values, attributes = simple_header_coordinate(
-                    self.index, coordinate_key=coord_key, attributes_keys=attrs_keys,
-                )
-            except CoordinateNotFound:
-                log.exception("coordinate %r failed", coord_key)
-                continue
-            data = np.array(values)
-            dimensions = (coord_key,)
-            if len(values) == 1:
-                data = data[0]
-                dimensions = ()
-            self.coordinates[coord_key] = Variable(
-                dimensions=dimensions, data=data, attributes=attributes,
+    coord_vars = collections.OrderedDict()
+    for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
+        try:
+            values, attrs = simple_header_coordinate(
+                index, coordinate_key=coord_key, attributes_keys=attrs_keys,
             )
-
-        # FIXME: move to a function
-        self.attributes['coordinates'] = ' '.join(self.coordinates.keys()) + ' lat lon'
-        self.dimensions = tuple(d for d, c in self.coordinates.items() if c.data.size > 1) + ('i',)
-        self.ndim = len(self.dimensions)
-        shape = tuple(self.coordinates[d].data.size for d in self.dimensions[:-1])
-        shape += (leader['numberOfPoints'],)
-
-        # add secondary coordinates
-        latitude = leader['latitudes']
-        self.coordinates['lat'] = Variable(
-            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
-        )
-        longitude = leader['longitudes']
-        self.coordinates['lon'] = Variable(
-            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
-        )
-        offsets = collections.OrderedDict()
-        for header_values, offset in self.index.offsets.items():
-            header_indexes = []  # type: T.List[int]
-            for dim in self.dimensions[:-1]:
-                header_value = header_values[self.index.index_keys.index(dim)]
-                header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
-            offsets[tuple(header_indexes)] = offset
-        missing_value = self.attributes.get('missingValue', 9999)
-        self.data = DataArray(
-            path=self.stream.path, shape=shape, offsets=offsets, missing_value=missing_value,
+        except CoordinateNotFound:
+            log.exception("coordinate %r failed", coord_key)
+            continue
+        data = np.array(values)
+        dimensions = (coord_key,)
+        if len(values) == 1:
+            data = data[0]
+            dimensions = ()
+        coord_vars[coord_key] = Variable(
+            dimensions=dimensions, data=data, attributes=attrs,
         )
 
-    def build_array(self):
-        # type: () -> np.ndarray
-        data = np.full(self.shape, fill_value=np.nan, dtype='float32')
-        with open(self.stream.path) as file:
-            for header_values, offset in sorted(self.index.offsets.items(), key=lambda x: x[1]):
-                header_indexes = []  # type: T.List[int]
-                for dim in self.dimensions[:-1]:
-                    header_value = header_values[self.index.index_keys.index(dim)]
-                    header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
-                # NOTE: fill a single field as found in the message
-                message = messages.Message.fromfile(file, offset=offset[0])
-                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-                data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
-        missing_value = self.attributes.get('missingValue', 9999)
-        data[data == missing_value] = np.nan
-        return data
+    # FIXME: move to a function
+    attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
+    dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1) + ('i',)
+    shape = tuple(coord_vars[d].data.size for d in dimensions[:-1])
+    shape += (leader['numberOfPoints'],)
 
-    # def build_array(self):
-    #     # type: () -> np.ndarray
-    #     data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
-    #     for message in self.stream:
-    #         if message.message_get('paramId', eccodes.CODES_TYPE_LONG) != self.paramId:
-    #             continue
-    #         header_indexes = []  # type: T.List[int]
-    #         header_values = []
-    #         for dim in self.dimensions[:-1]:
-    #             header_values.append(message.message_get(dim, eccodes.CODES_TYPE_LONG))
-    #             header_indexes.append(self.coordinates[dim].data.index(header_values[-1]))
-    #         # NOTE: fill a single field as found in the message
-    #         values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-    #         data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
-    #     missing_value = self.attributes.get('missingValue', 9999)
-    #     data[data == missing_value] = np.nan
-    #     return data
+    # add secondary coordinates
+    latitude = leader['latitudes']
+    coord_vars['lat'] = Variable(
+        dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
+    )
+    longitude = leader['longitudes']
+    coord_vars['lon'] = Variable(
+        dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
+    )
+    offsets = collections.OrderedDict()
+    for header_values, offset in index.offsets.items():
+        header_indexes = []  # type: T.List[int]
+        for dim in dimensions[:-1]:
+            header_value = header_values[index.index_keys.index(dim)]
+            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+        offsets[tuple(header_indexes)] = offset
+    missing_value = attributes.get('missingValue', 9999)
+    data = DataArray(
+        path=path, shape=shape, offsets=offsets, missing_value=missing_value,
+    )
+    data_var = Variable(dimensions=dimensions, data=data, attributes=attributes)
+    dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
+    return dims, data_var, coord_vars
 
 
 def dict_merge(master, update):
@@ -325,10 +283,10 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     for param_id, short_name in zip(param_ids, index['shortName']):
-        var = DataVariable(index=index.subindex(paramId=param_id), stream=stream)
-        vars = collections.OrderedDict([(short_name, var)])
-        vars.update(var.coordinates)
-        dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.data.shape))
+        var_index = index.subindex(paramId=param_id)
+        dims, data_var, coord_vars = build_data_var_components(path=stream.path, index=var_index)
+        vars = collections.OrderedDict([(short_name, data_var)])
+        vars.update(coord_vars)
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, global_attributes_keys)
