@@ -111,6 +111,7 @@ def make_message_schema(message, schema_keys, log=LOG):
 
 @attr.attrs()
 class Index(collections.Mapping):
+    path = attr.attrib(type=str)
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False)
 
@@ -125,7 +126,7 @@ class Index(collections.Mapping):
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
-        return cls(index_keys=index_keys, offsets=offsets)
+        return cls(path=stream.path, index_keys=index_keys, offsets=offsets)
 
     def __iter__(self):
         return iter(self.index_keys)
@@ -155,7 +156,7 @@ class Index(collections.Mapping):
                     break
             else:
                 offsets[header_values] = self.offsets[header_values]
-        return type(self)(index_keys=self.index_keys, offsets=offsets)
+        return type(self)(path=self.path, index_keys=self.index_keys, offsets=offsets)
 
 
 @attr.attrs()
