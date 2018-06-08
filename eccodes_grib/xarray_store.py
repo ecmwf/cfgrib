@@ -32,11 +32,11 @@ class WrapGrib(BackendArray):
 
     @property
     def shape(self):
-        return self.variable.shape
+        return self.variable.data.shape
 
     @property
     def dtype(self):
-        return self.variable.dtype
+        return self.variable.data.dtype
 
 
 @attr.attrs()
@@ -52,7 +52,7 @@ class GribDataStore(AbstractDataStore):
         from eccodes_grib import dataset
 
         if isinstance(var, dataset.DataVariable):
-            data = indexing.LazilyOuterIndexedArray(WrapGrib(var))
+            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data
 

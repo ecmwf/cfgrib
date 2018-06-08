@@ -19,7 +19,6 @@ from builtins import list, object, str
 
 import collections
 import datetime
-import functools
 import logging
 import pkg_resources
 import typing as T  # noqa
@@ -174,7 +173,10 @@ class Variable(object):
 
 @attr.attrs()
 class DataArray(object):
-    # array_index = attr.attrib(default=None)
+    path = attr.attrib()
+    shape = attr.attrib()
+    offsets = attr.attrib()
+    missing_value = attr.attrib()
 
     @property
     def data(self):
@@ -184,27 +186,26 @@ class DataArray(object):
 
     def build_array(self):
         # type: () -> np.ndarray
-        data = np.full(self.array_index.shape, fill_value=np.nan, dtype='float32')
-        with open(self.array_index.path) as file:
-            for header_values, offset in sorted(self.array_index.offsets.items(), key=lambda x: x[1]):
-                header_indexes = []  # type: T.List[int]
-                for dim in self.dimensions[:-1]:
-                    header_value = header_values[self.array_index.index_keys.index(dim)]
-                    header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
+        data = np.full(self.shape, fill_value=np.nan, dtype='float32')
+        with open(self.path) as file:
+            for header_indexes, offset in sorted(self.offsets.items(), key=lambda x: x[1]):
                 # NOTE: fill a single field as found in the message
                 message = messages.Message.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-                data.__setitem__(tuple(header_indexes + [slice(None, None)]), values)
-        missing_value = self.attributes.get('missingValue', 9999)
-        data[data == missing_value] = np.nan
+                data.__setitem__(header_indexes + (slice(None, None),), values)
+        data[data == self.missing_value] = np.nan
         return data
 
     def __getitem__(self, item):
         return self.data[item]
 
+    @property
+    def dtype(self):
+        return self.data.dtype
+
 
 @attr.attrs()
-class DataVariable(DataArray):
+class DataVariable(object):
     index = attr.attrib()
     stream = attr.attrib()
 
@@ -247,8 +248,8 @@ class DataVariable(DataArray):
         self.attributes['coordinates'] = ' '.join(self.coordinates.keys()) + ' lat lon'
         self.dimensions = tuple(d for d, c in self.coordinates.items() if c.data.size > 1) + ('i',)
         self.ndim = len(self.dimensions)
-        self.shape = tuple(self.coordinates[d].data.size for d in self.dimensions[:-1])
-        self.shape += (leader['numberOfPoints'],)
+        shape = tuple(self.coordinates[d].data.size for d in self.dimensions[:-1])
+        shape += (leader['numberOfPoints'],)
 
         # add secondary coordinates
         latitude = leader['latitudes']
@@ -259,16 +260,21 @@ class DataVariable(DataArray):
         self.coordinates['lon'] = Variable(
             dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
         )
-
-        # Variable attributes
-        self.dtype = np.dtype('float32')
-        self.scale = True
-        self.mask = False
-        self.size = functools.reduce(lambda x, y: x * y, self.shape, 1)
+        offsets = collections.OrderedDict()
+        for header_values, offset in self.index.offsets.items():
+            header_indexes = []  # type: T.List[int]
+            for dim in self.dimensions[:-1]:
+                header_value = header_values[self.index.index_keys.index(dim)]
+                header_indexes.append(self.coordinates[dim].data.tolist().index(header_value))
+            offsets[tuple(header_indexes)] = offset
+        missing_value = self.attributes.get('missingValue', 9999)
+        self.data = DataArray(
+            path=self.stream.path, shape=shape, offsets=offsets, missing_value=missing_value,
+        )
 
     def build_array(self):
         # type: () -> np.ndarray
-        data = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
+        data = np.full(self.shape, fill_value=np.nan, dtype='float32')
         with open(self.stream.path) as file:
             for header_values, offset in sorted(self.index.offsets.items(), key=lambda x: x[1]):
                 header_indexes = []  # type: T.List[int]
@@ -322,7 +328,7 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
         var = DataVariable(index=index.subindex(paramId=param_id), stream=stream)
         vars = collections.OrderedDict([(short_name, var)])
         vars.update(var.coordinates)
-        dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.shape))
+        dims = collections.OrderedDict((d, s) for d, s in zip(var.dimensions, var.data.shape))
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, global_attributes_keys)
