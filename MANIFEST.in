@@ -1,12 +1,10 @@
 include LICENSE
 include tox.ini
+recursive-include ci *.in
+recursive-include ci *.txt
 recursive-include docs *.gitkeep
-recursive-include docs *.in
 recursive-include docs *.py
 recursive-include docs *.rst
-recursive-include docs *.txt
 recursive-include eccodes_grib *.h
 recursive-include tests *.grib
-recursive-include tests *.in
 recursive-include tests *.py
-recursive-include tests *.txt
