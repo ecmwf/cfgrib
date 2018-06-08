@@ -23,6 +23,19 @@ def test_xarray_open_dataset():
 
     assert res.attrs['edition'] == 1
     assert res['t'].attrs['gridType'] == 'regular_ll'
-    # assert res['paramId_130'].attrs['units'] == 'K'
+    assert res['t'].attrs['units'] == 'K'
+    assert res['t'].dims == ('number', 'topLevel', 'dataDate', 'dataTime', 'i')
+
+    assert res['t'].mean() > 0.
+
+
+def test_xarray_open_dataset_encode_datetime():
+    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA, encode_datetime=True)
+    res = xr.open_dataset(datastore)
+
+    assert res.attrs['edition'] == 1
+    assert res['t'].attrs['gridType'] == 'regular_ll'
+    assert res['t'].attrs['units'] == 'K'
+    assert res['t'].dims == ('number', 'topLevel', 'ref_time', 'i')
 
     assert res['t'].mean() > 0.

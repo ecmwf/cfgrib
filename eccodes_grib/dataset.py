@@ -74,16 +74,17 @@ GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = [
     ('number', ['totalNumber']),
-    ('dataDate', []),
-    ('dataTime', []),
     ('endStep', ['stepUnits', 'stepType']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
 HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
 
+REF_TIME_COORDINATE_KEYS = ['dataDate', 'dataTime']
+
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + \
-    SPATIAL_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS
+    SPATIAL_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
+    REF_TIME_COORDINATE_KEYS
 
 
 class CoordinateNotFound(Exception):
@@ -103,15 +104,6 @@ def enforce_unique_attributes(
         if values:
             attributes[key] = values[0]
     return attributes
-
-
-def simple_header_coordinate(index, coordinate_key, attributes_keys):
-    data = index[coordinate_key]
-    if len(data) == 1 and data[0] == 'undef':
-        raise CoordinateNotFound("missing from GRIB stream: %r" % coordinate_key)
-
-    attributes = enforce_unique_attributes(index, attributes_keys)
-    return data, attributes
 
 
 def from_grib_date_time(date, time):
@@ -139,6 +131,7 @@ def from_grib_date_time(date, time):
 
 def data_date_time(index):
     reverse_index = {}
+    direct_index = {}
     data = []
     idate = index.index_keys.index('dataDate')
     itime = index.index_keys.index('dataTime')
@@ -149,13 +142,14 @@ def data_date_time(index):
         if seconds not in data:
             data.append(seconds)
         reverse_index[seconds] = (date, time)
+        direct_index[date, time] = seconds
     attributes = {
         'units': 'seconds since 1970-01-01T00:00:00+00:00',
         'calendar': 'proleptic_gregorian',
         'axis': 'T',
         'standard_name': 'forecast_reference_time',
     }
-    return data, attributes, reverse_index
+    return data, attributes, reverse_index, direct_index
 
 
 @attr.attrs(cmp=False)
@@ -204,7 +198,7 @@ class DataArray(object):
         return self.data.dtype
 
 
-def build_data_var_components(path, index, log=LOG, **kwargs):
+def build_data_var_components(path, index, encode_datetime=False, log=LOG, **kwargs):
     stream = messages.Stream(path=path, **kwargs)
 
     # FIXME: the order of the instructions until the end of the function is significant.
@@ -219,13 +213,11 @@ def build_data_var_components(path, index, log=LOG, **kwargs):
 
     coord_vars = collections.OrderedDict()
     for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
-        try:
-            values, attrs = simple_header_coordinate(
-                index, coordinate_key=coord_key, attributes_keys=attrs_keys,
-            )
-        except CoordinateNotFound:
-            log.exception("coordinate %r failed", coord_key)
+        values = index[coord_key]
+        if len(values) == 1 and values[0] == 'undef':
+            log.info("missing from GRIB stream: %r" % coord_key)
             continue
+        attrs = enforce_unique_attributes(index, attrs_keys)
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:
@@ -234,6 +226,27 @@ def build_data_var_components(path, index, log=LOG, **kwargs):
         coord_vars[coord_key] = Variable(
             dimensions=dimensions, data=data, attributes=attrs,
         )
+    if encode_datetime:
+        values, attrs, reverse_index, direct_index = data_date_time(index)
+        data = np.array(values)
+        dimensions = ('ref_time',)
+        coord_vars['ref_time'] = Variable(
+            dimensions=dimensions, data=data, attributes=attrs,
+        )
+    else:
+        for coord_key in REF_TIME_COORDINATE_KEYS:
+            values = index[coord_key]
+            if len(values) == 1 and values[0] == 'undef':
+                log.info("missing from GRIB stream: %r" % coord_key)
+                continue
+            data = np.array(values)
+            dimensions = (coord_key,)
+            if len(values) == 1:
+                data = data[0]
+                dimensions = ()
+            coord_vars[coord_key] = Variable(
+                dimensions=dimensions, data=data, attributes=attrs,
+            )
 
     # FIXME: move to a function
     attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
@@ -254,8 +267,14 @@ def build_data_var_components(path, index, log=LOG, **kwargs):
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
         for dim in dimensions[:-1]:
-            header_value = header_values[index.index_keys.index(dim)]
-            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+            if encode_datetime and dim == 'ref_time':
+                date = header_values[index.index_keys.index('dataDate')]
+                time = header_values[index.index_keys.index('dataTime')]
+                header_value = direct_index[date, time]
+                header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+            else:
+                header_value = header_values[index.index_keys.index(dim)]
+                header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = attributes.get('missingValue', 9999)
     data = DataArray(
@@ -277,19 +296,21 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KEYS):
+def build_dataset_components(stream, encode_datetime=False):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
-        dims, data_var, coord_vars = build_data_var_components(path=stream.path, index=var_index)
+        dims, data_var, coord_vars = build_data_var_components(
+            path=stream.path, index=var_index, encode_datetime=encode_datetime,
+        )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
-    attributes = enforce_unique_attributes(index, global_attributes_keys)
+    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
     attributes['eccodesGribVersion'] = VERSION
     return dimensions, variables, attributes
 
@@ -297,14 +318,14 @@ def build_dataset_components(stream, global_attributes_keys=GLOBAL_ATTRIBUTES_KE
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
-    encode = attr.attrib(default=True)
+    encode_datetime = attr.attrib(default=False)
 
     @classmethod
-    def fromstream(cls, path, encode=True, **kwagrs):
-        return cls(stream=messages.Stream(path, **kwagrs), encode=encode)
+    def fromstream(cls, path, encode_datetime=False, **kwagrs):
+        return cls(stream=messages.Stream(path, **kwagrs), encode_datetime=encode_datetime)
 
     def __attrs_post_init__(self):
-        dimensions, variables, attributes = build_dataset_components(self.stream)
-        self.dimensions = dimensions  # type: T.Dict[str, T.Optional[int]]
-        self.variables = variables  # type: T.Dict[str, Variable]
-        self.attributes = attributes  # type: T.Dict[str, T.Any]
+        dims, vars, attrs = build_dataset_components(self.stream, self.encode_datetime)
+        self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
+        self.variables = vars  # type: T.Dict[str, Variable]
+        self.attributes = attrs  # type: T.Dict[str, T.Any]
