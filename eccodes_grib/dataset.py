@@ -244,7 +244,7 @@ def build_data_var_components(
                 data = data[0]
                 dimensions = ()
             coord_vars[coord_key] = Variable(
-                dimensions=dimensions, data=data, attributes=attrs,
+                dimensions=dimensions, data=data, attributes={},
             )
 
     # FIXME: move to a function
