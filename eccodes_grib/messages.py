@@ -149,6 +149,12 @@ class Index(collections.Mapping):
         # type: (str) -> list
         return self.header_values[item]
 
+    def getone(self, item):
+        values = self[item]
+        if len(values) != 1:
+            raise ValueError("not one value for %r: %r" % (item, len(values)))
+        return values[0]
+
     def subindex(self, dict_query={}, **query):
         query.update(dict_query)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]

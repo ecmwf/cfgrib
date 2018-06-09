@@ -39,9 +39,9 @@ VERSION = pkg_resources.get_distribution("eccodes_grib").version
 GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
-VARIABLE_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
+DATA_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
 
-SPATIAL_COORDINATES_ATTRIBUTES_KEYS = ['gridType', 'numberOfPoints']
+GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS = ['gridType', 'numberOfPoints']
 
 GRID_TYPE_MAP = {
     'regular_ll': [
@@ -82,8 +82,8 @@ HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
 
 REF_TIME_COORDINATE_KEYS = ['dataDate', 'dataTime']
 
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + VARIABLE_ATTRIBUTES_KEYS + \
-    SPATIAL_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + \
+    GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
     REF_TIME_COORDINATE_KEYS
 
 
@@ -201,15 +201,13 @@ class DataArray(object):
 def build_data_var_components(
         path, index, encode_datetime=False, encode_grid_type=False, log=LOG, **kwargs
 ):
+    data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
+    data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
+    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
+    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
+
     # FIXME: This function is a monster. It must die... but not today :/
     # BEWARE: The order of the instructions in the function is significant.
-    first = messages.Stream(path=path, **kwargs).first()
-    attributes = enforce_unique_attributes(index, VARIABLE_ATTRIBUTES_KEYS)
-
-    spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
-    spatial_attributes_keys.extend(GRID_TYPE_MAP.get(first['gridType'], []))
-    attributes.update(enforce_unique_attributes(index, spatial_attributes_keys))
-
     coord_vars = collections.OrderedDict()
     for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
         values = index[coord_key]
@@ -248,26 +246,27 @@ def build_data_var_components(
             )
 
     # FIXME: move to a function
-    attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
+    data_var_attrs['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
     dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     shape = tuple(coord_vars[d].data.size for d in dimensions)
-    if encode_grid_type and first['gridType'] == 'regular_ll':
+    if encode_grid_type and index.getone('gridType') == 'regular_ll':
         spacial_ndim = 2
         dimensions += ('lat', 'lon')
-        shape += (first['Nj'], first['Ni'],)
+        shape += (index.getone('Nj'), index.getone('Ni'))
         coord_vars['lat'] = Variable(
-            dimensions=('lat',), data=np.linspace(-90., 90., first['Nj']),
+            dimensions=('lat',), data=np.linspace(-90., 90., index.getone('Nj')),
             attributes={'units': 'degrees_north'},
         )
         coord_vars['lon'] = Variable(
-            dimensions=('lon',), data=np.linspace(0., 360, first['Ni'], endpoint=False),
+            dimensions=('lon',), data=np.linspace(0., 360, index.getone('Ni'), endpoint=False),
             attributes={'units': 'degrees_north'},
         )
 
     else:
+        first = messages.Stream(path=path, **kwargs).first()
         spacial_ndim = 1
         dimensions += ('i',)
-        shape += (first['numberOfPoints'],)
+        shape += (index.getone('numberOfPoints'),)
 
         # add secondary coordinates
         latitude = first['latitudes']
@@ -291,11 +290,11 @@ def build_data_var_components(
                 header_value = header_values[index.index_keys.index(dim)]
                 header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
-    missing_value = attributes.get('missingValue', 9999)
+    missing_value = data_var_attrs.get('missingValue', 9999)
     data = DataArray(
         path=path, shape=shape, offsets=offsets, missing_value=missing_value,
     )
-    data_var = Variable(dimensions=dimensions, data=data, attributes=attributes)
+    data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
     return dims, data_var, coord_vars
 
