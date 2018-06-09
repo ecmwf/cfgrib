@@ -203,11 +203,11 @@ def build_data_var_components(
 ):
     # FIXME: This function is a monster. It must die... but not today :/
     # BEWARE: The order of the instructions in the function is significant.
-    leader = messages.Stream(path=path, **kwargs).first()
+    first = messages.Stream(path=path, **kwargs).first()
     attributes = enforce_unique_attributes(index, VARIABLE_ATTRIBUTES_KEYS)
 
     spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
-    spatial_attributes_keys.extend(GRID_TYPE_MAP.get(leader['gridType'], []))
+    spatial_attributes_keys.extend(GRID_TYPE_MAP.get(first['gridType'], []))
     attributes.update(enforce_unique_attributes(index, spatial_attributes_keys))
 
     coord_vars = collections.OrderedDict()
@@ -251,30 +251,30 @@ def build_data_var_components(
     attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
     dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     shape = tuple(coord_vars[d].data.size for d in dimensions)
-    if encode_grid_type and leader['gridType'] == 'regular_ll':
+    if encode_grid_type and first['gridType'] == 'regular_ll':
         spacial_ndim = 2
         dimensions += ('lat', 'lon')
-        shape += (leader['Nj'], leader['Ni'],)
+        shape += (first['Nj'], first['Ni'],)
         coord_vars['lat'] = Variable(
-            dimensions=('lat',), data=np.linspace(-90., 90., leader['Nj']),
+            dimensions=('lat',), data=np.linspace(-90., 90., first['Nj']),
             attributes={'units': 'degrees_north'},
         )
         coord_vars['lon'] = Variable(
-            dimensions=('lon',), data=np.linspace(0., 360, leader['Ni'], endpoint=False),
+            dimensions=('lon',), data=np.linspace(0., 360, first['Ni'], endpoint=False),
             attributes={'units': 'degrees_north'},
         )
 
     else:
         spacial_ndim = 1
         dimensions += ('i',)
-        shape += (leader['numberOfPoints'],)
+        shape += (first['numberOfPoints'],)
 
         # add secondary coordinates
-        latitude = leader['latitudes']
+        latitude = first['latitudes']
         coord_vars['lat'] = Variable(
             dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
         )
-        longitude = leader['longitudes']
+        longitude = first['longitudes']
         coord_vars['lon'] = Variable(
             dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
         )
