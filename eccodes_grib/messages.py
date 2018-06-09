@@ -117,7 +117,7 @@ class Index(collections.Mapping):
 
     @classmethod
     def fromstream(cls, stream, index_keys):
-        schema = make_message_schema(next(iter(stream)), index_keys)
+        schema = make_message_schema(stream.first(), index_keys)
         offsets = collections.OrderedDict()
         for message in stream:
             header_values = []
@@ -134,13 +134,16 @@ class Index(collections.Mapping):
     def __len__(self):
         return len(self.index_keys)
 
-    def __attrs_post_init__(self):
-        self.header_values = {}
-        for header_values in self.offsets:
-            for i, value in enumerate(header_values):
-                values = self.header_values.setdefault(self.index_keys[i], [])
-                if value not in values:
-                    values.append(value)
+    @property
+    def header_values(self):
+        if not hasattr(self, '_header_values'):
+            self._header_values = {}
+            for header_values in self.offsets:
+                for i, value in enumerate(header_values):
+                    values = self._header_values.setdefault(self.index_keys[i], [])
+                    if value not in values:
+                        values.append(value)
+        return self._header_values
 
     def __getitem__(self, item):
         # type: (str) -> list
