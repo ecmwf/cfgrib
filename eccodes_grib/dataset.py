@@ -198,10 +198,12 @@ class DataArray(object):
         return self.data.dtype
 
 
-def build_data_var_components(path, index, encode_datetime=False, log=LOG, **kwargs):
+def build_data_var_components(
+        path, index, encode_datetime=False, encode_grid_type=False, log=LOG, **kwargs
+):
     # FIXME: This function is a monster. It must die... but not today :/
     # BEWARE: The order of the instructions in the function is significant.
-    leader = next(iter(messages.Stream(path=path, **kwargs)))
+    leader = messages.Stream(path=path, **kwargs).first()
     attributes = enforce_unique_attributes(index, VARIABLE_ATTRIBUTES_KEYS)
 
     spatial_attributes_keys = SPATIAL_COORDINATES_ATTRIBUTES_KEYS[:]
@@ -249,20 +251,22 @@ def build_data_var_components(path, index, encode_datetime=False, log=LOG, **kwa
     attributes['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
     dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     shape = tuple(coord_vars[d].data.size for d in dimensions)
-    if leader['gridType'] == 'regular_ll':
+    if encode_grid_type and leader['gridType'] == 'regular_ll':
         spacial_ndim = 2
+        dimensions += ('lat', 'lon')
         shape += (leader['Nj'], leader['Ni'],)
         coord_vars['lat'] = Variable(
-            dimensions=('lat',), data=np.linspace(-90., 90., leader['Nj']), attributes={'units': 'degrees_north'},
+            dimensions=('lat',), data=np.linspace(-90., 90., leader['Nj']),
+            attributes={'units': 'degrees_north'},
         )
         coord_vars['lon'] = Variable(
-            dimensions=('lon',), data=np.linspace(0., 360, leader['Ni'], endpoint=False), attributes={'units': 'degrees_north'},
+            dimensions=('lon',), data=np.linspace(0., 360, leader['Ni'], endpoint=False),
+            attributes={'units': 'degrees_north'},
         )
-        dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
 
     else:
         spacial_ndim = 1
-        dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1) + ('i',)
+        dimensions += ('i',)
         shape += (leader['numberOfPoints'],)
 
         # add secondary coordinates
@@ -307,7 +311,7 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, encode_datetime=False):
+def build_dataset_components(stream, encode_datetime=False, encode_grid_type=False):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -315,7 +319,8 @@ def build_dataset_components(stream, encode_datetime=False):
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            path=stream.path, index=var_index, encode_datetime=encode_datetime,
+            path=stream.path, index=var_index,
+            encode_datetime=encode_datetime, encode_grid_type=encode_grid_type
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -330,13 +335,20 @@ def build_dataset_components(stream, encode_datetime=False):
 class Dataset(object):
     stream = attr.attrib()
     encode_datetime = attr.attrib(default=False)
+    encode_grid_type = attr.attrib(default=False)
 
     @classmethod
-    def fromstream(cls, path, encode_datetime=False, **kwagrs):
-        return cls(stream=messages.Stream(path, **kwagrs), encode_datetime=encode_datetime)
+    def fromstream(cls, path, encode_datetime=False, encode_grid_type=False, **kwagrs):
+        dataset = cls(
+            stream=messages.Stream(path, **kwagrs),
+            encode_datetime=encode_datetime, encode_grid_type=encode_grid_type,
+        )
+        return dataset
 
     def __attrs_post_init__(self):
-        dims, vars, attrs = build_dataset_components(self.stream, self.encode_datetime)
+        dims, vars, attrs = build_dataset_components(
+            self.stream, self.encode_datetime, self.encode_grid_type,
+        )
         self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
         self.variables = vars  # type: T.Dict[str, Variable]
         self.attributes = attrs  # type: T.Dict[str, T.Any]

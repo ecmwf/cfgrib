@@ -37,7 +37,8 @@ def test_build_data_var_components():
     assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
-    assert data_var.data[:].mean() > 0.  # equivalent ot not np.isnan without importing numpy
+    # equivalent to not np.isnan without importing numpy
+    assert data_var.data[:].mean() > 0.
 
 
 def test_Dataset():
@@ -48,9 +49,35 @@ def test_Dataset():
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'dataDate', 'dataTime', 'i')
 
 
-def test_Dataset_encode():
+def test_Dataset_encode_datetime():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_datetime=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 8
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'i')
+
+    # equivalent to not np.isnan without importing numpy
+    assert res.variables['t'].data[:].mean() > 0.
+
+
+def test_Dataset_encode_grid_type():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_grid_type=True)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert len(res.variables) == 9
+    assert tuple(res.dimensions.keys()) == \
+        ('number', 'topLevel', 'dataDate', 'dataTime', 'lat', 'lon')
+
+    # equivalent to not np.isnan without importing numpy
+    assert res.variables['t'].data[:].mean() > 0.
+
+
+def test_Dataset_encode_datetime_encode_grid_type():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_datetime=True, encode_grid_type=True)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert len(res.variables) == 8
+    assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'lat', 'lon')
+
+    # equivalent to not np.isnan without importing numpy
+    assert res.variables['t'].data[:].mean() > 0.
