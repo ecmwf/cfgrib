@@ -45,16 +45,16 @@ def test_Dataset():
     res = dataset.Dataset.fromstream(TEST_DATA)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert len(res.variables) == 9
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'dataDate', 'dataTime', 'i')
+    assert len(res.variables) == 9
 
 
 def test_Dataset_encode_time():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert len(res.variables) == 8
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'i')
+    assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.
@@ -64,9 +64,9 @@ def test_Dataset_encode_geography():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert len(res.variables) == 9
     assert tuple(res.dimensions.keys()) == \
         ('number', 'topLevel', 'dataDate', 'dataTime', 'lat', 'lon')
+    assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.
@@ -76,8 +76,8 @@ def test_Dataset_encode_time_encode_geography():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert len(res.variables) == 8
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'lat', 'lon')
+    assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.

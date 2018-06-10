@@ -72,19 +72,28 @@ GRID_TYPE_MAP = {
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-HEADER_COORDINATES_MAP = [
+HEADER_COORDINATES_MAP = list([
     ('number', ['totalNumber']),
     ('endStep', ['stepUnits', 'stepType']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
-]
+])  # python2 lists have no .copy() method
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
 HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
 
-REF_TIME_COORDINATE_KEYS = ['dataDate', 'dataTime']
+DATA_TIME_COORDINATE_MAP = [
+    ('dataDate', []),
+    ('dataTime', []),
+]
+REF_TIME_COORDINATE_MAP = [
+    ('ref_time', ['ref_time:units', 'ref_time:calendar'])
+]
+DATA_TIME_COORDINATES_KEYS = [k for k, _ in DATA_TIME_COORDINATE_MAP]
+REF_TIME_COORDINATE_KEYS = [k for k, _ in REF_TIME_COORDINATE_MAP]
+REF_TIME_COORDINATE_KEYS += [k for _, ks in REF_TIME_COORDINATE_MAP for k in ks]
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + \
     GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
-    REF_TIME_COORDINATE_KEYS
+    DATA_TIME_COORDINATES_KEYS + REF_TIME_COORDINATE_KEYS
 
 
 class CoordinateNotFound(Exception):
@@ -127,29 +136,6 @@ def from_grib_date_time(date, time):
     # Python 2 compatible timestamp implementation without timezone hurdle
     # see: https://docs.python.org/3/library/datetime.html#datetime.datetime.timestamp
     return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
-
-
-def data_date_time(index):
-    reverse_index = {}
-    direct_index = {}
-    data = []
-    idate = index.index_keys.index('dataDate')
-    itime = index.index_keys.index('dataTime')
-    for header_values in index.offsets:
-        date = header_values[idate]
-        time = header_values[itime]
-        seconds = from_grib_date_time(date, time)
-        if seconds not in data:
-            data.append(seconds)
-        reverse_index[seconds] = (date, time)
-        direct_index[date, time] = seconds
-    attributes = {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00',
-        'calendar': 'proleptic_gregorian',
-        'axis': 'T',
-        'standard_name': 'forecast_reference_time',
-    }
-    return data, attributes, reverse_index, direct_index
 
 
 @attr.attrs(cmp=False)
@@ -208,42 +194,27 @@ def build_data_var_components(
 
     # FIXME: This function is a monster. It must die... but not today :/
     # BEWARE: The order of the instructions in the function is significant.
+    coords_map = HEADER_COORDINATES_MAP.copy()
+    if encode_time:
+        coords_map.extend(REF_TIME_COORDINATE_MAP)
+    else:
+        coords_map.extend(DATA_TIME_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
-    for coord_key, attrs_keys in HEADER_COORDINATES_MAP:
+    for coord_key, attrs_keys in coords_map:
         values = index[coord_key]
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
-        attrs = enforce_unique_attributes(index, attrs_keys)
+        global_attrs = enforce_unique_attributes(index, attrs_keys)
+        coord_attrs = {k.rpartition(coord_key + ':')[2]: v for k, v in global_attrs.items()}
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:
             data = data[0]
             dimensions = ()
         coord_vars[coord_key] = Variable(
-            dimensions=dimensions, data=data, attributes=attrs,
+            dimensions=dimensions, data=data, attributes=coord_attrs,
         )
-    if encode_time:
-        values, attrs, reverse_index, direct_index = data_date_time(index)
-        data = np.array(values)
-        dimensions = ('ref_time',)
-        coord_vars['ref_time'] = Variable(
-            dimensions=dimensions, data=data, attributes=attrs,
-        )
-    else:
-        for coord_key in REF_TIME_COORDINATE_KEYS:
-            values = index[coord_key]
-            if len(values) == 1 and values[0] == 'undef':
-                log.info("missing from GRIB stream: %r" % coord_key)
-                continue
-            data = np.array(values)
-            dimensions = (coord_key,)
-            if len(values) == 1:
-                data = data[0]
-                dimensions = ()
-            coord_vars[coord_key] = Variable(
-                dimensions=dimensions, data=data, attributes={},
-            )
 
     # FIXME: move to a function
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
@@ -281,14 +252,8 @@ def build_data_var_components(
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
         for dim in dimensions[:-spacial_ndim]:
-            if encode_time and dim == 'ref_time':
-                date = header_values[index.index_keys.index('dataDate')]
-                time = header_values[index.index_keys.index('dataTime')]
-                header_value = direct_index[date, time]
-                header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
-            else:
-                header_value = header_values[index.index_keys.index(dim)]
-                header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+            header_value = header_values[index.index_keys.index(dim)]
+            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
     data = DataArray(
@@ -345,6 +310,17 @@ class Dataset(object):
         return dataset
 
     def __attrs_post_init__(self):
+        if self.encode_time:
+            extra_keys = {
+                'ref_time': lambda m: from_grib_date_time(m['dataDate'], m['dataTime']),
+                'ref_time:units': 'seconds since 1970-01-01T00:00:00+00:00',
+                'ref_time:calendar': 'proleptic_gregorian',
+                'ref_time:standard_name': 'forecast_reference_time',
+            }
+            message_factory = messages.extra_keys_message_factory('CfMessage', extra_keys).fromfile
+        else:
+            message_factory = messages.Message.fromfile
+        self.stream.message_factory = message_factory
         dims, vars, attrs = build_dataset_components(
             self.stream, self.encode_time, self.encode_geography,
         )
