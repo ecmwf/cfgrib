@@ -35,6 +35,8 @@ class Message(collections.Mapping):
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
 
+    extra_keys = {}  # type: T.Union[str, T.Callable[[Message], str]]
+
     @classmethod
     def fromfile(cls, file, offset=None, **kwargs):
         if offset is not None:
@@ -80,16 +82,30 @@ class Message(collections.Mapping):
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
+        if item in self.extra_keys:
+            if callable(self.extra_keys[item]):
+                return self.extra_keys[item](self)
+            else:
+                return self.extra_keys[item]
+
         return self.message_get(item)
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
         for key in self.message_iterkeys():
             yield key
+        for key in self.extra_keys:
+            yield key
 
     def __len__(self):
         # type: () -> int
         return sum(1 for _ in self)
+
+
+def extra_keys_message_factory(name, extra_keys):
+    # type: (str, T.Mapping[str, T.Union[str, T.Callable[[Message], str]]]) -> type
+    attributes = {'extra_keys': extra_keys}
+    return type(name, (Message,), attributes)
 
 
 def make_message_schema(message, schema_keys, log=LOG):
