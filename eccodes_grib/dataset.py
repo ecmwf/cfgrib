@@ -199,7 +199,7 @@ class DataArray(object):
 
 
 def build_data_var_components(
-        path, index, encode_datetime=False, encode_grid_type=False, log=LOG, **kwargs
+        path, index, encode_time=False, encode_geography=False, log=LOG, **kwargs
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
@@ -223,7 +223,7 @@ def build_data_var_components(
         coord_vars[coord_key] = Variable(
             dimensions=dimensions, data=data, attributes=attrs,
         )
-    if encode_datetime:
+    if encode_time:
         values, attrs, reverse_index, direct_index = data_date_time(index)
         data = np.array(values)
         dimensions = ('ref_time',)
@@ -249,7 +249,7 @@ def build_data_var_components(
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
     dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     shape = tuple(coord_vars[d].data.size for d in dimensions)
-    if encode_grid_type and index.getone('gridType') == 'regular_ll':
+    if encode_geography and index.getone('gridType') == 'regular_ll':
         spacial_ndim = 2
         dimensions += ('lat', 'lon')
         shape += (index.getone('Nj'), index.getone('Ni'))
@@ -281,7 +281,7 @@ def build_data_var_components(
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
         for dim in dimensions[:-spacial_ndim]:
-            if encode_datetime and dim == 'ref_time':
+            if encode_time and dim == 'ref_time':
                 date = header_values[index.index_keys.index('dataDate')]
                 time = header_values[index.index_keys.index('dataTime')]
                 header_value = direct_index[date, time]
@@ -310,7 +310,7 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, encode_datetime=False, encode_grid_type=False):
+def build_dataset_components(stream, encode_time=False, encode_geography=False):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -319,7 +319,7 @@ def build_dataset_components(stream, encode_datetime=False, encode_grid_type=Fal
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
             path=stream.path, index=var_index,
-            encode_datetime=encode_datetime, encode_grid_type=encode_grid_type
+            encode_time=encode_time, encode_geography=encode_geography
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -333,20 +333,20 @@ def build_dataset_components(stream, encode_datetime=False, encode_grid_type=Fal
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
-    encode_datetime = attr.attrib(default=False)
-    encode_grid_type = attr.attrib(default=False)
+    encode_time = attr.attrib(default=False)
+    encode_geography = attr.attrib(default=False)
 
     @classmethod
-    def fromstream(cls, path, encode_datetime=False, encode_grid_type=False, **kwagrs):
+    def fromstream(cls, path, encode_time=False, encode_geography=False, **kwagrs):
         dataset = cls(
             stream=messages.Stream(path, **kwagrs),
-            encode_datetime=encode_datetime, encode_grid_type=encode_grid_type,
+            encode_time=encode_time, encode_geography=encode_geography,
         )
         return dataset
 
     def __attrs_post_init__(self):
         dims, vars, attrs = build_dataset_components(
-            self.stream, self.encode_datetime, self.encode_grid_type,
+            self.stream, self.encode_time, self.encode_geography,
         )
         self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
         self.variables = vars  # type: T.Dict[str, Variable]

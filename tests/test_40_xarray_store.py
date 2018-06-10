@@ -29,8 +29,8 @@ def test_xarray_open_dataset():
     assert res['t'].mean() > 0.
 
 
-def test_xarray_open_dataset_encode_datetime():
-    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA, encode_datetime=True)
+def test_xarray_open_dataset_encode_time():
+    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA, encode_time=True)
     res = xr.open_dataset(datastore)
 
     assert res.attrs['edition'] == 1

@@ -49,8 +49,8 @@ def test_Dataset():
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'dataDate', 'dataTime', 'i')
 
 
-def test_Dataset_encode_datetime():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_datetime=True)
+def test_Dataset_encode_time():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 8
@@ -60,8 +60,8 @@ def test_Dataset_encode_datetime():
     assert res.variables['t'].data[:].mean() > 0.
 
 
-def test_Dataset_encode_grid_type():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_grid_type=True)
+def test_Dataset_encode_geography():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 9
@@ -72,8 +72,8 @@ def test_Dataset_encode_grid_type():
     assert res.variables['t'].data[:].mean() > 0.
 
 
-def test_Dataset_encode_datetime_encode_grid_type():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_datetime=True, encode_grid_type=True)
+def test_Dataset_encode_time_encode_geography():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert len(res.variables) == 8
