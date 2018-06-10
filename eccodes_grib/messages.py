@@ -15,7 +15,8 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, isinstance, str
+from builtins import bytes, isinstance, str, type
+import future.utils
 
 import collections
 import logging
@@ -105,7 +106,11 @@ class Message(collections.Mapping):
 def extra_keys_message_factory(name, extra_keys):
     # type: (str, T.Mapping[str, T.Union[str, T.Callable[[Message], str]]]) -> type
     attributes = {'extra_keys': extra_keys}
-    return type(name, (Message,), attributes)
+    # NOTE: python-future doesn't cope with three-argument type() and unicode_literals
+    if future.utils.PY2:
+        return type(name.encode('utf-8'), (Message,), attributes)
+    else:
+        return type(name, (Message,), attributes)
 
 
 def make_message_schema(message, schema_keys, log=LOG):
