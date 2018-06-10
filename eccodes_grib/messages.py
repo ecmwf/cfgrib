@@ -141,7 +141,9 @@ class Index(collections.Mapping):
         for message in stream:
             header_values = []
             for key, args in schema.items():
-                value = message.message_get(key, *args, default='undef')
+                # Note: optimisation
+                # value = message.message_get(key, *args, default='undef')
+                value = message.get(key, 'undef')
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
