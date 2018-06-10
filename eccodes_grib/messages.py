@@ -48,7 +48,7 @@ class Message(collections.Mapping):
         eccodes.codes_handle_delete(self.codes_id)
 
     def message_get(self, item, key_type=None, size=None, length=None, default=_MARKER):
-        # type: (str, type) -> T.Any
+        # type: (str, int, int, int, T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
         key = item.encode(self.encoding)
         try:
@@ -68,8 +68,9 @@ class Message(collections.Mapping):
         return values
 
     def message_iterkeys(self, namespace=None):
-        # type: (str) -> T.Generator[bytes, None, None]
-        bnamespace = namespace.encode(self.encoding) if namespace else namespace
+        # type: (str) -> T.Generator[str, None, None]
+        if namespace is not None:
+            bnamespace = namespace.encode(self.encoding)
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator).decode(self.encoding)
@@ -229,14 +230,15 @@ class Stream(collections.Iterable):
     path = attr.attrib(type=str)
     mode = attr.attrib(default='r', type=str)
     encoding = attr.attrib(default='ascii', type=str)
+    message_factory = attr.attrib(default=Message.fromfile, type=T.Callable[..., Message])
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, self.mode) as file:
             while True:
                 try:
-                    yield Message.fromfile(file=file, encoding=self.encoding)
-                except (EOFError, eccodes.EcCodesError):
+                    yield self.message_factory(file=file, encoding=self.encoding)
+                except EOFError:
                     break
 
     def first(self):
