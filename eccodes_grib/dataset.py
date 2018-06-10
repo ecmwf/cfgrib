@@ -19,6 +19,7 @@ from builtins import list, object, str
 
 import collections
 import datetime
+import functools
 import logging
 import pkg_resources
 import typing as T  # noqa
@@ -85,8 +86,8 @@ DATA_TIME_COORDINATE_MAP = [
     ('endStep', ['stepUnits', 'stepType']),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('ref_time', ['ref_time:units', 'ref_time:calendar', 'ref_time:standard_name']),
-    ('forecast_period', ['forecast_period:units', 'forecast_period:standard_name']),
+    ('ref_time', []),
+    ('forecast_period', ['stepUnits', 'stepType']),
 ]
 DATA_TIME_COORDINATES_KEYS = [k for k, _ in DATA_TIME_COORDINATE_MAP]
 DATA_TIME_COORDINATES_KEYS += [k for _, ks in DATA_TIME_COORDINATE_MAP for k in ks]
@@ -103,9 +104,17 @@ GRIB_STEP_UNITS_TO_SECONDS = [
     10800, 21600, 43200, 1, 900, 1800,
 ]
 
-
-class CoordinateNotFound(Exception):
-    pass
+COORD_ATTRS = {
+    'ref_time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00',
+        'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time',
+    },
+    'forecast_period': {
+        'units': 'seconds',
+        'standard_name': 'forecast_period',
+    },
+}
 
 
 def enforce_unique_attributes(
@@ -216,15 +225,15 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
-        global_attrs = enforce_unique_attributes(index, attrs_keys)
-        coord_attrs = {k.rpartition(coord_key + ':')[2]: v for k, v in global_attrs.items()}
+        attributes = COORD_ATTRS.get(coord_key, {}).copy()
+        attributes.update(enforce_unique_attributes(index, attrs_keys))
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:
             data = data[0]
             dimensions = ()
         coord_vars[coord_key] = Variable(
-            dimensions=dimensions, data=data, attributes=coord_attrs,
+            dimensions=dimensions, data=data, attributes=attributes,
         )
 
     # FIXME: move to a function
@@ -324,15 +333,10 @@ class Dataset(object):
         if self.encode_time:
             extra_keys.update({
                 'ref_time': lambda m: from_grib_date_time(m['dataDate'], m['dataTime']),
-                'ref_time:units': 'seconds since 1970-01-01T00:00:00+00:00',
-                'ref_time:calendar': 'proleptic_gregorian',
-                'ref_time:standard_name': 'forecast_reference_time',
                 'forecast_period': lambda m: from_grib_step(m['endStep'], m['stepUnits']),
-                'forecast_period:units': 'seconds',
-                'forecast_period:standard_name': 'forecast_period',
             })
         if extra_keys:
-            message_factory = messages.extra_keys_message_factory('CfMessage', extra_keys).fromfile
+            message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
         else:
             message_factory = messages.Message.fromfile
         self.stream.message_factory = message_factory
