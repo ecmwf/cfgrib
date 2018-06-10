@@ -430,7 +430,7 @@ _codes_get_string_array = check_return(lib.codes_get_string_array)
 
 
 def codes_get_string_array(handle, key, size=None, length=None):
-    # type: (cffi.FFI.CData, bytes) -> T.List[bytes]
+    # type: (cffi.FFI.CData, bytes, int, int) -> T.List[bytes]
     """
     Get string array values from a key.
 
@@ -450,7 +450,7 @@ def codes_get_string_array(handle, key, size=None, length=None):
 
 
 def codes_get_bytes(handle, key):
-    # type: (cffi.FFI.CData, bytes, bool) -> int
+    # type: (cffi.FFI.CData, bytes) -> int
     """
     Get unsigned char element from a key.
     It may or may not fail in case there are more than one key in a message.
@@ -501,7 +501,7 @@ def codes_get_native_type(handle, key):
 
 
 def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, type, int, int, logging.Logger) -> T.Any
+    # type: (cffi.FFI.CData, bytes, int, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
@@ -523,7 +523,7 @@ def codes_get(handle, key, key_type=None, length=None, log=LOG):
         key_type = codes_get_native_type(handle, key)
 
     if key_type == CODES_TYPE_LONG:
-        values = codes_get_long_array(handle, key, size=1)
+        values = codes_get_long_array(handle, key, size=1)  # type: T.Sequence[T.Any]
         return values[0]
     elif key_type == CODES_TYPE_DOUBLE:
         values = codes_get_double_array(handle, key, size=1)
