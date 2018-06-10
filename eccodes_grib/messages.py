@@ -71,6 +71,8 @@ class Message(collections.Mapping):
         # type: (str) -> T.Generator[str, None, None]
         if namespace is not None:
             bnamespace = namespace.encode(self.encoding)
+        else:
+            bnamespace = None
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator).decode(self.encoding)
