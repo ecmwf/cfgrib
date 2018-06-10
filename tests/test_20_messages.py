@@ -29,44 +29,17 @@ def test_Message():
 
 
 def test_Message_extra_keys():
-    class MyMessage(messages.Message):
-        extra_keys = {
-            'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
-            'ref_time_calendar': 'proleptic_gregorian',
-        }
+    extra_keys = {
+        'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
+    }
     with open(TEST_DATA) as file:
-        res = MyMessage.fromfile(file)
+        res = messages.Message.fromfile(file, extra_keys=extra_keys)
 
     assert res['paramId'] == 129
-    assert res['ref_time_calendar'] == 'proleptic_gregorian'
     assert res['ref_time'] == '201701010'
     assert list(res)[0] == 'globalDomain'
     assert 'paramId' in res
-    assert len(res) == 194
-
-    with pytest.raises(KeyError):
-        res['non-existent-key']
-
-    list(res.items())
-
-
-def test_extra_keys_message_factory():
-    MyMessage = messages.extra_keys_message_factory(
-        name='MyMesage',
-        extra_keys={
-            'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
-            'ref_time_calendar': 'proleptic_gregorian',
-        }
-    )
-    with open(TEST_DATA) as file:
-        res = MyMessage.fromfile(file)
-
-    assert res['paramId'] == 129
-    assert res['ref_time_calendar'] == 'proleptic_gregorian'
-    assert res['ref_time'] == '201701010'
-    assert list(res)[0] == 'globalDomain'
-    assert 'paramId' in res
-    assert len(res) == 194
+    assert len(res) == 193
 
     with pytest.raises(KeyError):
         res['non-existent-key']

@@ -16,7 +16,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import bytes, isinstance, str, type
-import future.utils
 
 import collections
 import logging
@@ -35,8 +34,7 @@ _MARKER = object()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
-
-    extra_keys = {}  # type: T.Union[str, T.Callable[[Message], str]]
+    extra_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[['Message'], T.Any]])
 
     @classmethod
     def fromfile(cls, file, offset=None, **kwargs):
@@ -84,12 +82,9 @@ class Message(collections.Mapping):
     def __getitem__(self, item):
         # type: (str) -> T.Any
         if item in self.extra_keys:
-            if callable(self.extra_keys[item]):
-                return self.extra_keys[item](self)
-            else:
-                return self.extra_keys[item]
-
-        return self.message_get(item)
+            return self.extra_keys[item](self)
+        else:
+            return self.message_get(item)
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
@@ -101,16 +96,6 @@ class Message(collections.Mapping):
     def __len__(self):
         # type: () -> int
         return sum(1 for _ in self)
-
-
-def extra_keys_message_factory(name, extra_keys):
-    # type: (str, T.Mapping[str, T.Union[str, T.Callable[[Message], str]]]) -> type
-    attributes = {'extra_keys': extra_keys}
-    # NOTE: python-future doesn't cope with three-argument type() and unicode_literals
-    if future.utils.PY2:
-        return type(name.encode('utf-8'), (Message,), attributes)
-    else:
-        return type(name, (Message,), attributes)
 
 
 def make_message_schema(message, schema_keys, log=LOG):
