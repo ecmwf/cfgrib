@@ -328,7 +328,7 @@ class Dataset(object):
                 'ref_time:calendar': 'proleptic_gregorian',
                 'ref_time:standard_name': 'forecast_reference_time',
                 'forecast_period': lambda m: from_grib_step(m['endStep'], m['stepUnits']),
-                'forecast_period:units': 's',
+                'forecast_period:units': 'seconds',
                 'forecast_period:standard_name': 'forecast_period',
             })
         if extra_keys:
