@@ -31,9 +31,11 @@ def test_dict_merge():
         dataset.dict_merge(master, {'two': 3})
 
 
-def test_build_data_var_components():
+def test_build_data_var_components_no_encode():
     index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
-    dims, data_var, coord_vars = dataset.build_data_var_components(path=TEST_DATA, index=index)
+    dims, data_var, coord_vars = dataset.build_data_var_components(
+        path=TEST_DATA, index=index, encode_time=False, encode_geography=False,
+    )
     assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
@@ -41,8 +43,21 @@ def test_build_data_var_components():
     assert data_var.data[:].mean() > 0.
 
 
+def test_build_data_var_components_encode_geography():
+    index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
+    dims, data_var, coord_vars = dataset.build_data_var_components(
+        path=TEST_DATA, index=index, encode_time=False, encode_geography=True,
+    )
+    assert dims == \
+        {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'lat': 61, 'lon': 120}
+    assert data_var.data.shape == (10, 2, 2, 2, 61, 120)
+
+    # equivalent to not np.isnan without importing numpy
+    assert data_var.data[:].mean() > 0.
+
+
 def test_Dataset():
-    res = dataset.Dataset.fromstream(TEST_DATA)
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'dataDate', 'dataTime', 'i')
@@ -50,7 +65,7 @@ def test_Dataset():
 
 
 def test_Dataset_encode_time():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True)
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'i')
@@ -61,7 +76,7 @@ def test_Dataset_encode_time():
 
 
 def test_Dataset_encode_geography():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_geography=True)
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == \

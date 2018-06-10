@@ -197,9 +197,7 @@ class DataArray(object):
         return self.data.dtype
 
 
-def build_data_var_components(
-        path, index, encode_time=False, encode_geography=False, log=LOG, **kwargs
-):
+def build_data_var_components(path, index, encode_time, encode_geography, log=LOG, **kwargs):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
@@ -288,7 +286,7 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, encode_time=False, encode_geography=False):
+def build_dataset_components(stream, encode_time, encode_geography):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -296,8 +294,7 @@ def build_dataset_components(stream, encode_time=False, encode_geography=False):
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            path=stream.path, index=var_index,
-            encode_time=encode_time, encode_geography=encode_geography
+            stream.path, var_index, encode_time, encode_geography
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -311,11 +308,11 @@ def build_dataset_components(stream, encode_time=False, encode_geography=False):
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
-    encode_time = attr.attrib(default=False)
-    encode_geography = attr.attrib(default=False)
+    encode_time = attr.attrib(default=True)
+    encode_geography = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, encode_time=False, encode_geography=False, **kwagrs):
+    def fromstream(cls, path, encode_time=True, encode_geography=True, **kwagrs):
         dataset = cls(
             stream=messages.Stream(path, **kwagrs),
             encode_time=encode_time, encode_geography=encode_geography,
