@@ -74,7 +74,6 @@ GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = list([
     ('number', ['totalNumber']),
-    ('endStep', ['stepUnits', 'stepType']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ])  # python2 lists have no .copy() method
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
@@ -83,17 +82,26 @@ HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', []),
     ('dataTime', []),
+    ('endStep', ['stepUnits', 'stepType']),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('ref_time', ['ref_time:units', 'ref_time:calendar'])
+    ('ref_time', ['ref_time:units', 'ref_time:calendar', 'ref_time:standard_name']),
+    ('forecast_period', ['forecast_period:units', 'forecast_period:standard_name']),
 ]
 DATA_TIME_COORDINATES_KEYS = [k for k, _ in DATA_TIME_COORDINATE_MAP]
+DATA_TIME_COORDINATES_KEYS += [k for _, ks in DATA_TIME_COORDINATE_MAP for k in ks]
 REF_TIME_COORDINATE_KEYS = [k for k, _ in REF_TIME_COORDINATE_MAP]
 REF_TIME_COORDINATE_KEYS += [k for _, ks in REF_TIME_COORDINATE_MAP for k in ks]
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + \
     GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
     DATA_TIME_COORDINATES_KEYS + REF_TIME_COORDINATE_KEYS
+
+# taken from eccodes stepUnits.table
+GRIB_STEP_UNITS_TO_SECONDS = [
+    60, 3600, 86400, None, None, None, None, None, None, None,
+    10800, 21600, 43200, 1, 900, 1800,
+]
 
 
 class CoordinateNotFound(Exception):
@@ -136,6 +144,11 @@ def from_grib_date_time(date, time):
     # Python 2 compatible timestamp implementation without timezone hurdle
     # see: https://docs.python.org/3/library/datetime.html#datetime.datetime.timestamp
     return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
+
+
+def from_grib_step(step, step_unit):
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
+    return step * to_seconds
 
 
 @attr.attrs(cmp=False)
@@ -310,13 +323,18 @@ class Dataset(object):
         return dataset
 
     def __attrs_post_init__(self):
+        extra_keys = {}
         if self.encode_time:
-            extra_keys = {
+            extra_keys.update({
                 'ref_time': lambda m: from_grib_date_time(m['dataDate'], m['dataTime']),
                 'ref_time:units': 'seconds since 1970-01-01T00:00:00+00:00',
                 'ref_time:calendar': 'proleptic_gregorian',
                 'ref_time:standard_name': 'forecast_reference_time',
-            }
+                'forecast_period': lambda m: from_grib_step(m['endStep'], m['stepUnits']),
+                'forecast_period:units': 's',
+                'forecast_period:standard_name': 'forecast_period',
+            })
+        if extra_keys:
             message_factory = messages.extra_keys_message_factory('CfMessage', extra_keys).fromfile
         else:
             message_factory = messages.Message.fromfile
