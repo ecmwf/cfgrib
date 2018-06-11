@@ -118,10 +118,10 @@ COORD_ATTRS = {
 
 
 def enforce_unique_attributes(
-        index,  # type: messages.Index
-        attributes_keys,  # type: T.Sequence[str]
+        index,
+        attributes_keys,
 ):
-    # type: (...) -> T.Dict[str, T.Any]
+    # type: (messages.Index, T.Sequence[str]) -> T.Dict[str, T.Any]
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
@@ -145,7 +145,6 @@ def from_grib_date_time(message, date_key='dataDate', time_key='dataTime'):
     """
     date = message[date_key]
     time = message[time_key]
-    # (int, int) -> int
     hour = time // 100
     minute = time % 100
     year = date // 10000
@@ -245,8 +244,6 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
 
-    # FIXME: This function is a monster. It must die... but not today :/
-    # BEWARE: The order of the instructions in the function is significant.
     coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
         coords_map.extend(REF_TIME_COORDINATE_MAP)
@@ -269,7 +266,6 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
             dimensions=dimensions, data=data, attributes=attributes,
         )
 
-    # FIXME: move to a function
     header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
