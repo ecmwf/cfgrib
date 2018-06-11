@@ -271,7 +271,6 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_geography)
-    print(header_dimensions, geo_dims)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
