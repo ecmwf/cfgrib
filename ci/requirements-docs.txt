@@ -6,8 +6,8 @@
 #
 alabaster==0.7.10         # via sphinx
 attrs==18.1.0
-babel==2.5.3              # via sphinx
-certifi==2018.1.18        # via requests
+babel==2.6.0              # via sphinx
+certifi==2018.4.16        # via requests
 cffi==1.11.5
 chardet==3.0.4            # via requests
 docutils==0.14            # via sphinx
@@ -16,6 +16,7 @@ idna==2.6                 # via requests
 imagesize==1.0.0          # via sphinx
 jinja2==2.10              # via sphinx
 markupsafe==1.0           # via jinja2
+numpy==1.14.4
 packaging==17.1           # via sphinx
 pycparser==2.18           # via cffi
 pygments==2.2.0           # via sphinx
@@ -25,7 +26,7 @@ pytz==2018.4              # via babel
 requests==2.18.4          # via sphinx
 six==1.11.0               # via packaging, sphinx
 snowballstemmer==1.2.1    # via sphinx
-sphinx==1.7.2
-sphinxcontrib-websupport==1.0.1  # via sphinx
+sphinx==1.7.5
+sphinxcontrib-websupport==1.1.0  # via sphinx
 typing==3.6.4
 urllib3==1.22             # via requests
