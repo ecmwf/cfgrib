@@ -303,8 +303,7 @@ def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topL
 
 
 def build_data_var_components(
-        path, index, encode_time, encode_geography, encode_vertical=False, coord_name_map={},
-        log=LOG,
+        path, index, encode_time=False, encode_geography=False, encode_vertical=False, log=LOG,
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
@@ -375,9 +374,15 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, encode_time=False, encode_geography=False, encode_vertical=False,
-        coord_name_map={},
+        stream, encode_time=False, encode_vertical=False, encode_geography=False,
 ):
+    extra_keys = {
+        'forecast_reference_time': from_grib_date_time,
+        'forecast_period': from_grib_step,
+        'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
+        'air_pressure': from_grib_pl_level,
+    }
+    stream.message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -385,7 +390,7 @@ def build_dataset_components(
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            stream.path, var_index, encode_time, encode_geography, encode_vertical, coord_name_map
+            stream.path, var_index, encode_time, encode_geography, encode_vertical,
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -400,27 +405,14 @@ def build_dataset_components(
 class Dataset(object):
     stream = attr.attrib()
     encode_time = attr.attrib(default=True)
+    encode_vertical = attr.attrib(default=True)
     encode_geography = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, encode_time=True, encode_geography=True, **kwagrs):
-        dataset = cls(
-            stream=messages.Stream(path, **kwagrs),
-            encode_time=encode_time, encode_geography=encode_geography,
-        )
-        return dataset
+    def fromstream(cls, path, mode='r', encoding='ascii', **kwargs):
+        return cls(stream=messages.Stream(path, mode=mode, encoding=encoding), **kwargs)
 
     def __attrs_post_init__(self):
-        extra_keys = {}
-        if self.encode_time:
-            extra_keys.update({
-                'forecast_reference_time': from_grib_date_time,
-                'forecast_period': from_grib_step,
-                'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
-                'air_pressure': from_grib_pl_level,
-            })
-        message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
-        self.stream.message_factory = message_factory
         dims, vars, attrs = build_dataset_components(**self.__dict__)
         self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
         self.variables = vars  # type: T.Dict[str, Variable]

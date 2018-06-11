@@ -35,9 +35,7 @@ def test_dict_merge():
 
 def test_build_data_var_components_no_encode():
     index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
-    dims, data_var, coord_vars = dataset.build_data_var_components(
-        path=TEST_DATA, index=index, encode_time=False, encode_geography=False,
-    )
+    dims, data_var, coord_vars = dataset.build_data_var_components(path=TEST_DATA, index=index)
     assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
@@ -48,7 +46,7 @@ def test_build_data_var_components_no_encode():
 def test_build_data_var_components_encode_geography():
     index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(
-        path=TEST_DATA, index=index, encode_time=False, encode_geography=True,
+        path=TEST_DATA, index=index, encode_geography=True,
     )
     assert dims == {
         'number': 10, 'dataDate': 2, 'dataTime': 2,
@@ -61,7 +59,18 @@ def test_build_data_var_components_encode_geography():
 
 
 def test_Dataset():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=False)
+    res = dataset.Dataset.fromstream(TEST_DATA)
+    assert 'eccodesGribVersion' in res.attributes
+    assert res.attributes['edition'] == 1
+    assert tuple(res.dimensions.keys()) == \
+        ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+    assert len(res.variables) == 8
+
+
+def test_Dataset_no_encode():
+    res = dataset.Dataset.fromstream(
+        TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
+    )
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
@@ -69,7 +78,7 @@ def test_Dataset():
 
 
 def test_Dataset_encode_time():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=False)
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_vertical=False, encode_geography=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'forecast_reference_time', 'topLevel', 'i')
@@ -80,7 +89,7 @@ def test_Dataset_encode_time():
 
 
 def test_Dataset_encode_geography():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=True)
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_vertical=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -91,13 +100,12 @@ def test_Dataset_encode_geography():
     assert res.variables['t'].data[:].mean() > 0.
 
 
-def test_Dataset_encode_time_encode_geography():
-    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=True)
+def test_Dataset_encode_vertical():
+    res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert tuple(res.dimensions.keys()) == \
-        ('number', 'forecast_reference_time', 'topLevel', 'latitude', 'longitude')
-    assert len(res.variables) == 8
+    assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
+    assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.

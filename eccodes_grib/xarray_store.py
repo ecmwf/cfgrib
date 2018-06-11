@@ -83,6 +83,9 @@ class GribDataStore(AbstractDataStore):
         return encoding
 
 
-def open_dataset(path, encode_time=True, encode_geography=True, **kwargs):
-    store = GribDataStore.fromstream(path, encode_time=encode_time, encode_geography=encode_geography)
+def open_dataset(path, encode_time=True, encode_vertical=True, encode_geography=True, **kwargs):
+    store = GribDataStore.fromstream(
+        path, encode_time=encode_time, encode_vertical=encode_vertical,
+        encode_geography=encode_geography
+    )
     return _open_dataset(store, **kwargs)

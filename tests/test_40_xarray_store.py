@@ -13,7 +13,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 def test_GribDataStore():
     datastore = xarray_store.GribDataStore.fromstream(
-        TEST_DATA, encode_time=False, encode_geography=False,
+        TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
     )
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
@@ -21,7 +21,7 @@ def test_GribDataStore():
 
 def test_xarray_open_dataset():
     datastore = xarray_store.GribDataStore.fromstream(
-        TEST_DATA, encode_time=False, encode_geography=False,
+        TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
     )
     res = xr.open_dataset(datastore)
 
@@ -33,11 +33,22 @@ def test_xarray_open_dataset():
     assert res['t'].mean() > 0.
 
 
-def test_xarray_open_dataset_encode_time():
-    datastore = xarray_store.GribDataStore.fromstream(
-        TEST_DATA, encode_time=True, encode_geography=False,
-    )
-    res = xr.open_dataset(datastore)
+def test_open_dataset():
+    res = xarray_store.open_dataset(TEST_DATA)
+
+    assert res.attrs['edition'] == 1
+
+    var = res['t']
+    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['units'] == 'K'
+    assert var.dims == \
+        ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+
+    assert var.mean() > 0.
+
+
+def test_open_dataset_encode_time():
+    res = xarray_store.open_dataset(TEST_DATA, encode_vertical=False, encode_geography=False)
 
     assert res.attrs['edition'] == 1
     assert res['t'].attrs['gridType'] == 'regular_ll'
@@ -47,28 +58,27 @@ def test_xarray_open_dataset_encode_time():
     assert res['t'].mean() > 0.
 
 
-def test_xarray_open_dataset_encode_time_and_geography():
-    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA)
-    res = xr.open_dataset(datastore)
+def test_open_dataset_encode_vertical():
+    res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_geography=False)
 
     assert res.attrs['edition'] == 1
 
     var = res['t']
     assert var.attrs['gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'forecast_reference_time', 'topLevel', 'latitude', 'longitude')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
 
     assert var.mean() > 0.
 
 
-def test_open_dataset():
-    res = xarray_store.open_dataset(TEST_DATA)
+def test_open_dataset_encode_geography():
+    res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_vertical=False)
 
     assert res.attrs['edition'] == 1
 
     var = res['t']
     assert var.attrs['gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'forecast_reference_time', 'topLevel', 'latitude', 'longitude')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
 
     assert var.mean() > 0.
