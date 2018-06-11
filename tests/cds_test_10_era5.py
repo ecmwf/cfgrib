@@ -85,7 +85,7 @@ def test_Dataset(test_file):
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
     res = eccodes_grib.Dataset.fromstream(path)
-    assert len(res.variables) == 8
+    assert len(res.variables) == 7
 
 
 @pytest.mark.skip()
@@ -97,5 +97,5 @@ def test_large_Dataset():
     path = cdscommon.ensure_data(dataset, request, name='cds-' + dataset + '-LARGE-{uuid}.grib')
 
     res = eccodes_grib.Dataset.fromstream(path)
-    assert len(res.variables) == 8
+    assert len(res.variables) == 7
     assert res.variables['t'].data.mean() > 0.

@@ -82,7 +82,10 @@ class Message(collections.Mapping):
     def __getitem__(self, item):
         # type: (str) -> T.Any
         if item in self.extra_keys:
-            return self.extra_keys[item](self)
+            try:
+                return self.extra_keys[item](self)
+            except:
+                raise KeyError(item)
         else:
             return self.message_get(item)
 
