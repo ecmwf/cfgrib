@@ -26,7 +26,7 @@ def read(fname):
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.5.2.dev0'
+version = '0.6.0'
 
 
 setuptools.setup(
