@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import list, object, str
+from builtins import list, object, set, str
 
 import collections
 import datetime
@@ -73,10 +73,10 @@ GRID_TYPE_MAP = {
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-HEADER_COORDINATES_MAP = list([
+HEADER_COORDINATES_MAP = [
     ('number', ['totalNumber']),
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
-])  # python2 lists have no .copy() method
+]
 HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
 HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
 
@@ -206,6 +206,36 @@ class DataArray(object):
         return self.data.dtype
 
 
+def build_geography_coordinates(index, encode_geography):
+    # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
+    geo_coord_vars = collections.OrderedDict()
+    if encode_geography and index.getone('gridType') == 'regular_ll':
+        geo_dims = ('lat', 'lon')
+        geo_shape = (index.getone('Nj'), index.getone('Ni'))
+        geo_coord_vars['lat'] = Variable(
+            dimensions=('lat',), data=np.linspace(-90., 90., index.getone('Nj')),
+            attributes={'units': 'degrees_north'},
+        )
+        geo_coord_vars['lon'] = Variable(
+            dimensions=('lon',), data=np.linspace(0., 360, index.getone('Ni'), endpoint=False),
+            attributes={'units': 'degrees_north'},
+        )
+    else:
+        geo_dims = ('i',)
+        geo_shape = (index.getone('numberOfPoints'),)
+        first = messages.Stream(path=index.path).first()
+        # add secondary coordinates
+        latitude = first['latitudes']
+        geo_coord_vars['lat'] = Variable(
+            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
+        )
+        longitude = first['longitudes']
+        geo_coord_vars['lon'] = Variable(
+            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
+        )
+    return geo_dims, geo_shape, geo_coord_vars
+
+
 def build_data_var_components(path, index, encode_time, encode_geography, log=LOG, **kwargs):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
@@ -214,7 +244,7 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
 
     # FIXME: This function is a monster. It must die... but not today :/
     # BEWARE: The order of the instructions in the function is significant.
-    coords_map = HEADER_COORDINATES_MAP.copy()
+    coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
@@ -237,41 +267,19 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
         )
 
     # FIXME: move to a function
-    data_var_attrs['coordinates'] = ' '.join(coord_vars.keys()) + ' lat lon'
-    dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
-    shape = tuple(coord_vars[d].data.size for d in dimensions)
-    if encode_geography and index.getone('gridType') == 'regular_ll':
-        spacial_ndim = 2
-        dimensions += ('lat', 'lon')
-        shape += (index.getone('Nj'), index.getone('Ni'))
-        coord_vars['lat'] = Variable(
-            dimensions=('lat',), data=np.linspace(-90., 90., index.getone('Nj')),
-            attributes={'units': 'degrees_north'},
-        )
-        coord_vars['lon'] = Variable(
-            dimensions=('lon',), data=np.linspace(0., 360, index.getone('Ni'), endpoint=False),
-            attributes={'units': 'degrees_north'},
-        )
+    header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
+    header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    else:
-        first = messages.Stream(path=path, **kwargs).first()
-        spacial_ndim = 1
-        dimensions += ('i',)
-        shape += (index.getone('numberOfPoints'),)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_geography)
+    print(header_dimensions, geo_dims)
+    dimensions = header_dimensions + geo_dims
+    shape = header_shape + geo_shape
+    coord_vars.update(geo_coord_vars)
 
-        # add secondary coordinates
-        latitude = first['latitudes']
-        coord_vars['lat'] = Variable(
-            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
-        )
-        longitude = first['longitudes']
-        coord_vars['lon'] = Variable(
-            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
-        )
     offsets = collections.OrderedDict()
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
-        for dim in dimensions[:-spacial_ndim]:
+        for dim in header_dimensions:
             header_value = header_values[index.index_keys.index(dim)]
             header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
@@ -279,6 +287,8 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
     data = DataArray(
         path=path, shape=shape, offsets=offsets, missing_value=missing_value,
     )
+
+    data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
     return dims, data_var, coord_vars
