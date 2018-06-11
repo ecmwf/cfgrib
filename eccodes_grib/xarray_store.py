@@ -78,12 +78,12 @@ class GribDataStore(AbstractDataStore):
     variable_map = attr.attrib(default={})
 
     @classmethod
-    def fromstream(cls, *args, flavour_name='ecmwf', **kwargs):
+    def fromstream(cls, path, flavour_name='ecmwf', **kwargs):
         flavour = FLAVOURS[flavour_name]
         config = flavour.get('dataset', {}).copy()
         config.update(kwargs)
         variable_map = flavour.get('variable_map', {})
-        return cls(ds=eccodes_grib.Dataset.fromstream(*args, **config), variable_map=variable_map)
+        return cls(ds=eccodes_grib.Dataset.fromstream(path, **config), variable_map=variable_map)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, eccodes_grib.dataset.DataArray):
