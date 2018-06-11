@@ -50,8 +50,10 @@ def test_build_data_var_components_encode_geography():
     dims, data_var, coord_vars = dataset.build_data_var_components(
         path=TEST_DATA, index=index, encode_time=False, encode_geography=True,
     )
-    assert dims == \
-        {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'lat': 61, 'lon': 120}
+    assert dims == {
+        'number': 10, 'dataDate': 2, 'dataTime': 2,
+        'topLevel': 2, 'latitude': 61, 'longitude': 120,
+    }
     assert data_var.data.shape == (10, 2, 2, 2, 61, 120)
 
     # equivalent to not np.isnan without importing numpy
@@ -82,7 +84,7 @@ def test_Dataset_encode_geography():
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == \
-        ('number', 'topLevel', 'dataDate', 'dataTime', 'lat', 'lon')
+        ('number', 'topLevel', 'dataDate', 'dataTime', 'latitude', 'longitude')
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
@@ -94,7 +96,7 @@ def test_Dataset_encode_time_encode_geography():
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == \
-        ('number', 'topLevel', 'forecast_reference_time', 'lat', 'lon')
+        ('number', 'topLevel', 'forecast_reference_time', 'latitude', 'longitude')
     assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy

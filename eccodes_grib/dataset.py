@@ -106,13 +106,17 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 
 COORD_ATTRS = {
     'forecast_reference_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00',
-        'calendar': 'proleptic_gregorian',
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time',
     },
     'forecast_period': {
-        'units': 'seconds',
-        'standard_name': 'forecast_period',
+        'units': 'seconds', 'standard_name': 'forecast_period',
+    },
+    'latitude': {
+        'units': 'degrees_north', 'standard_name': 'latitude',
+    },
+    'longitude': {
+        'units': 'degrees_east', 'standard_name': 'longitude',
     },
 }
 
@@ -208,19 +212,61 @@ class DataArray(object):
         return self.data.dtype
 
 
+def build_regular_lon(index, log=LOG):
+    if index.getone('iDirectionIncrementInDegrees') <= 0.:
+        raise ValueError(
+            "Unsupported iDirectionIncrementInDegrees: %r" %
+            index.getone('iDirectionIncrementInDegrees')
+        )
+    start = index.getone('longitudeOfFirstGridPointInDegrees')
+    stop = index.getone('longitudeOfLastGridPointInDegrees')
+    num = index.getone('Ni')
+    if index.getone('iDirectionIncrementInDegrees') != abs(start - stop) / (num - 1):
+        log.warning(
+            "Mismatch between coordinate %r step and internal key %r" %
+            ('longitude', 'iDirectionIncrementInDegrees')
+        )
+    if start > stop and not index.getone('iScansNegatively'):
+        start -= 360.
+    elif start < stop and index.getone('iScansNegatively'):
+        # NOTE: this is reasonable but undocumented
+        stop -= 360.
+    return np.linspace(start, stop, num)
+
+
+def build_regular_lat(index, log=LOG):
+    if index.getone('jPointsAreConsecutive'):
+        raise ValueError(
+            "Unsupported jPointsAreConsecutive: %r" % index.getone('jPointsAreConsecutive'))
+    if index.getone('jDirectionIncrementInDegrees') <= 0.:
+        raise ValueError(
+            "Unsupported jDirectionIncrementInDegrees: %r" %
+            index.getone('jDirectionIncrementInDegrees')
+        )
+    start = index.getone('latitudeOfFirstGridPointInDegrees')
+    stop = index.getone('latitudeOfLastGridPointInDegrees')
+    num = index.getone('Nj')
+    if index.getone('jDirectionIncrementInDegrees') != abs(stop - start) / (num - 1):
+        log.warning(
+            "Mismatch between coordinate %r step and internal key %r" %
+            ('latitude', 'jDirectionIncrementInDegrees')
+        )
+    return np.linspace(start, stop, num)
+
+
 def build_geography_coordinates(index, encode_geography):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     geo_coord_vars = collections.OrderedDict()
     if encode_geography and index.getone('gridType') == 'regular_ll':
-        geo_dims = ('lat', 'lon')
+        geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
-        geo_coord_vars['lat'] = Variable(
-            dimensions=('lat',), data=np.linspace(-90., 90., index.getone('Nj')),
-            attributes={'units': 'degrees_north'},
+        geo_coord_vars['latitude'] = Variable(
+            dimensions=('latitude',), data=build_regular_lat(index),
+            attributes=COORD_ATTRS['latitude'],
         )
-        geo_coord_vars['lon'] = Variable(
-            dimensions=('lon',), data=np.linspace(0., 360, index.getone('Ni'), endpoint=False),
-            attributes={'units': 'degrees_north'},
+        geo_coord_vars['longitude'] = Variable(
+            dimensions=('longitude',), data=build_regular_lon(index),
+            attributes=COORD_ATTRS['longitude'],
         )
     else:
         geo_dims = ('i',)
@@ -228,12 +274,12 @@ def build_geography_coordinates(index, encode_geography):
         first = messages.Stream(path=index.path).first()
         # add secondary coordinates
         latitude = first['latitudes']
-        geo_coord_vars['lat'] = Variable(
-            dimensions=('i',), data=np.array(latitude), attributes={'units': 'degrees_north'},
+        geo_coord_vars['latitude'] = Variable(
+            dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
         )
         longitude = first['longitudes']
-        geo_coord_vars['lon'] = Variable(
-            dimensions=('i',), data=np.array(longitude), attributes={'units': 'degrees_east'},
+        geo_coord_vars['longitude'] = Variable(
+            dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
         )
     return geo_dims, geo_shape, geo_coord_vars
 

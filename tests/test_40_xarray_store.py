@@ -52,8 +52,10 @@ def test_xarray_open_dataset_encode_time_and_geography():
     res = xr.open_dataset(datastore)
 
     assert res.attrs['edition'] == 1
-    assert res['t'].attrs['gridType'] == 'regular_ll'
-    assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'topLevel', 'forecast_reference_time', 'lat', 'lon')
 
-    assert res['t'].mean() > 0.
+    var = res['t']
+    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['units'] == 'K'
+    assert var.dims == ('number', 'topLevel', 'forecast_reference_time', 'latitude', 'longitude')
+
+    assert var.mean() > 0.
