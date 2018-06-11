@@ -16,12 +16,16 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import collections
+
 import attr
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
 from xarray.backends.api import open_dataset as _open_dataset
 from xarray.backends.common import AbstractDataStore, BackendArray
+
+import eccodes_grib
 
 
 class WrapGrib(BackendArray):
@@ -40,24 +44,54 @@ class WrapGrib(BackendArray):
         return self.variable.data.dtype
 
 
+FLAVOURS = {
+    'eccodes': {
+        'dataset': {
+            'encode_time': False,
+            'encode_vertical': False,
+            'encode_geography': False,
+        }
+    },
+    'ecmwf': {
+        'variable_map': {
+            'forecast_reference_time': 'time',
+            'forecast_period': 'step',
+            'time': 'valid_time',
+            'air_pressure': 'level',
+        }
+    },
+    'cds': {
+        'variable_map': {
+            'number': 'realization',
+            'forecast_period': 'leadtime',
+            'air_pressure': 'plev',
+            'latitude': 'lat',
+            'longitude': 'lon',
+        }
+    },
+}
+
+
 @attr.attrs()
 class GribDataStore(AbstractDataStore):
     ds = attr.attrib()
+    variable_map = attr.attrib(default={})
 
     @classmethod
-    def fromstream(cls, *args, **kwargs):
-        import eccodes_grib
-        return cls(ds=eccodes_grib.Dataset.fromstream(*args, **kwargs))
+    def fromstream(cls, *args, flavour_name='ecmwf', **kwargs):
+        flavour = FLAVOURS[flavour_name]
+        config = flavour.get('dataset', {}).copy()
+        config.update(kwargs)
+        variable_map = flavour.get('variable_map', {})
+        return cls(ds=eccodes_grib.Dataset.fromstream(*args, **config), variable_map=variable_map)
 
     def open_store_variable(self, name, var):
-        from eccodes_grib import dataset
-
-        if isinstance(var.data, dataset.DataArray):
+        if isinstance(var.data, eccodes_grib.dataset.DataArray):
             data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data
 
-        dimensions = var.dimensions
+        dimensions = tuple(self.variable_map.get(dim, dim) for dim in var.dimensions)
         attrs = var.attributes
 
         encoding = {}
@@ -68,14 +102,15 @@ class GribDataStore(AbstractDataStore):
         return Variable(dimensions, data, attrs, encoding)
 
     def get_variables(self):
-        return FrozenOrderedDict((k, self.open_store_variable(k, v))
+        return FrozenOrderedDict((self.variable_map.get(k, k), self.open_store_variable(k, v))
                                  for k, v in self.ds.variables.items())
 
     def get_attrs(self):
         return FrozenOrderedDict(self.ds.attributes)
 
     def get_dimensions(self):
-        return self.ds.dimensions
+        return collections.OrderedDict((self.variable_map.get(d, d), s)
+                                       for d, s in self.ds.dimensions.items())
 
     def get_encoding(self):
         encoding = {}
@@ -83,9 +118,10 @@ class GribDataStore(AbstractDataStore):
         return encoding
 
 
-def open_dataset(path, encode_time=True, encode_vertical=True, encode_geography=True, **kwargs):
-    store = GribDataStore.fromstream(
-        path, encode_time=encode_time, encode_vertical=encode_vertical,
-        encode_geography=encode_geography
-    )
+def open_dataset(path, flavour_name='ecmwf', **kwargs):
+    overrides = {}
+    for k in list(kwargs):  # copy to allow the .pop()
+        if k.startswith('encode_'):
+            overrides[k] = kwargs.pop(k)
+    store = GribDataStore.fromstream(path, flavour_name=flavour_name, **overrides)
     return _open_dataset(store, **kwargs)

@@ -42,7 +42,7 @@ def test_open_dataset():
     assert var.attrs['gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == \
-        ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+        ('number', 'time', 'level', 'latitude', 'longitude')
 
     assert var.mean() > 0.
 
@@ -53,7 +53,7 @@ def test_open_dataset_encode_time():
     assert res.attrs['edition'] == 1
     assert res['t'].attrs['gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'forecast_reference_time', 'topLevel', 'i')
+    assert res['t'].dims == ('number', 'time', 'topLevel', 'i')
 
     assert res['t'].mean() > 0.
 
@@ -66,7 +66,7 @@ def test_open_dataset_encode_vertical():
     var = res['t']
     assert var.attrs['gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
 
     assert var.mean() > 0.
 
@@ -80,5 +80,31 @@ def test_open_dataset_encode_geography():
     assert var.attrs['gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
+
+    assert var.mean() > 0.
+
+
+def test_open_dataset_eccodes():
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes')
+
+    assert res.attrs['edition'] == 1
+
+    var = res['t']
+    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['units'] == 'K'
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+
+    assert var.mean() > 0.
+
+
+def test_open_dataset_cds():
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='cds')
+
+    assert res.attrs['edition'] == 1
+
+    var = res['t']
+    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['units'] == 'K'
+    assert var.dims == ('realization', 'forecast_reference_time', 'plev', 'lat', 'lon')
 
     assert var.mean() > 0.
