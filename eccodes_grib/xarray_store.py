@@ -83,6 +83,6 @@ class GribDataStore(AbstractDataStore):
         return encoding
 
 
-def open_dataset(path, flavour='ecmwf', extra_config={}, **kwargs):
-    store = GribDataStore.fromstream(path, flavour=flavour, extra_config=extra_config)
+def open_dataset(path, encode_time=True, encode_geography=True, **kwargs):
+    store = GribDataStore.fromstream(path, encode_time=encode_time, encode_geography=encode_geography)
     return _open_dataset(store, **kwargs)

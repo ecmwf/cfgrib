@@ -261,20 +261,18 @@ def build_regular_lat(index, log=LOG):
     return np.linspace(start, stop, num)
 
 
-def build_geography_coordinates(index, encode_geography, coord_name_map={}):
+def build_geography_coordinates(index, encode_geography):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     geo_coord_vars = collections.OrderedDict()
-    lat_name = coord_name_map.get('latitude', 'latitude')
-    lon_name = coord_name_map.get('longitude', 'longitude')
     if encode_geography and index.getone('gridType') == 'regular_ll':
-        geo_dims = (lat_name, lon_name)
+        geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
-        geo_coord_vars[lat_name] = Variable(
-            dimensions=(lat_name,), data=build_regular_lat(index),
+        geo_coord_vars['latitude'] = Variable(
+            dimensions=('latitude',), data=build_regular_lat(index),
             attributes=COORD_ATTRS['latitude'],
         )
-        geo_coord_vars[lon_name] = Variable(
-            dimensions=(lon_name,), data=build_regular_lon(index),
+        geo_coord_vars['longitude'] = Variable(
+            dimensions=('longitude',), data=build_regular_lon(index),
             attributes=COORD_ATTRS['longitude'],
         )
     else:
@@ -283,11 +281,11 @@ def build_geography_coordinates(index, encode_geography, coord_name_map={}):
         first = messages.Stream(path=index.path).first()
         # add secondary coordinates
         latitude = first['latitudes']
-        geo_coord_vars[lat_name] = Variable(
+        geo_coord_vars['latitude'] = Variable(
             dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
         )
         longitude = first['longitudes']
-        geo_coord_vars[lon_name] = Variable(
+        geo_coord_vars['longitude'] = Variable(
             dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
         )
     return geo_dims, geo_shape, geo_coord_vars
@@ -323,11 +321,7 @@ def build_data_var_components(
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
-    header_dimensions = ()
-    header_dimensions_keys = ()
-    header_shape = ()
     for coord_key, attrs_keys in coords_map:
-        coord_name = coord_name_map.get(coord_key, coord_key)
         values = index[coord_key]
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
@@ -335,22 +329,18 @@ def build_data_var_components(
         attributes = COORD_ATTRS.get(coord_key, {}).copy()
         attributes.update(enforce_unique_attributes(index, attrs_keys))
         data = np.array(values)
-        dimensions = (coord_name,)
+        dimensions = (coord_key,)
         if len(values) == 1:
             data = data[0]
             dimensions = ()
-        coord_vars[coord_name] = Variable(
+        coord_vars[coord_key] = Variable(
             dimensions=dimensions, data=data, attributes=attributes,
         )
-        size = coord_vars[coord_name].data.size
-        if size > 1:
-            header_dimensions += (coord_name,)
-            header_dimensions_keys += (coord_key,)
-            header_shape += (size,)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
-        index, encode_geography, coord_name_map,
-    )
+    header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
+    header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
+
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_geography)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -358,10 +348,9 @@ def build_data_var_components(
     offsets = collections.OrderedDict()
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
-        for dim_key in header_dimensions_keys:
-            dim_name = coord_name_map.get(dim_key, dim_key)
-            header_value = header_values[index.index_keys.index(dim_key)]
-            header_indexes.append(coord_vars[dim_name].data.tolist().index(header_value))
+        for dim in header_dimensions:
+            header_value = header_values[index.index_keys.index(dim)]
+            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
     data = DataArray(
@@ -407,57 +396,32 @@ def build_dataset_components(
     return dimensions, variables, attributes
 
 
-FLAVOURS = {
-    'eccodes': {},
-    'ecmwf': {
-        'encode_time': True,
-        'encode_geography': True,
-        'coord_name_map': {
-            'forecast_refernce_time': 'time',
-            'forecast_period': 'step',
-            'air_pressure': 'level',
-        }
-    },
-    'cds': {
-        'encode_time': True,
-        'encode_geography': True,
-        'encode_vertical': True,
-        'coord_name_map': {
-            'number': 'realization',
-            'forecast_period': 'leadtime',
-            'air_pressure': 'plev',
-            'latitude': 'lat',
-            'longitude': 'lon',
-        },
-    }
-}
-
-
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
-    flavour = attr.attrib(default='ecmwf')
-    extra_config = attr.attrib(default={})
+    encode_time = attr.attrib(default=True)
+    encode_geography = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, flavour='ecmwf', extra_config={}, **kwagrs):
+    def fromstream(cls, path, encode_time=True, encode_geography=True, **kwagrs):
         dataset = cls(
-            stream=messages.Stream(path, **kwagrs), flavour=flavour, extra_config=extra_config,
+            stream=messages.Stream(path, **kwagrs),
+            encode_time=encode_time, encode_geography=encode_geography,
         )
         return dataset
 
     def __attrs_post_init__(self):
-        config = FLAVOURS[self.flavour].copy()
-        config.update(self.extra_config)
-        extra_keys = {
-            'forecast_reference_time': from_grib_date_time,
-            'forecast_period': from_grib_step,
-            'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
-            'air_pressure': from_grib_pl_level,
-        }
+        extra_keys = {}
+        if self.encode_time:
+            extra_keys.update({
+                'forecast_reference_time': from_grib_date_time,
+                'forecast_period': from_grib_step,
+                'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
+                'air_pressure': from_grib_pl_level,
+            })
         message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
         self.stream.message_factory = message_factory
-        dims, vars, attrs = build_dataset_components(self.stream, **config)
+        dims, vars, attrs = build_dataset_components(**self.__dict__)
         self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
         self.variables = vars  # type: T.Dict[str, Variable]
         self.attributes = attrs  # type: T.Dict[str, T.Any]
