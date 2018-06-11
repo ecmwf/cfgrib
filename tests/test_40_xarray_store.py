@@ -55,3 +55,16 @@ def test_xarray_open_dataset_encode_time_and_geography():
     assert var.dims == ('number', 'forecast_reference_time', 'topLevel', 'latitude', 'longitude')
 
     assert var.mean() > 0.
+
+
+def test_open_dataset():
+    res = xarray_store.open_dataset(TEST_DATA, flavour='cds')
+
+    assert res.attrs['edition'] == 1
+
+    var = res['t']
+    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['units'] == 'K'
+    assert var.dims == ('realization', 'forecast_reference_time', 'plev', 'lat', 'lon')
+
+    assert var.mean() > 0.

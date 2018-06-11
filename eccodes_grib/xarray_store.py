@@ -20,6 +20,7 @@ import attr
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
+from xarray.backends.api import open_dataset as _open_dataset
 from xarray.backends.common import AbstractDataStore, BackendArray
 
 
@@ -80,3 +81,8 @@ class GribDataStore(AbstractDataStore):
         encoding = {}
         encoding['unlimited_dims'] = {k for k, v in self.ds.dimensions.items() if v is None}
         return encoding
+
+
+def open_dataset(path, flavour='ecmwf', extra_config={}, **kwargs):
+    store = GribDataStore.fromstream(path, flavour=flavour, extra_config=extra_config)
+    return _open_dataset(store, **kwargs)

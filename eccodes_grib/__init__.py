@@ -19,5 +19,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from .dataset import Dataset
 from .eccodes import EcCodesError
 from .messages import Stream
+from .xarray_store import open_dataset
 
-__all__ = ['Dataset', 'EcCodesError', 'Stream']
+__all__ = ['Dataset', 'EcCodesError', 'open_dataset', 'Stream']
