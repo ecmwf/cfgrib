@@ -261,18 +261,20 @@ def build_regular_lat(index, log=LOG):
     return np.linspace(start, stop, num)
 
 
-def build_geography_coordinates(index, encode_geography):
+def build_geography_coordinates(index, encode_geography, coord_name_map={}):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     geo_coord_vars = collections.OrderedDict()
+    lat_name = coord_name_map.get('latitude', 'latitude')
+    lon_name = coord_name_map.get('longitude', 'longitude')
     if encode_geography and index.getone('gridType') == 'regular_ll':
-        geo_dims = ('latitude', 'longitude')
+        geo_dims = (lat_name, lon_name)
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
-        geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=build_regular_lat(index),
+        geo_coord_vars[lat_name] = Variable(
+            dimensions=(lat_name,), data=build_regular_lat(index),
             attributes=COORD_ATTRS['latitude'],
         )
-        geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=build_regular_lon(index),
+        geo_coord_vars[lon_name] = Variable(
+            dimensions=(lon_name,), data=build_regular_lon(index),
             attributes=COORD_ATTRS['longitude'],
         )
     else:
@@ -281,11 +283,11 @@ def build_geography_coordinates(index, encode_geography):
         first = messages.Stream(path=index.path).first()
         # add secondary coordinates
         latitude = first['latitudes']
-        geo_coord_vars['latitude'] = Variable(
+        geo_coord_vars[lat_name] = Variable(
             dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
         )
         longitude = first['longitudes']
-        geo_coord_vars['longitude'] = Variable(
+        geo_coord_vars[lon_name] = Variable(
             dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
         )
     return geo_dims, geo_shape, geo_coord_vars
@@ -303,7 +305,8 @@ def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topL
 
 
 def build_data_var_components(
-        path, index, encode_time, encode_geography, encode_vertical=False, log=LOG, **kwargs
+        path, index, encode_time, encode_geography, encode_vertical=False, coord_name_map={},
+        log=LOG,
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
@@ -320,7 +323,11 @@ def build_data_var_components(
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
+    header_dimensions = ()
+    header_dimensions_keys = ()
+    header_shape = ()
     for coord_key, attrs_keys in coords_map:
+        coord_name = coord_name_map.get(coord_key, coord_key)
         values = index[coord_key]
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
@@ -328,18 +335,22 @@ def build_data_var_components(
         attributes = COORD_ATTRS.get(coord_key, {}).copy()
         attributes.update(enforce_unique_attributes(index, attrs_keys))
         data = np.array(values)
-        dimensions = (coord_key,)
+        dimensions = (coord_name,)
         if len(values) == 1:
             data = data[0]
             dimensions = ()
-        coord_vars[coord_key] = Variable(
+        coord_vars[coord_name] = Variable(
             dimensions=dimensions, data=data, attributes=attributes,
         )
+        size = coord_vars[coord_name].data.size
+        if size > 1:
+            header_dimensions += (coord_name,)
+            header_dimensions_keys += (coord_key,)
+            header_shape += (size,)
 
-    header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
-    header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
-
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_geography)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
+        index, encode_geography, coord_name_map,
+    )
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -347,9 +358,10 @@ def build_data_var_components(
     offsets = collections.OrderedDict()
     for header_values, offset in index.offsets.items():
         header_indexes = []  # type: T.List[int]
-        for dim in header_dimensions:
-            header_value = header_values[index.index_keys.index(dim)]
-            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+        for dim_key in header_dimensions_keys:
+            dim_name = coord_name_map.get(dim_key, dim_key)
+            header_value = header_values[index.index_keys.index(dim_key)]
+            header_indexes.append(coord_vars[dim_name].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
     data = DataArray(
@@ -375,6 +387,7 @@ def dict_merge(master, update):
 
 def build_dataset_components(
         stream, encode_time=False, encode_geography=False, encode_vertical=False,
+        coord_name_map={},
 ):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
@@ -383,7 +396,7 @@ def build_dataset_components(
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            stream.path, var_index, encode_time, encode_geography, encode_vertical
+            stream.path, var_index, encode_time, encode_geography, encode_vertical, coord_name_map
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -399,11 +412,23 @@ FLAVOURS = {
     'ecmwf': {
         'encode_time': True,
         'encode_geography': True,
+        'coord_name_map': {
+            'forecast_refernce_time': 'time',
+            'forecast_period': 'step',
+            'air_pressure': 'level',
+        }
     },
     'cds': {
         'encode_time': True,
         'encode_geography': True,
         'encode_vertical': True,
+        'coord_name_map': {
+            'number': 'realization',
+            'forecast_period': 'leadtime',
+            'air_pressure': 'plev',
+            'latitude': 'lat',
+            'longitude': 'lon',
+        },
     }
 }
 

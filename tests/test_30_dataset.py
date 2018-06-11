@@ -108,7 +108,7 @@ def test_Dataset_cds():
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
     assert tuple(res.dimensions.keys()) == \
-        ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+        ('realization', 'forecast_reference_time', 'plev', 'lat', 'lon')
     assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy
