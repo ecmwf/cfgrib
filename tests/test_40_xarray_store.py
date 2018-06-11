@@ -42,7 +42,7 @@ def test_xarray_open_dataset_encode_time():
     assert res.attrs['edition'] == 1
     assert res['t'].attrs['gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'topLevel', 'ref_time', 'i')
+    assert res['t'].dims == ('number', 'topLevel', 'forecast_reference_time', 'i')
 
     assert res['t'].mean() > 0.
 
@@ -54,6 +54,6 @@ def test_xarray_open_dataset_encode_time_and_geography():
     assert res.attrs['edition'] == 1
     assert res['t'].attrs['gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'topLevel', 'ref_time', 'lat', 'lon')
+    assert res['t'].dims == ('number', 'topLevel', 'forecast_reference_time', 'lat', 'lon')
 
     assert res['t'].mean() > 0.

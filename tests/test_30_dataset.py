@@ -13,9 +13,11 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
 def test_from_grib_date_time():
-    datein = 20160706
-    timein = 1944
-    result = dataset.from_grib_date_time(datein, timein)
+    message = {
+        'dataDate': 20160706,
+        'dataTime': 1944,
+    }
+    result = dataset.from_grib_date_time(message)
 
     assert result == 1467834240
 
@@ -68,7 +70,7 @@ def test_Dataset_encode_time():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=False)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'i')
+    assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'forecast_reference_time', 'i')
     assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy
@@ -91,7 +93,8 @@ def test_Dataset_encode_time_encode_geography():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=True, encode_geography=True)
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['edition'] == 1
-    assert tuple(res.dimensions.keys()) == ('number', 'topLevel', 'ref_time', 'lat', 'lon')
+    assert tuple(res.dimensions.keys()) == \
+        ('number', 'topLevel', 'forecast_reference_time', 'lat', 'lon')
     assert len(res.variables) == 8
 
     # equivalent to not np.isnan without importing numpy

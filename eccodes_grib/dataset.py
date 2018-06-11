@@ -86,7 +86,7 @@ DATA_TIME_COORDINATE_MAP = [
     ('endStep', ['stepUnits', 'stepType']),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('ref_time', []),
+    ('forecast_reference_time', []),
     ('forecast_period', ['stepUnits', 'stepType']),
 ]
 DATA_TIME_COORDINATES_KEYS = [k for k, _ in DATA_TIME_COORDINATE_MAP]
@@ -105,7 +105,7 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 ]
 
 COORD_ATTRS = {
-    'ref_time': {
+    'forecast_reference_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00',
         'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time',
@@ -132,8 +132,8 @@ def enforce_unique_attributes(
     return attributes
 
 
-def from_grib_date_time(date, time):
-    # type: (int, int) -> int
+def from_grib_date_time(message, date_key='dataDate', time_key='dataTime'):
+    # type: (T.Mapping, str, str) -> int
     """
     Convert the date and time as encoded in a GRIB file in standard numpy-compatible
     datetime64 string.
@@ -143,6 +143,8 @@ def from_grib_date_time(date, time):
 
     :rtype: str
     """
+    date = message[date_key]
+    time = message[time_key]
     # (int, int) -> int
     hour = time // 100
     minute = time % 100
@@ -155,9 +157,10 @@ def from_grib_date_time(date, time):
     return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
 
 
-def from_grib_step(step, step_unit):
-    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
-    return step * to_seconds
+def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
+    # type: (T.Mapping, str, str) -> int
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
+    return message[step_key] * to_seconds
 
 
 @attr.attrs(cmp=False)
@@ -341,8 +344,8 @@ class Dataset(object):
         extra_keys = {}
         if self.encode_time:
             extra_keys.update({
-                'ref_time': lambda m: from_grib_date_time(m['dataDate'], m['dataTime']),
-                'forecast_period': lambda m: from_grib_step(m['endStep'], m['stepUnits']),
+                'forecast_reference_time': from_grib_date_time,
+                'forecast_period': from_grib_step,
             })
         if extra_keys:
             message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
