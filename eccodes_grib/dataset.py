@@ -75,11 +75,13 @@ GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = [
     ('number', ['totalNumber']),
+]
+VERTICAL_COORDINATE_MAP = [
     ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
-HEADER_COORDINATES_KEYS = [k for k, _ in HEADER_COORDINATES_MAP]
-HEADER_COORDINATES_KEYS += [k for _, ks in HEADER_COORDINATES_MAP for k in ks]
-
+PLEV_COORDINATE_MAP = [
+    ('air_pressure', []),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
+]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', []),
     ('dataTime', []),
@@ -89,14 +91,23 @@ REF_TIME_COORDINATE_MAP = [
     ('forecast_reference_time', []),
     ('forecast_period', ['stepUnits', 'stepType']),
 ]
-DATA_TIME_COORDINATES_KEYS = [k for k, _ in DATA_TIME_COORDINATE_MAP]
-DATA_TIME_COORDINATES_KEYS += [k for _, ks in DATA_TIME_COORDINATE_MAP for k in ks]
-REF_TIME_COORDINATE_KEYS = [k for k, _ in REF_TIME_COORDINATE_MAP]
-REF_TIME_COORDINATE_KEYS += [k for _, ks in REF_TIME_COORDINATE_MAP for k in ks]
+
+ALL_MAPS = [
+    HEADER_COORDINATES_MAP, VERTICAL_COORDINATE_MAP, PLEV_COORDINATE_MAP, DATA_TIME_COORDINATE_MAP,
+    REF_TIME_COORDINATE_MAP,
+]
+
+
+def unroll_keys(maps):
+    keys = []
+    for map in maps:
+        keys.extend([k for k, _ in map])
+        keys.extend([k for _, ks in map for k in ks])
+    return keys
+
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + \
-    GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + HEADER_COORDINATES_KEYS + \
-    DATA_TIME_COORDINATES_KEYS + REF_TIME_COORDINATE_KEYS
+    GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + unroll_keys(ALL_MAPS)
 
 # taken from eccodes stepUnits.table
 GRIB_STEP_UNITS_TO_SECONDS = [
@@ -109,15 +120,10 @@ COORD_ATTRS = {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time',
     },
-    'forecast_period': {
-        'units': 'seconds', 'standard_name': 'forecast_period',
-    },
-    'latitude': {
-        'units': 'degrees_north', 'standard_name': 'latitude',
-    },
-    'longitude': {
-        'units': 'degrees_east', 'standard_name': 'longitude',
-    },
+    'forecast_period': {'units': 'seconds', 'standard_name': 'forecast_period'},
+    'latitude': {'units': 'degrees_north', 'standard_name': 'latitude'},
+    'longitude': {'units': 'degrees_east', 'standard_name': 'longitude'},
+    'air_pressure': {'units': 'Pa', 'positive': 'down', 'standard_name': 'air_pressure'},
 }
 
 
@@ -136,7 +142,7 @@ def enforce_unique_attributes(
     return attributes
 
 
-def from_grib_date_time(message, date_key='dataDate', time_key='dataTime'):
+def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
     # type: (T.Mapping, str, str) -> int
     """
     Convert the date and time as encoded in a GRIB file in standard numpy-compatible
@@ -147,6 +153,7 @@ def from_grib_date_time(message, date_key='dataDate', time_key='dataTime'):
 
     :rtype: str
     """
+    date_key, time_key = keys
     date = message[date_key]
     time = message[time_key]
     hour = time // 100
@@ -284,7 +291,20 @@ def build_geography_coordinates(index, encode_geography):
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def build_data_var_components(path, index, encode_time, encode_geography, log=LOG, **kwargs):
+def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topLevel'):
+    type_of_level = message[type_of_level_key]
+    if type_of_level == 'isobaricInhPa':
+        coord = message[level_key] * 100.
+    elif type_of_level == b'isobaricInPa':
+        coord = float(message[level_key])
+    else:
+        raise ValueError("Unsupported value of typeOfLevel: %r" % (type_of_level,))
+    return coord
+
+
+def build_data_var_components(
+        path, index, encode_time, encode_geography, encode_vertical=False, log=LOG, **kwargs
+):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
@@ -295,6 +315,10 @@ def build_data_var_components(path, index, encode_time, encode_geography, log=LO
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
+    if encode_vertical:
+        coords_map.extend(PLEV_COORDINATE_MAP)
+    else:
+        coords_map.extend(VERTICAL_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
     for coord_key, attrs_keys in coords_map:
         values = index[coord_key]
@@ -349,7 +373,9 @@ def dict_merge(master, update):
                              "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
-def build_dataset_components(stream, encode_time, encode_geography):
+def build_dataset_components(
+        stream, encode_time=False, encode_geography=False, encode_vertical=False,
+):
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -357,7 +383,7 @@ def build_dataset_components(stream, encode_time, encode_geography):
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            stream.path, var_index, encode_time, encode_geography
+            stream.path, var_index, encode_time, encode_geography, encode_vertical
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -368,35 +394,45 @@ def build_dataset_components(stream, encode_time, encode_geography):
     return dimensions, variables, attributes
 
 
+FLAVOURS = {
+    'eccodes': {},
+    'ecmwf': {
+        'encode_time': True,
+        'encode_geography': True,
+    },
+    'cds': {
+        'encode_time': True,
+        'encode_geography': True,
+        'encode_vertical': True,
+    }
+}
+
+
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
-    encode_time = attr.attrib(default=True)
-    encode_geography = attr.attrib(default=True)
+    flavour = attr.attrib(default='ecmwf')
+    extra_config = attr.attrib(default={})
 
     @classmethod
-    def fromstream(cls, path, encode_time=True, encode_geography=True, **kwagrs):
+    def fromstream(cls, path, flavour='ecmwf', extra_config={}, **kwagrs):
         dataset = cls(
-            stream=messages.Stream(path, **kwagrs),
-            encode_time=encode_time, encode_geography=encode_geography,
+            stream=messages.Stream(path, **kwagrs), flavour=flavour, extra_config=extra_config,
         )
         return dataset
 
     def __attrs_post_init__(self):
-        extra_keys = {}
-        if self.encode_time:
-            extra_keys.update({
-                'forecast_reference_time': from_grib_date_time,
-                'forecast_period': from_grib_step,
-            })
-        if extra_keys:
-            message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
-        else:
-            message_factory = messages.Message.fromfile
+        config = FLAVOURS[self.flavour].copy()
+        config.update(self.extra_config)
+        extra_keys = {
+            'forecast_reference_time': from_grib_date_time,
+            'forecast_period': from_grib_step,
+            'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
+            'air_pressure': from_grib_pl_level,
+        }
+        message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
         self.stream.message_factory = message_factory
-        dims, vars, attrs = build_dataset_components(
-            self.stream, self.encode_time, self.encode_geography,
-        )
+        dims, vars, attrs = build_dataset_components(self.stream, **config)
         self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
         self.variables = vars  # type: T.Dict[str, Variable]
         self.attributes = attrs  # type: T.Dict[str, T.Any]
