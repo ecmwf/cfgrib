@@ -70,4 +70,10 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Operating System :: OS Independent',
     ],
+    entry_points={
+        'console_scripts': [
+            'eccodes_grib2netcdf = eccodes_grib.xarray_store:eccodes_grib2netcdf'
+        ]
+    },
+
 )

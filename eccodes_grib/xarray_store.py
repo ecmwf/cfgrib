@@ -125,3 +125,21 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.fromstream(path, flavour_name=flavour_name, **overrides)
     return _open_dataset(store, **kwargs)
+
+
+def eccodes_grib2netcdf():
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Convert a GRIB file into a NetCDF file.')
+    parser.add_argument('input', help='Path to the input GRIB file.')
+    parser.add_argument('--flavour_name', default='cds',
+        help='Translation flavour. Can be "cds", "eccodes" or "ecmwf".')
+    parser.add_argument('--output', '-o', default='{input}.nc',
+        help='Path to the output file.')
+
+    args = parser.parse_args()
+    print('Loading:', args.input)
+    ds = open_dataset(args.input, flavour_name=args.flavour_name)
+    outpath = args.output.format(input=args.input)
+    print('Creating:', outpath)
+    ds.to_netcdf(outpath)
