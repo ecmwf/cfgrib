@@ -2,6 +2,7 @@
 import pytest
 
 import eccodes_grib
+import eccodes_grib.xarray_store
 
 import cdscommon
 
@@ -104,7 +105,7 @@ TEST_FILES = {
 
 
 @pytest.mark.parametrize('test_file', TEST_FILES.keys())
-def test_reanalysis_Stream(test_file):
+def test_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
@@ -115,9 +116,21 @@ def test_reanalysis_Stream(test_file):
 
 
 @pytest.mark.parametrize('test_file', TEST_FILES.keys())
-def test_reanalysis_Dataset(test_file):
+def test_Dataset(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
+
+    res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
+    res.to_netcdf(path[:-5] + '.nc')
+
+
+@pytest.mark.skip()
+def test_large_Dataset():
+    dataset, request, key_count = TEST_FILES['seasonal-original-pressure-levels-ecmwf']
+    # make the request large
+    request['leadtime_hour'] = list(range(720, 1445, 24))
+    request['grid'] = ['1', '1']
+    path = cdscommon.ensure_data(dataset, request, name='cds-' + dataset + '-LARGE-{uuid}.grib')
 
     res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
     res.to_netcdf(path[:-5] + '.nc')

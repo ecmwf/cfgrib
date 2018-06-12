@@ -40,7 +40,9 @@ VERSION = pkg_resources.get_distribution("eccodes_grib").version
 GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
-DATA_ATTRIBUTES_KEYS = ['paramId', 'shortName', 'units', 'name', 'cfName', 'missingValue']
+DATA_ATTRIBUTES_KEYS = [
+    'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
+]
 
 GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS = ['gridType', 'numberOfPoints']
 
@@ -410,12 +412,14 @@ def build_dataset_components(
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
-    for param_id, short_name in zip(param_ids, index['shortName']):
+    for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
             stream.path, var_index,
             encode_parameter, encode_time, encode_geography, encode_vertical,
         )
+        if encode_parameter and var_name != 'undef':
+            short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
         dict_merge(dimensions, dims)
