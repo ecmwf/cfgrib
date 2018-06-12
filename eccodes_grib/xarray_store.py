@@ -94,6 +94,11 @@ class GribDataStore(AbstractDataStore):
         dimensions = tuple(self.variable_map.get(dim, dim) for dim in var.dimensions)
         attrs = var.attributes
 
+        # the coordinates attributes need a special treatment
+        if 'coordinates' in attrs:
+            coordinates = [self.variable_map.get(d, d) for d in attrs['coordinates'].split()]
+            attrs['coordinates'] = ' '.join(coordinates)
+
         encoding = {}
         # save source so __repr__ can detect if it's local or not
         encoding['source'] = self.ds.stream.path
