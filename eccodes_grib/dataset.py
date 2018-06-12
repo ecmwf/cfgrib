@@ -76,22 +76,22 @@ GRID_TYPE_MAP = {
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = [
-    ('number', ['totalNumber']),
+    ('number', ['totalNumber'], True),
 ]
 VERTICAL_COORDINATE_MAP = [
-    ('topLevel', ['typeOfLevel']),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('topLevel', ['typeOfLevel'], False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 PLEV_COORDINATE_MAP = [
-    ('air_pressure', []),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('air_pressure', [], False),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 DATA_TIME_COORDINATE_MAP = [
-    ('dataDate', []),
-    ('dataTime', []),
-    ('endStep', ['stepUnits', 'stepType']),
+    ('dataDate', [], True),
+    ('dataTime', [], True),
+    ('endStep', ['stepUnits', 'stepType'], True),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('forecast_reference_time', []),
-    ('forecast_period', ['stepUnits', 'stepType']),
+    ('forecast_reference_time', [], True),
+    ('forecast_period', ['stepUnits', 'stepType'], True),
 ]
 
 ALL_MAPS = [
@@ -103,8 +103,8 @@ ALL_MAPS = [
 def unroll_keys(maps):
     keys = []
     for map in maps:
-        keys.extend([k for k, _ in map])
-        keys.extend([k for _, ks in map for k in ks])
+        keys.extend([k for k, _, _ in map])
+        keys.extend([k for _, ks, _ in map for k in ks])
     return keys
 
 
@@ -344,8 +344,8 @@ def build_data_var_components(
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
-    for coord_key, attrs_keys in coords_map:
-        values = index[coord_key]
+    for coord_key, attrs_keys, increasing in coords_map:
+        values = sorted(index[coord_key], reverse=not increasing)
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
