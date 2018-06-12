@@ -25,8 +25,8 @@ def test_xarray_open_dataset():
     )
     res = xr.open_dataset(datastore)
 
-    assert res.attrs['edition'] == 1
-    assert res['t'].attrs['gridType'] == 'regular_ll'
+    assert res.attrs['GRIB_edition'] == 1
+    assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
     assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
 
@@ -36,10 +36,10 @@ def test_xarray_open_dataset():
 def test_open_dataset():
     res = xarray_store.open_dataset(TEST_DATA)
 
-    assert res.attrs['edition'] == 1
+    assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
-    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == \
         ('number', 'time', 'level', 'latitude', 'longitude')
@@ -50,8 +50,8 @@ def test_open_dataset():
 def test_open_dataset_encode_time():
     res = xarray_store.open_dataset(TEST_DATA, encode_vertical=False, encode_geography=False)
 
-    assert res.attrs['edition'] == 1
-    assert res['t'].attrs['gridType'] == 'regular_ll'
+    assert res.attrs['GRIB_edition'] == 1
+    assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
     assert res['t'].dims == ('number', 'time', 'topLevel', 'i')
 
@@ -61,10 +61,10 @@ def test_open_dataset_encode_time():
 def test_open_dataset_encode_vertical():
     res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_geography=False)
 
-    assert res.attrs['edition'] == 1
+    assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
-    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
 
@@ -74,10 +74,10 @@ def test_open_dataset_encode_vertical():
 def test_open_dataset_encode_geography():
     res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_vertical=False)
 
-    assert res.attrs['edition'] == 1
+    assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
-    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
 
@@ -87,10 +87,10 @@ def test_open_dataset_encode_geography():
 def test_open_dataset_eccodes():
     res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes')
 
-    assert res.attrs['edition'] == 1
+    assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
-    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
 
@@ -100,10 +100,10 @@ def test_open_dataset_eccodes():
 def test_open_dataset_cds():
     res = xarray_store.open_dataset(TEST_DATA, flavour_name='cds')
 
-    assert res.attrs['edition'] == 1
+    assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
-    assert var.attrs['gridType'] == 'regular_ll'
+    assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == ('realization', 'forecast_reference_time', 'plev', 'lat', 'lon')
 

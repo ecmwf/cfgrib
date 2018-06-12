@@ -118,12 +118,28 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 COORD_ATTRS = {
     'forecast_reference_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time',
+        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
+        'axis': 'T',
     },
-    'forecast_period': {'units': 'seconds', 'standard_name': 'forecast_period'},
-    'latitude': {'units': 'degrees_north', 'standard_name': 'latitude'},
-    'longitude': {'units': 'degrees_east', 'standard_name': 'longitude'},
-    'air_pressure': {'units': 'Pa', 'positive': 'down', 'standard_name': 'air_pressure'},
+    'forecast_period': {
+        'units': 'seconds',
+        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
+    },
+    'latitude': {
+        'units': 'degrees_north',
+        'standard_name': 'latitude', 'long_name': 'latitude',
+        'axis': 'Y',
+    },
+    'longitude': {
+        'units': 'degrees_east',
+        'standard_name': 'longitude', 'long_name': 'longitude',
+        'axis': 'X',
+    },
+    'air_pressure': {
+        'units': 'Pa', 'positive': 'down',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+        'axis': 'Z',
+    },
 }
 
 
@@ -138,7 +154,7 @@ def enforce_unique_attributes(
         if len(values) > 1:
             raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
         if values:
-            attributes[key] = values[0]
+            attributes['GRIB_' + key] = values[0]
     return attributes
 
 
@@ -303,12 +319,18 @@ def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topL
 
 
 def build_data_var_components(
-        path, index, encode_time=False, encode_geography=False, encode_vertical=False, log=LOG,
+        path, index,
+        encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
+        log=LOG,
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
+    if encode_parameter:
+        data_var_attrs['standard_name'] = data_var_attrs.get('GRIB_cfName', 'undef')
+        data_var_attrs['long_name'] = data_var_attrs.get('GRIB_name', 'undef')
+        data_var_attrs['units'] = data_var_attrs.get('GRIB_units', 'undef')
 
     coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
@@ -374,7 +396,8 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, encode_time=False, encode_vertical=False, encode_geography=False,
+        stream,
+        encode_parameter=False, encode_time=False, encode_vertical=False, encode_geography=False,
 ):
     extra_keys = {
         'forecast_reference_time': from_grib_date_time,
@@ -390,7 +413,8 @@ def build_dataset_components(
     for param_id, short_name in zip(param_ids, index['shortName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            stream.path, var_index, encode_time, encode_geography, encode_vertical,
+            stream.path, var_index,
+            encode_parameter, encode_time, encode_geography, encode_vertical,
         )
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -404,6 +428,7 @@ def build_dataset_components(
 @attr.attrs()
 class Dataset(object):
     stream = attr.attrib()
+    encode_parameter = attr.attrib(default=True)
     encode_time = attr.attrib(default=True)
     encode_vertical = attr.attrib(default=True)
     encode_geography = attr.attrib(default=True)

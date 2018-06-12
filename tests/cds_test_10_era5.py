@@ -2,6 +2,7 @@
 import pytest
 
 import eccodes_grib
+import eccodes_grib.xarray_store
 
 import cdscommon
 
@@ -65,6 +66,20 @@ TEST_FILES = {
         },
         192,
     ],
+    'era5-single-levels-reanalysis-area': [
+        'reanalysis-era5-single-levels',
+        {
+            'variable': '2m_temperature',
+            'product_type': 'reanalysis',
+            'year': '2017',
+            'month': '01',
+            'day': ['01', '02'],
+            'time': ['00:00', '12:00'],
+            'area': ['35.5', '6.5', '47.', '19.'],
+            'format': 'grib',
+        },
+        191,
+    ],
 }
 
 
@@ -84,11 +99,11 @@ def test_Dataset(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
-    res = eccodes_grib.Dataset.fromstream(path)
-    assert len(res.variables) == 7
+    res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
+    res.to_netcdf(path[:-5] + '.nc')
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_large_Dataset():
     dataset, request, key_count = TEST_FILES['era5-pressure-levels-ensemble_members']
     # make the request large
@@ -96,6 +111,5 @@ def test_large_Dataset():
     request['time'] = list(['%02d:00' % h for h in range(0, 24, 3)])
     path = cdscommon.ensure_data(dataset, request, name='cds-' + dataset + '-LARGE-{uuid}.grib')
 
-    res = eccodes_grib.Dataset.fromstream(path)
-    assert len(res.variables) == 7
-    assert res.variables['t'].data.mean() > 0.
+    res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
+    res.to_netcdf(path[:-5] + '.nc')
