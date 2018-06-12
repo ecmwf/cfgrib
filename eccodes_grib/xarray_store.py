@@ -138,7 +138,7 @@ def eccodes_grib2netcdf():
         help='Path to the output file.')
 
     args = parser.parse_args()
-    print('Loading:', args.input)
+    print('Loading: %r with flavour %r' % (args.input, args.flavour_name))
     ds = open_dataset(args.input, flavour_name=args.flavour_name)
     outpath = args.output.format(input=args.input)
     print('Creating:', outpath)
