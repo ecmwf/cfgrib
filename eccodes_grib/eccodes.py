@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import bytes, float, int, isinstance
+from future.utils import raise_from
 
 import functools
 import logging
@@ -32,23 +33,19 @@ ffi.cdef(pkgutil.get_data(__name__, 'eccodes.h').decode('utf-8'))
 
 
 class RaiseOnAttributeAccess(object):
-    def __init__(self, message):
+    def __init__(self, exc, message):
         self.message = message
+        self.exc = exc
 
     def __getattr__(self, attr):
-        raise RuntimeError(self.message)
+        raise_from(RuntimeError(self.message), self.exc)
 
 
 try:
-    # Linux / Unix systems
-    lib = ffi.dlopen('libeccodes.so')
-except OSError:
-    try:
-        # MacOS systems
-        lib = ffi.dlopen('libeccodes')
-    except OSError:
-        # lazy exception
-        lib = RaiseOnAttributeAccess('libeccodes library not found on the system.')
+    lib = ffi.dlopen('eccodes')
+except OSError as exc:
+    # lazy exception
+    lib = RaiseOnAttributeAccess(exc, 'libeccodes library not found on the system.')
 
 
 # default encoding for ecCodes strings
