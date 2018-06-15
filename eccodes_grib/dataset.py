@@ -121,7 +121,6 @@ COORD_ATTRS = {
     'forecast_reference_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
-        'axis': 'T',
     },
     'forecast_period': {
         'units': 'seconds',
@@ -134,17 +133,14 @@ COORD_ATTRS = {
     'latitude': {
         'units': 'degrees_north',
         'standard_name': 'latitude', 'long_name': 'latitude',
-        'axis': 'Y',
     },
     'longitude': {
         'units': 'degrees_east',
         'standard_name': 'longitude', 'long_name': 'longitude',
-        'axis': 'X',
     },
     'air_pressure': {
         'units': 'Pa', 'positive': 'down',
         'standard_name': 'air_pressure', 'long_name': 'pressure',
-        'axis': 'Z',
     },
 }
 
