@@ -64,7 +64,7 @@ def test_Dataset():
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
         ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
-    assert len(res.variables) == 8
+    assert len(res.variables) == 9
 
 
 def test_Dataset_no_encode():
@@ -82,7 +82,7 @@ def test_Dataset_encode_time():
     assert 'eccodesGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'forecast_reference_time', 'topLevel', 'i')
-    assert len(res.variables) == 8
+    assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.

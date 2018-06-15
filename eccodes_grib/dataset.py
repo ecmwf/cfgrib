@@ -127,6 +127,10 @@ COORD_ATTRS = {
         'units': 'seconds',
         'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
     },
+    'time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'time', 'long_name': 'time',
+    },
     'latitude': {
         'units': 'degrees_north',
         'standard_name': 'latitude', 'long_name': 'latitude',
@@ -356,9 +360,7 @@ def build_data_var_components(
         if len(values) == 1:
             data = data[0]
             dimensions = ()
-        coord_vars[coord_key] = Variable(
-            dimensions=dimensions, data=data, attributes=attributes,
-        )
+        coord_vars[coord_key] = Variable(dimensions=dimensions, data=data, attributes=attributes)
 
     header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
@@ -379,6 +381,25 @@ def build_data_var_components(
     data = DataArray(
         path=path, shape=shape, offsets=offsets, missing_value=missing_value,
     )
+
+    if encode_time:
+        # add the valid 'time' secondary coordinate
+        forecast_reference_time = coord_vars['forecast_reference_time'].data
+        forecast_period = coord_vars['forecast_period'].data
+        if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
+            time_data = forecast_reference_time + forecast_period
+            dims = ()
+        elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
+            time_data = forecast_reference_time + forecast_period
+            dims = ('forecast_reference_time',)
+        elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
+            time_data = forecast_reference_time + forecast_period
+            dims = ('forecast_period',)
+        else:
+            time_data = forecast_reference_time[:, None] + forecast_period[None, :]
+            dims = ('forecast_reference_time', 'forecast_period')
+        attrs = COORD_ATTRS['time']
+        coord_vars['time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
