@@ -13,8 +13,8 @@ execnet==1.5.0            # via pytest-cache
 future==0.16.0
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==4.2.0     # via pytest
-numpy==1.14.4
-pandas==0.23.0            # via xarray
+numpy==1.14.5
+pandas==0.23.1            # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.6.0             # via pytest
 py==1.5.3                 # via pytest

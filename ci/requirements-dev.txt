@@ -1,0 +1,13 @@
+check-manifest
+detox
+flake8
+ipython
+matplotlib
+notebook
+pip-tools
+# pytest-mypy
+setuptools
+tox
+tox-pyenv
+wheel
+zest.releaser
