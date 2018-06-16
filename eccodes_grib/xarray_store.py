@@ -89,14 +89,14 @@ class GribDataStore(AbstractDataStore):
     @classmethod
     def fromstream(cls, path, flavour_name='ecmwf', **kwargs):
         flavour = FLAVOURS[flavour_name].copy()
-        config = flavour.pop('dataset', {})
+        config = flavour.pop('dataset', {}).copy()
         config.update(kwargs)
         return cls(ds=eccodes_grib.Dataset.fromstream(path, **config), **flavour)
 
     def __attrs_post_init__(self):
         self.variable_map = self.variable_map.copy()
         for name, var in self.ds.variables.items():
-            if 'GRIB_typeOfLevel' in var.attributes:
+            if self.ds.encode_vertical and 'GRIB_typeOfLevel' in var.attributes:
                 type_of_level = var.attributes['GRIB_typeOfLevel']
                 coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
                 self.variable_map['topLevel'] = coord_name.format(**var.attributes)

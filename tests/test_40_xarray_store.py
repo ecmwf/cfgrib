@@ -12,17 +12,13 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
 def test_GribDataStore():
-    datastore = xarray_store.GribDataStore.fromstream(
-        TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
-    )
+    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA, flavour_name='eccodes')
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
 def test_xarray_open_dataset():
-    datastore = xarray_store.GribDataStore.fromstream(
-        TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
-    )
+    datastore = xarray_store.GribDataStore.fromstream(TEST_DATA, flavour_name='eccodes')
     res = xr.open_dataset(datastore)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -48,31 +44,27 @@ def test_open_dataset():
 
 
 def test_open_dataset_encode_time():
-    res = xarray_store.open_dataset(TEST_DATA, encode_vertical=False, encode_geography=False)
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_time=True)
 
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'time', 'topLevel', 'i')
+    assert res['t'].dims == ('number', 'forecast_reference_time', 'topLevel', 'i')
 
     assert res['t'].mean() > 0.
 
 
 def test_open_dataset_encode_vertical():
-    res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_geography=False)
-
-    assert res.attrs['GRIB_edition'] == 1
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_vertical=True)
 
     var = res['t']
-    assert var.attrs['GRIB_gridType'] == 'regular_ll'
-    assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
 
     assert var.mean() > 0.
 
 
 def test_open_dataset_encode_geography():
-    res = xarray_store.open_dataset(TEST_DATA, encode_time=False, encode_vertical=False)
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_geography=True)
 
     assert res.attrs['GRIB_edition'] == 1
 
@@ -85,14 +77,14 @@ def test_open_dataset_encode_geography():
 
 
 def test_open_dataset_eccodes():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes')
+    res = xarray_store.open_dataset(TEST_DATA, flavour_name='ecmwf')
 
     assert res.attrs['GRIB_edition'] == 1
 
     var = res['t']
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+    assert var.dims == ('number', 'time', 'level', 'latitude', 'longitude')
 
     assert var.mean() > 0.
 
