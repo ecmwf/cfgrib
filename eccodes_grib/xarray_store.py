@@ -50,7 +50,7 @@ FLAVOURS = {
             'encode_time': False,
             'encode_vertical': False,
             'encode_geography': False,
-        }
+        },
     },
     'ecmwf': {
         'variable_map': {
@@ -58,7 +58,11 @@ FLAVOURS = {
             'forecast_period': 'step',
             'time': 'valid_time',
             'air_pressure': 'level',
-        }
+            'topLevel': 'level',
+        },
+        'type_of_level_map': {
+            'hybrid': 'L{GRIB_hybrid_level_count}',
+        },
     },
     'cds': {
         'variable_map': {
@@ -67,7 +71,11 @@ FLAVOURS = {
             'air_pressure': 'plev',
             'latitude': 'lat',
             'longitude': 'lon',
-        }
+            'topLevel': 'level',
+        },
+        'type_of_level_map': {
+            'hybrid': 'L{GRIB_hybrid_level_count}',
+        },
     },
 }
 
@@ -76,14 +84,22 @@ FLAVOURS = {
 class GribDataStore(AbstractDataStore):
     ds = attr.attrib()
     variable_map = attr.attrib(default={})
+    type_of_level_map = attr.attrib(default={})
 
     @classmethod
     def fromstream(cls, path, flavour_name='ecmwf', **kwargs):
-        flavour = FLAVOURS[flavour_name]
-        config = flavour.get('dataset', {}).copy()
+        flavour = FLAVOURS[flavour_name].copy()
+        config = flavour.pop('dataset', {})
         config.update(kwargs)
-        variable_map = flavour.get('variable_map', {})
-        return cls(ds=eccodes_grib.Dataset.fromstream(path, **config), variable_map=variable_map)
+        return cls(ds=eccodes_grib.Dataset.fromstream(path, **config), **flavour)
+
+    def __attrs_post_init__(self):
+        self.variable_map = self.variable_map.copy()
+        for name, var in self.ds.variables.items():
+            if 'GRIB_typeOfLevel' in var.attributes:
+                type_of_level = var.attributes['GRIB_typeOfLevel']
+                coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
+                self.variable_map['topLevel'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, eccodes_grib.dataset.DataArray):

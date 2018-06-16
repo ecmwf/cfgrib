@@ -42,7 +42,8 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
-    'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType', 'NV',
+    'totalNumber', 'gridType', 'numberOfPoints', 'stepUnits', 'stepType',
+    'typeOfLevel', 'hybrid_level_count',
 ]
 
 GRID_TYPE_MAP = {
@@ -215,6 +216,7 @@ COMPUTED_KEYS = {
     'air_pressure': from_grib_pl_level,
     'regular_latitudes': from_grib_latitudes,
     'regular_longitudes': from_grib_longitudes,
+    'hybrid_level_count': lambda m: (m['NV'] - 2) // 2
 }
 
 
