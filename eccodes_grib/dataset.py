@@ -42,7 +42,7 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
-    'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType',
+    'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType', 'NV',
 ]
 
 GRID_TYPE_MAP = {
@@ -55,7 +55,6 @@ GRID_TYPE_MAP = {
     'reduced_ll': [
         'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
-        'pl',
     ],
     'regular_gg': [
         'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
@@ -182,14 +181,14 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     return message[step_key] * to_seconds
 
 
-def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topLevel'):
-    type_of_level = message[type_of_level_key]
+def from_grib_pl_level(message, level_key='topLevel'):
+    type_of_level = message['typeOfLevel']
     if type_of_level == 'isobaricInhPa':
         coord = message[level_key] * 100.
-    elif type_of_level == b'isobaricInPa':
+    elif type_of_level == 'isobaricInPa':
         coord = float(message[level_key])
     else:
-        raise ValueError("Unsupported value of typeOfLevel: %r" % (type_of_level,))
+        raise ValueError("Unsupported value of typeOfLevel: %r" % type_of_level)
     return coord
 
 
@@ -350,7 +349,7 @@ def build_data_var_components(
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if encode_vertical:
+    if encode_vertical and data_var_attrs['GRIB_typeOfLevel'] == 'isobaricInhPa':
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
