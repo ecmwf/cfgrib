@@ -147,7 +147,10 @@ class Index(collections.Mapping):
             for key, args in schema.items():
                 # Note: optimisation
                 # value = message.message_get(key, *args, default='undef')
-                value = message.get(key, 'undef')
+                try:
+                    value = message[key]
+                except:
+                    value = 'undef'
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)

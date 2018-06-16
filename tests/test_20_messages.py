@@ -87,6 +87,18 @@ def test_Index():
     assert len(subres) == 1
 
 
+def test_Index_errors():
+    class MyMessage(messages.ComputedKeysMessage):
+        computed_keys = {
+            'error_key': lambda m: 1 / 0,
+        }
+    res = messages.Index.fromstream(messages.Stream(TEST_DATA, message_class=MyMessage), ['paramId', 'error_key'])
+    assert res['paramId'] == [129, 130]
+    assert len(res) == 2
+    assert list(res) == ['paramId', 'error_key']
+    assert res['error_key'] == ['undef']
+
+
 def test_Stream():
     res = messages.Stream(TEST_DATA)
     leader = res.first()
