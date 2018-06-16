@@ -42,9 +42,8 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
+    'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType',
 ]
-
-GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS = ['gridType', 'numberOfPoints']
 
 GRID_TYPE_MAP = {
     'regular_ll': [
@@ -76,22 +75,22 @@ GRID_TYPE_MAP = {
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = [
-    ('number', ['totalNumber'], True),
+    ('number', True),
 ]
 VERTICAL_COORDINATE_MAP = [
-    ('topLevel', ['typeOfLevel'], False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('topLevel', False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 PLEV_COORDINATE_MAP = [
-    ('air_pressure', [], False),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('air_pressure', False),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 DATA_TIME_COORDINATE_MAP = [
-    ('dataDate', [], True),
-    ('dataTime', [], True),
-    ('endStep', ['stepUnits', 'stepType'], True),
+    ('dataDate', True),
+    ('dataTime', True),
+    ('endStep', True),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('forecast_reference_time', [], True),
-    ('forecast_period', ['stepUnits', 'stepType'], True),
+    ('forecast_reference_time', True),
+    ('forecast_period', True),
 ]
 
 ALL_MAPS = [
@@ -100,16 +99,7 @@ ALL_MAPS = [
 ]
 
 
-def unroll_keys(maps):
-    keys = []
-    for map in maps:
-        keys.extend([k for k, _, _ in map])
-        keys.extend([k for _, ks, _ in map for k in ks])
-    return keys
-
-
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + \
-    GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + unroll_keys(ALL_MAPS)
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + [k for m in ALL_MAPS for k, _ in m]
 
 # taken from eccodes stepUnits.table
 GRIB_STEP_UNITS_TO_SECONDS = [
@@ -326,7 +316,6 @@ def build_data_var_components(
         log=LOG,
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
-    data_var_attrs_keys.extend(GEOGRAPHY_COORDINATES_ATTRIBUTES_KEYS)
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
     if encode_parameter:
@@ -344,13 +333,12 @@ def build_data_var_components(
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
     coord_vars = collections.OrderedDict()
-    for coord_key, attrs_keys, increasing in coords_map:
+    for coord_key, increasing in coords_map:
         values = sorted(index[coord_key], reverse=not increasing)
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
         attributes = COORD_ATTRS.get(coord_key, {}).copy()
-        attributes.update(enforce_unique_attributes(index, attrs_keys))
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:
