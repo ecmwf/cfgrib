@@ -27,10 +27,17 @@ def test_Message():
 
     list(res.items())
 
+    with open(TEST_DATA) as file:
+        res = messages.Message.fromfile(file, offset=0)
+
+    assert res['paramId'] == 129
+    assert res.message_get('non-existent-key', default=1) == 1
+
 
 def test_Message_extra_keys():
     extra_keys = {
         'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
+        'error_key': lambda m: 1 / 0,
     }
     with open(TEST_DATA) as file:
         res = messages.Message.fromfile(file, extra_keys=extra_keys)
@@ -39,12 +46,13 @@ def test_Message_extra_keys():
     assert res['ref_time'] == '201701010'
     assert list(res)[0] == 'globalDomain'
     assert 'paramId' in res
-    assert len(res) == 193
+    assert len(res) == 194
 
     with pytest.raises(KeyError):
         res['non-existent-key']
 
-    list(res.items())
+    with pytest.raises(KeyError):
+        res['error_key']
 
 
 def test_EcCodesIndex():
@@ -79,6 +87,10 @@ def test_Index():
     assert res.get('paramId') == [129, 130]
     assert len(res) == 1
     assert list(res) == ['paramId']
+    assert res.first()
+
+    with pytest.raises(ValueError):
+        res.getone('paramId')
 
     with pytest.raises(KeyError):
         res['non-existent-key']
@@ -91,6 +103,7 @@ def test_Index_subindex():
     res = index.subindex(paramId=130)
 
     assert res.get('paramId') == [130]
+    assert res.getone('paramId') == 130
     assert len(res) == 1
 
 
@@ -99,3 +112,4 @@ def test_Stream():
     leader = res.first()
     assert len(leader) == 192
     assert sum(1 for _ in res) == leader['count']
+    assert len(res.index(['paramId'])) == 1
