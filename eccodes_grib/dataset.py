@@ -43,7 +43,6 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
     'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType',
-    'regular_latitudes', 'regular_longitudes',
 ]
 
 GRID_TYPE_MAP = {
@@ -214,7 +213,7 @@ class Variable(object):
 
 @attr.attrs()
 class DataArray(object):
-    path = attr.attrib()
+    stream = attr.attrib()
     shape = attr.attrib()
     offsets = attr.attrib(repr=False)
     missing_value = attr.attrib()
@@ -228,10 +227,10 @@ class DataArray(object):
     def build_array(self):
         # type: () -> np.ndarray
         data = np.full(self.shape, fill_value=np.nan, dtype='float32')
-        with open(self.path) as file:
+        with open(self.stream.path) as file:
             for header_indexes, offset in sorted(self.offsets.items(), key=lambda x: x[1]):
                 # NOTE: fill a single field as found in the message
-                message = messages.Message.fromfile(file, offset=offset[0])
+                message = self.stream.message_factory(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
                 data.__getitem__(header_indexes).flat[:] = values
         data[data == self.missing_value] = np.nan
@@ -247,22 +246,22 @@ class DataArray(object):
 
 def build_geography_coordinates(index, encode_geography):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
+    first = index.first()
     geo_coord_vars = collections.OrderedDict()
     if encode_geography and index.getone('gridType') in ('regular_ll', 'regular_gg'):
         geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=np.array(index.getone('regular_latitudes')),
+            dimensions=('latitude',), data=np.array(first['regular_latitudes']),
             attributes=COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=np.array(index.getone('regular_longitudes')),
+            dimensions=('longitude',), data=np.array(first['regular_longitudes']),
             attributes=COORD_ATTRS['longitude'],
         )
     else:
         geo_dims = ('i',)
         geo_shape = (index.getone('numberOfPoints'),)
-        first = messages.Stream(path=index.path).first()
         # add secondary coordinates
         latitude = first['latitudes']
         geo_coord_vars['latitude'] = Variable(
@@ -287,7 +286,7 @@ def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topL
 
 
 def build_data_var_components(
-        path, index,
+        index,
         encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
         log=LOG,
 ):
@@ -339,7 +338,7 @@ def build_data_var_components(
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
     data = DataArray(
-        path=path, shape=shape, offsets=offsets, missing_value=missing_value,
+        stream=index.stream, shape=shape, offsets=offsets, missing_value=missing_value,
     )
 
     if encode_time:
@@ -398,8 +397,7 @@ def build_dataset_components(
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            stream.path, var_index,
-            encode_parameter, encode_time, encode_geography, encode_vertical,
+            var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
         )
         if encode_parameter and var_name != 'undef':
             short_name = var_name
