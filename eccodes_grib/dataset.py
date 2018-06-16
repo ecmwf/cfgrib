@@ -43,7 +43,7 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
     'totalNumber', 'gridType', 'numberOfPoints', 'stepUnits', 'stepType',
-    'typeOfLevel', 'hybrid_level_count',
+    'typeOfLevel', 'hybrid_level_count', 'NV',
 ]
 
 GRID_TYPE_MAP = {
@@ -193,29 +193,11 @@ def from_grib_pl_level(message, level_key='topLevel'):
     return coord
 
 
-def from_grib_latitudes(message):
-    first_row_latitudes = message['latitudes'][:message['Ni']]
-    if len(set(first_row_latitudes)) != 1:
-        raise ValueError("latitudes are not regular %r", set(first_row_latitudes))
-    first_column_latitudes = message['latitudes'][::message['Ni'] + 1]
-    return first_column_latitudes
-
-
-def from_grib_longitudes(message):
-    first_column_longitudes = message['longitudes'][::message['Ni']]
-    if len(set(first_column_longitudes)) != 1:
-        raise ValueError("longitudes are not regular")
-    first_row_longitudes = message['longitudes'][:message['Ni']]
-    return first_row_longitudes
-
-
 COMPUTED_KEYS = {
     'forecast_reference_time': from_grib_date_time,
     'forecast_period': from_grib_step,
     'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
     'air_pressure': from_grib_pl_level,
-    'regular_latitudes': from_grib_latitudes,
-    'regular_longitudes': from_grib_longitudes,
     'hybrid_level_count': lambda m: (m['NV'] - 2) // 2
 }
 
@@ -283,11 +265,11 @@ def build_geography_coordinates(index, encode_geography):
         geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=np.array(first['regular_latitudes']),
+            dimensions=('latitude',), data=np.array(first['distinctLatitudes']),
             attributes=COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=np.array(first['regular_longitudes']),
+            dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
             attributes=COORD_ATTRS['longitude'],
         )
     elif encode_geography and index.getone('gridType') in GRID_TYPES_2D_AUX_COORD_VAR:
