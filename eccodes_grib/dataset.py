@@ -81,7 +81,7 @@ VERTICAL_COORDINATE_MAP = [
     ('topLevel', False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 PLEV_COORDINATE_MAP = [
-    ('air_pressure', False),  # NOTE: in this case we support mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('air_pressure', False),  # NOTE: this supports mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', True),
@@ -99,7 +99,8 @@ ALL_MAPS = [
 ]
 
 
-ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + [k for m in ALL_MAPS for k, _ in m]
+ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS \
+           + [k for m in ALL_MAPS for k, _ in m]
 
 # taken from eccodes stepUnits.table
 GRIB_STEP_UNITS_TO_SECONDS = [
@@ -181,6 +182,17 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     return message[step_key] * to_seconds
 
 
+def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topLevel'):
+    type_of_level = message[type_of_level_key]
+    if type_of_level == 'isobaricInhPa':
+        coord = message[level_key] * 100.
+    elif type_of_level == b'isobaricInPa':
+        coord = float(message[level_key])
+    else:
+        raise ValueError("Unsupported value of typeOfLevel: %r" % (type_of_level,))
+    return coord
+
+
 def from_grib_latitudes(message):
     first_row_latitudes = message['latitudes'][:message['Ni']]
     if len(set(first_row_latitudes)) != 1:
@@ -196,6 +208,20 @@ def from_grib_longitudes(message):
     first_row_longitudes = message['longitudes'][:message['Ni']]
     return first_row_longitudes
 
+
+COMPUTED_KEYS = {
+    'forecast_reference_time': from_grib_date_time,
+    'forecast_period': from_grib_step,
+    'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
+    'air_pressure': from_grib_pl_level,
+    'regular_latitudes': from_grib_latitudes,
+    'regular_longitudes': from_grib_longitudes,
+}
+
+
+@attr.attrs()
+class CfMessage(messages.ComputedKeysMessage):
+    computed_keys = attr.attrib(default=COMPUTED_KEYS)
 
 
 @attr.attrs(cmp=False)
@@ -230,7 +256,7 @@ class DataArray(object):
         with open(self.stream.path) as file:
             for header_indexes, offset in sorted(self.offsets.items(), key=lambda x: x[1]):
                 # NOTE: fill a single field as found in the message
-                message = self.stream.message_factory(file, offset=offset[0])
+                message = self.stream.message_class.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
                 data.__getitem__(header_indexes).flat[:] = values
         data[data == self.missing_value] = np.nan
@@ -272,17 +298,6 @@ def build_geography_coordinates(index, encode_geography):
             dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
         )
     return geo_dims, geo_shape, geo_coord_vars
-
-
-def from_grib_pl_level(message, type_of_level_key='typeOfLevel', level_key='topLevel'):
-    type_of_level = message[type_of_level_key]
-    if type_of_level == 'isobaricInhPa':
-        coord = message[level_key] * 100.
-    elif type_of_level == b'isobaricInPa':
-        coord = float(message[level_key])
-    else:
-        raise ValueError("Unsupported value of typeOfLevel: %r" % (type_of_level,))
-    return coord
 
 
 def build_data_var_components(
@@ -381,15 +396,6 @@ def build_dataset_components(
         stream,
         encode_parameter=False, encode_time=False, encode_vertical=False, encode_geography=False,
 ):
-    extra_keys = {
-        'forecast_reference_time': from_grib_date_time,
-        'forecast_period': from_grib_step,
-        'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
-        'air_pressure': from_grib_pl_level,
-        'regular_latitudes': from_grib_latitudes,
-        'regular_longitudes': from_grib_longitudes,
-    }
-    stream.message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
     index = stream.index(ALL_KEYS)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
@@ -419,8 +425,8 @@ class Dataset(object):
     encode_geography = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, mode='r', encoding='ascii', **kwargs):
-        return cls(stream=messages.Stream(path, mode=mode, encoding=encoding), **kwargs)
+    def fromstream(cls, path, mode='r', **kwargs):
+        return cls(stream=messages.Stream(path, mode=mode, message_class=CfMessage), **kwargs)
 
     def __attrs_post_init__(self):
         dims, vars, attrs = build_dataset_components(**self.__dict__)
