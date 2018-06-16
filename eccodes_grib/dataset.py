@@ -300,6 +300,23 @@ def build_geography_coordinates(index, encode_geography):
     return geo_dims, geo_shape, geo_coord_vars
 
 
+def build_valid_time(forecast_reference_time, forecast_period):
+    if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
+        data = forecast_reference_time + forecast_period
+        dims = ()
+    elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
+        data = forecast_reference_time + forecast_period
+        dims = ('forecast_reference_time',)
+    elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
+        data = forecast_reference_time + forecast_period
+        dims = ('forecast_period',)
+    else:
+        data = forecast_reference_time[:, None] + forecast_period[None, :]
+        dims = ('forecast_reference_time', 'forecast_period')
+    attrs = COORD_ATTRS['time']
+    return dims, data, attrs
+
+
 def build_data_var_components(
         index,
         encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
@@ -358,21 +375,9 @@ def build_data_var_components(
 
     if encode_time:
         # add the valid 'time' secondary coordinate
-        forecast_reference_time = coord_vars['forecast_reference_time'].data
-        forecast_period = coord_vars['forecast_period'].data
-        if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
-            time_data = forecast_reference_time + forecast_period
-            dims = ()
-        elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
-            time_data = forecast_reference_time + forecast_period
-            dims = ('forecast_reference_time',)
-        elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
-            time_data = forecast_reference_time + forecast_period
-            dims = ('forecast_period',)
-        else:
-            time_data = forecast_reference_time[:, None] + forecast_period[None, :]
-            dims = ('forecast_reference_time', 'forecast_period')
-        attrs = COORD_ATTRS['time']
+        dims, time_data, attrs = build_valid_time(
+            coord_vars['forecast_reference_time'].data, coord_vars['forecast_period'].data,
+        )
         coord_vars['time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
