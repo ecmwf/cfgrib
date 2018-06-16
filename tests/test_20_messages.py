@@ -92,7 +92,8 @@ def test_Index_errors():
         computed_keys = {
             'error_key': lambda m: 1 / 0,
         }
-    res = messages.Index.fromstream(messages.Stream(TEST_DATA, message_class=MyMessage), ['paramId', 'error_key'])
+    stream = messages.Stream(TEST_DATA, message_class=MyMessage)
+    res = messages.Index.fromstream(stream, ['paramId', 'error_key'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 2
     assert list(res) == ['paramId', 'error_key']

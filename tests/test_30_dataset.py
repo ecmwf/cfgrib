@@ -45,7 +45,8 @@ def test_build_data_var_components_no_encode():
 
 
 def test_build_data_var_components_encode_geography():
-    index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
+    stream = messages.Stream(path=TEST_DATA, message_class=dataset.CfMessage)
+    index = stream.index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(
         index=index, encode_geography=True,
     )

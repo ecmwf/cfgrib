@@ -137,10 +137,12 @@ def eccodes_grib2netcdf():
 
     parser = argparse.ArgumentParser(description='Convert a GRIB file into a NetCDF file.')
     parser.add_argument('input', help='Path to the input GRIB file.')
-    parser.add_argument('--flavour_name', default='cds',
-        help='Translation flavour. Can be "cds", "eccodes" or "ecmwf".')
-    parser.add_argument('--output', '-o', default='{input}.nc',
-        help='Path to the output file.')
+    parser.add_argument(
+        '--flavour_name', default='cds', help='Translation flavour: "cds", "eccodes" or "ecmwf".'
+    )
+    parser.add_argument(
+        '--output', '-o', default='{input}.nc', help='Path to the output file.'
+    )
 
     args = parser.parse_args()
     print('Loading: %r with flavour %r' % (args.input, args.flavour_name))
