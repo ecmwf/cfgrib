@@ -43,6 +43,7 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
     'totalNumber', 'gridType', 'numberOfPoints', 'typeOfLevel', 'stepUnits', 'stepType',
+    'regular_latitudes', 'regular_longitudes',
 ]
 
 GRID_TYPE_MAP = {
@@ -181,6 +182,23 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     return message[step_key] * to_seconds
 
 
+def from_grib_latitudes(message):
+    first_row_latitudes = message['latitudes'][:message['Ni']]
+    if len(set(first_row_latitudes)) != 1:
+        raise ValueError("latitudes are not regular %r", set(first_row_latitudes))
+    first_column_latitudes = message['latitudes'][::message['Ni'] + 1]
+    return first_column_latitudes
+
+
+def from_grib_longitudes(message):
+    first_column_longitudes = message['longitudes'][::message['Ni']]
+    if len(set(first_column_longitudes)) != 1:
+        raise ValueError("longitudes are not regular")
+    first_row_longitudes = message['longitudes'][:message['Ni']]
+    return first_row_longitudes
+
+
+
 @attr.attrs(cmp=False)
 class Variable(object):
     dimensions = attr.attrib(type=T.Sequence[str])
@@ -227,60 +245,18 @@ class DataArray(object):
         return self.data.dtype
 
 
-def build_regular_lon(index, log=LOG):
-    if index.getone('iDirectionIncrementInDegrees') <= 0.:
-        raise ValueError(
-            "Unsupported iDirectionIncrementInDegrees: %r" %
-            index.getone('iDirectionIncrementInDegrees')
-        )
-    start = index.getone('longitudeOfFirstGridPointInDegrees')
-    stop = index.getone('longitudeOfLastGridPointInDegrees')
-    num = index.getone('Ni')
-    if index.getone('iDirectionIncrementInDegrees') != abs(start - stop) / (num - 1):
-        log.warning(
-            "Mismatch between coordinate %r step and internal key %r" %
-            ('longitude', 'iDirectionIncrementInDegrees')
-        )
-    if start > stop and not index.getone('iScansNegatively'):
-        start -= 360.
-    elif start < stop and index.getone('iScansNegatively'):
-        # NOTE: this is reasonable but undocumented
-        stop -= 360.
-    return np.linspace(start, stop, num)
-
-
-def build_regular_lat(index, log=LOG):
-    if index.getone('jPointsAreConsecutive'):
-        raise ValueError(
-            "Unsupported jPointsAreConsecutive: %r" % index.getone('jPointsAreConsecutive'))
-    if index.getone('jDirectionIncrementInDegrees') <= 0.:
-        raise ValueError(
-            "Unsupported jDirectionIncrementInDegrees: %r" %
-            index.getone('jDirectionIncrementInDegrees')
-        )
-    start = index.getone('latitudeOfFirstGridPointInDegrees')
-    stop = index.getone('latitudeOfLastGridPointInDegrees')
-    num = index.getone('Nj')
-    if index.getone('jDirectionIncrementInDegrees') != abs(stop - start) / (num - 1):
-        log.warning(
-            "Mismatch between coordinate %r step and internal key %r" %
-            ('latitude', 'jDirectionIncrementInDegrees')
-        )
-    return np.linspace(start, stop, num)
-
-
 def build_geography_coordinates(index, encode_geography):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     geo_coord_vars = collections.OrderedDict()
-    if encode_geography and index.getone('gridType') == 'regular_ll':
+    if encode_geography and index.getone('gridType') in ('regular_ll', 'regular_gg'):
         geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=build_regular_lat(index),
+            dimensions=('latitude',), data=np.array(index.getone('regular_latitudes')),
             attributes=COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=build_regular_lon(index),
+            dimensions=('longitude',), data=np.array(index.getone('regular_longitudes')),
             attributes=COORD_ATTRS['longitude'],
         )
     else:
@@ -411,6 +387,8 @@ def build_dataset_components(
         'forecast_period': from_grib_step,
         'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
         'air_pressure': from_grib_pl_level,
+        'regular_latitudes': from_grib_latitudes,
+        'regular_longitudes': from_grib_longitudes,
     }
     stream.message_factory = functools.partial(messages.Message.fromfile, extra_keys=extra_keys)
     index = stream.index(ALL_KEYS)

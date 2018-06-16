@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os.path
 
 import pytest
+import numpy as np
 
 from eccodes_grib import messages
 from eccodes_grib import dataset
@@ -109,3 +110,11 @@ def test_Dataset_encode_vertical():
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables['t'].data[:].mean() > 0.
+
+
+def test_Dataset_reguler_gg_surface():
+    path = os.path.join(SAMPLE_DATA_FOLDER, 'regular_gg_sfc.grib')
+    res = dataset.Dataset.fromstream(path)
+
+    assert res.dimensions == {'latitude': 96, 'longitude': 192}
+    assert np.allclose(res.variables['latitude'].data[:2], [88.57216851, 86.72253095])

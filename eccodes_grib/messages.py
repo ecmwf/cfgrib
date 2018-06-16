@@ -137,7 +137,10 @@ class Index(collections.Mapping):
                 # Note: optimisation
                 # value = message.message_get(key, *args, default='undef')
                 value = message.get(key, 'undef')
-                header_values.append(value)
+                if isinstance(value, list):
+                    header_values.append(tuple(value))
+                else:
+                    header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
         return cls(path=stream.path, index_keys=index_keys, offsets=offsets)
