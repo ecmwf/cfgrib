@@ -34,7 +34,6 @@ _MARKER = object()
 class Message(collections.Mapping):
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
-    extra_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[['Message'], T.Any]])
 
     @classmethod
     def fromfile(cls, file, offset=None, **kwargs):
@@ -81,24 +80,36 @@ class Message(collections.Mapping):
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
-        if item in self.extra_keys:
-            try:
-                return self.extra_keys[item](self)
-            except:
-                raise KeyError(item)
-        else:
-            return self.message_get(item)
+        return self.message_get(item)
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
         for key in self.message_iterkeys():
             yield key
-        for key in self.extra_keys:
-            yield key
 
     def __len__(self):
         # type: () -> int
         return sum(1 for _ in self)
+
+
+@attr.attrs()
+class ComputedKeysMessage(Message):
+    computed_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[['Message'], T.Any]])
+
+    def __getitem__(self, item):
+        if item in self.computed_keys:
+            return self.computed_keys[item](self)
+        else:
+            return super(ComputedKeysMessage, self).__getitem__(item)
+
+    def __iter__(self):
+        seen = set()
+        for key in super(ComputedKeysMessage, self).__iter__():
+            yield key
+            seen.add(key)
+        for key in self.computed_keys:
+            if key not in seen:
+                yield key
 
 
 def make_message_schema(message, schema_keys, log=LOG):
@@ -137,10 +148,7 @@ class Index(collections.Mapping):
                 # Note: optimisation
                 # value = message.message_get(key, *args, default='undef')
                 value = message.get(key, 'undef')
-                if isinstance(value, list):
-                    header_values.append(tuple(value))
-                else:
-                    header_values.append(value)
+                header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
         return cls(stream=stream, index_keys=index_keys, offsets=offsets)
@@ -187,79 +195,21 @@ class Index(collections.Mapping):
     def first(self):
         with open(self.stream.path) as file:
             first_offset = next(iter(self.offsets.values()))[0]
-            return self.stream.message_factory(file, offset=first_offset)
-
-
-
-@attr.attrs()
-class EcCodesIndex(collections.Mapping):
-    path = attr.attrib(type=str)
-    index_keys = attr.attrib(type=T.List[str])
-    codes_index = attr.attrib(default=None)
-    encoding = attr.attrib(default='ascii', type=str)
-
-    def __iter__(self):
-        return iter(self.index_keys)
-
-    def __len__(self):
-        return len(self.index_keys)
-
-    def __attrs_post_init__(self):
-        bindex_keys = [key.encode(self.encoding) for key in self.index_keys]
-        bpath = self.path.encode(self.encoding)
-        self.codes_index = eccodes.codes_index_new_from_file(bpath, bindex_keys)
-
-    def __del__(self):
-        eccodes.codes_index_delete(self.codes_index)
-
-    def __getitem__(self, item):
-        # type: (str) -> list
-        key = item.encode(self.encoding)
-        try:
-            bvalues = eccodes.codes_index_get_autotype(self.codes_index, key)
-        except eccodes.EcCodesError:
-            raise KeyError(item)
-        values = []
-        for value in bvalues:
-            if isinstance(value, bytes):
-                value = value.decode(self.encoding)
-            values.append(value)
-        return values
-
-    def select(self, dict_query={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> T.Generator[Message, None, None]
-        query.update(dict_query)
-        if set(query) != set(self.index_keys):
-            raise ValueError("all index keys must have a value.")
-        for key, value in query.items():
-            bkey = key.encode(self.encoding)
-            if isinstance(value, str):
-                value = value.encode(self.encoding)
-            eccodes.codes_index_select(self.codes_index, bkey, value)
-        while True:
-            try:
-                codes_id = eccodes.codes_new_from_index(self.codes_index)
-                yield Message(codes_id=codes_id, encoding=self.encoding)
-            except eccodes.EcCodesError as ex:
-                if ex.code == eccodes.lib.GRIB_END_OF_INDEX:
-                    break
-                else:
-                    raise
+            return self.stream.message_class.fromfile(file, offset=first_offset)
 
 
 @attr.attrs()
 class Stream(collections.Iterable):
     path = attr.attrib(type=str)
     mode = attr.attrib(default='r', type=str)
-    encoding = attr.attrib(default='ascii', type=str)
-    message_factory = attr.attrib(default=Message.fromfile, type=T.Callable[..., Message])
+    message_class = attr.attrib(default=Message, type=Message)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, self.mode) as file:
             while True:
                 try:
-                    yield self.message_factory(file=file, encoding=self.encoding)
+                    yield self.message_class.fromfile(file=file)
                 except EOFError:
                     break
 

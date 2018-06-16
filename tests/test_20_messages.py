@@ -15,59 +15,44 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 def test_Message():
     with open(TEST_DATA) as file:
-        res = messages.Message.fromfile(file)
+        res = messages.Message.fromfile(file, offset=0)
 
+    assert res.message_get('paramId') == 129
     assert res['paramId'] == 129
     assert list(res)[0] == 'globalDomain'
+    assert list(res.message_iterkeys('time'))[0] == 'dataDate'
     assert 'paramId' in res
     assert len(res) == 192
 
     with pytest.raises(KeyError):
         res['non-existent-key']
 
+    assert res.message_get('non-existent-key', default=1) == 1
+
     list(res.items())
 
     with open(TEST_DATA) as file:
-        res = messages.Message.fromfile(file, offset=0)
+        with pytest.raises(EOFError):
+            while True:
+                messages.Message.fromfile(file)
 
-    assert res['paramId'] == 129
-    assert res.message_get('non-existent-key', default=1) == 1
 
-
-def test_Message_extra_keys():
-    extra_keys = {
+def test_ComputedKeysMessage():
+    computed_keys = {
         'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
         'error_key': lambda m: 1 / 0,
+        'centre': lambda m: -1,
     }
     with open(TEST_DATA) as file:
-        res = messages.Message.fromfile(file, extra_keys=extra_keys)
+        res = messages.ComputedKeysMessage.fromfile(file, computed_keys=computed_keys)
 
     assert res['paramId'] == 129
     assert res['ref_time'] == '201701010'
-    assert list(res)[0] == 'globalDomain'
-    assert 'paramId' in res
     assert len(res) == 194
+    assert res['centre'] == -1
 
-    with pytest.raises(KeyError):
-        res['non-existent-key']
-
-    with pytest.raises(KeyError):
+    with pytest.raises(ZeroDivisionError):
         res['error_key']
-
-
-def test_EcCodesIndex():
-    res = messages.EcCodesIndex(TEST_DATA, ['paramId'])
-    assert res.get('paramId') == [129, 130]
-    assert sum(1 for _ in res.select(paramId='130')) == 80
-    assert sum(1 for _ in res.select(paramId=130)) == 80
-    assert len(res) == 1
-    assert list(res) == ['paramId']
-
-    with pytest.raises(KeyError):
-        res['non-existent-key']
-
-    with pytest.raises(ValueError):
-        list(res.select())
 
 
 def test_make_message_schema():
@@ -84,7 +69,7 @@ def test_make_message_schema():
 
 def test_Index():
     res = messages.Index.fromstream(messages.Stream(TEST_DATA), ['paramId'])
-    assert res.get('paramId') == [129, 130]
+    assert res['paramId'] == [129, 130]
     assert len(res) == 1
     assert list(res) == ['paramId']
     assert res.first()
@@ -95,16 +80,11 @@ def test_Index():
     with pytest.raises(KeyError):
         res['non-existent-key']
 
+    subres = res.subindex(paramId=130)
 
-def test_Index_subindex():
-    index = messages.Index.fromstream(messages.Stream(TEST_DATA), ['paramId'])
-    assert index.get('paramId') == [129, 130]
-
-    res = index.subindex(paramId=130)
-
-    assert res.get('paramId') == [130]
-    assert res.getone('paramId') == 130
-    assert len(res) == 1
+    assert subres.get('paramId') == [130]
+    assert subres.getone('paramId') == 130
+    assert len(subres) == 1
 
 
 def test_Stream():
