@@ -270,11 +270,15 @@ class DataArray(object):
         return self.data.dtype
 
 
+GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
+GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic', 'space_view')
+
+
 def build_geography_coordinates(index, encode_geography):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()
-    if encode_geography and index.getone('gridType') in ('regular_ll', 'regular_gg'):
+    if encode_geography and index.getone('gridType') in GRID_TYPES_COORD_VAR:
         geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
@@ -283,6 +287,17 @@ def build_geography_coordinates(index, encode_geography):
         )
         geo_coord_vars['longitude'] = Variable(
             dimensions=('longitude',), data=np.array(first['regular_longitudes']),
+            attributes=COORD_ATTRS['longitude'],
+        )
+    elif encode_geography and index.getone('gridType') in GRID_TYPES_2D_AUX_COORD_VAR:
+        geo_dims = ('y', 'x')
+        geo_shape = (index.getone('Ny'), index.getone('Nx'))
+        geo_coord_vars['latitude'] = Variable(
+            dimensions=('y', 'x'), data=np.array(first['latitudes']).reshape(geo_shape),
+            attributes=COORD_ATTRS['latitude'],
+        )
+        geo_coord_vars['longitude'] = Variable(
+            dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
             attributes=COORD_ATTRS['longitude'],
         )
     else:
