@@ -4,9 +4,10 @@
 ecCodes-GRIB
 ============
 
-A Python interface to read GRIB files to an in-memory representation similar to the
-NetCDF Common Data Model following the CF Conventions. Low level access is done via the
-ECMWF ecCodes C library.
+A Python interface to read GRIB files to a in-memory representation similar to the
+NetCDF Common Data Model following the CF Conventions.
+The high level APIs are inspired by h5netcdf and NetCDF-python.
+Low level access is done via the ECMWF ecCodes C library.
 
 Write support is a planned feature.
 
