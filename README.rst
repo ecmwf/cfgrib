@@ -4,13 +4,18 @@
 ecCodes-GRIB
 ============
 
-Python interface to read and write GRIB files via the ECMWF ecCodes C library.
+A Python interface to read GRIB files to an in-memory representation similar to the
+NetCDF Common Data Model following the CF Conventions. Low level access is done via the
+ECMWF ecCodes C library.
+
+Write support is a planned feature.
 
 The project targets Python 3, but aims to retain Python 2 compatibility as long as
 possible.
 
 .. warning::
-    The API is not compatible and it is not intended to be compatible with ecCodes python bindings.
+    The internal Python 3 ecCodes bindings are intended to be private and are not
+    compatible with the standard ecCodes python module.
 
 
 Development
