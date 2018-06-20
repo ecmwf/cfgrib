@@ -42,8 +42,8 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
-    'totalNumber', 'gridType', 'numberOfPoints', 'stepUnits', 'stepType',
-    'typeOfLevel', 'hybrid_level_count', 'NV',
+    'totalNumber', 'gridType', 'gridDefinitionDescription', 'numberOfPoints',
+    'stepUnits', 'stepType', 'typeOfLevel', 'hybrid_level_count', 'NV',
 ]
 
 GRID_TYPE_MAP = {
@@ -254,14 +254,15 @@ class DataArray(object):
 
 
 GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
-GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic', 'space_view')
+GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 
-def build_geography_coordinates(index, encode_geography):
+def build_geography_coordinates(index, encode_geography, log=LOG):
     # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()
-    if encode_geography and index.getone('gridType') in GRID_TYPES_COORD_VAR:
+    grid_type = index.getone('gridType')
+    if encode_geography and grid_type in GRID_TYPES_COORD_VAR:
         geo_dims = ('latitude', 'longitude')
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
@@ -272,7 +273,7 @@ def build_geography_coordinates(index, encode_geography):
             dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
             attributes=COORD_ATTRS['longitude'],
         )
-    elif encode_geography and index.getone('gridType') in GRID_TYPES_2D_AUX_COORD_VAR:
+    elif encode_geography and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
         geo_coord_vars['latitude'] = Variable(
@@ -286,15 +287,18 @@ def build_geography_coordinates(index, encode_geography):
     else:
         geo_dims = ('i',)
         geo_shape = (index.getone('numberOfPoints'),)
-        # add secondary coordinates
-        latitude = first['latitudes']
-        geo_coord_vars['latitude'] = Variable(
-            dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
-        )
-        longitude = first['longitudes']
-        geo_coord_vars['longitude'] = Variable(
-            dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
-        )
+        # add secondary coordinates if ecCodes provides them
+        try:
+            latitude = first['latitudes']
+            geo_coord_vars['latitude'] = Variable(
+                dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
+            )
+            longitude = first['longitudes']
+            geo_coord_vars['longitude'] = Variable(
+                dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
+            )
+        except KeyError:
+            log.warning('No latitudes/longitudes provided by ecCodes for %r', )
     return geo_dims, geo_shape, geo_coord_vars
 
 
