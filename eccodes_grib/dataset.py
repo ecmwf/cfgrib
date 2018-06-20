@@ -298,7 +298,7 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
                 dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:
-            log.warning('No latitudes/longitudes provided by ecCodes for %r', )
+            log.warning('No latitudes/longitudes provided by ecCodes for gridType = %r', grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
 
