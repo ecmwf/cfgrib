@@ -4,8 +4,8 @@
 CF-GRIB
 ============
 
-A Python interface to read GRIB files to a in-memory representation similar to the
-NetCDF Common Data Model following the CF Conventions.
+A Python interface that
+maps GRIB files to the NetCDF Common Data Model following CF Conventions.
 The high level APIs are inspired by h5netcdf and NetCDF-python.
 Low level access is done via the ECMWF ecCodes C library.
 
