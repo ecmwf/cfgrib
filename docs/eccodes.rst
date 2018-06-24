@@ -2,5 +2,5 @@
 eccodes
 -------
 
-.. automodule:: eccodes_grib.eccodes
+.. automodule:: cfgrib.eccodes
     :members:

@@ -31,7 +31,7 @@ from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
-VERSION = pkg_resources.get_distribution("eccodes_grib").version
+VERSION = pkg_resources.get_distribution("cfgrib").version
 
 #
 # Edition-independent keys in ecCodes namespaces. Documented in:

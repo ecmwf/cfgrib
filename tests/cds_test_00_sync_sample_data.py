@@ -1,7 +1,7 @@
 
 import pytest
 
-import eccodes_grib
+import cfgrib
 
 import cdscommon
 
@@ -30,7 +30,7 @@ def test_reanalysis_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name=test_file + '{ext}')
 
-    stream = eccodes_grib.Stream(path)
+    stream = cfgrib.Stream(path)
     leader = stream.first()
     assert len(leader) == key_count
     assert sum(1 for _ in stream) == leader['count']

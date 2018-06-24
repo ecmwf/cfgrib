@@ -32,7 +32,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'eccodes-grib'
+project = u'cfgrib'
 copyright = u"2017-2018, European Centre for Medium-Range Weather Forecasts (ECMWF)."
 
 # The version info for the project you're documenting, acts as replacement
@@ -40,7 +40,7 @@ copyright = u"2017-2018, European Centre for Medium-Range Weather Forecasts (ECM
 # the built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = pkg_resources.get_distribution("eccodes_grib").version
+release = pkg_resources.get_distribution("cfgrib").version
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
@@ -165,4 +165,4 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'eccodes_gribdoc'
+htmlhelp_basename = 'cfgribdoc'

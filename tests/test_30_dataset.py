@@ -6,8 +6,8 @@ import os.path
 import pytest
 import numpy as np
 
-from eccodes_grib import messages
-from eccodes_grib import dataset
+from cfgrib import messages
+from cfgrib import dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')

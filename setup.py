@@ -30,7 +30,7 @@ version = '0.7.3.dev0'
 
 
 setuptools.setup(
-    name='eccodes-grib',
+    name='cfgrib',
     version=version,
     description='Python interface to read and write GRIB files via the ECMWF ecCodes C library.',
     long_description=read('README.rst'),
@@ -72,7 +72,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'eccodes_grib2netcdf = eccodes_grib.xarray_store:eccodes_grib2netcdf'
+            'cfgrib2netcdf = cfgrib.xarray_store:cfgrib2netcdf'
         ]
     },
 

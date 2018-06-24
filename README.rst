@@ -1,7 +1,7 @@
 
 .. highlights:: bash
 
-ecCodes-GRIB
+CF-GRIB
 ============
 
 A Python interface to read GRIB files to a in-memory representation similar to the
@@ -24,7 +24,7 @@ Development
 
 After cloning the repository run::
 
-    cd eccodes-grib
+    cd cfgrib
     pip install -r ci/requirements-tests.txt
     pip install -e .
 
