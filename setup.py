@@ -32,7 +32,7 @@ version = '0.7.3.dev0'
 setuptools.setup(
     name='cfgrib',
     version=version,
-    description='Maps GRIB files to the NetCDF Common Data Model following CF Conventions.',
+    description='An API to map GRIB files to the NetCDF Common Data Model with CF Conventions.',
     long_description=read('README.rst'),
     author='European Centre for Medium-Range Weather Forecasts (ECMWF)',
     author_email='software.support@ecmwf.int',
