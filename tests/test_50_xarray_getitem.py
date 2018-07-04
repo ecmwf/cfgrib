@@ -1,8 +1,6 @@
 
 import os.path
 
-import numpy as np
-
 from eccodes_grib import xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
