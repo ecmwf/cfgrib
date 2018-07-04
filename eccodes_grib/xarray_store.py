@@ -29,14 +29,14 @@ import eccodes_grib
 
 
 class WrapGrib(BackendArray):
-    def __init__(self, array):
-        self.array = array
-
-    def __getitem__(self, item):
-        return indexing.NumpyIndexingAdapter(self.array)[item]
+    def __init__(self, backend_array):
+        self.backend_array = backend_array
 
     def __getattr__(self, item):
-        return getattr(self.array, item)
+        return getattr(self.backend_array, item)
+
+    def __getitem__(self, item):
+        return indexing.NumpyIndexingAdapter(self.backend_array)[item]
 
 
 FLAVOURS = {
