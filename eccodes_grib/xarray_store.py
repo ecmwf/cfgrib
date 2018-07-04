@@ -29,19 +29,14 @@ import eccodes_grib
 
 
 class WrapGrib(BackendArray):
-    def __init__(self, variable):
-        self.variable = variable
+    def __init__(self, array):
+        self.array = array
 
     def __getitem__(self, item):
-        return indexing.NumpyIndexingAdapter(self.variable.data)[item]
+        return indexing.NumpyIndexingAdapter(self.array)[item]
 
-    @property
-    def shape(self):
-        return self.variable.data.shape
-
-    @property
-    def dtype(self):
-        return self.variable.data.dtype
+    def __getattr__(self, item):
+        return getattr(self.array, item)
 
 
 FLAVOURS = {
@@ -103,7 +98,7 @@ class GribDataStore(AbstractDataStore):
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, eccodes_grib.dataset.DataArray):
-            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
+            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data.data))
         else:
             data = var.data
 
