@@ -36,7 +36,15 @@ class WrapGrib(BackendArray):
         return getattr(self.backend_array, item)
 
     def __getitem__(self, item):
-        return indexing.NumpyIndexingAdapter(self.backend_array)[item]
+        key, np_inds = indexing.decompose_indexer(
+            item, self.shape, indexing.IndexingSupport.OUTER_1VECTOR)
+
+        array = self.backend_array[key.tuple]
+
+        if len(np_inds.tuple) > 0:
+            array = indexing.NumpyIndexingAdapter(array)[np_inds]
+
+        return array
 
 
 FLAVOURS = {
