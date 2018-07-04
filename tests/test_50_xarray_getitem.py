@@ -29,5 +29,5 @@ def test_all():
     assert da.sel(number=[2, 3, 4, 5]).mean() == va[[2, 3, 4, 5]].mean()
     assert da.sel(number=[4, 3, 2, 5]).mean() == va[[4, 3, 2, 5]].mean()
 
-    assert da.isel(latitude=slice(20, 30), longitude=slice(0, 33)).mean() == va[..., 20:30, :33].mean()
-    assert da.sel(latitude=slice(90, 0), longitude=slice(0, 180)).mean() == va[..., :31, :61].mean()
+    assert da.isel(latitude=slice(0, 3), longitude=slice(0, 33)).mean() == va[..., :3, :33].mean()
+    assert da.sel(latitude=slice(90, 0), longitude=slice(0, 90)).mean() == va[..., :31, :31].mean()
