@@ -105,7 +105,7 @@ class GribDataStore(AbstractDataStore):
                 self.variable_map['topLevel'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
-        if isinstance(var.data, eccodes_grib.dataset.DataArray):
+        if isinstance(var.data, eccodes_grib.dataset.OnDiskArray):
             data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data

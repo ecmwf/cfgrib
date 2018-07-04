@@ -221,7 +221,7 @@ class Variable(object):
 
 
 @attr.attrs()
-class DataArray(object):
+class OnDiskArray(object):
     stream = attr.attrib()
     shape = attr.attrib()
     offsets = attr.attrib(repr=False)
@@ -371,7 +371,7 @@ def build_data_var_components(
             header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
-    data = DataArray(
+    data = OnDiskArray(
         stream=index.stream, shape=shape, offsets=offsets, missing_value=missing_value,
     )
 
