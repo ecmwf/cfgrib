@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file ci/requirements-tests.txt setup.py ci/requirements-tests.in
 #
-apipkg==1.4               # via execnet
+apipkg==1.5               # via execnet
 atomicwrites==1.1.5       # via pytest
 attrs==18.1.0
 cffi==1.11.5
@@ -14,10 +14,10 @@ future==0.16.0
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==4.2.0     # via pytest
 numpy==1.14.5
-pandas==0.23.1            # via xarray
+pandas==0.23.2            # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.6.0             # via pytest
-py==1.5.3                 # via pytest
+py==1.5.4                 # via pytest
 pycparser==2.18           # via cffi
 pyflakes==2.0.0           # via pytest-flakes
 pytest-cache==1.0         # via pytest-flakes, pytest-mccabe, pytest-pep8
@@ -26,9 +26,9 @@ pytest-flakes==3.0.2
 pytest-mccabe==0.1
 pytest-pep8==1.0.6
 pytest-runner==4.2
-pytest==3.6.1
+pytest==3.6.3
 python-dateutil==2.7.3    # via pandas
-pytz==2018.4              # via pandas
+pytz==2018.5              # via pandas
 six==1.11.0               # via more-itertools, pytest, python-dateutil
 typing==3.6.4
 xarray==0.10.7

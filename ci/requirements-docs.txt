@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file ci/requirements-docs.txt setup.py ci/requirements-docs.in
 #
-alabaster==0.7.10         # via sphinx
+alabaster==0.7.11         # via sphinx
 attrs==18.1.0
 babel==2.6.0              # via sphinx
 certifi==2018.4.16        # via requests
@@ -22,7 +22,7 @@ pycparser==2.18           # via cffi
 pygments==2.2.0           # via sphinx
 pyparsing==2.2.0          # via packaging
 pytest-runner==4.2
-pytz==2018.4              # via babel
+pytz==2018.5              # via babel
 requests==2.19.1          # via sphinx
 six==1.11.0               # via packaging, sphinx
 snowballstemmer==1.2.1    # via sphinx
