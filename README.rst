@@ -2,12 +2,16 @@
 .. highlights:: bash
 
 CF-GRIB
-============
+=======
 
-An Python interface to
-map GRIB files to the NetCDF Common Data Model with CF Conventions.
-The high level APIs are inspired by h5netcdf and NetCDF-python.
-Low level access is done via the ECMWF ecCodes C library.
+A Python interface to map GRIB files to the
+`NetCDF Common Data Model <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
+following the `CF Conventions <http://cfconventions.org/>`_.
+The high level API is designed to support a GRIB backend for `xarray <http://xarray.pydata.org/>`_
+and it is inspired by `NetCDF-python <http://unidata.github.io/netcdf4-python/>`_
+and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
+Low level access and decoding is performed via the
+ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
 Write support is a planned feature.
 
@@ -37,7 +41,8 @@ On a MacOS with HomeBrew use::
 As an alternative you may install the official source distribution
 by following the ecCodes instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
-Note that ecCodes upport for the Windows operating system is experimental.
+
+Note that ecCodes support for the Windows operating system is experimental.
 
 
 Development
