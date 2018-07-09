@@ -29,19 +29,22 @@ import cfgrib
 
 
 class WrapGrib(BackendArray):
-    def __init__(self, variable):
-        self.variable = variable
+    def __init__(self, backend_array):
+        self.backend_array = backend_array
+
+    def __getattr__(self, item):
+        return getattr(self.backend_array, item)
 
     def __getitem__(self, item):
-        return indexing.NumpyIndexingAdapter(self.variable.data)[item]
+        key, np_inds = indexing.decompose_indexer(
+            item, self.shape, indexing.IndexingSupport.OUTER_1VECTOR)
 
-    @property
-    def shape(self):
-        return self.variable.data.shape
+        array = self.backend_array[key.tuple]
 
-    @property
-    def dtype(self):
-        return self.variable.data.dtype
+        if len(np_inds.tuple) > 0:
+            array = indexing.NumpyIndexingAdapter(array)[np_inds]
+
+        return array
 
 
 FLAVOURS = {
@@ -102,7 +105,7 @@ class GribDataStore(AbstractDataStore):
                 self.variable_map['topLevel'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
-        if isinstance(var.data, cfgrib.dataset.DataArray):
+        if isinstance(var.data, cfgrib.dataset.OnDiskArray):
             data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data

@@ -220,37 +220,74 @@ class Variable(object):
         return equal and np.array_equal(self.data, other.data)
 
 
+def expand_item(item, shape):
+    expanded_item = []
+    for i, size in zip(item, shape):
+        if isinstance(i, list):
+            expanded_item.append(i)
+        elif isinstance(i, slice):
+            expanded_item.append(list(range(i.start or 0, i.stop or size, i.step or 1)))
+        elif isinstance(i, int):
+            expanded_item.append([i])
+        else:
+            TypeError("Unsupported index type %r" % type(i))
+    return expanded_item
+
+
 @attr.attrs()
-class DataArray(object):
+class OnDiskArray(object):
     stream = attr.attrib()
     shape = attr.attrib()
     offsets = attr.attrib(repr=False)
     missing_value = attr.attrib()
+    geo_ndim = attr.attrib(default=1)
 
     @property
-    def data(self):
-        if not hasattr(self, '_data'):
-            self._data = self.build_array()
-        return self._data
+    def array(self):
+        if not hasattr(self, '_array'):
+            self._array = self.build_array()
+        return self._array
 
     def build_array(self):
         # type: () -> np.ndarray
-        data = np.full(self.shape, fill_value=np.nan, dtype='float32')
+        array = np.full(self.shape, fill_value=np.nan, dtype='float32')
         with open(self.stream.path) as file:
-            for header_indexes, offset in sorted(self.offsets.items(), key=lambda x: x[1]):
+            for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_class.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-                data.__getitem__(header_indexes).flat[:] = values
-        data[data == self.missing_value] = np.nan
-        return data
+                array.__getitem__(header_indexes).flat[:] = values
+        array[array == self.missing_value] = np.nan
+        return array
 
     def __getitem__(self, item):
-        return self.data[item]
+        assert isinstance(item, tuple)
+        assert len(item) == len(self.shape)
+
+        header_item = expand_item(item[:-self.geo_ndim], self.shape)
+        array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim:]
+        array_field = np.full(array_field_shape, fill_value=np.nan, dtype='float32')
+        with open(self.stream.path) as file:
+            for header_indexes, offset in self.offsets.items():
+                try:
+                    array_field_indexes = tuple(it.index(ix) for it, ix in zip(header_item, header_indexes))
+                except ValueError:
+                    continue
+                # NOTE: fill a single field as found in the message
+                message = self.stream.message_class.fromfile(file, offset=offset[0])
+                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+                array_field.__getitem__(array_field_indexes).flat[:] = values
+
+        array = array_field[(...,) + item[-self.geo_ndim:]]
+        array[array == self.missing_value] = np.nan
+        for i, it in reversed(list(enumerate(item[:-self.geo_ndim]))):
+            if isinstance(it, int):
+                array = array[(slice(None, None, None),) * i + (0,)]
+        return array
 
     @property
     def dtype(self):
-        return self.data.dtype
+        return self.array.dtype
 
 
 GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
@@ -371,8 +408,9 @@ def build_data_var_components(
             header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
-    data = DataArray(
+    data = OnDiskArray(
         stream=index.stream, shape=shape, offsets=offsets, missing_value=missing_value,
+        geo_ndim=len(geo_dims),
     )
 
     if encode_time:

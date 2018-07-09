@@ -1,8 +1,8 @@
 
 PACKAGE := cfgrib
 IMAGE := $(PACKAGE)
-MODULE := cfgrib
-PYTHONS := python3.6 python3.5 pypy3 python2.7 pypy
+MODULE := $(PACKAGE)
+PYTHONS := python3.7 python3.6 python3.5 pypy3 python2.7 pypy
 
 export WHEELHOUSE := ~/.wheelhouse
 export PIP_FIND_LINKS := $(WHEELHOUSE)
