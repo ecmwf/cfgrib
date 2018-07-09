@@ -1,8 +1,8 @@
 
 import pytest
 
-import eccodes_grib
-import eccodes_grib.xarray_store
+import cfgrib
+import cfgrib.xarray_store
 
 import cdscommon
 
@@ -109,7 +109,7 @@ def test_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
-    stream = eccodes_grib.Stream(path)
+    stream = cfgrib.Stream(path)
     leader = stream.first()
     assert len(leader) == key_count
     assert sum(1 for _ in stream) == leader['count']
@@ -120,7 +120,7 @@ def test_Dataset(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
-    res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
+    res = cfgrib.xarray_store.open_dataset(path, flavour_name='cds')
     res.to_netcdf(path[:-5] + '.nc')
 
 
@@ -132,5 +132,5 @@ def test_large_Dataset():
     request['grid'] = ['1', '1']
     path = cdscommon.ensure_data(dataset, request, name='cds-' + dataset + '-LARGE-{uuid}.grib')
 
-    res = eccodes_grib.xarray_store.open_dataset(path, flavour_name='cds')
+    res = cfgrib.xarray_store.open_dataset(path, flavour_name='cds')
     res.to_netcdf(path[:-5] + '.nc')

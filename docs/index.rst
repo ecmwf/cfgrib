@@ -1,8 +1,8 @@
 
 
-============
-ecCodes-GRIB
-============
+=======
+CF-GRIB
+=======
 
 :Version: |release|
 :Date: |today|
@@ -21,3 +21,5 @@ possible.
 
     eccodes
     messages
+    dataset
+    xarray_grib

@@ -6,7 +6,7 @@ import os.path
 
 import pytest
 
-from eccodes_grib import eccodes
+from cfgrib import eccodes
 
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')

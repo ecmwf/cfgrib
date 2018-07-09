@@ -6,5 +6,5 @@ recursive-include ci *.txt
 recursive-include docs *.gitkeep
 recursive-include docs *.py
 recursive-include docs *.rst
-recursive-include eccodes_grib *.h
+recursive-include cfgrib *.h
 recursive-include tests *.py

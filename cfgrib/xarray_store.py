@@ -25,7 +25,7 @@ from xarray.core.utils import FrozenOrderedDict
 from xarray.backends.api import open_dataset as _open_dataset
 from xarray.backends.common import AbstractDataStore, BackendArray
 
-import eccodes_grib
+import cfgrib
 
 
 class WrapGrib(BackendArray):
@@ -94,7 +94,7 @@ class GribDataStore(AbstractDataStore):
         flavour = FLAVOURS[flavour_name].copy()
         config = flavour.pop('dataset', {}).copy()
         config.update(kwargs)
-        return cls(ds=eccodes_grib.Dataset.fromstream(path, **config), **flavour)
+        return cls(ds=cfgrib.Dataset.fromstream(path, **config), **flavour)
 
     def __attrs_post_init__(self):
         self.variable_map = self.variable_map.copy()
@@ -105,7 +105,7 @@ class GribDataStore(AbstractDataStore):
                 self.variable_map['topLevel'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
-        if isinstance(var.data, eccodes_grib.dataset.OnDiskArray):
+        if isinstance(var.data, cfgrib.dataset.OnDiskArray):
             data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
         else:
             data = var.data
@@ -151,7 +151,7 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
     return _open_dataset(store, **kwargs)
 
 
-def eccodes_grib2netcdf():
+def cfgrib2netcdf():
     import argparse
 
     parser = argparse.ArgumentParser(description='Convert a GRIB file into a NetCDF file.')

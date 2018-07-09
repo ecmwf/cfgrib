@@ -1,11 +1,11 @@
 
 .. highlights:: bash
 
-ecCodes-GRIB
+CF-GRIB
 ============
 
-A Python interface to read GRIB files to a in-memory representation similar to the
-NetCDF Common Data Model following the CF Conventions.
+An Python interafce to
+map GRIB files to the NetCDF Common Data Model with CF Conventions.
 The high level APIs are inspired by h5netcdf and NetCDF-python.
 Low level access is done via the ECMWF ecCodes C library.
 
@@ -24,7 +24,7 @@ Development
 
 After cloning the repository run::
 
-    cd eccodes-grib
+    cd cfgrib
     pip install -r ci/requirements-tests.txt
     pip install -e .
 

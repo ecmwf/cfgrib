@@ -30,9 +30,9 @@ version = '0.7.3.dev1'
 
 
 setuptools.setup(
-    name='eccodes-grib',
+    name='cfgrib',
     version=version,
-    description='Python interface to read and write GRIB files via the ECMWF ecCodes C library.',
+    description='An API to map GRIB files to the NetCDF Common Data Model with CF Conventions.',
     long_description=read('README.rst'),
     author='European Centre for Medium-Range Weather Forecasts (ECMWF)',
     author_email='software.support@ecmwf.int',
@@ -73,7 +73,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'eccodes_grib2netcdf = eccodes_grib.xarray_store:eccodes_grib2netcdf'
+            'cfgrib2netcdf = cfgrib.xarray_store:cfgrib2netcdf'
         ]
     },
 

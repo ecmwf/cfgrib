@@ -5,8 +5,8 @@ import os.path
 
 import pytest
 
-from eccodes_grib import eccodes
-from eccodes_grib import messages
+from cfgrib import eccodes
+from cfgrib import messages
 
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')

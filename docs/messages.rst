@@ -2,5 +2,5 @@
 messages
 --------
 
-.. automodule:: eccodes_grib.messages
+.. automodule:: cfgrib.messages
     :members:
