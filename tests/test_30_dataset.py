@@ -41,7 +41,7 @@ def test_build_data_var_components_no_encode():
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
     # equivalent to not np.isnan without importing numpy
-    assert data_var.data[:].mean() > 0.
+    assert data_var.data[:, :, :, :, :].mean() > 0.
 
 
 def test_build_data_var_components_encode_geography():
@@ -57,7 +57,7 @@ def test_build_data_var_components_encode_geography():
     assert data_var.data.shape == (10, 2, 2, 2, 61, 120)
 
     # equivalent to not np.isnan without importing numpy
-    assert data_var.data[:].mean() > 0.
+    assert data_var.data[:, :, :, :, :, :].mean() > 0.
 
 
 def test_Dataset():
@@ -87,7 +87,7 @@ def test_Dataset_encode_time():
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :].mean() > 0.
 
 
 def test_Dataset_encode_geography():
@@ -99,7 +99,7 @@ def test_Dataset_encode_geography():
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :, :, :].mean() > 0.
 
 
 def test_Dataset_encode_vertical():
@@ -110,7 +110,7 @@ def test_Dataset_encode_vertical():
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :, :].mean() > 0.
 
 
 def test_Dataset_reguler_gg_surface():
