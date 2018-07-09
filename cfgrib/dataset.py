@@ -261,8 +261,8 @@ class OnDiskArray(object):
         return array
 
     def __getitem__(self, item):
-        assert isinstance(item, tuple)
-        assert len(item) == len(self.shape)
+        assert isinstance(item, tuple), "Item type must be tuple not %r" % type(item)
+        assert len(item) == len(self.shape), "Item length must be %r not %r" % (self.shape, len(item))
 
         header_item = expand_item(item[:-self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim:]
@@ -457,7 +457,7 @@ def build_dataset_components(
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
-    attributes['eccodesGribVersion'] = VERSION
+    attributes['cfGribVersion'] = VERSION
     return dimensions, variables, attributes
 
 

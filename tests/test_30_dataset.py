@@ -62,7 +62,7 @@ def test_build_data_var_components_encode_geography():
 
 def test_Dataset():
     res = dataset.Dataset.fromstream(TEST_DATA)
-    assert 'eccodesGribVersion' in res.attributes
+    assert 'cfGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
         ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
@@ -73,7 +73,7 @@ def test_Dataset_no_encode():
     res = dataset.Dataset.fromstream(
         TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
     )
-    assert 'eccodesGribVersion' in res.attributes
+    assert 'cfGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
     assert len(res.variables) == 9
@@ -81,7 +81,7 @@ def test_Dataset_no_encode():
 
 def test_Dataset_encode_time():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_vertical=False, encode_geography=False)
-    assert 'eccodesGribVersion' in res.attributes
+    assert 'cfGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'forecast_reference_time', 'topLevel', 'i')
     assert len(res.variables) == 9
@@ -92,7 +92,7 @@ def test_Dataset_encode_time():
 
 def test_Dataset_encode_geography():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_vertical=False)
-    assert 'eccodesGribVersion' in res.attributes
+    assert 'cfGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
         ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
@@ -104,7 +104,7 @@ def test_Dataset_encode_geography():
 
 def test_Dataset_encode_vertical():
     res = dataset.Dataset.fromstream(TEST_DATA, encode_time=False, encode_geography=False)
-    assert 'eccodesGribVersion' in res.attributes
+    assert 'cfGribVersion' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
     assert len(res.variables) == 9

@@ -3,7 +3,7 @@ import os.path
 
 import pytest
 
-from eccodes_grib import xarray_store
+from cfgrib import xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
