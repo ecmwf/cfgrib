@@ -26,7 +26,7 @@ def read(fname):
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.7.3.dev1'
+version = '0.7.3.dev2'
 
 
 setuptools.setup(
@@ -37,7 +37,7 @@ setuptools.setup(
     author='European Centre for Medium-Range Weather Forecasts (ECMWF)',
     author_email='software.support@ecmwf.int',
     license='Apache License Version 2.0',
-    url='https://github.com/ecmwf/eccodes-grib',
+    url='https://github.com/ecmwf/cfgrib',
     packages=setuptools.find_packages(),
     include_package_data=True,
     setup_requires=[
