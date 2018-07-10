@@ -282,7 +282,7 @@ class OnDiskArray(object):
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
-        array = array_field[(...,) + item[-self.geo_ndim:]]
+        array = array_field[(Ellipsis,) + item[-self.geo_ndim:]]
         array[array == self.missing_value] = np.nan
         for i, it in reversed(list(enumerate(item[:-self.geo_ndim]))):
             if isinstance(it, int):
