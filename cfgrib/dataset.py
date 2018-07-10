@@ -225,13 +225,15 @@ def expand_item(item, shape):
     for i, size in zip(item, shape):
         if isinstance(i, list):
             expanded_item.append(i)
+        elif isinstance(i, np.ndarray):
+            expanded_item.append(i.tolist())
         elif isinstance(i, slice):
             expanded_item.append(list(range(i.start or 0, i.stop or size, i.step or 1)))
         elif isinstance(i, int):
             expanded_item.append([i])
         else:
             TypeError("Unsupported index type %r" % type(i))
-    return expanded_item
+    return tuple(expanded_item)
 
 
 @attr.attrs()
