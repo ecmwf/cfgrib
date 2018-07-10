@@ -1,9 +1,9 @@
 # Run tests in a more reproducible and isolated environment.
 #
 # Build the docker image once with:
-#   docker build -t xarray-grib .
+#   docker build -t cfgrib .
 # Run the container with:
-#   docker run --rm -it -v `pwd`:/src xarray-grib
+#   docker run --rm -it -v `pwd`:/src cfgrib
 #
 FROM bopen/ubuntu-pyenv:latest
 
