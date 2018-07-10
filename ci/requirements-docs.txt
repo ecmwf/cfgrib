@@ -18,15 +18,18 @@ jinja2==2.10              # via sphinx
 markupsafe==1.0           # via jinja2
 numpy==1.14.5
 packaging==17.1           # via sphinx
+pandas==0.23.2            # via xarray
 pycparser==2.18           # via cffi
 pygments==2.2.0           # via sphinx
 pyparsing==2.2.0          # via packaging
 pytest-runner==4.2
-pytz==2018.5              # via babel
+python-dateutil==2.7.3    # via pandas
+pytz==2018.5              # via babel, pandas
 requests==2.19.1          # via sphinx
-six==1.11.0               # via packaging, sphinx
+six==1.11.0               # via packaging, python-dateutil, sphinx
 snowballstemmer==1.2.1    # via sphinx
 sphinx==1.7.5
 sphinxcontrib-websupport==1.1.0  # via sphinx
 typing==3.6.4
 urllib3==1.23             # via requests
+xarray==0.10.7

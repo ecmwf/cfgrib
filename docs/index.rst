@@ -22,4 +22,4 @@ possible.
     eccodes
     messages
     dataset
-    xarray_grib
+    xarray_store
