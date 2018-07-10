@@ -264,7 +264,7 @@ class OnDiskArray(object):
 
     def __getitem__(self, item):
         assert isinstance(item, tuple), "Item type must be tuple not %r" % type(item)
-        assert len(item) == len(self.shape), "Item length must be %r not %r" % (self.shape, len(item))
+        assert len(item) == len(self.shape), "Item len must be %r not %r" % (self.shape, len(item))
 
         header_item = expand_item(item[:-self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim:]
@@ -272,13 +272,15 @@ class OnDiskArray(object):
         with open(self.stream.path) as file:
             for header_indexes, offset in self.offsets.items():
                 try:
-                    array_field_indexes = tuple(it.index(ix) for it, ix in zip(header_item, header_indexes))
+                    array_field_indexes = []
+                    for it, ix in zip(header_item, header_indexes):
+                        array_field_indexes.append(it.index(ix))
                 except ValueError:
                     continue
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_class.fromfile(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
-                array_field.__getitem__(array_field_indexes).flat[:] = values
+                array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = array_field[(...,) + item[-self.geo_ndim:]]
         array[array == self.missing_value] = np.nan

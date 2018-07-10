@@ -18,6 +18,7 @@ def test_all(cache):
 
     assert da.mean() == va.mean()
 
+
 @pytest.mark.parametrize('cache', [True, False])
 def test_getitem_int(cache):
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars['t']
