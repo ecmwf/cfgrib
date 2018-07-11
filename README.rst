@@ -67,9 +67,9 @@ If you are not register to the CDS portal register at:
 
     https://cds.climate.copernicus.eu/user/register
 
-In order to automatically download the GRIB files install and configure the `cdsapi` package::
+In order to automatically download and test the GRIB files install and configure the `cdsapi` package::
 
-    $ pip install cdsapi
+    $ pip install cdsapi netcdf4
 
 The log into the CDS portal and setup the CDS API key as described in:
 
