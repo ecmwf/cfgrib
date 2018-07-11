@@ -50,9 +50,9 @@ Development
 
 After cloning the repository run::
 
-    cd cfgrib
-    pip install -r ci/requirements-tests.txt
-    pip install -e .
+    $ cd cfgrib
+    $ pip install -r ci/requirements-tests.txt
+    $ pip install -e .
 
 
 Test
@@ -60,18 +60,22 @@ Test
 
 Unit test with::
 
-    pytest -vv --flakes
+    $ pytest -vv --flakes
 
-You can test the GRIB driver on a larger set of products from the Climate Data Store.
-In order to automatically download the data files you need to register fo the CDS:
+You can test the CF-GRIB driver on a set of products downloaded from the Climate Data Store.
+If you are not register to the CDS portal register at:
 
     https://cds.climate.copernicus.eu/user/register
 
-and set up your CDS API key as described in:
+In order to automatically download the GRIB files install and configure the `cdsapi` package::
+
+    $ pip install cdsapi
+
+The log into the CDS portal and setup the CDS API key as described in:
 
     https://cds.climate.copernicus.eu/api-how-to
 
 Then you can run::
 
-    pytest -vv tests/cds_test_*.py
+    $ pytest -vv tests/cds_test_*.py
 
