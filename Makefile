@@ -58,13 +58,13 @@ local-wheel:
 	$(PIP) wheel -e .
 
 testclean:
-	$(RM) -r */__pycache__ .coverage .cache
+	$(RM) -r */__pycache__ .coverage .cache tests/.ipynb_checkpoints
 
-clean:
-	$(RM) -r */*.pyc htmlcov dist build .eggs *.egg-info
+clean: testclean
+	$(RM) -r */*.pyc htmlcov dist build .eggs
 
 distclean: clean
-	$(RM) -r .tox .docker-tox
+	$(RM) -r .tox .docker-tox *.egg-info
 
 cacheclean:
 	$(RM) -r $(WHEELHOUSE)/* ~/.cache/*
