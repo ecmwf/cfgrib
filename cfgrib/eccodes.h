@@ -363,6 +363,13 @@ int codes_set_bytes(codes_handle* h, const char*  key, const unsigned char* byte
 */
 int codes_set_double_array(codes_handle* h, const char* key, const double* vals, size_t length);
 
+/**
+*  Get the API version
+*
+*  @return        API version
+*/
+long codes_get_api_version(void);
+
 /*! \defgroup keys_iterator Iterating on keys names
 The keys iterator is designed to get the key names defined in a message.
 Key names on which the iteration is carried out can be filtered through their

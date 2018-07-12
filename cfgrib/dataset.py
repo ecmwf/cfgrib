@@ -37,7 +37,7 @@ VERSION = pkg_resources.get_distribution("cfgrib").version
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription']
+GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription', 'subCentre', 'table2Version']
 
 # NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
@@ -461,7 +461,8 @@ def build_dataset_components(
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
-    attributes['cfGribVersion'] = VERSION
+    eccodes_version = eccodes.lib.codes_get_api_version()
+    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s' % (VERSION, eccodes_version)
     return dimensions, variables, attributes
 
 
