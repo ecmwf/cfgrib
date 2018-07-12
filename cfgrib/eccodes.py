@@ -557,3 +557,18 @@ def codes_keys_iterator_get_name(iterator):
 def codes_keys_iterator_delete(iterator_id):
     codes_keys_iterator_delete = check_return(lib.codes_keys_iterator_delete)
     codes_keys_iterator_delete(iterator_id)
+
+
+def codes_get_api_version():
+    """
+    Get the API version.
+
+    Returns the version of the API as a string in the format "major.minor.revision".
+    """
+    ver = lib.codes_get_api_version()
+    patch = ver % 100
+    ver = ver // 100
+    minor = ver % 100
+    major = ver // 100
+
+    return "%d.%d.%d" % (major, minor, patch)

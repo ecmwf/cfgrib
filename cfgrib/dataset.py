@@ -31,7 +31,6 @@ from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
-VERSION = pkg_resources.get_distribution("cfgrib").version
 
 #
 # Edition-independent keys in ecCodes namespaces. Documented in:
@@ -461,8 +460,9 @@ def build_dataset_components(
         dict_merge(dimensions, dims)
         dict_merge(variables, vars)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
-    eccodes_version = eccodes.lib.codes_get_api_version()
-    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s' % (VERSION, eccodes_version)
+    cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
+    eccodes_ver = eccodes.codes_get_api_version()
+    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s' % (cfgrib_ver, eccodes_ver)
     return dimensions, variables, attributes
 
 
