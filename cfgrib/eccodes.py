@@ -146,9 +146,9 @@ def codes_index_new_from_file(path, keys):
     return check_last(lib.codes_index_new_from_file)(ffi.NULL, path, keys_enc)
 
 
-def grib_new_from_file(fileobj, headers_only=False):
+def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
     try:
-        retval = check_last(lib.grib_new_from_file)(ffi.NULL, fileobj, int(headers_only))
+        retval = check_last(lib.codes_handle_new_from_file)(ffi.NULL, fileobj, product_kind)
         if retval == ffi.NULL:
             return None
         else:
@@ -159,10 +159,10 @@ def grib_new_from_file(fileobj, headers_only=False):
         raise
 
 
-def codes_new_from_file(fileobj, product_kind, headers_only=False):
-    if product_kind == CODES_PRODUCT_GRIB:
-        return grib_new_from_file(fileobj, headers_only)
-    raise Exception("Invalid product kind: " + product_kind)
+def codes_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
+    if product_kind == lib.PRODUCT_GRIB:
+        return codes_handle_new_from_file(fileobj, product_kind)
+    raise Exception("Invalid product kind: %r" % product_kind)
 
 
 codes_index_delete = lib.codes_index_delete

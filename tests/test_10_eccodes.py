@@ -49,6 +49,26 @@ def test_codes_index_new_from_file():
     assert "'codes_index *'" in repr(res)
 
 
+@pytest.mark.parametrize('key, expected_value', [
+    (b'numberOfDataPoints', 7320),
+    (b'gridType', b'regular_ll'),
+])
+def test_codes_handle_new_from_file(key, expected_value):
+    grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
+
+    result = eccodes.codes_get(grib, key)
+
+    assert result == expected_value
+
+
+def test_codes_handle_new_from_file_errors():
+    grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
+
+    with pytest.raises(eccodes.EcCodesError) as err:
+        eccodes.codes_get(grib, b'gridType', length=1)  # too short
+    assert err.value.code == eccodes.lib.GRIB_BUFFER_TOO_SMALL
+
+
 def test_codes_index_get_size():
     grib_index = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
 
@@ -77,7 +97,7 @@ def test_codes_index_get(key, ktype, expected_value):
     (b'gridType', [b'regular_ll']),
 ])
 def test_codes_get_array(key, expected_value):
-    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+    grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     result = eccodes.codes_get_array(grib, key)
 
@@ -85,7 +105,7 @@ def test_codes_get_array(key, expected_value):
 
 
 def test_codes_get_array_errors():
-    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+    grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     with pytest.raises(eccodes.EcCodesError) as err:
         eccodes.codes_get_array(grib, b'values', size=1)  # too short
@@ -94,26 +114,6 @@ def test_codes_get_array_errors():
     with pytest.raises(eccodes.EcCodesError) as err:
         eccodes.codes_get_array(grib, b'values', key_type=eccodes.CODES_TYPE_LONG)  # wrong type
     assert err.value.code == eccodes.lib.GRIB_NOT_IMPLEMENTED
-
-
-@pytest.mark.parametrize('key, expected_value', [
-    (b'numberOfDataPoints', 7320),
-    (b'gridType', b'regular_ll'),
-])
-def test_codes_get(key, expected_value):
-    grib = eccodes.grib_new_from_file(open(TEST_DATA))
-
-    result = eccodes.codes_get(grib, key)
-
-    assert result == expected_value
-
-
-def test_codes_get_errors():
-    grib = eccodes.grib_new_from_file(open(TEST_DATA))
-
-    with pytest.raises(eccodes.EcCodesError) as err:
-        eccodes.codes_get(grib, b'gridType', length=1)  # too short
-    assert err.value.code == eccodes.lib.GRIB_BUFFER_TOO_SMALL
 
 
 @pytest.mark.parametrize('key, value', [
@@ -145,7 +145,7 @@ def test_codes_get_length():
 
 
 def test_codes_keys_iterator():
-    grib = eccodes.grib_new_from_file(open(TEST_DATA))
+    grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     iterator = eccodes.codes_keys_iterator_new(grib)
 
