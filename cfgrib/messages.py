@@ -205,7 +205,7 @@ class Index(collections.Mapping):
 class Stream(collections.Iterable):
     path = attr.attrib(type=str)
     mode = attr.attrib(default='r', type=str)
-    message_class = attr.attrib(default=Message, type=Message)
+    message_class = attr.attrib(default=Message, type=Message, repr=False)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]

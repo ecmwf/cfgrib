@@ -101,6 +101,29 @@ Before you submit a pull request, check that it meets these guidelines:
 3. The pull request should work for Python 2.7, 3.5, 3.6 and 3.7, and for PyPy2 and Pypy3. Check
    the tox results and make sure that the tests pass for all supported Python versions.
 
+
+Testing CDS data
+----------------
+
+You can test the CF-GRIB driver on a set of products downloaded from the Climate Data Store
+of the `Copernicus Climate Change Service <https://climate.copernicus.eu>`_.
+If you are not register to the CDS portal register at:
+
+    https://cds.climate.copernicus.eu/user/register
+
+In order to automatically download and test the GRIB files install and configure the `cdsapi` package::
+
+    $ pip install cdsapi netcdf4
+
+The log into the CDS portal and setup the CDS API key as described in:
+
+    https://cds.climate.copernicus.eu/api-how-to
+
+Then you can run::
+
+    $ pytest -vv tests/cds_test_*.py
+
+
 .. cfgrib: https://github.com/ecmwk/cfgrib
 .. virtualenv: https://virtualenv.pypa.io/en/stable/installation
 .. git: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git

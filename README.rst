@@ -1,10 +1,7 @@
 
 .. highlight: console
 
-CF-GRIB
-=======
-
-A Python interface to map GRIB files to the
+Python interface to map GRIB files to the
 `NetCDF Common Data Model <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
 following the `CF Conventions <http://cfconventions.org/>`_.
 The high level API is designed to support a GRIB backend for `xarray <http://xarray.pydata.org/>`_
@@ -23,8 +20,11 @@ possible.
     compatible with the standard ecCodes python module.
 
 
-Install system dependencies
----------------------------
+Installation
+------------
+
+System dependencies
+~~~~~~~~~~~~~~~~~~~
 
 The python module depends on the ECMWF ecCodes library
 that must be installed on the system and accessible as a shared library.
@@ -44,37 +44,54 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
 Note that ecCodes support for the Windows operating system is experimental.
 
-
-Install
--------
+Main package
+~~~~~~~~~~~~
 
 The package is installed from PyPI with::
 
     $ pip install cfgrib
 
+You may run a simple self-check with::
 
-Test
-----
+    $ python -m cfgrib --selfcheck
 
-Unit test with::
 
-    $ pytest -vv --flakes
+Usage
+-----
 
-You can test the CF-GRIB driver on a set of products downloaded from the Climate Data Store
-of the `Copernicus Climate Change Service <https://climate.copernicus.eu>`_.
-If you are not register to the CDS portal register at:
+First, you need a well-formed GRIB file, if you don't have one download at hand download our
+`ERA5 on pressure levels sample <https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true>`_::
 
-    https://cds.climate.copernicus.eu/user/register
+    $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
 
-In order to automatically download and test the GRIB files install and configure the `cdsapi` package::
+    $ python
+    >>> import cfgrib
+    >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
+    >>> ds.dimensions
+    OrderedDict([('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)])
+    >>> sorted(ds.variables)
+    ['air_pressure', 'forecast_period', 'forecast_reference_time', 'latitude', 'longitude', 'number', 't', 'time', 'z']
+    >>> var = ds.variables['t']
+    >>> var.dimensions
+    ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+    >>> var.data[:, :, :, :, :].mean()
+    262.92133
 
-    $ pip install cdsapi netcdf4
 
-The log into the CDS portal and setup the CDS API key as described in:
+Contributing
+------------
 
-    https://cds.climate.copernicus.eu/api-how-to
+Contributions are very welcome. Please see the CONTRIBUTING.rst document for the best way to help.
+If you encounter any problems, please file an issue along with a detailed description.
 
-Then you can run::
+Maintainer:
 
-    $ pytest -vv tests/cds_test_*.py
+- Alessandro Amici - `@alexamici <https://github.com/alexamici>`_
 
+Main contributors:
+
+- Baudouin Raoult - ECMWF
+- Leonardo Barcaroli - `@leophys <https://github.com/leophys>`_
+- Aureliana Barghini - `@aurghs <https://github.com/aurghs>`_
+
+See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.

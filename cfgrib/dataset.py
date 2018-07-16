@@ -210,7 +210,7 @@ class CfMessage(messages.ComputedKeysMessage):
 class Variable(object):
     dimensions = attr.attrib(type=T.Sequence[str])
     data = attr.attrib(type=np.ndarray)
-    attributes = attr.attrib(default={}, type=T.Mapping[str, T.Any])
+    attributes = attr.attrib(default={}, type=T.Mapping[str, T.Any], repr=False)
 
     def __eq__(self, other):
         if other.__class__ is not self.__class__:
@@ -241,7 +241,7 @@ class OnDiskArray(object):
     shape = attr.attrib()
     offsets = attr.attrib(repr=False)
     missing_value = attr.attrib()
-    geo_ndim = attr.attrib(default=1)
+    geo_ndim = attr.attrib(default=1, repr=False)
 
     @property
     def array(self):
