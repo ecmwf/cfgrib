@@ -1,5 +1,5 @@
 
-.. highlights:: bash
+.. highlight: console
 
 CF-GRIB
 =======
@@ -45,6 +45,14 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 Note that ecCodes support for the Windows operating system is experimental.
 
 
+Install
+-------
+
+The package is installed from PyPI with::
+
+    $ pip install cfgrib
+
+
 Development
 -----------
 
@@ -62,7 +70,8 @@ Unit test with::
 
     $ pytest -vv --flakes
 
-You can test the CF-GRIB driver on a set of products downloaded from the Climate Data Store.
+You can test the CF-GRIB driver on a set of products downloaded from the Climate Data Store
+of the `Copernicus Climate Change Service <https://climate.copernicus.eu>`_.
 If you are not register to the CDS portal register at:
 
     https://cds.climate.copernicus.eu/user/register
