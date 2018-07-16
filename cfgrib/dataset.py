@@ -475,7 +475,7 @@ class Dataset(object):
     encode_geography = attr.attrib(default=True)
 
     @classmethod
-    def fromstream(cls, path, mode='r', **kwargs):
+    def frompath(cls, path, mode='r', **kwargs):
         return cls(stream=messages.Stream(path, mode=mode, message_class=CfMessage), **kwargs)
 
     def __attrs_post_init__(self):
