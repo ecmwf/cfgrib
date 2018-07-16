@@ -23,8 +23,8 @@ possible.
     compatible with the standard ecCodes python module.
 
 
-Dependencies
-------------
+Install system dependencies
+---------------------------
 
 The python module depends on the ECMWF ecCodes library
 that must be installed on the system and accessible as a shared library.
@@ -51,16 +51,6 @@ Install
 The package is installed from PyPI with::
 
     $ pip install cfgrib
-
-
-Development
------------
-
-After cloning the repository run::
-
-    $ cd cfgrib
-    $ pip install -r ci/requirements-tests.txt
-    $ pip install -e .
 
 
 Test
