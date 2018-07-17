@@ -1,6 +1,4 @@
 
-.. highlight: console
-
 Python interface to map GRIB files to the
 `NetCDF Common Data Model <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
 following the `CF Conventions <http://cfconventions.org/>`_.
@@ -18,6 +16,8 @@ possible.
 .. warning::
     The internal Python 3 ecCodes bindings are intended to be private and are not
     compatible with the standard ecCodes python module.
+
+.. highlight: console
 
 
 Installation
@@ -59,16 +59,21 @@ You may run a simple self-check with::
 Usage
 -----
 
-First, you need a well-formed GRIB file, if you don't have one download at hand download our
+First, you need a well-formed GRIB file, if you don't have one at hand you can download our
 `ERA5 on pressure levels sample <https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true>`_::
 
     $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
 
-    $ python
+You may try out the high level API in a python interpreter:
+
+    .. code-block: python
+
     >>> import cfgrib
     >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
-    >>> ds.dimensions
-    OrderedDict([('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)])
+    >>> ds.attributes['GRIB_edition']
+    1
+    >>> ds.dimensions.items()
+    [('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
     >>> sorted(ds.variables)
     ['air_pressure', 'forecast_period', 'forecast_reference_time', 'latitude', 'longitude', 'number', 't', 'time', 'z']
     >>> var = ds.variables['t']
@@ -84,14 +89,31 @@ Contributing
 Contributions are very welcome. Please see the CONTRIBUTING.rst document for the best way to help.
 If you encounter any problems, please file an issue along with a detailed description.
 
-Maintainer:
+Lead developer:
 
-- Alessandro Amici - `@alexamici <https://github.com/alexamici>`_
+- `Alessandro Amici <https://github.com/alexamici>`_ - B-Open
 
 Main contributors:
 
 - Baudouin Raoult - ECMWF
-- Leonardo Barcaroli - `@leophys <https://github.com/leophys>`_
-- Aureliana Barghini - `@aurghs <https://github.com/aurghs>`_
+- `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
+- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 
 See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
+
+License
+-------
+
+Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
