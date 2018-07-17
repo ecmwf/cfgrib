@@ -35,6 +35,7 @@ _MARKER = object()
 
 @attr.attrs()
 class Message(collections.Mapping):
+    """Dictionary-line interface to access Message headers."""
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
 
@@ -97,6 +98,7 @@ class Message(collections.Mapping):
 
 @attr.attrs()
 class ComputedKeysMessage(Message):
+    """Extension of Message class for adding computed keys."""
     computed_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[['Message'], T.Any]])
 
     def __getitem__(self, item):
@@ -206,6 +208,7 @@ class Index(collections.Mapping):
 
 @attr.attrs()
 class Stream(collections.Iterable):
+    """Iterator-like access to a stream of Messages."""
     path = attr.attrib(type=str)
     mode = attr.attrib(default='r', type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
