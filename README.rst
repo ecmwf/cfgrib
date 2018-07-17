@@ -66,21 +66,21 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 
 You may try out the high level API in a python interpreter:
 
-    .. highlight: python
+.. highlight: python
 
-    >>> import cfgrib
-    >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
-    >>> ds.attributes['GRIB_edition']
-    1
-    >>> ds.dimensions.items()
-    [('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
-    >>> sorted(ds.variables)
-    ['air_pressure', 'forecast_period', 'forecast_reference_time', 'latitude', 'longitude', 'number', 't', 'time', 'z']
-    >>> var = ds.variables['t']
-    >>> var.dimensions
-    ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
-    >>> var.data[:, :, :, :, :].mean()
-    262.92133
+>>> import cfgrib
+>>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
+>>> ds.attributes['GRIB_edition']
+1
+>>> ds.dimensions.items()
+[('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
+>>> sorted(ds.variables)
+['air_pressure', 'forecast_period', 'forecast_reference_time', 'latitude', 'longitude', 'number', 't', 'time', 'z']
+>>> var = ds.variables['t']
+>>> var.dimensions
+('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+>>> var.data[:, :, :, :, :].mean()
+262.92133
 
 
 Contributing
