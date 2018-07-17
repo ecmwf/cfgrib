@@ -99,7 +99,7 @@ class Message(collections.Mapping):
 @attr.attrs()
 class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
-    computed_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[['Message'], T.Any]])
+    computed_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[[Message], T.Any]])
 
     def __getitem__(self, item):
         if item in self.computed_keys:
