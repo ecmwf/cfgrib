@@ -11,7 +11,7 @@ ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 Features:
 
 - map a GRIB file to a set of N-dimensional variables following the NetCDF Common Data Model,
-- map CF Conventions attributes to known coordinate and data variables,
+- map CF Conventions attributes coordinate and data variables,
 - access data variable values from disk efficiently,
 - no write support yet.
 
@@ -63,8 +63,8 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
     $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
 
 
-Common Data Model API
-~~~~~~~~~~~~~~~~~~~~~
+Dataset API
+~~~~~~~~~~~
 
 You may try out the high level API in a python interpreter:
 
