@@ -13,6 +13,7 @@ Features:
 - map a GRIB file to a set of N-dimensional variables following the NetCDF Common Data Model,
 - map CF Conventions attributes coordinate and data variables,
 - access data variable values from disk efficiently,
+- provisional `xarray` GRIB driver,
 - no write support yet.
 
 .. highlight: console
@@ -63,8 +64,8 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
     $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
 
 
-Dataset API
-~~~~~~~~~~~
+Dataset / Variable API
+~~~~~~~~~~~~~~~~~~~~~~
 
 You may try out the high level API in a python interpreter:
 
@@ -83,6 +84,42 @@ You may try out the high level API in a python interpreter:
 ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
+
+
+Provisional `xarray` GRIB driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have xarray installed `cfgrib` can open a GRIB file as a `xarray.Dataset`::
+
+    $ pip install xarray
+
+In a Python interpreter try:
+
+.. code-block: python
+
+>>> from cfgrib import xarray_store
+>>> ds = xarray_store.open_dataset('era5-levels-members.grib', flavour_name='cds')
+>>> ds
+<xarray.Dataset>
+Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, plev: 2, realization: 10)
+Coordinates:
+  * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
+  * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01-01 ...
+    leadtime                 timedelta64[ns] ...
+  * plev                     (plev) float64 8.5e+04 5e+04
+  * lat                      (lat) float64 90.0 87.0 84.0 81.0 78.0 75.0 ...
+  * lon                      (lon) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 ...
+    time                     (forecast_reference_time) datetime64[ns] ...
+Data variables:
+    z                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+    t                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+Attributes:
+    GRIB_edition:            1
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    GRIB_table2Version:      128
+    history:                 GRIB to CDM+CF via cfgrib-0.7.3.dev2/ecCodes-2.7.0
 
 
 Lower level APIs

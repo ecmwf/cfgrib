@@ -1,6 +1,6 @@
 
-xarray_store
-------------
+xarray GRIB driver
+------------------
 
 .. automodule:: cfgrib.xarray_store
     :members:

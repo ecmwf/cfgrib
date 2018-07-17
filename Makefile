@@ -91,6 +91,9 @@ test: testclean
 qc:
 	$(RUN) python setup.py test --addopts "-v --pep8 --mccabe"
 
+doc:
+	$(RUN) python setup.py build_sphinx
+
 tox: testclean
 	$(RUN) tox $(TOXFLAGS)
 
