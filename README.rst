@@ -8,20 +8,16 @@ and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
 ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
-Write support is a planned feature.
-
-The project targets Python 3, but aims to retain Python 2 compatibility as long as
-possible.
-
-.. warning::
-    The internal Python 3 ecCodes bindings are intended to be private and are not
-    compatible with the standard ecCodes python module.
-
 .. highlight: console
 
 
 Installation
 ------------
+
+The package is installed from PyPI with::
+
+    $ pip install cfgrib
+
 
 System dependencies
 ~~~~~~~~~~~~~~~~~~~
@@ -44,13 +40,6 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
 Note that ecCodes support for the Windows operating system is experimental.
 
-Main package
-~~~~~~~~~~~~
-
-The package is installed from PyPI with::
-
-    $ pip install cfgrib
-
 You may run a simple self-check with::
 
     $ python -m cfgrib --selfcheck
@@ -63,6 +52,10 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 `ERA5 on pressure levels sample <https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true>`_::
 
     $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
+
+
+Common Data Model API
+~~~~~~~~~~~~~~~~~~~~~
 
 You may try out the high level API in a python interpreter:
 
@@ -81,6 +74,14 @@ You may try out the high level API in a python interpreter:
 ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
+
+
+Lower level APIs
+~~~~~~~~~~~~~~~~
+
+Lower level APIs are not stable and should not be considered public yet.
+In particular the internal Python 3 ecCodes bindings are not compatible with
+the standard ecCodes python module.
 
 
 Contributing
