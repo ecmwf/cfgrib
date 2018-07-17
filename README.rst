@@ -8,6 +8,13 @@ and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
 ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
+Features:
+
+- map a GRIB file to a set of N-dimensional variables following the NetCDF Common Data Model,
+- map CF Conventions attributes to known coordinate and data variables,
+- access data variable values from disk efficiently,
+- no write support yet.
+
 .. highlight: console
 
 
@@ -101,6 +108,7 @@ Main contributors:
 - `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 
 See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
+
 
 License
 -------
