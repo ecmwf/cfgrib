@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--selfcheck', default=False, action='store_true')
     args = parser.parse_args()
     if args.selfcheck:
-        eccodes.codes_get_api_version()
+        print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
         print("Your system is ready.")
     else:
         raise RuntimeError("Command not recognised. See usage with --help.")
