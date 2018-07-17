@@ -1,4 +1,8 @@
+include *.rst
+include Dockerfile
+include .dockerignore
 include LICENSE
+include Makefile
 include tox.ini
 include tests/sample-data/era5-levels-members.grib
 recursive-include ci *.in
@@ -7,4 +11,6 @@ recursive-include docs *.gitkeep
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include cfgrib *.h
+recursive-include tests *.grib
+recursive-include tests *.ipynb
 recursive-include tests *.py
