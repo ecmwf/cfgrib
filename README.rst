@@ -66,7 +66,7 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 
 You may try out the high level API in a python interpreter:
 
-    .. code-block: python
+    .. highlight: python
 
     >>> import cfgrib
     >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
