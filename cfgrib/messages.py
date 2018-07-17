@@ -1,5 +1,4 @@
 #
-# Copyright 2017-2018 B-Open Solutions srl.
 # Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Authors:
+#   Alessandro Amici - B-Open - https://bopen.eu
+#
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import bytes, isinstance, str, type

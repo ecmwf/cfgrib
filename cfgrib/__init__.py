@@ -1,5 +1,4 @@
 #
-# Copyright 2017-2018 B-Open Solutions srl.
 # Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
