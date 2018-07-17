@@ -143,6 +143,7 @@ Lead developer:
 Main contributors:
 
 - Baudouin Raoult - ECMWF
+- `Iain Russell <https://github.com/iainrussell>`_ - ECMWF
 - `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
 - `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 
