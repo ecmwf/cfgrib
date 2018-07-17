@@ -119,7 +119,7 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     GRIB_table2Version:      128
-    history:                 GRIB to CDM+CF via cfgrib-0.7.3.dev2/ecCodes-2.7.0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.0/ecCodes-2.7.0
 
 
 Lower level APIs
