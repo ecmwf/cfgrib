@@ -47,9 +47,10 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
 Note that ecCodes support for the Windows operating system is experimental.
 
-You may run a simple self-check with::
+You may run a simple self-check command to ensure that your system is set up correctly::
 
     $ python -m cfgrib --selfcheck
+    Your system is ready.
 
 
 Usage
