@@ -59,9 +59,9 @@ Usage
 -----
 
 First, you need a well-formed GRIB file, if you don't have one at hand you can download our
-`ERA5 on pressure levels sample <https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true>`_::
+`ERA5 on pressure levels sample <http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib>`_::
 
-    $ wget https://github.com/ecmwf/cfgrib/blob/master/tests/sample-data/era5-levels-members.grib?raw=true -O era5-levels-members.grib
+    $ wget http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib
 
 
 Dataset / Variable API
