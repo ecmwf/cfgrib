@@ -225,3 +225,7 @@ def test_codes_set():
     message_id = eccodes.codes_new_from_samples(b'regular_ll_sfc_grib2')
 
     eccodes.codes_set(message_id, b'endStep', 2)
+    eccodes.codes_set(message_id, b'longitudeOfFirstGridPointInDegrees', 1.)
+    eccodes.codes_set(message_id, b'gridType', b'regular_ll')
+
+    eccodes.codes_set_array(message_id, b'values', [0.])
