@@ -211,7 +211,17 @@ def test_codes_get_api_version():
 
 
 def test_codes_new_from_samples():
-    res = eccodes.codes_new_from_samples(b'regular_ll_sfc')
+    res = eccodes.codes_new_from_samples(b'regular_ll_sfc_grib2')
 
     assert isinstance(res, eccodes.ffi.CData)
     assert "grib_handle *'" in repr(res)
+
+def test_codes_new_from_samples_errors():
+    with pytest.raises(ValueError):
+        eccodes.codes_new_from_samples(b'non-existent')
+
+
+def test_codes_set():
+    message_id = eccodes.codes_new_from_samples(b'regular_ll_sfc_grib2')
+
+    eccodes.codes_set(message_id, b'endStep', 2)

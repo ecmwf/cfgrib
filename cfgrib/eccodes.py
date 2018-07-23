@@ -575,7 +575,10 @@ def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
     # type: (bytes, int) -> cffi.FFI.CData
     if product_kind != CODES_PRODUCT_GRIB:
         raise NotImplementedError("Support implemented only for GRIB.")
-    return lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+    handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+    if handle == ffi.NULL:
+        raise ValueError("sample not found: %r" % samplename)
+    return handle
 
 
 def codes_set_long(handle, key, value):
