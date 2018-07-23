@@ -48,18 +48,19 @@ you already have `virtualenv` and `Git` installed and ready to go.
 
     $ cd path_for_the_repo
     $ git clone https://github.com/YOUR_NAME/cfgrib.git
+    $ cd cfgrib
 
 3. Assuming you have virtualenv installed (If you have Python3.5 this should already be there), you can create a new environment for your local development by typing::
 
-    $ virtualenv cfgrib-env
-    $ source cfgrib-env/bin/activate
+    $ virtualenv ../cfgrib-env
+    $ source ../cfgrib-env/bin/activate
 
     This should change the shell to look something like
     (cfgrib-env) $
 
 4. Install system dependencies as described in the README.rst file then install a known-good set of python dependencies and the your local copy with::
 
-    $ pip install -r ci/requiremetns-tests.txt
+    $ pip install -r ci/requirements-tests.txt
     $ pip install -e .
 
 5. Create a branch for local development::
@@ -77,7 +78,7 @@ you already have `virtualenv` and `Git` installed and ready to go.
 
     $ tox
 
-8. If your contribution is a bug fix or new feature, you may want to add a test to the existing test suite.
+8. If your contribution is a bug fix or new feature, you should add a test to the existing test suite.
 
 9. Commit your changes and push your branch to GitHub::
 
@@ -113,7 +114,8 @@ If you are not register to the CDS portal register at:
 
 In order to automatically download and test the GRIB files install and configure the `cdsapi` package::
 
-    $ pip install cdsapi netcdf4
+    $ pip install cdsapi
+    $ pip install netcdf4
 
 The log into the CDS portal and setup the CDS API key as described in:
 
