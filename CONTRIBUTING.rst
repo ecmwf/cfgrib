@@ -47,7 +47,7 @@ you already have `virtualenv` and `Git` installed and ready to go.
 2. Clone your fork locally::
 
     $ cd path_for_the_repo
-    $ git clone git@github.com:YOUR_NAME/cfgrib.git
+    $ git clone https://github.com/YOUR_NAME/cfgrib.git
 
 3. Assuming you have virtualenv installed (If you have Python3.5 this should already be there), you can create a new environment for your local development by typing::
 
