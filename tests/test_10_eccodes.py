@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import int, float, bytes
+from builtins import bytes, float, int, str
 
 import os.path
 
@@ -42,18 +42,18 @@ def test_check_return():
         eccodes.check_return(identity)(-1)
 
 
-def test_codes_index_new_from_file():
-    res = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
+def test_codes_handle_new_from_file_errors():
+    res = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     assert isinstance(res, eccodes.ffi.CData)
-    assert "'codes_index *'" in repr(res)
+    assert "'grib_handle *'" in repr(res)
 
 
 @pytest.mark.parametrize('key, expected_value', [
     (b'numberOfDataPoints', 7320),
     (b'gridType', b'regular_ll'),
 ])
-def test_codes_handle_new_from_file(key, expected_value):
+def test_codes_get(key, expected_value):
     grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     result = eccodes.codes_get(grib, key)
@@ -61,12 +61,19 @@ def test_codes_handle_new_from_file(key, expected_value):
     assert result == expected_value
 
 
-def test_codes_handle_new_from_file_errors():
+def test_codes_get_errors():
     grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     with pytest.raises(eccodes.EcCodesError) as err:
         eccodes.codes_get(grib, b'gridType', length=1)  # too short
     assert err.value.code == eccodes.lib.GRIB_BUFFER_TOO_SMALL
+
+
+def test_codes_index_new_from_file():
+    res = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
+
+    assert isinstance(res, eccodes.ffi.CData)
+    assert "'codes_index *'" in repr(res)
 
 
 def test_codes_index_get_size():
@@ -164,3 +171,17 @@ def test_codes_keys_iterator():
     assert eccodes.codes_keys_iterator_get_name(iterator) == b'dataTime'
 
     eccodes.codes_keys_iterator_delete(iterator)
+
+
+def test_codes_get_api_version():
+    res = eccodes.codes_get_api_version()
+
+    assert isinstance(res, str)
+    assert res.count('.') == 2
+
+
+def test_codes_new_from_samples():
+    res = eccodes.codes_new_from_samples(b'regulare_ll_sfc')
+
+    assert isinstance(res, eccodes.ffi.CData)
+    assert "grib_handle *'" in repr(res)
