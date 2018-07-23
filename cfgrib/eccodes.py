@@ -609,11 +609,11 @@ def codes_set(handle, key, value):
     elif isinstance(value, bytes):
         codes_set_string(handle, key, value)
     else:
-        raise TypeError('Unsupported type %r' % type(value))
+        raise TypeError("Unsupported type %r" % type(value))
 
 
 def codes_set_double_array(handle, key, values):
-    # type: (cffi.FFI.CData, bytes, typing.List[float]) -> None
+    # type: (cffi.FFI.CData, bytes, T.List[float]) -> None
     size = len(values)
     c_values = ffi.new("double []", values)
     codes_set_double_array = check_return(lib.codes_set_double_array)
@@ -621,18 +621,18 @@ def codes_set_double_array(handle, key, values):
 
 
 def codes_set_array(handle, key, values):
-    # type: (cffi.FFI.CData, bytes, typing.List[typing.Any]) -> None
+    # type: (cffi.FFI.CData, bytes, T.List[T.Any]) -> None
     if len(values) > 0:
         if isinstance(values[0], float):
             codes_set_double_array(handle, key, values)
         else:
             raise NotImplementedError("Unsupported value type: %r" % type(values[0]))
     else:
-        raise ValueError("Cannot provide an empty list.")
+        raise ValueError("Cannot set an empty list.")
 
 
 def codes_write(handle, outfile):
-    # type: (cffi.FFI.CData, typing.BinaryIO) -> None
+    # type: (cffi.FFI.CData, T.BinaryIO) -> None
     """
     Write a coded message to a file. If the file does not exist, it is created.
 
