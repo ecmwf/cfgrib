@@ -63,13 +63,13 @@ def test_codes_handle_new_from_file_errors(tmpdir):
     empty_grib = tmpdir.join('empty.grib')
     empty_grib.ensure()
 
-    with pytest.raises(TypeError):
+    with pytest.raises(EOFError):
         eccodes.codes_handle_new_from_file(open(str(empty_grib)))
 
     garbage_grib = tmpdir.join('garbage.grib')
     garbage_grib.write('gargage')
 
-    with pytest.raises(TypeError):
+    with pytest.raises(EOFError):
         eccodes.codes_handle_new_from_file(open(str(garbage_grib)))
 
     bad_grib = tmpdir.join('bad.grib')
