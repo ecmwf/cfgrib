@@ -14,6 +14,16 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_DATA_B = TEST_DATA.encode('ASCII')
 
 
+def test_RaiseOnAttributeAccess():
+    try:
+        1 / 0
+    except ZeroDivisionError as ex:
+        res = eccodes.RaiseOnAttributeAccess(ex, 'Infinity!')
+
+    with pytest.raises(RuntimeError):
+        res.non_existent_method()
+
+
 @pytest.mark.parametrize('code, message', [
     (0, 'No error'),  # eccodes.lib.GRIB_SUCCESS
     (-43, 'End of index reached'),  # eccodes.lib.GRIB_END_OF_INDEX
@@ -42,11 +52,31 @@ def test_check_return():
         eccodes.check_return(identity)(-1)
 
 
-def test_codes_handle_new_from_file_errors():
+def test_codes_handle_new_from_file():
     res = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     assert isinstance(res, eccodes.ffi.CData)
     assert "'grib_handle *'" in repr(res)
+
+
+def test_codes_handle_new_from_file_errors(tmpdir):
+    empty_grib = tmpdir.join('empty.grib')
+    empty_grib.ensure()
+
+    with pytest.raises(TypeError):
+        eccodes.codes_handle_new_from_file(open(str(empty_grib)))
+
+    garbage_grib = tmpdir.join('garbage.grib')
+    garbage_grib.write('gargage')
+
+    with pytest.raises(TypeError):
+        eccodes.codes_handle_new_from_file(open(str(garbage_grib)))
+
+    bad_grib = tmpdir.join('bad.grib')
+    bad_grib.write('GRIB')
+
+    with pytest.raises(eccodes.EcCodesError):
+        eccodes.codes_handle_new_from_file(open(str(bad_grib)))
 
 
 @pytest.mark.parametrize('key, expected_value', [
@@ -181,7 +211,7 @@ def test_codes_get_api_version():
 
 
 def test_codes_new_from_samples():
-    res = eccodes.codes_new_from_samples(b'regulare_ll_sfc')
+    res = eccodes.codes_new_from_samples(b'regular_ll_sfc')
 
     assert isinstance(res, eccodes.ffi.CData)
     assert "grib_handle *'" in repr(res)

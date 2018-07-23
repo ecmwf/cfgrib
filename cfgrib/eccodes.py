@@ -153,7 +153,7 @@ def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
     try:
         retval = check_last(lib.codes_handle_new_from_file)(ffi.NULL, fileobj, product_kind)
         if retval == ffi.NULL:
-            return None
+            raise TypeError("Not a GRIB file: %r" % fileobj)
         else:
             return retval
     except EcCodesError as ex:
