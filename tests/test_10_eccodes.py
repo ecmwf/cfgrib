@@ -42,11 +42,11 @@ def test_check_return():
         eccodes.check_return(identity)(-1)
 
 
-def test_codes_index_new_from_file():
-    res = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
+def test_codes_handle_new_from_file_errors():
+    res = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     assert isinstance(res, eccodes.ffi.CData)
-    assert "'codes_index *'" in repr(res)
+    assert "'grib_handle *'" in repr(res)
 
 
 @pytest.mark.parametrize('key, expected_value', [
@@ -61,19 +61,19 @@ def test_codes_get(key, expected_value):
     assert result == expected_value
 
 
-def test_codes_handle_new_from_file_errors():
-    res = eccodes.codes_handle_new_from_file(open(TEST_DATA))
-
-    assert isinstance(res, eccodes.ffi.CData)
-    assert "'grib_handle *'" in repr(res)
-
-
 def test_codes_get_errors():
     grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     with pytest.raises(eccodes.EcCodesError) as err:
         eccodes.codes_get(grib, b'gridType', length=1)  # too short
     assert err.value.code == eccodes.lib.GRIB_BUFFER_TOO_SMALL
+
+
+def test_codes_index_new_from_file():
+    res = eccodes.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
+
+    assert isinstance(res, eccodes.ffi.CData)
+    assert "'codes_index *'" in repr(res)
 
 
 def test_codes_index_get_size():
