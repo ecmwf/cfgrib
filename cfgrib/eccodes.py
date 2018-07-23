@@ -578,50 +578,50 @@ def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
     return lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
 
 
-def codes_set_long(msgid, key, value):
+def codes_set_long(handle, key, value):
     # type: (cffi.FFI.CData, bytes, int) -> None
     codes_set_long = check_return(lib.codes_set_long)
-    codes_set_long(msgid, key, value)
+    codes_set_long(handle, key, value)
 
 
-def codes_set_double(msgid, key, value):
+def codes_set_double(handle, key, value):
     # type: (cffi.FFI.CData, bytes, float) -> None
     codes_set_double = check_return(lib.codes_set_double)
-    codes_set_double(msgid, key, value)
+    codes_set_double(handle, key, value)
 
 
-def codes_set_string(msgid, key, value):
+def codes_set_string(handle, key, value):
     # type: (cffi.FFI.CData, bytes, bytes) -> None
     size = ffi.new('size_t *', len(value))
     codes_set_string = check_return(lib.codes_set_string)
-    codes_set_string(msgid, key, value, size)
+    codes_set_string(handle, key, value, size)
 
 
-def codes_set(msgid, key, value):
+def codes_set(handle, key, value):
     """"""
     if isinstance(value, int):
-        codes_set_long(msgid, key, value)
+        codes_set_long(handle, key, value)
     elif isinstance(value, float):
-        codes_set_double(msgid, key, value)
+        codes_set_double(handle, key, value)
     elif isinstance(value, bytes):
-        codes_set_string(msgid, key, value)
+        codes_set_string(handle, key, value)
     else:
         raise TypeError('Unsupported type %r' % type(value))
 
 
-def codes_set_double_array(msgid, key, values):
+def codes_set_double_array(handle, key, values):
     # type: (cffi.FFI.CData, bytes, typing.List[float]) -> None
     size = len(values)
     c_values = ffi.new("double []", values)
     codes_set_double_array = check_return(lib.codes_set_double_array)
-    codes_set_double_array(msgid, key, c_values, size)
+    codes_set_double_array(handle, key, c_values, size)
 
 
-def codes_set_array(msgid, key, values):
+def codes_set_array(handle, key, values):
     # type: (cffi.FFI.CData, bytes, typing.List[typing.Any]) -> None
     if len(values) > 0:
         if isinstance(values[0], float):
-            codes_set_double_array(msgid, key, values)
+            codes_set_double_array(handle, key, values)
         else:
             raise NotImplementedError("Unsupported value type: %r" % type(values[0]))
     else:
