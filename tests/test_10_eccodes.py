@@ -229,3 +229,16 @@ def test_codes_set():
     eccodes.codes_set(message_id, b'gridType', b'regular_ll')
 
     eccodes.codes_set_array(message_id, b'values', [0.])
+
+
+def test_codes_write(tmpdir):
+    message_id = eccodes.codes_new_from_samples(b'regular_ll_sfc_grib2')
+    grib_file = tmpdir.join('test.grib')
+
+    with open(str(grib_file), 'wb') as file:
+        eccodes.codes_write(message_id, file)
+
+    assert grib_file.read_binary()[:4] == b'GRIB'
+
+    with open(str(grib_file)) as file:
+        eccodes.codes_handle_new_from_file(file)
