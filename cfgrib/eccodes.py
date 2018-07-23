@@ -162,12 +162,6 @@ def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
         raise
 
 
-def codes_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
-    if product_kind == lib.PRODUCT_GRIB:
-        return codes_handle_new_from_file(fileobj, product_kind)
-    raise Exception("Invalid product kind: %r" % product_kind)
-
-
 codes_index_delete = lib.codes_index_delete
 codes_handle_delete = lib.codes_handle_delete
 
@@ -575,3 +569,76 @@ def codes_get_api_version():
     major = ver // 100
 
     return "%d.%d.%d" % (major, minor, patch)
+
+
+def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
+    # type: (bytes, int) -> cffi.FFI.CData
+    if product_kind != CODES_PRODUCT_GRIB:
+        raise NotImplementedError("Support implemented only for GRIB.")
+    return lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+
+
+def codes_set_long(msgid, key, value):
+    # type: (cffi.FFI.CData, bytes, int) -> None
+    codes_set_long = check_return(lib.codes_set_long)
+    codes_set_long(msgid, key, value)
+
+
+def codes_set_double(msgid, key, value):
+    # type: (cffi.FFI.CData, bytes, float) -> None
+    codes_set_double = check_return(lib.codes_set_double)
+    codes_set_double(msgid, key, value)
+
+
+def codes_set_string(msgid, key, value):
+    # type: (cffi.FFI.CData, bytes, bytes) -> None
+    size = ffi.new('size_t *', len(value))
+    codes_set_string = check_return(lib.codes_set_string)
+    codes_set_string(msgid, key, value, size)
+
+
+def codes_set(msgid, key, value):
+    """"""
+    if isinstance(value, int):
+        codes_set_long(msgid, key, value)
+    elif isinstance(value, float):
+        codes_set_double(msgid, key, value)
+    elif isinstance(value, bytes):
+        codes_set_string(msgid, key, value)
+    else:
+        raise TypeError('Unsupported type %r' % type(value))
+
+
+def codes_set_double_array(msgid, key, values):
+    # type: (cffi.FFI.CData, bytes, typing.List[float]) -> None
+    size = len(values)
+    c_values = ffi.new("double []", values)
+    codes_set_double_array = check_return(lib.codes_set_double_array)
+    codes_set_double_array(msgid, key, c_values, size)
+
+
+def codes_set_array(msgid, key, values):
+    # type: (cffi.FFI.CData, bytes, typing.List[typing.Any]) -> None
+    if len(values) > 0:
+        if isinstance(values[0], float):
+            codes_set_double_array(msgid, key, values)
+        else:
+            raise NotImplementedError("Unsupported value type: %r" % type(values[0]))
+    else:
+        raise ValueError("Cannot provide an empty list.")
+
+
+def codes_write(handle, outfile):
+    # type: (cffi.FFI.CData, typing.BinaryIO) -> None
+    """
+    Write a coded message to a file. If the file does not exist, it is created.
+
+    :param str path: (optional) the path to the GRIB file;
+        defaults to the one of the open index.
+    """
+    mess = ffi.new('const void **')
+    mess_len = ffi.new('size_t*')
+    codes_get_message = check_return(lib.codes_get_message)
+    codes_get_message(handle, mess, mess_len)
+    message = ffi.buffer(mess[0], size=mess_len[0])
+    outfile.write(message)
