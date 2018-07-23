@@ -45,7 +45,7 @@ GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription', 'subCentre',
 DATA_ATTRIBUTES_KEYS = [
     'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
     'totalNumber', 'gridType', 'gridDefinitionDescription', 'numberOfPoints',
-    'stepUnits', 'stepType', 'typeOfLevel', 'hybrid_level_count', 'NV',
+    'stepUnits', 'stepType', 'typeOfLevel', 'NV',
 ]
 
 GRID_TYPE_MAP = {
@@ -200,7 +200,6 @@ COMPUTED_KEYS = {
     'forecast_period': from_grib_step,
     'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
     'air_pressure': from_grib_pl_level,
-    'hybrid_level_count': lambda m: (m['NV'] - 2) // 2
 }
 
 
