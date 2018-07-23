@@ -20,6 +20,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
+import typing as T
 
 import attr
 from xarray import Variable
