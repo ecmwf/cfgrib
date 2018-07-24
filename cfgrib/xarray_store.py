@@ -29,7 +29,8 @@ import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
-from xarray.backends.api import open_dataset as _open_dataset, _validate_dataset_names, _validate_attrs
+from xarray.backends.api import open_dataset as _open_dataset
+from xarray.backends.api import _validate_attrs, _validate_dataset_names
 from xarray.backends.common import AbstractDataStore, BackendArray
 
 import cfgrib
@@ -162,6 +163,7 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
     store = GribDataStore.frompath(path, flavour_name=flavour_name, **overrides)
     return _open_dataset(store, **kwargs)
 
+
 #
 # write support
 #
@@ -222,7 +224,6 @@ def to_grib(ecmwf_dataset, path, mode='wb', **kwargs):
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
             ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs)
-
 
 
 def cfgrib2netcdf():
