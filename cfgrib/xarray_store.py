@@ -20,16 +20,22 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
+import itertools
+import logging
 import typing as T
 
 import attr
+import xarray as xr
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
-from xarray.backends.api import open_dataset as _open_dataset
+from xarray.backends.api import open_dataset as _open_dataset, _validate_dataset_names, _validate_attrs
 from xarray.backends.common import AbstractDataStore, BackendArray
 
 import cfgrib
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class WrapGrib(BackendArray):
@@ -155,6 +161,68 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.frompath(path, flavour_name=flavour_name, **overrides)
     return _open_dataset(store, **kwargs)
+
+#
+# write support
+#
+def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
+    # type: (T.BinaryIO, str, xr.DataArray) -> None
+    from cfgrib import cfmessage
+    from cfgrib import dataset
+    from cfgrib import eccodes
+
+    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
+    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
+
+    header_coords_names = []
+
+    if grib_attributes['gridType'] == 'regular_ll':
+        geography = 'regular_ll'
+        header_coords_names += [n for n, _ in dataset.DATA_TIME_COORDINATE_MAP]
+    else:
+        raise NotImplementedError("Unsupported 'gridType': %r" % grib_attributes['gridType'])
+
+    if grib_attributes['typeOfLevel'] == 'isobaricInhPa':
+        vertical = 'pl'
+        header_coords_names += [n for n, _ in dataset.VERTICAL_COORDINATE_MAP]
+    elif grib_attributes['typeOfLevel'] in ('surface', 'meanSea'):
+        vertical = 'sfc'
+    else:
+        raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
+
+    sample_name = '%s_%s_grib2' % (geography, vertical)
+
+    for dim in header_coords_names:
+        if dim not in data_var.dims:
+            data_var = data_var.expand_dims(dim)
+    header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
+    for items in itertools.product(*header_coords_values):
+        message = cfmessage.CfMessage.fromsample(sample_name)
+        for key, value in grib_attributes.items():
+            try:
+                message[key] = value
+            except eccodes.EcCodesError as ex:
+                if ex.code != eccodes.lib.GRIB_READ_ONLY:
+                    LOGGER.exception("Can't encode key: %r" % key)
+
+        for coord_name, coord_value in zip(header_coords_names, items):
+            message[coord_name] = coord_value
+
+        select = {n: v for n, v in zip(header_coords_names, items)}
+        message['values'] = data_var.sel(**select).values.flat[:].tolist()
+
+        message.write(file)
+
+
+def to_grib(ecmwf_dataset, path, mode='wb', **kwargs):
+    # validate Dataset keys, DataArray names, and attr keys/values
+    _validate_dataset_names(ecmwf_dataset)
+    _validate_attrs(ecmwf_dataset)
+
+    with open(path, mode=mode) as file:
+        for data_var in ecmwf_dataset.data_vars.values():
+            ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs)
+
 
 
 def cfgrib2netcdf():
