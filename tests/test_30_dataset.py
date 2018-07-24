@@ -6,21 +6,12 @@ import os.path
 import pytest
 import numpy as np
 
+from cfgrib import cfmessage
 from cfgrib import messages
 from cfgrib import dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
-
-
-def test_from_grib_date_time():
-    message = {
-        'dataDate': 20160706,
-        'dataTime': 1944,
-    }
-    result = dataset.from_grib_date_time(message)
-
-    assert result == 1467834240
 
 
 def test_dict_merge():
@@ -45,7 +36,7 @@ def test_build_data_var_components_no_encode():
 
 
 def test_build_data_var_components_encode_geography():
-    stream = messages.Stream(path=TEST_DATA, message_class=dataset.CfMessage)
+    stream = messages.Stream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index = stream.index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(
         index=index, encode_geography=True,

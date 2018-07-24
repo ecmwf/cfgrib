@@ -21,8 +21,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import list, object, set, str
 
 import collections
-import datetime
-import functools
 import logging
 import pkg_resources
 import typing as T  # noqa
@@ -30,6 +28,7 @@ import typing as T  # noqa
 import attr
 import numpy as np
 
+from . import cfmessage
 from . import eccodes
 from . import messages
 
@@ -104,12 +103,6 @@ ALL_MAPS = [
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS \
            + [k for m in ALL_MAPS for k, _ in m]
 
-# taken from eccodes stepUnits.table
-GRIB_STEP_UNITS_TO_SECONDS = [
-    60, 3600, 86400, None, None, None, None, None, None, None,
-    10800, 21600, 43200, 1, 900, 1800,
-]
-
 COORD_ATTRS = {
     'forecast_reference_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
@@ -151,61 +144,6 @@ def enforce_unique_attributes(
         if values:
             attributes['GRIB_' + key] = values[0]
     return attributes
-
-
-def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
-    # type: (T.Mapping, str, str) -> int
-    """
-    Convert the date and time as encoded in a GRIB file in standard numpy-compatible
-    datetime64 string.
-
-    :param int date: the content of "dataDate" key
-    :param int time: the content of "dataTime" key
-
-    :rtype: str
-    """
-    date_key, time_key = keys
-    date = message[date_key]
-    time = message[time_key]
-    hour = time // 100
-    minute = time % 100
-    year = date // 10000
-    month = date // 100 % 100
-    day = date % 100
-    data_datetime = datetime.datetime(year, month, day, hour, minute)
-    # Python 2 compatible timestamp implementation without timezone hurdle
-    # see: https://docs.python.org/3/library/datetime.html#datetime.datetime.timestamp
-    return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
-
-
-def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
-    # type: (T.Mapping, str, str) -> int
-    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
-    return message[step_key] * to_seconds
-
-
-def from_grib_pl_level(message, level_key='topLevel'):
-    type_of_level = message['typeOfLevel']
-    if type_of_level == 'isobaricInhPa':
-        coord = message[level_key] * 100.
-    elif type_of_level == 'isobaricInPa':
-        coord = float(message[level_key])
-    else:
-        raise ValueError("Unsupported value of typeOfLevel: %r" % type_of_level)
-    return coord
-
-
-COMPUTED_KEYS = {
-    'forecast_reference_time': from_grib_date_time,
-    'forecast_period': from_grib_step,
-    'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
-    'air_pressure': from_grib_pl_level,
-}
-
-
-@attr.attrs()
-class CfMessage(messages.ComputedKeysMessage):
-    computed_keys = attr.attrib(default=COMPUTED_KEYS)
 
 
 @attr.attrs(cmp=False)
@@ -478,7 +416,7 @@ class Dataset(object):
 
     @classmethod
     def frompath(cls, path, mode='r', **kwargs):
-        return cls(stream=messages.Stream(path, mode=mode, message_class=CfMessage), **kwargs)
+        return cls(stream=messages.Stream(path, mode, message_class=cfmessage.CfMessage), **kwargs)
 
     def __attrs_post_init__(self):
         dims, vars, attrs = build_dataset_components(**self.__dict__)

@@ -216,6 +216,7 @@ def test_codes_new_from_samples():
     assert isinstance(res, eccodes.ffi.CData)
     assert "grib_handle *'" in repr(res)
 
+
 def test_codes_new_from_samples_errors():
     with pytest.raises(ValueError):
         eccodes.codes_new_from_samples(b'non-existent')
