@@ -26,7 +26,7 @@ def test_getitem_int(cache):
 
     assert da.isel(level=1).values.shape == va[:, :, 1].shape
     assert da.isel(level=1).mean() == va[:, :, 1].mean()
-    assert da.sel(level=50000).mean() == va[:, :, 1].mean()
+    assert da.sel(level=500).mean() == va[:, :, 1].mean()
 
 
 @pytest.mark.parametrize('cache', [True, False])
