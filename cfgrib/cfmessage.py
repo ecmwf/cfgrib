@@ -37,15 +37,15 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 ]
 
 COORD_ATTRS = {
-    'forecast_reference_time': {
+    'time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
     },
-    'forecast_period': {
+    'step': {
         'units': 'seconds',
         'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
     },
-    'time': {
+    'valid_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'time', 'long_name': 'time',
     },
@@ -103,7 +103,17 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     return message[step_key] * to_seconds
 
 
+def to_grib_step(message, step, step_unit=1, step_key='endStep', step_unit_key='stepUnits'):
+    # type: (T.Mapping, np.timedelta64, int, str, str) -> None
+    # step_seconds = np.timedelta64(step, 's').astype(int)
+    step_seconds = step.astype('timedelta64[s]').astype(int)
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
+    message[step_key] = step_seconds / to_seconds
+    message[step_unit_key] = step_unit
+
+
 def from_grib_pl_level(message, level_key='topLevel'):
+    # type: (T.Mapping, str) -> float
     type_of_level = message['typeOfLevel']
     if type_of_level == 'isobaricInhPa':
         coord = message[level_key] * 100.
@@ -114,10 +124,23 @@ def from_grib_pl_level(message, level_key='topLevel'):
     return coord
 
 
+def to_grib_pl_level(message, coord, type_of_level='isobaricInPa', level_key='topLevel'):
+    # type: (T.Mapping, float, str) -> None
+
+    if type_of_level == 'isobaricInhPa':
+        message[level_key] = coord / 100.
+    elif type_of_level == 'isobaricInPa':
+        message[level_key] = coord
+    else:
+        raise ValueError("Unsupported value of typeOfLevel: %r" % type_of_level)
+
+    message['typeOfLevel'] = type_of_level
+
+
 COMPUTED_KEYS = {
-    'forecast_reference_time': (from_grib_date_time, to_grib_date_time),
-    'forecast_period': (from_grib_step, None),
-    'air_pressure': (from_grib_pl_level, None),
+    'time': (from_grib_date_time, to_grib_date_time),
+    'step': (from_grib_step, to_grib_step),
+    'air_pressure': (from_grib_pl_level, to_grib_pl_level),
 }
 
 

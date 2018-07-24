@@ -67,10 +67,6 @@ FLAVOURS = {
     },
     'ecmwf': {
         'variable_map': {
-            'forecast_reference_time': 'time',
-            'forecast_period': 'step',
-            'time': 'valid_time',
-            'air_pressure': 'level',
             'topLevel': 'level',
         },
         'type_of_level_map': {
@@ -80,7 +76,9 @@ FLAVOURS = {
     'cds': {
         'variable_map': {
             'number': 'realization',
-            'forecast_period': 'leadtime',
+            'time': 'forecast_reference_time',
+            'valid_time': 'step',
+            'step': 'leadtime',
             'air_pressure': 'plev',
             'latitude': 'lat',
             'longitude': 'lon',
@@ -169,43 +167,45 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
 
 def sample_name_detection(grib_attributes):
     # type: (T.Mapping) ->  T.Tuple[str, T.List]
-    from cfgrib import dataset
-    header_coords_names = []
 
     if grib_attributes['gridType'] == 'regular_ll':
         geography = 'regular_ll'
-        header_coords_names += [n for n, _ in dataset.DATA_TIME_COORDINATE_MAP]
     else:
         raise NotImplementedError("Unsupported 'gridType': %r" % grib_attributes['gridType'])
 
     if grib_attributes['typeOfLevel'] == 'isobaricInhPa':
         vertical = 'pl'
-        header_coords_names += [n for n, _ in dataset.VERTICAL_COORDINATE_MAP]
     elif grib_attributes['typeOfLevel'] in ('surface', 'meanSea'):
         vertical = 'sfc'
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
 
     sample_name = '%s_%s_grib2' % (geography, vertical)
-    return sample_name, header_coords_names
+    return sample_name
+
 
 
 def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=None):
     # type: (T.BinaryIO, str, xr.DataArray) -> None
     from cfgrib import cfmessage
     from cfgrib import eccodes
+    from cfgrib import dataset
 
     grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
     grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
 
-    sample_name_detected, header_coords_names = sample_name_detection(grib_attributes)
     if sample_name is None:
-        sample_name = sample_name_detected
+        sample_name = sample_name_detection(grib_attributes)
 
-    for dim in header_coords_names:
-        if dim not in data_var.dims:
-            data_var = data_var.expand_dims(dim)
+    header_coords_names = []
+    for coord_name in dataset.ALL_HEADER_DIMS:
+        if coord_name in set(data_var.coords):
+            header_coords_names.append(coord_name)
+            if coord_name not in data_var.dims:
+                data_var.expand_dims(dim)
+
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
+
     for items in itertools.product(*header_coords_values):
         message = cfmessage.CfMessage.fromsample(sample_name)
         for key, value in grib_attributes.items():

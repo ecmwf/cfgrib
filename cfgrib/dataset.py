@@ -90,8 +90,8 @@ DATA_TIME_COORDINATE_MAP = [
     ('endStep', True),
 ]
 REF_TIME_COORDINATE_MAP = [
-    ('forecast_reference_time', True),
-    ('forecast_period', True),
+    ('time', True),
+    ('step', True),
 ]
 
 ALL_MAPS = [
@@ -263,14 +263,14 @@ def build_valid_time(forecast_reference_time, forecast_period):
         dims = ()
     elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
         data = forecast_reference_time + forecast_period
-        dims = ('forecast_reference_time',)
+        dims = ('time',)
     elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
         data = forecast_reference_time + forecast_period
-        dims = ('forecast_period',)
+        dims = ('step',)
     else:
         data = forecast_reference_time[:, None] + forecast_period[None, :]
-        dims = ('forecast_reference_time', 'forecast_period')
-    attrs = cfmessage.COORD_ATTRS['time']
+        dims = ('time', 'step')
+    attrs = cfmessage.COORD_ATTRS['valid_time']
     return dims, data, attrs
 
 
@@ -334,9 +334,9 @@ def build_data_var_components(
     if encode_time:
         # add the valid 'time' secondary coordinate
         dims, time_data, attrs = build_valid_time(
-            coord_vars['forecast_reference_time'].data, coord_vars['forecast_period'].data,
+            coord_vars['time'].data, coord_vars['step'].data,
         )
-        coord_vars['time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
+        coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
