@@ -23,8 +23,6 @@ Limitations:
 - rely on ecCodes for the `gridType` handling.
 
 
-
-
 Installation
 ------------
 
