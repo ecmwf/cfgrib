@@ -25,7 +25,7 @@ import logging
 import typing as T
 
 import attr
-import xarray as xr
+import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
