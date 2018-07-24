@@ -42,7 +42,7 @@ COORD_ATTRS = {
         'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
     },
     'forecast_period': {
-        'units': 'seconds',
+        'units': 'hours',
         'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
     },
     'time': {
@@ -58,7 +58,7 @@ COORD_ATTRS = {
         'standard_name': 'longitude', 'long_name': 'longitude',
     },
     'air_pressure': {
-        'units': 'Pa', 'positive': 'down',
+        'units': 'hPa', 'positive': 'down',
         'standard_name': 'air_pressure', 'long_name': 'pressure',
     },
 }
@@ -98,17 +98,17 @@ def to_grib_date_time(message, datetime, keys=('dataDate', 'dataTime')):
 
 
 def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
-    # type: (T.Mapping, str, str) -> int
+    # type: (T.Mapping, str, str) -> float
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
-    return message[step_key] * to_seconds
+    return message[step_key] * to_seconds / 3600.
 
 
 def from_grib_pl_level(message, level_key='topLevel'):
     type_of_level = message['typeOfLevel']
     if type_of_level == 'isobaricInhPa':
-        coord = message[level_key] * 100.
-    elif type_of_level == 'isobaricInPa':
         coord = float(message[level_key])
+    elif type_of_level == 'isobaricInPa':
+        coord = message[level_key] / 100.
     else:
         raise ValueError("Unsupported value of typeOfLevel: %r" % type_of_level)
     return coord
