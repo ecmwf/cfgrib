@@ -165,15 +165,11 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
 #
 # write support
 #
-def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
-    # type: (T.BinaryIO, str, xr.DataArray) -> None
-    from cfgrib import cfmessage
+
+
+def sample_name_detection(grib_attributes):
+    # type: (T.Mapping) ->  T.Tuple[str, T.List]
     from cfgrib import dataset
-    from cfgrib import eccodes
-
-    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
-    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
-
     header_coords_names = []
 
     if grib_attributes['gridType'] == 'regular_ll':
@@ -191,6 +187,20 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
 
     sample_name = '%s_%s_grib2' % (geography, vertical)
+    return sample_name, header_coords_names
+
+
+def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=None):
+    # type: (T.BinaryIO, str, xr.DataArray) -> None
+    from cfgrib import cfmessage
+    from cfgrib import eccodes
+
+    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
+    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
+
+    sample_name_detected, header_coords_names = sample_name_detection(grib_attributes)
+    if sample_name is None:
+        sample_name = sample_name_detected
 
     for dim in header_coords_names:
         if dim not in data_var.dims:
@@ -214,15 +224,14 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
         message.write(file)
 
 
-def to_grib(ecmwf_dataset, path, mode='wb', **kwargs):
+def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
     # validate Dataset keys, DataArray names, and attr keys/values
     _validate_dataset_names(ecmwf_dataset)
     _validate_attrs(ecmwf_dataset)
 
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
-            ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs)
-
+            ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=None)
 
 
 def cfgrib2netcdf():
