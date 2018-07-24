@@ -103,33 +103,6 @@ ALL_MAPS = [
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS \
            + [k for m in ALL_MAPS for k, _ in m]
 
-COORD_ATTRS = {
-    'forecast_reference_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
-    },
-    'forecast_period': {
-        'units': 'seconds',
-        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
-    },
-    'time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'time', 'long_name': 'time',
-    },
-    'latitude': {
-        'units': 'degrees_north',
-        'standard_name': 'latitude', 'long_name': 'latitude',
-    },
-    'longitude': {
-        'units': 'degrees_east',
-        'standard_name': 'longitude', 'long_name': 'longitude',
-    },
-    'air_pressure': {
-        'units': 'Pa', 'positive': 'down',
-        'standard_name': 'air_pressure', 'long_name': 'pressure',
-    },
-}
-
 
 def enforce_unique_attributes(
         index,
@@ -247,22 +220,22 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
         geo_shape = (index.getone('Nj'), index.getone('Ni'))
         geo_coord_vars['latitude'] = Variable(
             dimensions=('latitude',), data=np.array(first['distinctLatitudes']),
-            attributes=COORD_ATTRS['latitude'],
+            attributes=cfmessage.COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
             dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
-            attributes=COORD_ATTRS['longitude'],
+            attributes=cfmessage.COORD_ATTRS['longitude'],
         )
     elif encode_geography and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
         geo_coord_vars['latitude'] = Variable(
             dimensions=('y', 'x'), data=np.array(first['latitudes']).reshape(geo_shape),
-            attributes=COORD_ATTRS['latitude'],
+            attributes=cfmessage.COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
             dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
-            attributes=COORD_ATTRS['longitude'],
+            attributes=cfmessage.COORD_ATTRS['longitude'],
         )
     else:
         geo_dims = ('i',)
@@ -271,11 +244,13 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
         try:
             latitude = first['latitudes']
             geo_coord_vars['latitude'] = Variable(
-                dimensions=('i',), data=np.array(latitude), attributes=COORD_ATTRS['latitude'],
+                dimensions=('i',), data=np.array(latitude),
+                attributes=cfmessage.COORD_ATTRS['latitude'],
             )
             longitude = first['longitudes']
             geo_coord_vars['longitude'] = Variable(
-                dimensions=('i',), data=np.array(longitude), attributes=COORD_ATTRS['longitude'],
+                dimensions=('i',), data=np.array(longitude),
+                attributes=cfmessage.COORD_ATTRS['longitude'],
             )
         except KeyError:
             log.warning('No latitudes/longitudes provided by ecCodes for gridType = %r', grid_type)
@@ -295,7 +270,7 @@ def build_valid_time(forecast_reference_time, forecast_period):
     else:
         data = forecast_reference_time[:, None] + forecast_period[None, :]
         dims = ('forecast_reference_time', 'forecast_period')
-    attrs = COORD_ATTRS['time']
+    attrs = cfmessage.COORD_ATTRS['time']
     return dims, data, attrs
 
 
@@ -327,7 +302,7 @@ def build_data_var_components(
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
-        attributes = COORD_ATTRS.get(coord_key, {}).copy()
+        attributes = cfmessage.COORD_ATTRS.get(coord_key, {}).copy()
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:

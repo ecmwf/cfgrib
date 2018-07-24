@@ -21,7 +21,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import str  # noqa
 
 import datetime
-import functools
 import logging
 import typing as T  # noqa
 
@@ -36,6 +35,33 @@ GRIB_STEP_UNITS_TO_SECONDS = [
     60, 3600, 86400, None, None, None, None, None, None, None,
     10800, 21600, 43200, 1, 900, 1800,
 ]
+
+COORD_ATTRS = {
+    'forecast_reference_time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
+    },
+    'forecast_period': {
+        'units': 'seconds',
+        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
+    },
+    'time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'time', 'long_name': 'time',
+    },
+    'latitude': {
+        'units': 'degrees_north',
+        'standard_name': 'latitude', 'long_name': 'latitude',
+    },
+    'longitude': {
+        'units': 'degrees_east',
+        'standard_name': 'longitude', 'long_name': 'longitude',
+    },
+    'air_pressure': {
+        'units': 'Pa', 'positive': 'down',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+}
 
 
 def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
@@ -63,6 +89,14 @@ def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
     return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
 
 
+def to_grib_date_time(message, datetime, keys=('dataDate', 'dataTime')):
+    # type: (T.MutableMapping, np.datetime64, T.Tuple[str, str]) -> None
+    datetime_iso = str(datetime)
+    date_key, time_key = keys
+    message[date_key] = int(datetime_iso[:10].replace('-', ''))
+    message[time_key] = int(datetime_iso[11:16].replace(':', ''))
+
+
 def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     # type: (T.Mapping, str, str) -> int
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
@@ -81,9 +115,8 @@ def from_grib_pl_level(message, level_key='topLevel'):
 
 
 COMPUTED_KEYS = {
-    'forecast_reference_time': (from_grib_date_time, None),
+    'forecast_reference_time': (from_grib_date_time, to_grib_date_time),
     'forecast_period': (from_grib_step, None),
-    'time': (functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')), None),
     'air_pressure': (from_grib_pl_level, None),
 }
 
