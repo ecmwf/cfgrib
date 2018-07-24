@@ -39,9 +39,9 @@ def test_Message():
 
 def test_ComputedKeysMessage():
     computed_keys = {
-        'ref_time': lambda m: str(m['dataDate']) + str(m['dataTime']),
-        'error_key': lambda m: 1 / 0,
-        'centre': lambda m: -1,
+        'ref_time': (lambda m: str(m['dataDate']) + str(m['dataTime']), None),
+        'error_key': (lambda m: 1 / 0, None),
+        'centre': (lambda m: -1, None),
     }
     with open(TEST_DATA) as file:
         res = messages.ComputedKeysMessage.fromfile(file, computed_keys=computed_keys)

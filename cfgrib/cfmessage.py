@@ -81,10 +81,10 @@ def from_grib_pl_level(message, level_key='topLevel'):
 
 
 COMPUTED_KEYS = {
-    'forecast_reference_time': from_grib_date_time,
-    'forecast_period': from_grib_step,
-    'time': functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')),
-    'air_pressure': from_grib_pl_level,
+    'forecast_reference_time': (from_grib_date_time, None),
+    'forecast_period': (from_grib_step, None),
+    'time': (functools.partial(from_grib_date_time, keys=('validityDate', 'validityTime')), None),
+    'air_pressure': (from_grib_pl_level, None),
 }
 
 

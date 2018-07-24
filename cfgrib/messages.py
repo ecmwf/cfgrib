@@ -127,11 +127,15 @@ class Message(collections.MutableMapping):
 @attr.attrs()
 class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
-    computed_keys = attr.attrib(default={}, type=T.Mapping[str, T.Callable[[Message], T.Any]])
+    computed_keys = attr.attrib(
+        default={},
+        type=T.Mapping[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message], T.Any]]],
+    )
 
     def __getitem__(self, item):
         if item in self.computed_keys:
-            return self.computed_keys[item](self)
+            getter, _ = self.computed_keys[item]
+            return getter(self)
         else:
             return super(ComputedKeysMessage, self).__getitem__(item)
 
@@ -143,6 +147,13 @@ class ComputedKeysMessage(Message):
         for key in self.computed_keys:
             if key not in seen:
                 yield key
+
+    def __setitem__(self, item, value):
+        if item in self.computed_keys:
+            _, setter = self.computed_keys[item]
+            return setter(self, value)
+        else:
+            return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
 def make_message_schema(message, schema_keys, log=LOG):
