@@ -71,10 +71,4 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Operating System :: OS Independent',
     ],
-    entry_points={
-        'console_scripts': [
-            'cfgrib2netcdf = cfgrib.xarray_store:cfgrib2netcdf'
-        ]
-    },
-
 )
