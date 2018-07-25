@@ -291,7 +291,7 @@ def build_data_var_components(
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if encode_vertical and data_var_attrs['GRIB_typeOfLevel'] == 'isobaricInhPa':
+    if encode_vertical and data_var_attrs['GRIB_typeOfLevel'] in ('isobaricInhPa', 'isobaricInPa'):
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
