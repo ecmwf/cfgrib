@@ -227,7 +227,9 @@ def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
 
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
-            ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=None)
+            ecmwf_dataarray_to_grib(
+                file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=sample_name,
+            )
 
 
 def cfgrib2netcdf():
