@@ -22,9 +22,9 @@ def test_from_grib_date_time():
 
 def test_to_grib_date_time():
     message = {}
-    datetime = np.datetime64('2001-10-11T01:01:00', 's')
+    datetime_ns = int(np.datetime64('2001-10-11T01:01:00', 'ns'))
 
-    cfmessage.to_grib_date_time(message, datetime)
+    cfmessage.to_grib_date_time(message, datetime_ns)
 
     assert message['dataDate'] == 20011011
     assert message['dataTime'] == 101
@@ -37,24 +37,14 @@ def test_from_grib_step():
     }
     step_seconds = cfmessage.from_grib_step(message)
 
-    assert step_seconds == 60 * 60
+    assert step_seconds == 1
 
 
 def test_to_grib_step():
     message = {}
-    step = np.timedelta64(60 * 60, 's')
+    step_ns = 60 * 60 * 1e9
 
-    cfmessage.to_grib_step(message, step=step, step_unit=1)
+    cfmessage.to_grib_step(message, step_ns, step_unit=1)
 
     assert message['endStep'] == 1
     assert message['stepUnits'] == 1
-
-
-# def test_from_grib_pl_level():
-#     message = {
-#         'typeOfLevel': 'isobaricInhPa',
-#         'topLevel': 1,
-#     }
-#
-
-    from_grib_pl_level(message, level_key='topLevel')
