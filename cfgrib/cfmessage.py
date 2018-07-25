@@ -107,7 +107,7 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
 
 
 def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_key='stepUnits'):
-    # type: (T.Mapping, int, int, str, str) -> None
+    # type: (T.MutableMapping, int, int, str, str) -> None
     # step_seconds = np.timedelta64(step, 's').astype(int)
     step_s = int(step_ns) * 1e-9
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
@@ -127,17 +127,11 @@ def from_grib_pl_level(message, level_key='topLevel'):
     return coord
 
 
-def to_grib_pl_level(message, coord, type_of_level='isobaricInPa', level_key='topLevel'):
-    # type: (T.Mapping, float, str) -> None
-
-    if type_of_level == 'isobaricInhPa':
-        message[level_key] = coord / 100.
-    elif type_of_level == 'isobaricInPa':
-        message[level_key] = coord
-    else:
-        raise ValueError("Unsupported value of typeOfLevel: %r" % type_of_level)
-
-    message['typeOfLevel'] = type_of_level
+def to_grib_pl_level(message, coord, level_key='topLevel'):
+    # type: (T.MutableMapping, float, str) -> None
+    # ecCodes accepts floats in hPa and correctly encodes them to int in isobaricInPa if needed
+    message['typeOfLevel'] = 'isobaricInhPa'
+    message[level_key] = coord
 
 
 COMPUTED_KEYS = {
