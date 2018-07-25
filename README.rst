@@ -13,7 +13,8 @@ Features:
 - map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
 - add CF Conventions attributes to known coordinate and data variables,
 - read the data lazily and efficiently in terms of both memory usage and disk access,
-- provisional `xarray` GRIB driver.
+- provisional `xarray` GRIB driver,
+- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3
 
 Limitations:
 
@@ -54,7 +55,7 @@ Note that ecCodes support for the Windows operating system is experimental.
 
 You may run a simple self-check command to ensure that your system is set up correctly::
 
-    $ python -m cfgrib --selfcheck
+    $ python -m cfgrib selfcheck
     Found: ecCodes v2.7.0.
     Your system is ready.
 
@@ -79,8 +80,8 @@ You may try out the high level API in a python interpreter:
 >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
 >>> ds.attributes['GRIB_edition']
 1
->>> ds.dimensions.items()
-[('number', 10), ('time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
+>>> sorted(ds.dimensions.items())
+[('air_pressure', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
 >>> sorted(ds.variables)
 ['air_pressure', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
 >>> var = ds.variables['t']
@@ -122,7 +123,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.2/ecCodes-2.7.0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
 
 Lower level APIs
