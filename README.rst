@@ -137,8 +137,12 @@ the standard ecCodes python module.
 Contributing
 ------------
 
-Contributions are very welcome. Please see the CONTRIBUTING.rst document for the best way to help.
-If you encounter any problems, please file an issue along with a detailed description.
+The main repository is hosted on GitHub,
+testing, bug reports and contributions are highly welcomed and appreciated:
+
+https://github.com/ecmwf/cfgrib
+
+Please see the CONTRIBUTING.rst document for the best way to help.
 
 Lead developer:
 
@@ -147,9 +151,9 @@ Lead developer:
 Main contributors:
 
 - Baudouin Raoult - ECMWF
+- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 - `Iain Russell <https://github.com/iainrussell>`_ - ECMWF
 - `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
-- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 
 See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
 
