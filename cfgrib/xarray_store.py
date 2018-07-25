@@ -202,7 +202,7 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=No
         if coord_name in set(data_var.coords):
             header_coords_names.append(coord_name)
             if coord_name not in data_var.dims:
-                data_var.expand_dims(dim)
+                data_var = data_var.expand_dims(coord_name)
 
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
 
