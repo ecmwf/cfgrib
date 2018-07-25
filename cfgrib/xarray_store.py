@@ -67,13 +67,7 @@ FLAVOURS = {
         },
     },
     'ecmwf': {
-        'variable_map': {
-            'forecast_reference_time': 'time',
-            'forecast_period': 'step',
-            'time': 'valid_time',
-            'air_pressure': 'level',
-            'topLevel': 'level',
-        },
+        'variable_map': {},
         'type_of_level_map': {
             'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
         },
@@ -81,7 +75,9 @@ FLAVOURS = {
     'cds': {
         'variable_map': {
             'number': 'realization',
-            'forecast_period': 'leadtime',
+            'time': 'forecast_reference_time',
+            'valid_time': 'step',
+            'step': 'leadtime',
             'air_pressure': 'plev',
             'latitude': 'lat',
             'longitude': 'lon',
@@ -167,36 +163,44 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
 #
 # write support
 #
-def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
-    # type: (T.BinaryIO, str, xr.DataArray) -> None
-    from cfgrib import cfmessage
-    from cfgrib import dataset
-    from cfgrib import eccodes
-
-    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
-    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
-
-    header_coords_names = []
+def sample_name_detection(grib_attributes):
+    # type: (T.Mapping) -> str
 
     if grib_attributes['gridType'] == 'regular_ll':
         geography = 'regular_ll'
-        header_coords_names += [n for n, _ in dataset.DATA_TIME_COORDINATE_MAP]
     else:
         raise NotImplementedError("Unsupported 'gridType': %r" % grib_attributes['gridType'])
 
     if grib_attributes['typeOfLevel'] == 'isobaricInhPa':
         vertical = 'pl'
-        header_coords_names += [n for n, _ in dataset.VERTICAL_COORDINATE_MAP]
     elif grib_attributes['typeOfLevel'] in ('surface', 'meanSea'):
         vertical = 'sfc'
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
 
     sample_name = '%s_%s_grib2' % (geography, vertical)
+    return sample_name
 
-    for dim in header_coords_names:
-        if dim not in data_var.dims:
-            data_var = data_var.expand_dims(dim)
+
+def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=None):
+    # type: (T.BinaryIO, xr.DataArray, T.Dict[str, T.Any], str) -> None
+    from cfgrib import cfmessage
+    from cfgrib import eccodes
+    from cfgrib import dataset
+
+    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
+    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
+
+    if sample_name is None:
+        sample_name = sample_name_detection(grib_attributes)
+
+    header_coords_names = []
+    for coord_name in dataset.ALL_HEADER_DIMS:
+        if coord_name in set(data_var.coords):
+            header_coords_names.append(coord_name)
+            if coord_name not in data_var.dims:
+                data_var = data_var.expand_dims(coord_name)
+
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
     for items in itertools.product(*header_coords_values):
         message = cfmessage.CfMessage.fromsample(sample_name)
@@ -216,14 +220,16 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}):
         message.write(file)
 
 
-def to_grib(ecmwf_dataset, path, mode='wb', **kwargs):
+def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
     # validate Dataset keys, DataArray names, and attr keys/values
     _validate_dataset_names(ecmwf_dataset)
     _validate_attrs(ecmwf_dataset)
 
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
-            ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs)
+            ecmwf_dataarray_to_grib(
+                file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=sample_name,
+            )
 
 
 def cfgrib2netcdf():

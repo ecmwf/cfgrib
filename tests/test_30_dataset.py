@@ -56,7 +56,7 @@ def test_Dataset():
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
-        ('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+        ('number', 'time', 'air_pressure', 'latitude', 'longitude')
     assert len(res.variables) == 9
 
 
@@ -74,7 +74,7 @@ def test_Dataset_encode_time():
     res = dataset.Dataset.frompath(TEST_DATA, encode_vertical=False, encode_geography=False)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
-    assert tuple(res.dimensions.keys()) == ('number', 'forecast_reference_time', 'topLevel', 'i')
+    assert tuple(res.dimensions.keys()) == ('number', 'time', 'topLevel', 'i')
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy

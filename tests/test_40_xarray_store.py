@@ -38,7 +38,7 @@ def test_open_dataset():
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
     assert var.dims == \
-        ('number', 'time', 'level', 'latitude', 'longitude')
+        ('number', 'time', 'air_pressure', 'latitude', 'longitude')
 
     assert var.mean() > 0.
 
@@ -49,7 +49,7 @@ def test_open_dataset_encode_time():
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'forecast_reference_time', 'topLevel', 'i')
+    assert res['t'].dims == ('number', 'time', 'topLevel', 'i')
 
     assert res['t'].mean() > 0.
 
@@ -84,7 +84,7 @@ def test_open_dataset_eccodes():
     var = res['t']
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'time', 'level', 'latitude', 'longitude')
+    assert var.dims == ('number', 'time', 'air_pressure', 'latitude', 'longitude')
 
     assert var.mean() > 0.
 

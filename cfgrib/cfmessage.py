@@ -37,15 +37,15 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 ]
 
 COORD_ATTRS = {
-    'forecast_reference_time': {
+    'time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
     },
-    'forecast_period': {
+    'step': {
         'units': 'hours',
         'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
     },
-    'time': {
+    'valid_time': {
         'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'time', 'long_name': 'time',
     },
@@ -89,9 +89,12 @@ def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
     return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
 
 
-def to_grib_date_time(message, datetime, keys=('dataDate', 'dataTime')):
-    # type: (T.MutableMapping, np.datetime64, T.Tuple[str, str]) -> None
-    datetime_iso = str(datetime)
+def to_grib_date_time(message, data_datetime_ns, keys=('dataDate', 'dataTime')):
+    # type: (T.MutableMapping, int, T.Tuple[str, str]) -> None
+    # np.datetime64(d, 'ns')- np.timedelta64(np.datetime64(d, 'ns').tolist(), 'ns')
+    data_datetime_s = int(data_datetime_ns) * 1e-9
+    data_datetime = datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=data_datetime_s)
+    datetime_iso = str(data_datetime)
     date_key, time_key = keys
     message[date_key] = int(datetime_iso[:10].replace('-', ''))
     message[time_key] = int(datetime_iso[11:16].replace(':', ''))
@@ -103,7 +106,17 @@ def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     return message[step_key] * to_seconds / 3600.
 
 
+def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_key='stepUnits'):
+    # type: (T.MutableMapping, int, int, str, str) -> None
+    # step_seconds = np.timedelta64(step, 's').astype(int)
+    step_s = int(step_ns) * 1e-9
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
+    message[step_key] = step_s / to_seconds
+    message[step_unit_key] = step_unit
+
+
 def from_grib_pl_level(message, level_key='topLevel'):
+    # type: (T.Mapping, str) -> float
     type_of_level = message['typeOfLevel']
     if type_of_level == 'isobaricInhPa':
         coord = float(message[level_key])
@@ -114,10 +127,17 @@ def from_grib_pl_level(message, level_key='topLevel'):
     return coord
 
 
+def to_grib_pl_level(message, coord, level_key='topLevel'):
+    # type: (T.MutableMapping, float, str) -> None
+    # ecCodes accepts floats in hPa and correctly encodes them to int in isobaricInPa if needed
+    message['typeOfLevel'] = 'isobaricInhPa'
+    message[level_key] = coord
+
+
 COMPUTED_KEYS = {
-    'forecast_reference_time': (from_grib_date_time, to_grib_date_time),
-    'forecast_period': (from_grib_step, None),
-    'air_pressure': (from_grib_pl_level, None),
+    'time': (from_grib_date_time, to_grib_date_time),
+    'step': (from_grib_step, to_grib_step),
+    'air_pressure': (from_grib_pl_level, to_grib_pl_level),
 }
 
 
