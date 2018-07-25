@@ -10,11 +10,11 @@ ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
 Features:
 
-- map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
-- add CF Conventions attributes to known coordinate and data variables,
-- read the data lazily and efficiently in terms of both memory usage and disk access,
 - provisional `xarray` GRIB driver,
-- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3.
+- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
+- read the data lazily and efficiently in terms of both memory usage and disk access,
+- map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
+- add CF Conventions attributes to known coordinate and data variables.
 
 Limitations:
 
