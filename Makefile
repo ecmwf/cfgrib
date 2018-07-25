@@ -88,7 +88,7 @@ update-req:
 test: testclean
 	$(RUN) python setup.py test --addopts "-v --flakes --cov=$(MODULE) --cov-report=html --cache-clear"
 
-qc:
+qc: testclean
 	$(RUN) python setup.py test --addopts "-v --pep8 --mccabe"
 
 doc:
