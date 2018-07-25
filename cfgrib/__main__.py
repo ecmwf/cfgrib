@@ -22,15 +22,15 @@ import argparse
 from . import eccodes
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--selfcheck', default=False, action='store_true')
-    args = parser.parse_args()
-    if args.selfcheck:
+    parser.add_argument('command')
+    args = parser.parse_args(args=argv)
+    if args.command == 'selfcheck':
         print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
         print("Your system is ready.")
     else:
-        raise RuntimeError("Command not recognised. See usage with --help.")
+        raise RuntimeError("Command not recognised %r. See usage with --help." % args.command)
 
 
 if __name__ == '__main__':
