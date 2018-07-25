@@ -80,12 +80,12 @@ You may try out the high level API in a python interpreter:
 >>> ds.attributes['GRIB_edition']
 1
 >>> ds.dimensions.items()
-[('number', 10), ('forecast_reference_time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
+[('number', 10), ('time', 4), ('air_pressure', 2), ('latitude', 61), ('longitude', 120)]
 >>> sorted(ds.variables)
-['air_pressure', 'forecast_period', 'forecast_reference_time', 'latitude', 'longitude', 'number', 't', 'time', 'z']
+['air_pressure', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
 >>> var = ds.variables['t']
 >>> var.dimensions
-('number', 'forecast_reference_time', 'air_pressure', 'latitude', 'longitude')
+('number', 'time', 'air_pressure', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
 
@@ -105,25 +105,24 @@ In a Python interpreter try:
 >>> ds = xarray_store.open_dataset('era5-levels-members.grib')
 >>> ds
 <xarray.Dataset>
-Dimensions:     (latitude: 61, level: 2, longitude: 120, number: 10, time: 4)
+Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
-  * number      (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time        (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
-    step        timedelta64[ns] ...
-  * level       (level) float64 8.5e+04 5e+04
-  * latitude    (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
-  * longitude   (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 24.0 ...
-    valid_time  (time) datetime64[ns] ...
+  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+    step          timedelta64[ns] ...
+  * air_pressure  (air_pressure) float64 850.0 500.0
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+    valid_time    (time) datetime64[ns] ...
 Data variables:
-    z           (number, time, level, latitude, longitude) float32 ...
-    t           (number, time, level, latitude, longitude) float32 ...
+    z             (number, time, air_pressure, latitude, longitude) float32 ...
+    t             (number, time, air_pressure, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            1
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    GRIB_table2Version:      128
-    history:                 GRIB to CDM+CF via cfgrib-0.8.0/ecCodes-2.7.0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.2/ecCodes-2.7.0
 
 
 Lower level APIs
