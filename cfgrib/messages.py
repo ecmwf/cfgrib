@@ -227,8 +227,8 @@ class Index(collections.Mapping):
             raise ValueError("not one value for %r: %r" % (item, len(values)))
         return values[0]
 
-    def subindex(self, dict_query={}, **query):
-        query.update(dict_query)
+    def subindex(self, filter_by_keys={}, **query):
+        query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = collections.OrderedDict()
         for header_values in self.offsets:

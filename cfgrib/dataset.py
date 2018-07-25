@@ -357,8 +357,9 @@ def dict_merge(master, update):
 def build_dataset_components(
         stream,
         encode_parameter=False, encode_time=False, encode_vertical=False, encode_geography=False,
+        filter_by_keys={},
 ):
-    index = stream.index(ALL_KEYS)
+    index = stream.index(ALL_KEYS).subindex(filter_by_keys)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
@@ -387,6 +388,7 @@ class Dataset(object):
     encode_time = attr.attrib(default=True)
     encode_vertical = attr.attrib(default=True)
     encode_geography = attr.attrib(default=True)
+    filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
     def frompath(cls, path, mode='r', **kwargs):

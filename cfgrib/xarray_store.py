@@ -151,12 +151,15 @@ class GribDataStore(AbstractDataStore):
         return encoding
 
 
-def open_dataset(path, flavour_name='ecmwf', **kwargs):
-    overrides = {}
+def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, **kwargs):
+    overrides = {
+        'flavour_name': flavour_name,
+        'filter_by_keys': filter_by_keys,
+    }
     for k in list(kwargs):  # copy to allow the .pop()
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
-    store = GribDataStore.frompath(path, flavour_name=flavour_name, **overrides)
+    store = GribDataStore.frompath(path, **overrides)
     return _open_dataset(store, **kwargs)
 
 
