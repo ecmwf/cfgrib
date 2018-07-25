@@ -67,9 +67,7 @@ FLAVOURS = {
         },
     },
     'ecmwf': {
-        'variable_map': {
-            'topLevel': 'level',
-        },
+        'variable_map': {},
         'type_of_level_map': {
             'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
         },
