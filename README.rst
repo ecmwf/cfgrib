@@ -137,8 +137,12 @@ the standard ecCodes python module.
 Contributing
 ------------
 
-Contributions are very welcome. Please see the CONTRIBUTING.rst document for the best way to help.
-If you encounter any problems, please file an issue along with a detailed description.
+The main repository is hosted on GitHub,
+testing, bug reports and contributions are highly welcomed and appreciated:
+
+https://github.com/ecmwf/cfgrib
+
+Please see the CONTRIBUTING.rst document for the best way to help.
 
 Lead developer:
 
