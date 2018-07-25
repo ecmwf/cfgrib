@@ -14,11 +14,11 @@ Features:
 - add CF Conventions attributes to known coordinate and data variables,
 - read the data lazily and efficiently in terms of both memory usage and disk access,
 - provisional `xarray` GRIB driver,
-- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3
+- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3.
 
 Limitations:
 
-- development stage: **Alpha**
+- development stage: **Alpha**,
 - no write support (yet),
 - rely on ecCodes for the CF attributes of the data variables,
 - rely on ecCodes for the `gridType` handling.
