@@ -152,9 +152,9 @@ Lead developer:
 Main contributors:
 
 - Baudouin Raoult - ECMWF
+- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 - `Iain Russell <https://github.com/iainrussell>`_ - ECMWF
 - `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
-- `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 
 See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
 
