@@ -10,13 +10,17 @@ ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
 Features:
 
-- map a GRIB file to a set of N-dimensional variables following the NetCDF Common Data Model,
-- map CF Conventions attributes coordinate and data variables,
-- access data variable values from disk efficiently,
-- provisional `xarray` GRIB driver,
-- no write support yet.
+- map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
+- add CF Conventions attributes to known coordinate and data variables,
+- read the data lazily and efficiently in terms of both memory usage and disk access,
+- provisional `xarray` GRIB driver.
 
-.. highlight: console
+Limitations:
+
+- development stage: **Alpha**
+- no write support (yet),
+- rely on ecCodes for the CF attributes of the data variables,
+- rely on ecCodes for the `gridType` handling.
 
 
 Installation
