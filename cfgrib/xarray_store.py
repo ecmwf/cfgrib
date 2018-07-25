@@ -165,10 +165,8 @@ def open_dataset(path, flavour_name='ecmwf', **kwargs):
 #
 # write support
 #
-
-
 def sample_name_detection(grib_attributes):
-    # type: (T.Mapping) ->  T.Tuple[str, T.List]
+    # type: (T.Mapping) -> str
 
     if grib_attributes['gridType'] == 'regular_ll':
         geography = 'regular_ll'
@@ -186,9 +184,8 @@ def sample_name_detection(grib_attributes):
     return sample_name
 
 
-
 def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=None):
-    # type: (T.BinaryIO, str, xr.DataArray) -> None
+    # type: (T.BinaryIO, xr.DataArray, T.Dict[str, T.Any], str) -> None
     from cfgrib import cfmessage
     from cfgrib import eccodes
     from cfgrib import dataset
@@ -207,7 +204,6 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=No
                 data_var = data_var.expand_dims(coord_name)
 
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
-
     for items in itertools.product(*header_coords_values):
         message = cfmessage.CfMessage.fromsample(sample_name)
         for key, value in grib_attributes.items():
@@ -234,6 +230,7 @@ def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
             ecmwf_dataarray_to_grib(file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=None)
+
 
 def cfgrib2netcdf():
     import argparse
