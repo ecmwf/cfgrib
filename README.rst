@@ -10,7 +10,7 @@ Low level access and decoding is performed via the
 
 Features:
 
-- provisional GRIB driver for `xarray`,
+- provisional GRIB driver for *xarray*,
 - support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
 - read the data lazily and efficiently in terms of both memory usage and disk access,
 - map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
@@ -22,8 +22,8 @@ Limitations:
 - no write support (yet),
 - no multiple GRIB files support (yet),
 - incomplete documentation (yet),
-- rely on `ecCodes` for the CF attributes of the data variables,
-- rely on `ecCodes` for the ``gridType`` handling.
+- rely on *ecCodes* for the CF attributes of the data variables,
+- rely on *ecCodes* for the ``gridType`` handling.
 
 
 Installation
@@ -37,7 +37,7 @@ The package is installed from PyPI with::
 System dependencies
 ~~~~~~~~~~~~~~~~~~~
 
-The python module depends on the ECMWF `ecCodes` library
+The python module depends on the ECMWF *ecCodes* library
 that must be installed on the system and accessible as a shared library.
 Some Linux distributions ship a binary version that may be installed with the standard package manager.
 On Ubuntu 18.04 use the command::
@@ -52,7 +52,7 @@ As an alternative you may install the official source distribution
 by following the instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
-Note that `ecCodes` support for the Windows operating system is experimental.
+Note that *ecCodes* support for the Windows operating system is experimental.
 
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
@@ -75,7 +75,7 @@ Dataset / Variable API
 
 You may try out the high level API in a python interpreter:
 
-.. highlight: python
+.. code-block: python
 
 >>> import cfgrib
 >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
@@ -92,7 +92,7 @@ You may try out the high level API in a python interpreter:
 262.92133
 
 
-Provisional `xarray` GRIB driver
+Provisional *xarray* GRIB driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have xarray installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
@@ -131,8 +131,8 @@ Lower level APIs
 ~~~~~~~~~~~~~~~~
 
 Lower level APIs are not stable and should not be considered public yet.
-In particular the internal Python 3 `ecCodes` bindings are not compatible with
-the standard `ecCodes` python module.
+In particular the internal Python 3 *ecCodes* bindings are not compatible with
+the standard *ecCodes* python module.
 
 
 Advanced usage
