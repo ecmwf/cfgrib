@@ -139,12 +139,14 @@ the standard *ecCodes* python module.
 Advanced usage
 --------------
 
-``cfgrib.Dataset`` can open a GRIB file only if it can represent all the messages
-with the same ``shortName`` as a single ``cfgrib.Variable`` hypercube,
-so it cannot open a file containing two hypercubes of the same variable,
-e.g. variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s.
-Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate
+``cfgrib.Dataset`` can open a GRIB file only if all the messages
+with the same ``shortName`` can be respresented as as a single ``cfgrib.Variable`` hypercube.
+For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
+as this would result in multiple hypercubes for variable ``t``.
+Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
 the values of the coordinate must match exactly.
+For example, if variables ``t`` and ``z`` share the same step coordinate,
+they must both have exactly the same set of steps.
 
 You can handle complex GRIB files containing heterogeneous messages by using
 the ``filter_by_keys`` keyword to select which GRIB messages belong to a
