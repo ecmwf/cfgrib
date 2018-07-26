@@ -19,8 +19,9 @@ Features:
 Limitations:
 
 - development stage: **Alpha**,
+- limited support for multi-variable GRIB files (yet),
 - no write support (yet),
-- no multiple GRIB files support (yet),
+- no support for opening multiple GRIB files (yet),
 - incomplete documentation (yet),
 - rely on *ecCodes* for the CF attributes of the data variables,
 - rely on *ecCodes* for the ``gridType`` handling.
