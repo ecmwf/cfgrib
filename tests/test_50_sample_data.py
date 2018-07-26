@@ -13,7 +13,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
     pytest.mark.xfail('hpa_and_pa'),
     'fields_with_missing_values',
     'lambert_grid',
-    pytest.mark.xfail('reduced_gg'),
+    'reduced_gg',
     'regular_gg_sfc',
     'regular_gg_pl',
     'regular_gg_ml',
