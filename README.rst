@@ -12,6 +12,8 @@ Features:
 
 - provisional GRIB driver for *xarray*,
 - support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
+- only system dependency is the ecCodes C-library (not the Python2-only module),
+- no install time build (binds with *CFFI* ABI mode),
 - read the data lazily and efficiently in terms of both memory usage and disk access,
 - map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
 - add CF Conventions attributes to known coordinate and data variables.
