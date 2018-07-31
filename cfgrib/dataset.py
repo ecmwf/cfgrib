@@ -113,7 +113,7 @@ def enforce_unique_attributes(
         values = index[key]
         if len(values) > 1:
             raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
-        if values:
+        if values and values[0] not in ('undef', 'unknown'):
             attributes['GRIB_' + key] = values[0]
     return attributes
 
@@ -282,9 +282,10 @@ def build_data_var_components(
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
     if encode_parameter:
-        data_var_attrs['standard_name'] = data_var_attrs.get('GRIB_cfName', 'undef')
-        data_var_attrs['long_name'] = data_var_attrs.get('GRIB_name', 'undef')
-        data_var_attrs['units'] = data_var_attrs.get('GRIB_units', 'undef')
+        if data_var_attrs.get('GRIB_cfName'):
+            data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
+        data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
+        data_var_attrs['units'] = data_var_attrs['GRIB_units']
 
     coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
@@ -368,7 +369,7 @@ def build_dataset_components(
         dims, data_var, coord_vars = build_data_var_components(
             var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
         )
-        if encode_parameter and var_name != 'undef':
+        if encode_parameter and var_name not in ('undef', 'unknown'):
             short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
