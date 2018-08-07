@@ -6,12 +6,14 @@ The high level API is designed to support a GRIB backend for `xarray <http://xar
 and it is inspired by `NetCDF-python <http://unidata.github.io/netcdf4-python/>`_
 and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
-ECMWF `ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
+`ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
 Features:
 
-- provisional `xarray` GRIB driver,
+- provisional GRIB driver for *xarray*,
 - support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
+- only system dependency is the ecCodes C-library (not the Python2-only module),
+- no install time build (binds with *CFFI* ABI mode),
 - read the data lazily and efficiently in terms of both memory usage and disk access,
 - map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
 - add CF Conventions attributes to known coordinate and data variables.
@@ -19,9 +21,12 @@ Features:
 Limitations:
 
 - development stage: **Alpha**,
+- limited support for multi-variable GRIB files (yet),
 - no write support (yet),
-- rely on ecCodes for the CF attributes of the data variables,
-- rely on ecCodes for the `gridType` handling.
+- no support for opening multiple GRIB files (yet),
+- incomplete documentation (yet),
+- rely on *ecCodes* for the CF attributes of the data variables,
+- rely on *ecCodes* for the ``gridType`` handling.
 
 
 Installation
@@ -35,10 +40,9 @@ The package is installed from PyPI with::
 System dependencies
 ~~~~~~~~~~~~~~~~~~~
 
-The python module depends on the ECMWF ecCodes library
+The python module depends on the ECMWF *ecCodes* library
 that must be installed on the system and accessible as a shared library.
-Some Linux distributions ship a binary version of ecCodes
-that may be installed with the standard package manager.
+Some Linux distributions ship a binary version that may be installed with the standard package manager.
 On Ubuntu 18.04 use the command::
 
     $ sudo apt-get install libeccodes0
@@ -48,12 +52,12 @@ On a MacOS with HomeBrew use::
     $ brew install eccodes
 
 As an alternative you may install the official source distribution
-by following the ecCodes instructions at
+by following the instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
-Note that ecCodes support for the Windows operating system is experimental.
+Note that *ecCodes* support for the Windows operating system is experimental.
 
-You may run a simple self-check command to ensure that your system is set up correctly::
+You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
     Found: ecCodes v2.7.0.
@@ -74,7 +78,7 @@ Dataset / Variable API
 
 You may try out the high level API in a python interpreter:
 
-.. highlight: python
+.. code-block: python
 
 >>> import cfgrib
 >>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
@@ -91,10 +95,10 @@ You may try out the high level API in a python interpreter:
 262.92133
 
 
-Provisional `xarray` GRIB driver
+Provisional *xarray* GRIB driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have xarray installed `cfgrib` can open a GRIB file as a `xarray.Dataset`::
+If you have xarray installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
 
     $ pip install xarray
 
@@ -130,8 +134,94 @@ Lower level APIs
 ~~~~~~~~~~~~~~~~
 
 Lower level APIs are not stable and should not be considered public yet.
-In particular the internal Python 3 ecCodes bindings are not compatible with
-the standard ecCodes python module.
+In particular the internal Python 3 *ecCodes* bindings are not compatible with
+the standard *ecCodes* python module.
+
+
+Advanced usage
+--------------
+
+``cfgrib.Dataset`` can open a GRIB file only if all the messages
+with the same ``shortName`` can be respresented as as a single ``cfgrib.Variable`` hypercube.
+For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
+as this would result in multiple hypercubes for variable ``t``.
+Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
+the values of the coordinate must match exactly.
+For example, if variables ``t`` and ``z`` share the same step coordinate,
+they must both have exactly the same set of steps.
+
+You can handle complex GRIB files containing heterogeneous messages by using
+the ``filter_by_keys`` keyword to select which GRIB messages belong to a
+well formed set of hypercubes.
+
+For example to open
+`US National Weather Service complex GRIB2 files <http://ftpprd.ncep.noaa.gov/data/nccf/com/nam/prod/>`_
+you can use:
+
+.. code-block: python
+
+>>> from cfgrib.xarray_store import open_dataset
+>>> open_dataset('nam.t00z.awip1200.tm00.grib2',
+...              filter_by_keys={'typeOfLevel': 'surface', 'stepType': 'instant'})
+<xarray.Dataset>
+Dimensions:     (x: 614, y: 428)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    surface     int64 ...
+    latitude    (y, x) float64 ...
+    longitude   (y, x) float64 ...
+    valid_time  datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    vis         (y, x) float32 ...
+    gust        (y, x) float32 ...
+    hindex      (y, x) float32 ...
+    sp          (y, x) float32 ...
+    orog        (y, x) float32 ...
+    t           (y, x) float32 ...
+    unknown     (y, x) float32 ...
+    sdwe        (y, x) float32 ...
+    sde         (y, x) float32 ...
+    prate       (y, x) float32 ...
+    sr          (y, x) float32 ...
+    veg         (y, x) float32 ...
+    slt         (y, x) float32 ...
+    lsm         (y, x) float32 ...
+    ci          (y, x) float32 ...
+    al          (y, x) float32 ...
+    sst         (y, x) float32 ...
+    shtfl       (y, x) float32 ...
+    lhtfl       (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+>>> open_dataset('nam.t00z.awip1200.tm00.grib2',
+...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'topLevel': 2})
+<xarray.Dataset>
+Dimensions:            (x: 614, y: 428)
+Coordinates:
+    time               datetime64[ns] ...
+    step               timedelta64[ns] ...
+    heightAboveGround  int64 ...
+    latitude           (y, x) float64 ...
+    longitude          (y, x) float64 ...
+    valid_time         datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    t2m                (y, x) float32 ...
+    q                  (y, x) float32 ...
+    d2m                (y, x) float32 ...
+    r2                 (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
 
 Contributing

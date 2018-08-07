@@ -251,6 +251,7 @@ class Stream(collections.Iterable):
     path = attr.attrib(type=str)
     mode = attr.attrib(default='r', type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
+    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
@@ -260,6 +261,11 @@ class Stream(collections.Iterable):
                     yield self.message_class.fromfile(file=file)
                 except EOFError:
                     break
+                except Exception:
+                    if self.errors == 'ignore':
+                        logging.exception("skipping corrupted Message")
+                    else:
+                        raise
 
     def first(self):
         # type: () -> Message

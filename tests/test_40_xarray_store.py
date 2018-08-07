@@ -3,12 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os.path
 
+import pytest
 import xarray as xr
 
+from cfgrib import eccodes
 from cfgrib import xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
+TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 
 def test_GribDataStore():
@@ -41,6 +44,16 @@ def test_open_dataset():
         ('number', 'time', 'air_pressure', 'latitude', 'longitude')
 
     assert var.mean() > 0.
+
+
+def test_open_dataset_corrupted():
+    res = xarray_store.open_dataset(TEST_CORRUPTED)
+
+    assert res.attrs['GRIB_edition'] == 1
+    assert len(res.data_vars) == 1
+
+    with pytest.raises(eccodes.EcCodesError):
+        xarray_store.open_dataset(TEST_CORRUPTED, errors='strict')
 
 
 def test_open_dataset_encode_time():

@@ -70,7 +70,7 @@ GRID_TYPE_MAP = {
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfSouthernPoleInDegrees',
         'DyInMetres', 'DxInMetres', 'Latin2InDegrees', 'Latin1InDegrees', 'Ny', 'Nx',
     ],
-    'reduced_gg': ['N',  'pl'],
+    'reduced_gg': ['N'],  # FIXME: we don't read 'pl' because messages.Index doesn't support lists
     'sh': ['M', 'K', 'J'],
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
@@ -113,7 +113,7 @@ def enforce_unique_attributes(
         values = index[key]
         if len(values) > 1:
             raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
-        if values:
+        if values and values[0] not in ('undef', 'unknown'):
             attributes['GRIB_' + key] = values[0]
     return attributes
 
@@ -290,9 +290,10 @@ def build_data_var_components(
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
     if encode_parameter:
-        data_var_attrs['standard_name'] = data_var_attrs.get('GRIB_cfName', 'undef')
-        data_var_attrs['long_name'] = data_var_attrs.get('GRIB_name', 'undef')
-        data_var_attrs['units'] = data_var_attrs.get('GRIB_units', 'undef')
+        if data_var_attrs.get('GRIB_cfName'):
+            data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
+        data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
+        data_var_attrs['units'] = data_var_attrs['GRIB_units']
 
     coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
@@ -376,7 +377,7 @@ def build_dataset_components(
         dims, data_var, coord_vars = build_data_var_components(
             var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
         )
-        if encode_parameter and var_name != 'undef':
+        if encode_parameter and var_name not in ('undef', 'unknown'):
             short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -399,8 +400,9 @@ class Dataset(object):
     filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
-    def frompath(cls, path, mode='r', **kwargs):
-        return cls(stream=messages.Stream(path, mode, message_class=cfmessage.CfMessage), **kwargs)
+    def frompath(cls, path, mode='r', errors='ignore', **kwargs):
+        stream = messages.Stream(path, mode, message_class=cfmessage.CfMessage, errors=errors)
+        return cls(stream=stream, **kwargs)
 
     def __attrs_post_init__(self):
         dims, vars, attrs = build_dataset_components(**self.__dict__)
