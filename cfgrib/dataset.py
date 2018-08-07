@@ -257,6 +257,14 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
 
 
 def build_valid_time(forecast_reference_time, forecast_period):
+    # Note that this function is used in build_data_var_components and it takes in input
+    # the output of cfmessage.from_grib_date_time and cfmessage.from_grib_forecast_period. Therefore we assumes that
+    # the input reference time is in seconds
+    # the forecast_period is in hours
+    # according to the output data time units of from_grib_date_time and from_grib_forecast_period.
+
+    # hours to seconds
+    forecast_period = forecast_period * 3600
     if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
         data = forecast_reference_time + forecast_period
         dims = ()
