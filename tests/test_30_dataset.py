@@ -110,3 +110,39 @@ def test_Dataset_reguler_gg_surface():
 
     assert res.dimensions == {'latitude': 96, 'longitude': 192}
     assert np.allclose(res.variables['latitude'].data[:2], [88.57216851, 86.72253095])
+
+
+def test_build_valid_time():
+    forecast_reference_time = np.array(0)
+    forecast_period = np.array(0)
+
+    dims, data, attrs = dataset.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ()
+    assert data.shape == ()
+
+    forecast_reference_time = np.array([0, 31536000])
+    forecast_period = np.array(0)
+
+    dims, data, attrs = dataset.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('time',)
+    assert data.shape == forecast_reference_time.shape + forecast_period.shape
+
+    forecast_reference_time = np.array(0)
+    forecast_period = np.array([0, 12, 24, 36])
+
+    dims, data, attrs = dataset.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('step',)
+    assert data.shape == (4,)
+    assert np.allclose((data - data[..., :1]) / 3600, forecast_period)
+
+    forecast_reference_time = np.array([0, 31536000])
+    forecast_period = np.array([0, 12, 24, 36])
+
+    dims, data, attrs = dataset.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('time', 'step')
+    assert data.shape == (2, 4)
+    assert np.allclose((data - data[..., :1]) / 3600, forecast_period)
