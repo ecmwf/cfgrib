@@ -149,7 +149,7 @@ with the same ``shortName`` can be represented as a single ``cfgrib.Variable`` h
 For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
 as this would result in multiple hypercubes for variable ``t``.
 Opening a non-conformant GRIB file will fail with a ``ValueError: multiple values for unique attribute...``
-error message, see`#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
+error message, see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
 Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
 the values of the coordinate must match exactly.
 For example, if variables ``t`` and ``z`` share the same step coordinate,
