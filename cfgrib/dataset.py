@@ -316,9 +316,10 @@ def build_data_var_components(
 
     if encode_time:
         # add the valid 'time' secondary coordinate
-        dims, time_data, attrs = cfmessage.build_valid_time(
+        dims, time_data = cfmessage.build_valid_time(
             coord_vars['time'].data, coord_vars['step'].data,
         )
+        attrs = cfmessage.COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())

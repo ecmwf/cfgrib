@@ -25,6 +25,7 @@ import logging
 import typing as T  # noqa
 
 import attr
+import numpy as np  # noqa
 
 from . import messages
 
@@ -69,7 +70,7 @@ DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH):
     # type: (T.Mapping, str, str, datetime.datetime) -> int
     """
-    Extract the number of seconds since the ``epoch`` from the values of the ``message`` keys,
+    Return the number of seconds since the ``epoch`` from the values of the ``message`` keys,
     using datetime.total_seconds().
 
     :param message: the target GRIB message
@@ -91,38 +92,12 @@ def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch
 
 
 def to_grib_date_time(message, time_ns, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH):
-    # type: (T.MutableMapping, int, T.Tuple[str, str]) -> None
+    # type: (T.MutableMapping, np.datetime64, str, str, datetime.datetime) -> None
     time_s = int(time_ns) * 1e-9
     time = epoch + datetime.timedelta(seconds=time_s)
     datetime_iso = str(time)
     message[date_key] = int(datetime_iso[:10].replace('-', ''))
     message[time_key] = int(datetime_iso[11:16].replace(':', ''))
-
-
-def build_valid_time(forecast_reference_time, forecast_period):
-    # Note that this function is used in build_data_var_components and it takes in input
-    # the output of cfmessage.from_grib_date_time and cfmessage.from_grib_forecast_period.
-    # Therefore we assumes that:
-    #  * the input reference time is in seconds
-    #  * the forecast_period is in hours
-    # according to the output data time units of from_grib_date_time and from_grib_forecast_period.
-
-    # hours to seconds
-    forecast_period = forecast_period * 3600
-    if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
-        data = forecast_reference_time + forecast_period
-        dims = ()
-    elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
-        data = forecast_reference_time + forecast_period
-        dims = ('time',)
-    elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
-        data = forecast_reference_time + forecast_period
-        dims = ('step',)
-    else:
-        data = forecast_reference_time[:, None] + forecast_period[None, :]
-        dims = ('time', 'step')
-    attrs = COORD_ATTRS['valid_time']
-    return dims, data, attrs
 
 
 def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
@@ -138,6 +113,31 @@ def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_ke
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
     message[step_key] = step_s / to_seconds
     message[step_unit_key] = step_unit
+
+
+def build_valid_time(time, step):
+    # type: (np.ndarray, np.ndarray) -> T.Tuple[T.Sequence[int], np.ndarray]
+    """
+    Return dimensions and data of the valid_time corresponding to the given ``time`` and ``step``.
+    The data is seconds from the same epoch as ``time`` and may have one or two dimensions.
+
+    :param time: given in seconds from an epoch, as returned by ``from_grib_date_time``
+    :param step: given in hours, as returned by ``from_grib_step``
+    """
+    step_s = step * 3600
+    if len(time.shape) == 0 and len(step.shape) == 0:
+        data = time + step_s
+        dims = ()
+    elif len(time.shape) > 0 and len(step.shape) == 0:
+        data = time + step_s
+        dims = ('time',)
+    elif len(time.shape) == 0 and len(step.shape) > 0:
+        data = time + step_s
+        dims = ('step',)
+    else:
+        data = time[:, None] + step_s[None, :]
+        dims = ('time', 'step')
+    return dims, data
 
 
 def from_grib_pl_level(message, level_key='topLevel'):

@@ -34,7 +34,7 @@ def test_build_valid_time():
     forecast_reference_time = np.array(0)
     forecast_period = np.array(0)
 
-    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+    dims, data = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
 
     assert dims == ()
     assert data.shape == ()
@@ -42,7 +42,7 @@ def test_build_valid_time():
     forecast_reference_time = np.array([0, 31536000])
     forecast_period = np.array(0)
 
-    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+    dims, data = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
 
     assert dims == ('time',)
     assert data.shape == forecast_reference_time.shape + forecast_period.shape
@@ -50,7 +50,7 @@ def test_build_valid_time():
     forecast_reference_time = np.array(0)
     forecast_period = np.array([0, 12, 24, 36])
 
-    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+    dims, data = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
 
     assert dims == ('step',)
     assert data.shape == (4,)
@@ -59,7 +59,7 @@ def test_build_valid_time():
     forecast_reference_time = np.array([0, 31536000])
     forecast_period = np.array([0, 12, 24, 36])
 
-    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+    dims, data = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
 
     assert dims == ('time', 'step')
     assert data.shape == (2, 4)
