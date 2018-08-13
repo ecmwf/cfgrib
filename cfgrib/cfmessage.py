@@ -63,19 +63,20 @@ COORD_ATTRS = {
     },
 }
 
+DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 
-def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
-    # type: (T.Mapping, str, str) -> int
+
+def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH):
+    # type: (T.Mapping, str, str, datetime.datetime) -> int
     """
-    Convert the date and time as encoded in a GRIB file in standard numpy-compatible
-    datetime64 string.
+    Extract the number of seconds since the ``epoch`` from the values of the ``message`` keys,
+    using datetime.total_seconds().
 
-    :param int date: the content of "dataDate" key
-    :param int time: the content of "dataTime" key
-
-    :rtype: str
+    :param message: the target GRIB message
+    :param date_key: the date key, defaults to "dataDate"
+    :param time_key: the time key, defaults to "dataTime"
+    :param epoch: the reference datetime
     """
-    date_key, time_key = keys
     date = message[date_key]
     time = message[time_key]
     hour = time // 100
@@ -86,16 +87,14 @@ def from_grib_date_time(message, keys=('dataDate', 'dataTime')):
     data_datetime = datetime.datetime(year, month, day, hour, minute)
     # Python 2 compatible timestamp implementation without timezone hurdle
     # see: https://docs.python.org/3/library/datetime.html#datetime.datetime.timestamp
-    return int((data_datetime - datetime.datetime(1970, 1, 1)).total_seconds())
+    return int((data_datetime - epoch).total_seconds())
 
 
-def to_grib_date_time(message, data_datetime_ns, keys=('dataDate', 'dataTime')):
+def to_grib_date_time(message, time_ns, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH):
     # type: (T.MutableMapping, int, T.Tuple[str, str]) -> None
-    # np.datetime64(d, 'ns')- np.timedelta64(np.datetime64(d, 'ns').tolist(), 'ns')
-    data_datetime_s = int(data_datetime_ns) * 1e-9
-    data_datetime = datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=data_datetime_s)
-    datetime_iso = str(data_datetime)
-    date_key, time_key = keys
+    time_s = int(time_ns) * 1e-9
+    time = epoch + datetime.timedelta(seconds=time_s)
+    datetime_iso = str(time)
     message[date_key] = int(datetime_iso[:10].replace('-', ''))
     message[time_key] = int(datetime_iso[11:16].replace(':', ''))
 
