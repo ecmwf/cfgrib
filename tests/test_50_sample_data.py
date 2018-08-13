@@ -59,7 +59,7 @@ def test_open_dataset_fail(grib_name):
 ])
 def test_to_grib_eccodes(grib_name, tmpdir):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
-    out_path = tmpdir.join(grib_name + '.grib')
+    out_path = str(tmpdir.join(grib_name + '.grib'))
 
     res = xarray_store.open_dataset(grib_path, flavour_name='eccodes', cache=False)
 
@@ -86,7 +86,7 @@ def test_to_grib_eccodes(grib_name, tmpdir):
 ])
 def test_to_grib_ecmwf(grib_name, tmpdir):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
-    out_path = tmpdir.join(grib_name + '.grib')
+    out_path = str(tmpdir.join(grib_name + '.grib'))
 
     res = xarray_store.open_dataset(grib_path, cache=False)
 
