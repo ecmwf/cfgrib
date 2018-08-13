@@ -22,9 +22,12 @@ Limitations:
 
 - development stage: **Alpha**,
 - limited support for multi-variable GRIB files (yet),
+see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
+`#13 <https://github.com/ecmwf/cfgrib/issues/13>`_ and the Advanced Usage section below,
 - no write support (yet),
 - no support for opening multiple GRIB files (yet),
 - incomplete documentation (yet),
+- no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
 - rely on *ecCodes* for the ``gridType`` handling.
 
@@ -142,13 +145,17 @@ Advanced usage
 --------------
 
 ``cfgrib.Dataset`` can open a GRIB file only if all the messages
-with the same ``shortName`` can be respresented as as a single ``cfgrib.Variable`` hypercube.
+with the same ``shortName`` can be represented as a single ``cfgrib.Variable`` hypercube.
 For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
 as this would result in multiple hypercubes for variable ``t``.
+Opening a non-conformant GRIB file will fail with a ``ValueError: multiple values for unique attribute...``
+error message, see`#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
 Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
 the values of the coordinate must match exactly.
 For example, if variables ``t`` and ``z`` share the same step coordinate,
 they must both have exactly the same set of steps.
+Opening a non-conformant GRIB file will fail with a ``ValueError: key present and new value is different...``
+error message, see `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 
 You can handle complex GRIB files containing heterogeneous messages by using
 the ``filter_by_keys`` keyword to select which GRIB messages belong to a
