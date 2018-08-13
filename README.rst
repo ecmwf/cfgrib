@@ -22,8 +22,8 @@ Limitations:
 
 - development stage: **Alpha**,
 - limited support for multi-variable GRIB files (yet),
-see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
-`#13 <https://github.com/ecmwf/cfgrib/issues/13>`_ and the Advanced Usage section below,
+  see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
+  `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_ and the Advanced Usage section below,
 - no write support (yet),
 - no support for opening multiple GRIB files (yet),
 - incomplete documentation (yet),
