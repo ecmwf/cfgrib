@@ -150,6 +150,7 @@ For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` 
 as this would result in multiple hypercubes for variable ``t``.
 Opening a non-conformant GRIB file will fail with a ``ValueError: multiple values for unique attribute...``
 error message, see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
+
 Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
 the values of the coordinate must match exactly.
 For example, if variables ``t`` and ``z`` share the same step coordinate,
@@ -157,7 +158,7 @@ they must both have exactly the same set of steps.
 Opening a non-conformant GRIB file will fail with a ``ValueError: key present and new value is different...``
 error message, see `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 
-You can handle complex GRIB files containing heterogeneous messages by using
+In most cases you can handle complex GRIB files containing heterogeneous messages by using
 the ``filter_by_keys`` keyword to select which GRIB messages belong to a
 well formed set of hypercubes.
 
