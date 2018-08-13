@@ -30,6 +30,26 @@ def test_to_grib_date_time():
     assert message['dataTime'] == 101
 
 
+def test_from_grib_step():
+    message = {
+        'endStep': 1,
+        'stepUnits': 1,
+    }
+    step_seconds = cfmessage.from_grib_step(message)
+
+    assert step_seconds == 1
+
+
+def test_to_grib_step():
+    message = {}
+    step_ns = 60 * 60 * 1e9
+
+    cfmessage.to_grib_step(message, step_ns, step_unit=1)
+
+    assert message['endStep'] == 1
+    assert message['stepUnits'] == 1
+
+
 def test_build_valid_time():
     forecast_reference_time = np.array(0)
     forecast_period = np.array(0)
@@ -64,23 +84,3 @@ def test_build_valid_time():
     assert dims == ('time', 'step')
     assert data.shape == (2, 4)
     assert np.allclose((data - data[..., :1]) / 3600, forecast_period)
-
-
-def test_from_grib_step():
-    message = {
-        'endStep': 1,
-        'stepUnits': 1,
-    }
-    step_seconds = cfmessage.from_grib_step(message)
-
-    assert step_seconds == 1
-
-
-def test_to_grib_step():
-    message = {}
-    step_ns = 60 * 60 * 1e9
-
-    cfmessage.to_grib_step(message, step_ns, step_unit=1)
-
-    assert message['endStep'] == 1
-    assert message['stepUnits'] == 1
