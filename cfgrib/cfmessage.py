@@ -100,6 +100,32 @@ def to_grib_date_time(message, data_datetime_ns, keys=('dataDate', 'dataTime')):
     message[time_key] = int(datetime_iso[11:16].replace(':', ''))
 
 
+def build_valid_time(forecast_reference_time, forecast_period):
+    # Note that this function is used in build_data_var_components and it takes in input
+    # the output of cfmessage.from_grib_date_time and cfmessage.from_grib_forecast_period.
+    # Therefore we assumes that:
+    #  * the input reference time is in seconds
+    #  * the forecast_period is in hours
+    # according to the output data time units of from_grib_date_time and from_grib_forecast_period.
+
+    # hours to seconds
+    forecast_period = forecast_period * 3600
+    if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
+        data = forecast_reference_time + forecast_period
+        dims = ()
+    elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
+        data = forecast_reference_time + forecast_period
+        dims = ('time',)
+    elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
+        data = forecast_reference_time + forecast_period
+        dims = ('step',)
+    else:
+        data = forecast_reference_time[:, None] + forecast_period[None, :]
+        dims = ('time', 'step')
+    attrs = COORD_ATTRS['valid_time']
+    return dims, data, attrs
+
+
 def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     # type: (T.Mapping, str, str) -> float
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]

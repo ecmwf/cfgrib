@@ -256,32 +256,6 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def build_valid_time(forecast_reference_time, forecast_period):
-    # Note that this function is used in build_data_var_components and it takes in input
-    # the output of cfmessage.from_grib_date_time and cfmessage.from_grib_forecast_period.
-    # Therefore we assumes that:
-    #  * the input reference time is in seconds
-    #  * the forecast_period is in hours
-    # according to the output data time units of from_grib_date_time and from_grib_forecast_period.
-
-    # hours to seconds
-    forecast_period = forecast_period * 3600
-    if len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) == 0:
-        data = forecast_reference_time + forecast_period
-        dims = ()
-    elif len(forecast_reference_time.shape) > 0 and len(forecast_period.shape) == 0:
-        data = forecast_reference_time + forecast_period
-        dims = ('time',)
-    elif len(forecast_reference_time.shape) == 0 and len(forecast_period.shape) > 0:
-        data = forecast_reference_time + forecast_period
-        dims = ('step',)
-    else:
-        data = forecast_reference_time[:, None] + forecast_period[None, :]
-        dims = ('time', 'step')
-    attrs = cfmessage.COORD_ATTRS['valid_time']
-    return dims, data, attrs
-
-
 def build_data_var_components(
         index,
         encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
@@ -342,7 +316,7 @@ def build_data_var_components(
 
     if encode_time:
         # add the valid 'time' secondary coordinate
-        dims, time_data, attrs = build_valid_time(
+        dims, time_data, attrs = cfmessage.build_valid_time(
             coord_vars['time'].data, coord_vars['step'].data,
         )
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)

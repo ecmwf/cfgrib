@@ -30,6 +30,42 @@ def test_to_grib_date_time():
     assert message['dataTime'] == 101
 
 
+def test_build_valid_time():
+    forecast_reference_time = np.array(0)
+    forecast_period = np.array(0)
+
+    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ()
+    assert data.shape == ()
+
+    forecast_reference_time = np.array([0, 31536000])
+    forecast_period = np.array(0)
+
+    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('time',)
+    assert data.shape == forecast_reference_time.shape + forecast_period.shape
+
+    forecast_reference_time = np.array(0)
+    forecast_period = np.array([0, 12, 24, 36])
+
+    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('step',)
+    assert data.shape == (4,)
+    assert np.allclose((data - data[..., :1]) / 3600, forecast_period)
+
+    forecast_reference_time = np.array([0, 31536000])
+    forecast_period = np.array([0, 12, 24, 36])
+
+    dims, data, attrs = cfmessage.build_valid_time(forecast_reference_time, forecast_period)
+
+    assert dims == ('time', 'step')
+    assert data.shape == (2, 4)
+    assert np.allclose((data - data[..., :1]) / 3600, forecast_period)
+
+
 def test_from_grib_step():
     message = {
         'endStep': 1,
