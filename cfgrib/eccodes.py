@@ -47,11 +47,15 @@ class RaiseOnAttributeAccess(object):
         raise_from(RuntimeError(self.message), self.exc)
 
 
-try:
-    lib = ffi.dlopen('eccodes')
-except OSError as exc:
-    # lazy exception
-    lib = RaiseOnAttributeAccess(exc, 'libeccodes library not found on the system.')
+for libname in ['eccodes', 'libeccodes.so', 'libeccodes']:
+    try:
+        lib = ffi.dlopen(libname)
+        LOG.info("ecCodes library found using name '%s'.", libname)
+        break
+    except OSError as exc:
+        # lazy exception
+        lib = RaiseOnAttributeAccess(exc, 'ecCodes library not found on the system.')
+        LOG.info("ecCodes library not found using name '%s'.", libname)
 
 
 # default encoding for ecCodes strings
