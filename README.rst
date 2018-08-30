@@ -25,7 +25,7 @@ Limitations:
   see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_ and the Advanced Usage section below,
 - no write support (yet),
-- no support for opening multiple GRIB files (yet),
+- no support for opening multiple GRIB files (yet) `15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - incomplete documentation (yet),
 - no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
