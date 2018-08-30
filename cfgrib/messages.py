@@ -77,7 +77,7 @@ class Message(collections.MutableMapping):
         return values
 
     def message_set(self, item, value):
-        # type: (str, T.Any, bool) -> None
+        # type: (str, T.Any) -> None
         key = item.encode(self.encoding)
         set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
         if set_array:
