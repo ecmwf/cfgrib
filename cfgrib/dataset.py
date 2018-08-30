@@ -376,8 +376,8 @@ class Dataset(object):
     filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
-    def frompath(cls, path, mode='r', errors='ignore', **kwargs):
-        stream = messages.Stream(path, mode, message_class=cfmessage.CfMessage, errors=errors)
+    def frompath(cls, path, errors='ignore', **kwargs):
+        stream = messages.Stream(path, message_class=cfmessage.CfMessage, errors=errors)
         return cls(stream=stream, **kwargs)
 
     def __attrs_post_init__(self):

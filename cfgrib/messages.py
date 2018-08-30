@@ -249,13 +249,12 @@ class Index(collections.Mapping):
 class Stream(collections.Iterable):
     """Iterator-like access to a stream of Messages."""
     path = attr.attrib(type=str)
-    mode = attr.attrib(default='r', type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
-        with open(self.path, self.mode) as file:
+        with open(self.path, 'rb') as file:
             while True:
                 try:
                     yield self.message_class.fromfile(file=file)
