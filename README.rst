@@ -21,11 +21,12 @@ Features:
 Limitations:
 
 - development stage: **Alpha**,
-- limited support for multi-variable GRIB files (yet),
-  see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
-  `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_ and the Advanced Usage section below,
+- limited support for GRIB files containing multiple hypecubes (yet),
+  see the Advanced Usage section below and
+  `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
+  `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - no write support (yet),
-- no support for opening multiple GRIB files (yet) `15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
+- no support for opening multiple GRIB files (yet), see `15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - incomplete documentation (yet),
 - no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
