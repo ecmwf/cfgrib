@@ -15,7 +15,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 def test_Message():
     with open(TEST_DATA) as file:
-        res = messages.Message.fromfile(file, offset=0)
+        res = messages.Message.fromfile(file)
 
     assert res.message_get('paramId') == 129
     assert res['paramId'] == 129

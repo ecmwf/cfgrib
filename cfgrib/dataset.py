@@ -167,7 +167,7 @@ class OnDiskArray(object):
         with open(self.stream.path) as file:
             for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
-                message = self.stream.message_class.fromfile(file, offset=offset[0])
+                message = self.stream.message_from_file(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
                 array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
@@ -189,7 +189,7 @@ class OnDiskArray(object):
                 except ValueError:
                     continue
                 # NOTE: fill a single field as found in the message
-                message = self.stream.message_class.fromfile(file, offset=offset[0])
+                message = self.stream.message_from_file(file, offset=offset[0])
                 values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 

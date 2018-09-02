@@ -40,9 +40,7 @@ class Message(collections.MutableMapping):
     encoding = attr.attrib(default='ascii', type=str)
 
     @classmethod
-    def fromfile(cls, file, offset=None, **kwargs):
-        if offset is not None:
-            file.seek(offset)
+    def fromfile(cls, file, **kwargs):
         codes_id = eccodes.codes_handle_new_from_file(file)
         if codes_id is None:
             raise EOFError("end-of-file reached.")
@@ -242,7 +240,7 @@ class FileIndex(collections.Mapping):
     def first(self):
         with open(self.stream.path) as file:
             first_offset = next(iter(self.offsets.values()))[0]
-            return self.stream.message_class.fromfile(file, offset=first_offset)
+            return self.stream.message_from_file(file, offset=first_offset)
 
 
 @attr.attrs()
@@ -257,7 +255,7 @@ class Stream(collections.Iterable):
         with open(self.path, 'rb') as file:
             while True:
                 try:
-                    yield self.message_class.fromfile(file=file)
+                    yield self.message_from_file(file)
                 except EOFError:
                     break
                 except Exception:
@@ -265,6 +263,11 @@ class Stream(collections.Iterable):
                         logging.exception("skipping corrupted Message")
                     else:
                         raise
+
+    def message_from_file(self, file, offset=None):
+        if offset is not None:
+            file.seek(offset)
+        return self.message_class.fromfile(file=file)
 
     def first(self):
         # type: () -> Message
