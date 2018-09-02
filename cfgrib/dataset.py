@@ -377,7 +377,7 @@ class Dataset(object):
 
     @classmethod
     def frompath(cls, path, errors='ignore', **kwargs):
-        stream = messages.Stream(path, message_class=cfmessage.CfMessage, errors=errors)
+        stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
         return cls(stream=stream, **kwargs)
 
     def __attrs_post_init__(self):

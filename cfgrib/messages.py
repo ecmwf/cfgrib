@@ -244,7 +244,7 @@ class FileIndex(collections.Mapping):
 
 
 @attr.attrs()
-class Stream(collections.Iterable):
+class FileStream(collections.Iterable):
     """Iterator-like access to a stream of Messages."""
     path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)

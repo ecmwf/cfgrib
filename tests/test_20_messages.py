@@ -68,7 +68,7 @@ def test_make_message_schema():
 
 
 def test_FileIndex():
-    res = messages.FileIndex.fromstream(messages.Stream(TEST_DATA), ['paramId'])
+    res = messages.FileIndex.fromstream(messages.FileStream(TEST_DATA), ['paramId'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 1
     assert list(res) == ['paramId']
@@ -87,12 +87,12 @@ def test_FileIndex():
     assert len(subres) == 1
 
 
-def test_Index_errors():
+def test_FileIndex_errors():
     class MyMessage(messages.ComputedKeysMessage):
         computed_keys = {
             'error_key': lambda m: 1 / 0,
         }
-    stream = messages.Stream(TEST_DATA, message_class=MyMessage)
+    stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
     res = messages.FileIndex.fromstream(stream, ['paramId', 'error_key'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 2
@@ -100,8 +100,8 @@ def test_Index_errors():
     assert res['error_key'] == ['undef']
 
 
-def test_Stream():
-    res = messages.Stream(TEST_DATA)
+def test_FileStream():
+    res = messages.FileStream(TEST_DATA)
     leader = res.first()
     assert len(leader) == 192
     assert sum(1 for _ in res) == leader['count']

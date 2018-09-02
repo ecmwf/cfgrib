@@ -26,7 +26,7 @@ def test_dict_merge():
 
 
 def test_build_data_var_components_no_encode():
-    index = messages.Stream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
+    index = messages.FileStream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(index=index)
     assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
@@ -36,7 +36,7 @@ def test_build_data_var_components_no_encode():
 
 
 def test_build_data_var_components_encode_geography():
-    stream = messages.Stream(path=TEST_DATA, message_class=cfmessage.CfMessage)
+    stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index = stream.index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(
         index=index, encode_geography=True,

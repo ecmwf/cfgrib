@@ -109,7 +109,7 @@ def test_Stream(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
-    stream = cfgrib.Stream(path)
+    stream = cfgrib.FileStream(path)
     leader = stream.first()
     assert len(leader) == key_count
     assert sum(1 for _ in stream) == leader['count']
