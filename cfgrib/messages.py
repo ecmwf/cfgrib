@@ -177,7 +177,7 @@ def make_message_schema(message, schema_keys, log=LOG):
 
 
 @attr.attrs()
-class Index(collections.Mapping):
+class FileIndex(collections.Mapping):
     stream = attr.attrib()
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False)
@@ -271,4 +271,4 @@ class Stream(collections.Iterable):
         return next(iter(self))
 
     def index(self, index_keys):
-        return Index.fromstream(stream=self, index_keys=index_keys)
+        return FileIndex.fromstream(stream=self, index_keys=index_keys)

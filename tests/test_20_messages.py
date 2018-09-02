@@ -67,8 +67,8 @@ def test_make_message_schema():
     assert res['non-existent'] == ()
 
 
-def test_Index():
-    res = messages.Index.fromstream(messages.Stream(TEST_DATA), ['paramId'])
+def test_FileIndex():
+    res = messages.FileIndex.fromstream(messages.Stream(TEST_DATA), ['paramId'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 1
     assert list(res) == ['paramId']
@@ -93,7 +93,7 @@ def test_Index_errors():
             'error_key': lambda m: 1 / 0,
         }
     stream = messages.Stream(TEST_DATA, message_class=MyMessage)
-    res = messages.Index.fromstream(stream, ['paramId', 'error_key'])
+    res = messages.FileIndex.fromstream(stream, ['paramId', 'error_key'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 2
     assert list(res) == ['paramId', 'error_key']

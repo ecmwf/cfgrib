@@ -70,7 +70,7 @@ GRID_TYPE_MAP = {
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfSouthernPoleInDegrees',
         'DyInMetres', 'DxInMetres', 'Latin2InDegrees', 'Latin1InDegrees', 'Ny', 'Nx',
     ],
-    'reduced_gg': ['N'],  # FIXME: we don't read 'pl' because messages.Index doesn't support lists
+    'reduced_gg': ['N'],  # FIXME: we don't read 'pl' because messages.FileIndex doesn't support lists
     'sh': ['M', 'K', 'J'],
 }
 GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
@@ -107,7 +107,7 @@ def enforce_unique_attributes(
         index,
         attributes_keys,
 ):
-    # type: (messages.Index, T.Sequence[str]) -> T.Dict[str, T.Any]
+    # type: (messages.FileIndex, T.Sequence[str]) -> T.Dict[str, T.Any]
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
@@ -210,7 +210,7 @@ GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 
 def build_geography_coordinates(index, encode_geography, log=LOG):
-    # type: (messages.Index, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
+    # type: (messages.FileIndex, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()
     grid_type = index.getone('gridType')
