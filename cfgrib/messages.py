@@ -176,15 +176,15 @@ def make_message_schema(message, schema_keys, log=LOG):
 
 @attr.attrs()
 class FileIndex(collections.Mapping):
-    stream = attr.attrib()
+    filestream = attr.attrib()
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False)
 
     @classmethod
-    def fromstream(cls, stream, index_keys):
-        schema = make_message_schema(stream.first(), index_keys)
+    def fromfilestream(cls, filestream, index_keys):
+        schema = make_message_schema(filestream.first(), index_keys)
         offsets = collections.OrderedDict()
-        for message in stream:
+        for message in filestream:
             header_values = []
             for key, args in schema.items():
                 # Note: optimisation
@@ -196,7 +196,7 @@ class FileIndex(collections.Mapping):
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
-        return cls(stream=stream, index_keys=index_keys, offsets=offsets)
+        return cls(filestream=filestream, index_keys=index_keys, offsets=offsets)
 
     def __iter__(self):
         return iter(self.index_keys)
@@ -235,17 +235,17 @@ class FileIndex(collections.Mapping):
                     break
             else:
                 offsets[header_values] = self.offsets[header_values]
-        return type(self)(stream=self.stream, index_keys=self.index_keys, offsets=offsets)
+        return type(self)(filestream=self.filestream, index_keys=self.index_keys, offsets=offsets)
 
     def first(self):
-        with open(self.stream.path) as file:
+        with open(self.filestream.path) as file:
             first_offset = next(iter(self.offsets.values()))[0]
-            return self.stream.message_from_file(file, offset=first_offset)
+            return self.filestream.message_from_file(file, offset=first_offset)
 
 
 @attr.attrs()
 class FileStream(collections.Iterable):
-    """Iterator-like access to a stream of Messages."""
+    """Iterator-like access to a filestream of Messages."""
     path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
@@ -274,4 +274,4 @@ class FileStream(collections.Iterable):
         return next(iter(self))
 
     def index(self, index_keys):
-        return FileIndex.fromstream(stream=self, index_keys=index_keys)
+        return FileIndex.fromfilestream(filestream=self, index_keys=index_keys)

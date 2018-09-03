@@ -310,7 +310,7 @@ def build_data_var_components(
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
     data = OnDiskArray(
-        stream=index.stream, shape=shape, offsets=offsets, missing_value=missing_value,
+        stream=index.filestream, shape=shape, offsets=offsets, missing_value=missing_value,
         geo_ndim=len(geo_dims),
     )
 
