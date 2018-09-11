@@ -210,7 +210,7 @@ GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 
 def build_geography_coordinates(index, encode_geography, log=LOG):
-    # type: (messages.FileIndex, bool) -> T.Tuple[T.Tuple[str], T.Tuple[int], T.Dict]
+    # type: (messages.FileIndex, bool, logging.Logger) -> T.Tuple[T.Tuple[str], T.Tuple[int], dict]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()
     grid_type = index.getone('gridType')
