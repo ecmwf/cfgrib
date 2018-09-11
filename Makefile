@@ -86,7 +86,7 @@ update-req:
 	$(RUN) pip-compile -o ci/requirements-docs.txt -U setup.py ci/requirements-docs.in
 
 test: testclean
-	$(RUN) python setup.py test --addopts "-v --flakes --cov=$(MODULE) --cov-report=html --cache-clear"
+	$(RUN) python setup.py test --addopts "-v --flakes --cov=$(MODULE) --cov=cf2cdm --cov-report=html --cache-clear"
 
 qc: testclean
 	$(RUN) python setup.py test --addopts "-v --pep8 --mccabe"
