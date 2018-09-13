@@ -260,7 +260,7 @@ class FileStream(collections.Iterable):
                     break
                 except Exception:
                     if self.errors == 'ignore':
-                        logging.exception("skipping corrupted Message")
+                        LOG.exception("skipping corrupted Message")
                     else:
                         raise
 
