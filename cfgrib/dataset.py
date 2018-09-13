@@ -24,6 +24,7 @@ import collections
 import logging
 import pkg_resources
 import typing as T  # noqa
+import warnings
 
 import attr
 import numpy as np
@@ -376,9 +377,15 @@ class Dataset(object):
     filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
-    def frompath(cls, path, errors='ignore', **kwargs):
+    def from_path(cls, path, errors='ignore', **kwargs):
         stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
         return cls(stream=stream, **kwargs)
+
+    @classmethod
+    def frompath(cls, *args, **kwargs):
+        """Deprecated! Use `.from_path` instead."""
+        warnings.warn(".frompath is deprecated, use .from_path instead", FutureWarning)
+        return cls.from_path(*args, **kwargs)
 
     def __attrs_post_init__(self):
         dims, vars, attrs = build_dataset_components(**self.__dict__)

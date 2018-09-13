@@ -52,7 +52,7 @@ def test_build_data_var_components_encode_geography():
 
 
 def test_Dataset():
-    res = dataset.Dataset.frompath(TEST_DATA)
+    res = dataset.Dataset.from_path(TEST_DATA)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -61,7 +61,7 @@ def test_Dataset():
 
 
 def test_Dataset_no_encode():
-    res = dataset.Dataset.frompath(
+    res = dataset.Dataset.from_path(
         TEST_DATA, encode_time=False, encode_vertical=False, encode_geography=False,
     )
     assert 'history' in res.attributes
@@ -71,7 +71,7 @@ def test_Dataset_no_encode():
 
 
 def test_Dataset_encode_time():
-    res = dataset.Dataset.frompath(TEST_DATA, encode_vertical=False, encode_geography=False)
+    res = dataset.Dataset.from_path(TEST_DATA, encode_vertical=False, encode_geography=False)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'time', 'topLevel', 'i')
@@ -82,7 +82,7 @@ def test_Dataset_encode_time():
 
 
 def test_Dataset_encode_geography():
-    res = dataset.Dataset.frompath(TEST_DATA, encode_time=False, encode_vertical=False)
+    res = dataset.Dataset.from_path(TEST_DATA, encode_time=False, encode_vertical=False)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -94,7 +94,7 @@ def test_Dataset_encode_geography():
 
 
 def test_Dataset_encode_vertical():
-    res = dataset.Dataset.frompath(TEST_DATA, encode_time=False, encode_geography=False)
+    res = dataset.Dataset.from_path(TEST_DATA, encode_time=False, encode_geography=False)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
@@ -106,7 +106,7 @@ def test_Dataset_encode_vertical():
 
 def test_Dataset_reguler_gg_surface():
     path = os.path.join(SAMPLE_DATA_FOLDER, 'regular_gg_sfc.grib')
-    res = dataset.Dataset.frompath(path)
+    res = dataset.Dataset.from_path(path)
 
     assert res.dimensions == {'latitude': 96, 'longitude': 192}
     assert np.allclose(res.variables['latitude'].data[:2], [88.57216851, 86.72253095])

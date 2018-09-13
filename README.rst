@@ -85,7 +85,19 @@ You may try out the high level API in a python interpreter:
 .. code-block: python
 
 >>> import cfgrib
->>> ds = cfgrib.Dataset.frompath('era5-levels-members.grib')
+>>> ds = cfgrib.Dataset.from_path('era5-levels-members.grib')
+>>> ds.attributes['GRIB_edition']
+1
+>>> sorted(ds.dimensions.items())
+[('air_pressure', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+>>> sorted(ds.variables)
+['air_pressure', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+>>> var = ds.variables['t']
+>>> var.dimensions
+('number', 'time', 'air_pressure', 'latitude', 'longitude')
+>>> var.data[:, :, :, :, :].mean()
+262.92133
+>>> ds = cfgrib.Dataset.from_path('era5-levels-members.grib')
 >>> ds.attributes['GRIB_edition']
 1
 >>> sorted(ds.dimensions.items())

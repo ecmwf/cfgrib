@@ -101,7 +101,7 @@ class GribDataStore(AbstractDataStore):
         flavour = FLAVOURS[flavour_name].copy()
         config = flavour.pop('dataset', {}).copy()
         config.update(kwargs)
-        return cls(ds=cfgrib.Dataset.frompath(path, errors=errors, **config), **flavour)
+        return cls(ds=cfgrib.Dataset.from_path(path, errors=errors, **config), **flavour)
 
     def __attrs_post_init__(self):
         self.variable_map = self.variable_map.copy()
