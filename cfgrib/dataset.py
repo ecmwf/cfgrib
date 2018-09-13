@@ -266,10 +266,12 @@ def build_data_var_components(
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
     if encode_parameter:
-        if data_var_attrs.get('GRIB_cfName'):
+        if 'GRIB_cfName' in data_var_attrs:
             data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
-        data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
-        data_var_attrs['units'] = data_var_attrs['GRIB_units']
+        if 'GRIB_name' in data_var_attrs:
+            data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
+        if 'GRIB_units' in data_var_attrs:
+            data_var_attrs['units'] = data_var_attrs['GRIB_units']
 
     coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
