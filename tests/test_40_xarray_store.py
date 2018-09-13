@@ -15,13 +15,13 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 
 def test_GribDataStore():
-    datastore = xarray_store.GribDataStore.frompath(TEST_DATA, flavour_name='eccodes')
+    datastore = xarray_store.GribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
 def test_xarray_open_dataset():
-    datastore = xarray_store.GribDataStore.frompath(TEST_DATA, flavour_name='eccodes')
+    datastore = xarray_store.GribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
     res = xr.open_dataset(datastore)
 
     assert res.attrs['GRIB_edition'] == 1

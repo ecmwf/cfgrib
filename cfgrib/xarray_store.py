@@ -97,7 +97,7 @@ class GribDataStore(AbstractDataStore):
     type_of_level_map = attr.attrib(default={})
 
     @classmethod
-    def frompath(cls, path, flavour_name='ecmwf', errors='ignore', **kwargs):
+    def from_path(cls, path, flavour_name='ecmwf', errors='ignore', **kwargs):
         flavour = FLAVOURS[flavour_name].copy()
         config = flavour.pop('dataset', {}).copy()
         config.update(kwargs)
@@ -160,7 +160,7 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
     for k in list(kwargs):  # copy to allow the .pop()
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
-    store = GribDataStore.frompath(path, **overrides)
+    store = GribDataStore.from_path(path, **overrides)
     return _open_dataset(store, **kwargs)
 
 
