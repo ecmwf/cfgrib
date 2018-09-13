@@ -15,7 +15,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 def test_Message():
     with open(TEST_DATA) as file:
-        res = messages.Message.fromfile(file)
+        res = messages.Message.from_file(file)
 
     assert res.message_get('paramId') == 129
     assert res['paramId'] == 129
@@ -34,7 +34,7 @@ def test_Message():
     with open(TEST_DATA) as file:
         with pytest.raises(EOFError):
             while True:
-                messages.Message.fromfile(file)
+                messages.Message.from_file(file)
 
 
 def test_ComputedKeysMessage():
@@ -44,7 +44,7 @@ def test_ComputedKeysMessage():
         'centre': (lambda m: -1, None),
     }
     with open(TEST_DATA) as file:
-        res = messages.ComputedKeysMessage.fromfile(file, computed_keys=computed_keys)
+        res = messages.ComputedKeysMessage.from_file(file, computed_keys=computed_keys)
 
     assert res['paramId'] == 129
     assert res['ref_time'] == '201701010'
@@ -57,7 +57,7 @@ def test_ComputedKeysMessage():
 
 def test_make_message_schema():
     with open(TEST_DATA) as file:
-        message = messages.Message.fromfile(file)
+        message = messages.Message.from_file(file)
 
     res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
 
@@ -68,7 +68,7 @@ def test_make_message_schema():
 
 
 def test_FileIndex():
-    res = messages.FileIndex.fromfilestream(messages.FileStream(TEST_DATA), ['paramId'])
+    res = messages.FileIndex.from_filestream(messages.FileStream(TEST_DATA), ['paramId'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 1
     assert list(res) == ['paramId']
@@ -93,7 +93,7 @@ def test_FileIndex_errors():
             'error_key': lambda m: 1 / 0,
         }
     stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
-    res = messages.FileIndex.fromfilestream(stream, ['paramId', 'error_key'])
+    res = messages.FileIndex.from_filestream(stream, ['paramId', 'error_key'])
     assert res['paramId'] == [129, 130]
     assert len(res) == 2
     assert list(res) == ['paramId', 'error_key']

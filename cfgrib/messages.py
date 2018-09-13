@@ -40,14 +40,14 @@ class Message(collections.MutableMapping):
     encoding = attr.attrib(default='ascii', type=str)
 
     @classmethod
-    def fromfile(cls, file, **kwargs):
+    def from_file(cls, file, **kwargs):
         codes_id = eccodes.codes_handle_new_from_file(file)
         if codes_id is None:
             raise EOFError("end-of-file reached.")
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
-    def fromsample(cls, sample_name, **kwargs):
+    def from_sample_name(cls, sample_name, **kwargs):
         codes_id = eccodes.codes_new_from_samples(sample_name.encode('ASCII'))
         return cls(codes_id=codes_id, **kwargs)
 
@@ -181,7 +181,7 @@ class FileIndex(collections.Mapping):
     offsets = attr.attrib(repr=False)
 
     @classmethod
-    def fromfilestream(cls, filestream, index_keys):
+    def from_filestream(cls, filestream, index_keys):
         schema = make_message_schema(filestream.first(), index_keys)
         offsets = collections.OrderedDict()
         for message in filestream:
@@ -267,11 +267,11 @@ class FileStream(collections.Iterable):
     def message_from_file(self, file, offset=None):
         if offset is not None:
             file.seek(offset)
-        return self.message_class.fromfile(file=file)
+        return self.message_class.from_file(file=file)
 
     def first(self):
         # type: () -> Message
         return next(iter(self))
 
     def index(self, index_keys):
-        return FileIndex.fromfilestream(filestream=self, index_keys=index_keys)
+        return FileIndex.from_filestream(filestream=self, index_keys=index_keys)

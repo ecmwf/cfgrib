@@ -207,7 +207,7 @@ def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=No
 
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
     for items in itertools.product(*header_coords_values):
-        message = cfmessage.CfMessage.fromsample(sample_name)
+        message = cfmessage.CfMessage.from_sample_name(sample_name)
         for key, value in grib_attributes.items():
             try:
                 message[key] = value
