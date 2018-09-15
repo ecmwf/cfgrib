@@ -167,7 +167,14 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
 #
 # write support
 #
-def sample_name_detection(grib_attributes):
+def detect_grib_attributes(data_var, grib_attributes=None):
+    # type: (xr.DataArray, T.Mapping) -> dict
+    if grib_attributes is None:
+        grib_attributes = {}
+    return dict(grib_attributes)
+
+
+def detect_sample_name(grib_attributes):
     # type: (T.Mapping) -> str
 
     if grib_attributes['gridType'] == 'regular_ll':
@@ -186,17 +193,16 @@ def sample_name_detection(grib_attributes):
     return sample_name
 
 
-def ecmwf_dataarray_to_grib(file, data_var, global_attributes={}, sample_name=None):
+def ecmwf_dataarray_to_grib(file, data_var, grib_attributes=None, sample_name=None):
     # type: (T.BinaryIO, xr.DataArray, T.Dict[str, T.Any], str) -> None
     from cfgrib import cfmessage
     from cfgrib import eccodes
     from cfgrib import dataset
 
-    grib_attributes = {k[5:]: v for k, v in global_attributes.items() if k[:5] == 'GRIB_'}
-    grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
+    grib_attributes = detect_grib_attributes(data_var, grib_attributes)
 
     if sample_name is None:
-        sample_name = sample_name_detection(grib_attributes)
+        sample_name = detect_sample_name(grib_attributes)
 
     header_coords_names = []
     for coord_name in dataset.ALL_HEADER_DIMS:
@@ -229,8 +235,11 @@ def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
     _validate_dataset_names(ecmwf_dataset)
     _validate_attrs(ecmwf_dataset)
 
+    grib_attributes = {k[5:]: v for k, v in ecmwf_dataset.attrs.items() if k[:5] == 'GRIB_'}
+
     with open(path, mode=mode) as file:
         for data_var in ecmwf_dataset.data_vars.values():
+            grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
             ecmwf_dataarray_to_grib(
-                file, data_var, global_attributes=ecmwf_dataset.attrs, sample_name=sample_name,
+                file, data_var, grib_attributes=grib_attributes, sample_name=sample_name,
             )
