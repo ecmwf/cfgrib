@@ -79,7 +79,7 @@ def test_to_grib_eccodes(grib_name, tmpdir):
     pytest.mark.xfail('regular_gg_ml'),
     pytest.mark.xfail('regular_gg_ml_g2'),
     'regular_ll_sfc',
-    pytest.mark.xfail('regular_ll_msl'),
+    'regular_ll_msl',
     'scanning_mode_64',
     pytest.mark.xfail('spherical_harmonics'),
     't_analysis_and_fc_0',

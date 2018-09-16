@@ -217,6 +217,10 @@ def detect_grib_keys(data_var, default_grib_keys):
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
+    for key in ['shortName', 'gridType', 'typeOfLevel', 'totalNumber']:
+        if 'GRIB_' + key in data_var.attrs:
+            suggested_grib_keys[key] = data_var.attrs['GRIB_' + key]
+
     if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
         regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
         detected_grib_keys.update(regular_ll_grib_keys)
@@ -224,20 +228,9 @@ def detect_grib_keys(data_var, default_grib_keys):
     if 'air_pressure' in data_var.dims or 'air_pressure' in data_var.coords:
         detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
 
-    if 'GRIB_typeOflevel' in data_var.attrs:
-        suggested_grib_keys['typeOflevel'] = data_var.attrs['GRIB_typeOflevel']
-
     if 'number' in data_var.dims or 'number' in data_var.coords:
         # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
         detected_grib_keys['productDefinitionTemplateNumber'] = 1
-
-    if 'shortName' in data_var.attrs:
-        detected_grib_keys['shortName'] = data_var.attrs['shortName']
-
-    if 'GRIB_shortName' in data_var.attrs:
-        suggested_grib_keys['shortName'] = data_var.attrs['GRIB_shortName']
-    elif data_var.name:
-        suggested_grib_keys['shortName'] = data_var.name
 
     return detected_grib_keys, suggested_grib_keys
 
