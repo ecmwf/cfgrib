@@ -304,16 +304,16 @@ for example:
 
 >>> import numpy as np
 >>> import xarray as xr
->>> da = xr.DataArray(
+>>> ds2 = xr.DataArray(
 ...     np.zeros((5, 6)) + 300.,
 ...     coords=[
 ...         np.linspace(90., -90., 5),
 ...         np.linspace(0., 360., 6, endpoint=False),
 ...     ],
 ...     dims=['latitude', 'longitude'],
-... )
->>> da.attrs['GRIB_shortName'] = 'skt'
->>> xarray_store.to_grib(da.to_dataset(), 'out2.grib')
+... ).to_dataset(name='skin_temperature')
+>>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
+>>> xarray_store.to_grib(ds2, 'out2.grib')
 >>> xarray_store.open_dataset('out2.grib')
 <xarray.Dataset>
 Dimensions:     (latitude: 5, longitude: 6)
