@@ -221,7 +221,7 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 >>> open_dataset('nam.t00z.awip1200.tm00.grib2',
-...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'topLevel': 2})
+...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'level': 2})
 <xarray.Dataset>
 Dimensions:            (x: 614, y: 428)
 Coordinates:

@@ -16,7 +16,7 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 def test_GribDataStore():
     datastore = xarray_store.GribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
-    expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
+    expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
@@ -27,7 +27,7 @@ def test_xarray_open_dataset():
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+    assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
 
     assert res['t'].mean() > 0.
 
@@ -62,7 +62,7 @@ def test_open_dataset_encode_time():
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['units'] == 'K'
-    assert res['t'].dims == ('number', 'time', 'topLevel', 'i')
+    assert res['t'].dims == ('number', 'time', 'level', 'i')
 
     assert res['t'].mean() > 0.
 
@@ -84,7 +84,7 @@ def test_open_dataset_encode_geography():
     var = res['t']
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'latitude', 'longitude')
 
     assert var.mean() > 0.
 

@@ -28,7 +28,7 @@ def test_dict_merge():
 def test_build_data_var_components_no_encode():
     index = messages.FileStream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_data_var_components(index=index)
-    assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'topLevel': 2, 'i': 7320}
+    assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
     # equivalent to not np.isnan without importing numpy
@@ -43,7 +43,7 @@ def test_build_data_var_components_encode_geography():
     )
     assert dims == {
         'number': 10, 'dataDate': 2, 'dataTime': 2,
-        'topLevel': 2, 'latitude': 61, 'longitude': 120,
+        'level': 2, 'latitude': 61, 'longitude': 120,
     }
     assert data_var.data.shape == (10, 2, 2, 2, 61, 120)
 
@@ -66,7 +66,7 @@ def test_Dataset_no_encode():
     )
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
-    assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'topLevel', 'i')
+    assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'level', 'i')
     assert len(res.variables) == 9
 
 
@@ -74,7 +74,7 @@ def test_Dataset_encode_time():
     res = dataset.Dataset.from_path(TEST_DATA, encode_vertical=False, encode_geography=False)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
-    assert tuple(res.dimensions.keys()) == ('number', 'time', 'topLevel', 'i')
+    assert tuple(res.dimensions.keys()) == ('number', 'time', 'level', 'i')
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
@@ -86,7 +86,7 @@ def test_Dataset_encode_geography():
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
-        ('number', 'dataDate', 'dataTime', 'topLevel', 'latitude', 'longitude')
+        ('number', 'dataDate', 'dataTime', 'level', 'latitude', 'longitude')
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy

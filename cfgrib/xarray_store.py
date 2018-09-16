@@ -82,7 +82,6 @@ FLAVOURS = {
             'air_pressure': 'plev',
             'latitude': 'lat',
             'longitude': 'lon',
-            'topLevel': 'level',
         },
         'type_of_level_map': {
             'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
@@ -112,7 +111,7 @@ class GribDataStore(AbstractDataStore):
                 coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
                 if isinstance(coord_name, T.Callable):
                     coord_name = coord_name(var.attributes)
-                self.variable_map['topLevel'] = coord_name.format(**var.attributes)
+                self.variable_map['level'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, cfgrib.dataset.OnDiskArray):

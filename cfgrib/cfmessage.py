@@ -140,7 +140,7 @@ def build_valid_time(time, step):
     return dims, data
 
 
-def from_grib_pl_level(message, level_key='topLevel'):
+def from_grib_pl_level(message, level_key='level'):
     # type: (T.Mapping, str) -> float
     type_of_level = message['typeOfLevel']
     if type_of_level == 'isobaricInhPa':
@@ -152,7 +152,7 @@ def from_grib_pl_level(message, level_key='topLevel'):
     return coord
 
 
-def to_grib_pl_level(message, coord, level_key='topLevel'):
+def to_grib_pl_level(message, coord, level_key='level'):
     # type: (T.MutableMapping, float, str) -> None
     # ecCodes accepts floats in hPa and correctly encodes them to int in isobaricInPa if needed
     message['typeOfLevel'] = 'isobaricInhPa'
