@@ -212,18 +212,34 @@ def detect_regular_ll_grib_keys(lon, lat):
     return grib_keys
 
 
-def detect_grib_keys(data_var):
-    # type: (xr.DataArray) -> dict
-    grib_keys = {}
+def detect_grib_keys(data_var, default_grib_keys):
+    # type: (xr.DataArray, dict) -> T.Tuple[dict, dict]
+    detected_grib_keys = {}
+    suggested_grib_keys = default_grib_keys.copy()
 
     if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
         regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
-        grib_keys.update(regular_ll_grib_keys)
+        detected_grib_keys.update(regular_ll_grib_keys)
 
-    if 'air_pressure' in data_var.dims:
-        grib_keys['typeOfLevel'] = 'isobaricInhPa'
+    if 'air_pressure' in data_var.dims or 'air_pressure' in data_var.coords:
+        detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
 
-    return grib_keys
+    if 'GRIB_typeOflevel' in data_var.attrs:
+        suggested_grib_keys['typeOflevel'] = data_var.attrs['GRIB_typeOflevel']
+
+    if 'number' in data_var.dims or 'number' in data_var.coords:
+        # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
+        detected_grib_keys['productDefinitionTemplateNumber'] = 1
+
+    if 'shortName' in data_var.attrs:
+        detected_grib_keys['shortName'] = data_var.attrs['shortName']
+
+    if 'GRIB_shortName' in data_var.attrs:
+        suggested_grib_keys['shortName'] = data_var.attrs['GRIB_shortName']
+    elif data_var.name:
+        suggested_grib_keys['shortName'] = data_var.name
+
+    return detected_grib_keys, suggested_grib_keys
 
 
 def detect_sample_name(grib_keys):
@@ -263,8 +279,8 @@ def canonical_dataarray_to_grib(
     from cfgrib import eccodes
     from cfgrib import dataset
 
-    detected_grib_keys = detect_grib_keys(data_var)
-    merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys)
+    detected_grib_keys, suggested_grib_keys = detect_grib_keys(data_var, default_grib_keys)
+    merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, suggested_grib_keys)
 
     if 'gridType' not in merged_grib_keys:
         raise ValueError("required grid_key 'gridType' not passed nor auto-detected")
@@ -303,8 +319,6 @@ def to_grib(dataset, path, mode='wb', **kwargs):
     _validate_dataset_names(dataset)
     _validate_attrs(dataset)
 
-    grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == 'GRIB_'}
-
     with open(path, mode=mode) as file:
         for data_var in dataset.data_vars.values():
-            canonical_dataarray_to_grib(file, data_var, grib_keys=grib_keys, **kwargs)
+            canonical_dataarray_to_grib(file, data_var, **kwargs)
