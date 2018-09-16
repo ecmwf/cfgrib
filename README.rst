@@ -25,7 +25,7 @@ Limitations:
   see the Advanced Usage section below and
   `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
-- limited support to write carefully-crafted ``xarray.Dataset``s to a GRIB2 file,
+- limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the Advanced Write Usage section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
 - no support for opening multiple GRIB files (yet), see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
