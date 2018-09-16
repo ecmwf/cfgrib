@@ -25,7 +25,9 @@ Limitations:
   see the Advanced Usage section below and
   `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
-- no write support (yet),
+- limited support to write carefully-crafted ``xarray.Dataset``s to a GRIB2 file,
+  see the Advanced Write Usage section below and
+  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
 - no support for opening multiple GRIB files (yet), see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - incomplete documentation (yet),
 - no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
@@ -181,8 +183,7 @@ you can use:
 
 .. code-block: python
 
->>> from cfgrib.xarray_store import open_dataset
->>> open_dataset('nam.t00z.awip1200.tm00.grib2',
+>>> xarray_store.open_dataset('nam.t00z.awip1200.tm00.grib2',
 ...              filter_by_keys={'typeOfLevel': 'surface', 'stepType': 'instant'})
 <xarray.Dataset>
 Dimensions:     (x: 614, y: 428)
@@ -220,7 +221,7 @@ Attributes:
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
->>> open_dataset('nam.t00z.awip1200.tm00.grib2',
+>>> xarray_store.open_dataset('nam.t00z.awip1200.tm00.grib2',
 ...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'level': 2})
 <xarray.Dataset>
 Dimensions:            (x: 614, y: 428)
@@ -244,6 +245,93 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
+
+Advanced Write Usage
+--------------------
+
+**Please note that write support is highly experimental.**
+Only ``xarray.Dataset``s with the coordinates names matching the GRIB coordinates can be saved:
+
+.. code-block: python
+
+>>> ds = xarray_store.open_dataset('era5-levels-members.grib')
+>>> ds
+<xarray.Dataset>
+Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Coordinates:
+  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+    step          timedelta64[ns] ...
+  * air_pressure  (air_pressure) float64 850.0 500.0
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+    valid_time    (time) datetime64[ns] ...
+Data variables:
+    z             (number, time, air_pressure, latitude, longitude) float32 ...
+    t             (number, time, air_pressure, latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            1
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+>>> xarray_store.to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
+>>> xarray_store.open_dataset('out1.grib')
+<xarray.Dataset>
+Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Coordinates:
+  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+    step          timedelta64[ns] ...
+  * air_pressure  (air_pressure) float64 850.0 500.0
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+    valid_time    (time) datetime64[ns] ...
+Data variables:
+    z             (number, time, air_pressure, latitude, longitude) float32 ...
+    t             (number, time, air_pressure, latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+
+Per-variable GRIB keys can be set by setting the `attrs` variable with key prefixed by `GRIB_`,
+for example:
+
+.. code-block: python
+
+>>> import numpy as np
+>>> import xarray as xr
+>>> da = xr.DataArray(
+...     np.zeros((5, 6)) + 300.,
+...     coords=[
+...         np.linspace(90., -90., 5),
+...         np.linspace(0., 360., 6, endpoint=False),
+...     ],
+...     dims=['latitude', 'longitude'],
+... )
+>>> da.attrs['GRIB_shortName'] = 'skt'
+>>> xarray_store.to_grib(da.to_dataset(), 'out2.grib')
+>>> xarray_store.open_dataset('out2.grib')
+<xarray.Dataset>
+Dimensions:     (latitude: 5, longitude: 6)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    surface     int64 ...
+  * latitude    (latitude) float64 90.0 45.0 0.0 -45.0 -90.0
+  * longitude   (longitude) float64 0.0 60.0 120.0 180.0 240.0 300.0
+    valid_time  datetime64[ns] ...
+Data variables:
+    skt         (latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             consensus
+    GRIB_centreDescription:  Consensus
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
 Contributing
 ------------
