@@ -25,6 +25,7 @@ import logging
 import typing as T
 
 import attr
+import numpy as np
 import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
@@ -167,42 +168,102 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
 #
 # write support
 #
-def detect_grib_attributes(data_var, grib_attributes=None):
-    # type: (xr.DataArray, T.Mapping) -> dict
-    if grib_attributes is None:
-        grib_attributes = {}
-    return dict(grib_attributes)
+def regular_ll_params(values, min_value=-180., max_value=360.):
+    # type: (T.Sequence, float, float) -> T.Tuple[float, float, int]
+    start, stop, num = float(values[0]), float(values[-1]), len(values)
+    if min(start, stop) < min_value or max(start, stop) > max_value:
+        raise ValueError("Unsupported spatial grid: out of bounds (%r, %r)" % (start, stop))
+    check_values = np.linspace(start, stop, num)
+    if not np.allclose(check_values, values):
+        raise ValueError("Unsupported spatial grid: not regular %r" % (check_values,))
+    return (start, stop, num)
 
 
-def detect_sample_name(grib_attributes):
+def detect_regular_ll_grib_keys(lon, lat):
+    # type: (np.ndarray, np.ndarray) -> T.Dict[bytes, T.Any]
+    grib_keys = {}  # type: T.Dict[bytes, T.Any]
+
+    lon_start, lon_stop, lon_num = regular_ll_params(lon)
+    lon_scan_negatively = lon_stop < lon_start
+    lon_step = abs(lon_stop - lon_start) / (lon_num - 1.)
+    if lon_start < 0.:
+        lon_start += 360.
+    if lon_stop < 0.:
+        lon_stop += 360.
+    grib_keys['longitudeOfFirstGridPointInDegrees'] = lon_start
+    grib_keys['longitudeOfLastGridPointInDegrees'] = lon_stop
+    grib_keys['Ni'] = lon_num
+    grib_keys['iDirectionIncrementInDegrees'] = lon_step
+    grib_keys['iScansNegatively'] = lon_scan_negatively
+
+    lat_start, lat_stop, lat_num = regular_ll_params(lat, min_value=-90., max_value=90.)
+    grib_keys['latitudeOfFirstGridPointInDegrees'] = lat_start
+    grib_keys['latitudeOfLastGridPointInDegrees'] = lat_stop
+    grib_keys['Nj'] = lat_num
+    grib_keys['jDirectionIncrementInDegrees'] = abs(lat_stop - lat_start) / (lat_num - 1.)
+    grib_keys['jScansPositively'] = lat_stop > lat_start
+    grib_keys['gridType'] = 'regular_ll'
+
+    return grib_keys
+
+
+def detect_grib_keys(data_var):
+    # type: (xr.DataArray) -> dict
+    grib_keys = {}
+
+    if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
+        regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
+        grib_keys.update(regular_ll_grib_keys)
+
+    return grib_keys
+
+
+def detect_sample_name(grib_keys):
     # type: (T.Mapping) -> str
-
-    if grib_attributes['gridType'] == 'regular_ll':
+    if grib_keys['gridType'] == 'regular_ll':
         geography = 'regular_ll'
     else:
-        raise NotImplementedError("Unsupported 'gridType': %r" % grib_attributes['gridType'])
+        raise NotImplementedError("Unsupported 'gridType': %r" % grib_keys['gridType'])
 
-    if grib_attributes['typeOfLevel'] == 'isobaricInhPa':
+    if grib_keys['typeOfLevel'] == 'isobaricInhPa':
         vertical = 'pl'
-    elif grib_attributes['typeOfLevel'] in ('surface', 'meanSea'):
+    elif grib_keys['typeOfLevel'] in ('surface', 'meanSea'):
         vertical = 'sfc'
     else:
-        raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
+        raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
 
     sample_name = '%s_%s_grib2' % (geography, vertical)
     return sample_name
 
 
-def ecmwf_dataarray_to_grib(file, data_var, grib_attributes=None, sample_name=None):
-    # type: (T.BinaryIO, xr.DataArray, T.Dict[str, T.Any], str) -> None
+def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
+    from cfgrib import dataset
+
+    merged_grib_keys = {k: v for k, v in grib_keys.items()}
+    dataset.dict_merge(merged_grib_keys, detected_grib_keys)
+    for key, value in default_grib_keys.items():
+        if key not in merged_grib_keys:
+            merged_grib_keys[key] = value
+    return merged_grib_keys
+
+
+def canonical_dataarray_to_grib(file, data_var, grib_keys={}, sample_name=None):
+    # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], str) -> None
     from cfgrib import cfmessage
     from cfgrib import eccodes
     from cfgrib import dataset
 
-    grib_attributes = detect_grib_attributes(data_var, grib_attributes)
+    default_grib_keys = {
+        'typeOfLevel': 'surface',
+    }
+    detected_grib_keys = detect_grib_keys(data_var)
+    merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys)
+
+    if 'gridType' not in merged_grib_keys:
+        raise ValueError("required grid_key 'gridType' not passed nor auto-detected")
 
     if sample_name is None:
-        sample_name = detect_sample_name(grib_attributes)
+        sample_name = detect_sample_name(merged_grib_keys)
 
     header_coords_names = []
     for coord_name in dataset.ALL_HEADER_DIMS:
@@ -214,7 +275,7 @@ def ecmwf_dataarray_to_grib(file, data_var, grib_attributes=None, sample_name=No
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
     for items in itertools.product(*header_coords_values):
         message = cfmessage.CfMessage.from_sample_name(sample_name)
-        for key, value in grib_attributes.items():
+        for key, value in merged_grib_keys.items():
             try:
                 message[key] = value
             except eccodes.EcCodesError as ex:
@@ -230,16 +291,16 @@ def ecmwf_dataarray_to_grib(file, data_var, grib_attributes=None, sample_name=No
         message.write(file)
 
 
-def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
+def to_grib(dataset, path, mode='wb', sample_name=None):
     # validate Dataset keys, DataArray names, and attr keys/values
-    _validate_dataset_names(ecmwf_dataset)
-    _validate_attrs(ecmwf_dataset)
+    _validate_dataset_names(dataset)
+    _validate_attrs(dataset)
 
-    grib_attributes = {k[5:]: v for k, v in ecmwf_dataset.attrs.items() if k[:5] == 'GRIB_'}
+    grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == 'GRIB_'}
 
     with open(path, mode=mode) as file:
-        for data_var in ecmwf_dataset.data_vars.values():
-            grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
-            ecmwf_dataarray_to_grib(
-                file, data_var, grib_attributes=grib_attributes, sample_name=sample_name,
+        for data_var in dataset.data_vars.values():
+            grib_keys.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
+            canonical_dataarray_to_grib(
+                file, data_var, grib_keys=grib_keys, sample_name=sample_name,
             )
