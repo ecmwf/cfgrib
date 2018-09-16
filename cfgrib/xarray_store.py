@@ -168,6 +168,12 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
 #
 # write support
 #
+DEFAULT_GRIB_KEYS = {
+    'centre': 255,  # missing value, see: http://apps.ecmwf.int/codes/grib/format/grib1/centre/0/
+    'typeOfLevel': 'surface',
+}
+
+
 def regular_ll_params(values, min_value=-180., max_value=360.):
     # type: (T.Sequence, float, float) -> T.Tuple[float, float, int]
     start, stop, num = float(values[0]), float(values[-1]), len(values)
@@ -215,6 +221,9 @@ def detect_grib_keys(data_var):
         regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
         grib_keys.update(regular_ll_grib_keys)
 
+    if 'air_pressure' in data_var.dims:
+        grib_keys['typeOfLevel'] = 'isobaricInhPa'
+
     return grib_keys
 
 
@@ -247,15 +256,14 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
     return merged_grib_keys
 
 
-def canonical_dataarray_to_grib(file, data_var, grib_keys={}, sample_name=None):
-    # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], str) -> None
+def canonical_dataarray_to_grib(
+        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, sample_name=None
+):
+    # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], T.Mapping[str, T.Any], str) -> None
     from cfgrib import cfmessage
     from cfgrib import eccodes
     from cfgrib import dataset
 
-    default_grib_keys = {
-        'typeOfLevel': 'surface',
-    }
     detected_grib_keys = detect_grib_keys(data_var)
     merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys)
 
@@ -291,7 +299,7 @@ def canonical_dataarray_to_grib(file, data_var, grib_keys={}, sample_name=None):
         message.write(file)
 
 
-def to_grib(dataset, path, mode='wb', sample_name=None):
+def to_grib(dataset, path, mode='wb', **kwargs):
     # validate Dataset keys, DataArray names, and attr keys/values
     _validate_dataset_names(dataset)
     _validate_attrs(dataset)
@@ -300,7 +308,4 @@ def to_grib(dataset, path, mode='wb', sample_name=None):
 
     with open(path, mode=mode) as file:
         for data_var in dataset.data_vars.values():
-            grib_keys.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
-            canonical_dataarray_to_grib(
-                file, data_var, grib_keys=grib_keys, sample_name=sample_name,
-            )
+            canonical_dataarray_to_grib(file, data_var, grib_keys=grib_keys, **kwargs)
