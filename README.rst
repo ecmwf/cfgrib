@@ -22,11 +22,11 @@ Limitations:
 
 - development stage: **Alpha**,
 - limited support for GRIB files containing multiple hypecubes (yet),
-  see the Advanced Usage section below and
+  see the *Advanced usage* section below and
   `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
-  see the Advanced Write Usage section below and
+  see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
 - no support for opening multiple GRIB files (yet), see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - incomplete documentation (yet),
@@ -228,7 +228,7 @@ Attributes:
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
 
-Advanced Write Usage
+Advanced write usage
 --------------------
 
 **Please note that write support is highly experimental.**
@@ -279,7 +279,7 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
-Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by `GRIB_`,
+Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by ``GRIB_``,
 for example:
 
 .. code-block: python
