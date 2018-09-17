@@ -20,17 +20,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
-import itertools
 import logging
-import typing as T
+import typing as T  # noqa
 
 import attr
-import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
 from xarray.backends.api import open_dataset as _open_dataset
-from xarray.backends.api import _validate_attrs, _validate_dataset_names
 from xarray.backends.common import AbstractDataStore, BackendArray
 
 import cfgrib
@@ -81,7 +78,6 @@ FLAVOURS = {
             'air_pressure': 'plev',
             'latitude': 'lat',
             'longitude': 'lon',
-            'topLevel': 'level',
         },
         'type_of_level_map': {
             'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
@@ -111,7 +107,7 @@ class GribDataStore(AbstractDataStore):
                 coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
                 if isinstance(coord_name, T.Callable):
                     coord_name = coord_name(var.attributes)
-                self.variable_map['topLevel'] = coord_name.format(**var.attributes)
+                self.variable_map['level'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, cfgrib.dataset.OnDiskArray):
@@ -162,84 +158,3 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.from_path(path, **overrides)
     return _open_dataset(store, **kwargs)
-
-
-#
-# write support
-#
-def detect_grib_attributes(data_var, grib_attributes=None):
-    # type: (xr.DataArray, T.Mapping) -> dict
-    if grib_attributes is None:
-        grib_attributes = {}
-    return dict(grib_attributes)
-
-
-def detect_sample_name(grib_attributes):
-    # type: (T.Mapping) -> str
-
-    if grib_attributes['gridType'] == 'regular_ll':
-        geography = 'regular_ll'
-    else:
-        raise NotImplementedError("Unsupported 'gridType': %r" % grib_attributes['gridType'])
-
-    if grib_attributes['typeOfLevel'] == 'isobaricInhPa':
-        vertical = 'pl'
-    elif grib_attributes['typeOfLevel'] in ('surface', 'meanSea'):
-        vertical = 'sfc'
-    else:
-        raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_attributes['typeOfLevel'])
-
-    sample_name = '%s_%s_grib2' % (geography, vertical)
-    return sample_name
-
-
-def ecmwf_dataarray_to_grib(file, data_var, grib_attributes=None, sample_name=None):
-    # type: (T.BinaryIO, xr.DataArray, T.Dict[str, T.Any], str) -> None
-    from cfgrib import cfmessage
-    from cfgrib import eccodes
-    from cfgrib import dataset
-
-    grib_attributes = detect_grib_attributes(data_var, grib_attributes)
-
-    if sample_name is None:
-        sample_name = detect_sample_name(grib_attributes)
-
-    header_coords_names = []
-    for coord_name in dataset.ALL_HEADER_DIMS:
-        if coord_name in set(data_var.coords):
-            header_coords_names.append(coord_name)
-            if coord_name not in data_var.dims:
-                data_var = data_var.expand_dims(coord_name)
-
-    header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
-    for items in itertools.product(*header_coords_values):
-        message = cfmessage.CfMessage.from_sample_name(sample_name)
-        for key, value in grib_attributes.items():
-            try:
-                message[key] = value
-            except eccodes.EcCodesError as ex:
-                if ex.code != eccodes.lib.GRIB_READ_ONLY:
-                    LOGGER.exception("Can't encode key: %r" % key)
-
-        for coord_name, coord_value in zip(header_coords_names, items):
-            message[coord_name] = coord_value
-
-        select = {n: v for n, v in zip(header_coords_names, items)}
-        message['values'] = data_var.sel(**select).values.flat[:].tolist()
-
-        message.write(file)
-
-
-def to_grib(ecmwf_dataset, path, mode='wb', sample_name=None):
-    # validate Dataset keys, DataArray names, and attr keys/values
-    _validate_dataset_names(ecmwf_dataset)
-    _validate_attrs(ecmwf_dataset)
-
-    grib_attributes = {k[5:]: v for k, v in ecmwf_dataset.attrs.items() if k[:5] == 'GRIB_'}
-
-    with open(path, mode=mode) as file:
-        for data_var in ecmwf_dataset.data_vars.values():
-            grib_attributes.update({k[5:]: v for k, v in data_var.attrs.items() if k[:5] == 'GRIB_'})
-            ecmwf_dataarray_to_grib(
-                file, data_var, grib_attributes=grib_attributes, sample_name=sample_name,
-            )

@@ -80,7 +80,7 @@ HEADER_COORDINATES_MAP = [
     ('number', True),
 ]
 VERTICAL_COORDINATE_MAP = [
-    ('topLevel', False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('level', False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
 ]
 PLEV_COORDINATE_MAP = [
     ('air_pressure', False),  # NOTE: this supports mixed 'isobaricInPa' / 'isobaricInhPa'.

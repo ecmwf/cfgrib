@@ -104,7 +104,11 @@ class Message(collections.MutableMapping):
 
     def __setitem__(self, item, value):
         # type: (str, T.Any) -> None
-        return self.message_set(item, value)
+        try:
+            return self.message_set(item, value)
+        except eccodes.EcCodesError as ex:
+            message = ex.eccode_message + ' (%r = %r)' % (item, value)
+            raise eccodes.EcCodesError(ex.code, message=message)
 
     def __delitem__(self, item):
         raise NotImplementedError

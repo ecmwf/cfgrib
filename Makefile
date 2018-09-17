@@ -4,6 +4,9 @@ IMAGE := $(PACKAGE)
 MODULE := $(PACKAGE)
 PYTHONS := python3.7 python3.6 python3.5 pypy3 python2.7 pypy
 
+PYTESTFLAGS_TEST := -v --flakes --doctest-glob '*.rst' --cov=$(MODULE) --cov=cf2cdm --cov-report=html --cache-clear
+PYTESTFLAGS_QC := --pep8 --mccabe $(PYTESTFLAGS_TEST)
+
 export WHEELHOUSE := ~/.wheelhouse
 export PIP_FIND_LINKS := $(WHEELHOUSE)
 export PIP_WHEEL_DIR := $(WHEELHOUSE)
@@ -86,10 +89,10 @@ update-req:
 	$(RUN) pip-compile -o ci/requirements-docs.txt -U setup.py ci/requirements-docs.in
 
 test: testclean
-	$(RUN) python setup.py test --addopts "-v --flakes --cov=$(MODULE) --cov=cf2cdm --cov-report=html --cache-clear"
+	$(RUN) python setup.py test --addopts "$(PYTESTFLAGS_TEST)"
 
 qc: testclean
-	$(RUN) python setup.py test --addopts "-v --pep8 --mccabe"
+	$(RUN) python setup.py test --addopts "$(PYTESTFLAGS_QC)"
 
 doc:
 	$(RUN) python setup.py build_sphinx
