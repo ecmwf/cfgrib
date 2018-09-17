@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from cfgrib import xarray_store
+from cfgrib import xarray_to_grib
 
 
 @pytest.fixture()
@@ -29,13 +29,13 @@ def test_canonical_dataarray_to_grib_with_grik_keys(canonic_dataarray, tmpdir):
         'gridType': 'regular_ll',
     }
     with open(str(out_path), 'wb') as file:
-        xarray_store.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)
+        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)
 
 
 def test_canonical_dataarray_to_grib_detect_grik_keys(canonic_dataarray, tmpdir):
     out_path = tmpdir.join('res.grib')
     with open(str(out_path), 'wb') as file:
-        xarray_store.canonical_dataarray_to_grib(file, canonic_dataarray)
+        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray)
 
 
 def test_canonical_dataarray_to_grib_conflicting_detect_grik_keys(canonic_dataarray, tmpdir):
@@ -45,4 +45,4 @@ def test_canonical_dataarray_to_grib_conflicting_detect_grik_keys(canonic_dataar
     }
     with open(str(out_path), 'wb') as file:
         with pytest.raises(ValueError):
-            xarray_store.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)
+            xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)

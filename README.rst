@@ -124,18 +124,17 @@ In a Python interpreter try:
 
 .. code-block: python
 
->>> from cfgrib import xarray_store
->>> ds = xarray_store.open_dataset('era5-levels-members.grib')
+>>> ds = cfgrib.open_dataset('era5-levels-members.grib')
 >>> ds
 <xarray.Dataset>
 Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
   * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step          timedelta64[ns] ...
   * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time    (time) datetime64[ns] ...
 Data variables:
     z             (number, time, air_pressure, latitude, longitude) float32 ...
@@ -183,7 +182,7 @@ you can use:
 
 .. code-block: python
 
->>> xarray_store.open_dataset('nam.t00z.awip1200.tm00.grib2',
+>>> cfgrib.open_dataset('nam.t00z.awip1200.tm00.grib2',
 ...              filter_by_keys={'typeOfLevel': 'surface', 'stepType': 'instant'})
 <xarray.Dataset>
 Dimensions:     (x: 614, y: 428)
@@ -202,7 +201,7 @@ Data variables:
     sp          (y, x) float32 ...
     orog        (y, x) float32 ...
     t           (y, x) float32 ...
-    unknown     (y, x) float32 ...
+    cnwat       (y, x) float32 ...
     sdwe        (y, x) float32 ...
     sde         (y, x) float32 ...
     prate       (y, x) float32 ...
@@ -221,7 +220,7 @@ Attributes:
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
->>> xarray_store.open_dataset('nam.t00z.awip1200.tm00.grib2',
+>>> cfgrib.open_dataset('nam.t00z.awip1200.tm00.grib2',
 ...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'level': 2})
 <xarray.Dataset>
 Dimensions:            (x: 614, y: 428)
@@ -254,17 +253,17 @@ Only ``xarray.Dataset``s with the coordinates names matching the GRIB coordinate
 
 .. code-block: python
 
->>> ds = xarray_store.open_dataset('era5-levels-members.grib')
+>>> ds = cfgrib.open_dataset('era5-levels-members.grib')
 >>> ds
 <xarray.Dataset>
 Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
   * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step          timedelta64[ns] ...
   * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time    (time) datetime64[ns] ...
 Data variables:
     z             (number, time, air_pressure, latitude, longitude) float32 ...
@@ -275,17 +274,17 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
->>> xarray_store.to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
->>> xarray_store.open_dataset('out1.grib')
+>>> cfgrib.to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
+>>> cfgrib.open_dataset('out1.grib')
 <xarray.Dataset>
 Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
   * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 2017-01-01T12:00:00 ...
+  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step          timedelta64[ns] ...
   * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 78.0 75.0 72.0 69.0 ...
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 12.0 15.0 18.0 21.0 ...
+  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time    (time) datetime64[ns] ...
 Data variables:
     z             (number, time, air_pressure, latitude, longitude) float32 ...
@@ -313,8 +312,8 @@ for example:
 ...     dims=['latitude', 'longitude'],
 ... ).to_dataset(name='skin_temperature')
 >>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
->>> xarray_store.to_grib(ds2, 'out2.grib')
->>> xarray_store.open_dataset('out2.grib')
+>>> cfgrib.to_grib(ds2, 'out2.grib')
+>>> cfgrib.open_dataset('out2.grib')
 <xarray.Dataset>
 Dimensions:     (latitude: 5, longitude: 6)
 Coordinates:
