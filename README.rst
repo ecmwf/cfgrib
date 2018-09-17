@@ -232,7 +232,7 @@ Advanced Write Usage
 --------------------
 
 **Please note that write support is highly experimental.**
-Only ``xarray.Dataset``s with the coordinates names matching the GRIB coordinates can be saved:
+Only ``xarray.Dataset``'s with the coordinates names matching the GRIB coordinates can be saved:
 
 .. code-block: python
 
@@ -314,6 +314,7 @@ Attributes:
     GRIB_centreDescription:  Consensus
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+
 
 Contributing
 ------------
