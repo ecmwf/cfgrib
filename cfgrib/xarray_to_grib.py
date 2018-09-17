@@ -101,8 +101,8 @@ def detect_grib_keys(data_var, default_grib_keys):
     return detected_grib_keys, suggested_grib_keys
 
 
-def detect_sample_name(grib_keys):
-    # type: (T.Mapping) -> str
+def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_grib2'):
+    # type: (T.Mapping, str) -> str
     if grib_keys['gridType'] == 'regular_ll':
         geography = 'regular_ll'
     else:
@@ -115,7 +115,7 @@ def detect_sample_name(grib_keys):
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
 
-    sample_name = '%s_%s_grib2' % (geography, vertical)
+    sample_name = sample_name_template.format(**locals())
     return sample_name
 
 
@@ -130,8 +130,19 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
     return merged_grib_keys
 
 
+def expand_dims(data_var):
+    header_coords_names = []
+    for coord_name in dataset.ALL_HEADER_DIMS:
+        if coord_name in set(data_var.coords):
+            header_coords_names.append(coord_name)
+            if coord_name not in data_var.dims:
+                data_var = data_var.expand_dims(coord_name)
+    return header_coords_names, data_var
+
+
 def canonical_dataarray_to_grib(
-        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, sample_name=None
+        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS,
+        sample_name_template='{geography}_{vertical}_grib2'
 ):
     # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], T.Mapping[str, T.Any], str) -> None
     detected_grib_keys, suggested_grib_keys = detect_grib_keys(data_var, default_grib_keys)
@@ -140,15 +151,9 @@ def canonical_dataarray_to_grib(
     if 'gridType' not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
-    if sample_name is None:
-        sample_name = detect_sample_name(merged_grib_keys)
+    sample_name = detect_sample_name(merged_grib_keys, sample_name_template=sample_name_template)
 
-    header_coords_names = []
-    for coord_name in dataset.ALL_HEADER_DIMS:
-        if coord_name in set(data_var.coords):
-            header_coords_names.append(coord_name)
-            if coord_name not in data_var.dims:
-                data_var = data_var.expand_dims(coord_name)
+    header_coords_names, data_var = expand_dims(data_var)
 
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
     for items in itertools.product(*header_coords_values):
@@ -157,8 +162,7 @@ def canonical_dataarray_to_grib(
             try:
                 message[key] = value
             except eccodes.EcCodesError as ex:
-                if ex.code != eccodes.lib.GRIB_READ_ONLY:
-                    LOGGER.exception("Can't encode key: %r" % key)
+                LOGGER.exception("skipping key due to errors: %r" % key)
 
         for coord_name, coord_value in zip(header_coords_names, items):
             message[coord_name] = coord_value
