@@ -279,7 +279,7 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
 
-Per-variable GRIB keys can be set by setting the `attrs` variable with key prefixed by `GRIB_`,
+Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by `GRIB_`,
 for example:
 
 .. code-block: python
