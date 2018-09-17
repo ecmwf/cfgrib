@@ -138,7 +138,7 @@ def canonical_dataarray_to_grib(
     merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, suggested_grib_keys)
 
     if 'gridType' not in merged_grib_keys:
-        raise ValueError("required grid_key 'gridType' not passed nor auto-detected")
+        raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
     if sample_name is None:
         sample_name = detect_sample_name(merged_grib_keys)
