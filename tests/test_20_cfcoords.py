@@ -9,7 +9,7 @@ from cf2cdm import cfcoords
 
 
 @pytest.fixture
-def dataarray1():
+def da1():
     latitude = [0., 0.5]
     longitude = [10., 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
@@ -27,7 +27,7 @@ def dataarray1():
 
 
 @pytest.fixture
-def dataarray2():
+def da2():
     latitude = [0., 0.5]
     longitude = [10., 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
@@ -71,42 +71,42 @@ def test_match_values():
     assert res == ['callable']
 
 
-def test_coord_translator(dataarray1):
-    res = cfcoords.coord_translator('level', 'hPa', lambda x: False, 'level', dataarray1)
-    assert dataarray1.equals(res)
+def test_coord_translator(da1):
+    res = cfcoords.coord_translator('level', 'hPa', lambda x: False, 'level', da1)
+    assert da1.equals(res)
 
     with pytest.raises(ValueError):
-        cfcoords.coord_translator('level', 'hPa', lambda x: True, 'level', dataarray1)
+        cfcoords.coord_translator('level', 'hPa', lambda x: True, 'level', da1)
 
-    res = cfcoords.coord_translator('level', 'hPa', cfcoords.is_vertical_pressure, 'level', dataarray1)
-    assert dataarray1.equals(res)
+    res = cfcoords.coord_translator('level', 'hPa', cfcoords.is_vertical_pressure, 'level', da1)
+    assert da1.equals(res)
 
     with pytest.raises(ValueError):
-        cfcoords.coord_translator('level', 'hPa', cfcoords.is_latitude, 'level', dataarray1)
+        cfcoords.coord_translator('level', 'hPa', cfcoords.is_latitude, 'level', da1)
 
-    res = cfcoords.coord_translator('level', 'Pa', cfcoords.is_vertical_pressure, 'level', dataarray1)
-    assert not dataarray1.equals(res)
+    res = cfcoords.coord_translator('level', 'Pa', cfcoords.is_vertical_pressure, 'level', da1)
+    assert not da1.equals(res)
 
-    res = cfcoords.coord_translator('step', 'h', cfcoords.is_forecast_period, 'step', dataarray1)
-    assert dataarray1.equals(res)
+    res = cfcoords.coord_translator('step', 'h', cfcoords.is_forecast_period, 'step', da1)
+    assert da1.equals(res)
 
 
-def test_translate_coords(dataarray1, dataarray2):
-    result = cfcoords.translate_coords(dataarray1)
+def test_translate_coords(da1, da2):
+    result = cfcoords.translate_coords(da1)
 
     assert 'latitude' in result.coords
     assert 'longitude' in result.coords
     assert 'time' in result.coords
 
-    result = cfcoords.translate_coords(dataarray2)
+    result = cfcoords.translate_coords(da2)
 
     assert 'latitude' in result.coords
     assert 'longitude' in result.coords
     assert 'valid_time' in result.coords
 
 
-def test_ensure_valid_time(dataarray1, dataarray3):
-    result1 = cfcoords.ensure_valid_time(dataarray1.squeeze())
+def test_ensure_valid_time(da1, dataarray3):
+    result1 = cfcoords.ensure_valid_time(da1.squeeze())
     result2 = cfcoords.ensure_valid_time(result1)
 
     assert 'valid_time' in result1.coords

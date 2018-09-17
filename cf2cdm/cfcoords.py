@@ -90,8 +90,11 @@ def is_forecast_reference_time(coord):
     return coord.attrs.get('standard_name') == 'forecast_reference_time'
 
 
+TIME_CF_UNITS = 'seconds since 1970-01-01T00:00:00+00:00'
+
+
 COORD_TRANSLATORS['forecast_reference_time'] = functools.partial(
-    coord_translator, 'time', 'seconds since 1970-01-01T00:00:00+00:00', is_forecast_reference_time,
+    coord_translator, 'time', TIME_CF_UNITS, is_forecast_reference_time,
 )
 
 
@@ -115,7 +118,7 @@ def is_valid_time(coord):
 
 
 COORD_TRANSLATORS['valid_time'] = functools.partial(
-    coord_translator, 'valid_time', 'seconds since 1970-01-01T00:00:00+00:00', is_valid_time,
+    coord_translator, 'valid_time', TIME_CF_UNITS, is_valid_time,
 )
 
 
