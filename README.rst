@@ -18,18 +18,21 @@ Features:
 - map a GRIB 1 or 2 file to a set of N-dimensional variables following the NetCDF Common Data Model,
 - add CF Conventions attributes to known coordinate and data variables.
 
-Limitations:
+Work in progress:
 
-- development stage: **Alpha**,
-- limited support for GRIB files containing multiple hypecubes (yet),
+- limited support to read GRIB files containing multiple hypecubes,
   see the *Advanced usage* section below and
   `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
-- no support for opening multiple GRIB files (yet), see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
+
+Limitations:
+
+- development stage: **Alpha**,
 - incomplete documentation (yet),
+- no support for opening multiple GRIB files, see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
 - rely on *ecCodes* for the ``gridType`` handling.
