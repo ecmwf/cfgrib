@@ -41,6 +41,7 @@ def test_open_dataset_fail(grib_name):
     with pytest.raises(ValueError):
         xarray_store.open_dataset(grib_path, cache=False)
 
+
 # writing eccodes flavor is not supported ATM
 @pytest.mark.parametrize('grib_name', [
     pytest.param('era5-levels-members', marks=pytest.mark.xfail),
