@@ -257,14 +257,7 @@ def build_geography_coordinates(index, encode_geography, log=LOG):
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def build_data_var_components(
-        index,
-        encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
-        log=LOG,
-):
-    data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
-    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
-    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
+def do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, encode_vertical):
     if encode_parameter:
         if 'GRIB_cfName' in data_var_attrs:
             data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
@@ -272,8 +265,6 @@ def build_data_var_components(
             data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
         if 'GRIB_units' in data_var_attrs:
             data_var_attrs['units'] = data_var_attrs['GRIB_units']
-
-    coords_map = HEADER_COORDINATES_MAP[:]
     if encode_time:
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
@@ -282,6 +273,20 @@ def build_data_var_components(
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
+
+
+def build_data_var_components(
+        index,
+        encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
+        log=LOG,
+):
+    data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
+    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
+    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
+    coords_map = HEADER_COORDINATES_MAP[:]
+
+    do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, encode_vertical)
+
     coord_vars = collections.OrderedDict()
     for coord_key, increasing in coords_map:
         values = sorted(index[coord_key], reverse=not increasing)
