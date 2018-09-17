@@ -8,7 +8,7 @@ from cfgrib import xarray_to_grib
 
 
 @pytest.fixture()
-def canonic_dataarray():
+def canonic_da():
     da = xr.DataArray(
         np.zeros((4, 2, 3, 5, 6)),
         coords=[
@@ -23,26 +23,26 @@ def canonic_dataarray():
     return da
 
 
-def test_canonical_dataarray_to_grib_with_grik_keys(canonic_dataarray, tmpdir):
+def test_canonical_dataarray_to_grib_with_grik_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     grib_keys = {
         'gridType': 'regular_ll',
     }
     with open(str(out_path), 'wb') as file:
-        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)
+        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da, grib_keys=grib_keys)
 
 
-def test_canonical_dataarray_to_grib_detect_grik_keys(canonic_dataarray, tmpdir):
+def test_canonical_dataarray_to_grib_detect_grik_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     with open(str(out_path), 'wb') as file:
-        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray)
+        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da)
 
 
-def test_canonical_dataarray_to_grib_conflicting_detect_grik_keys(canonic_dataarray, tmpdir):
+def test_canonical_dataarray_to_grib_conflicting_detect_grik_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     grib_keys = {
         'gridType': 'reduced_ll',
     }
     with open(str(out_path), 'wb') as file:
         with pytest.raises(ValueError):
-            xarray_to_grib.canonical_dataarray_to_grib(file, canonic_dataarray, grib_keys=grib_keys)
+            xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da, grib_keys=grib_keys)
