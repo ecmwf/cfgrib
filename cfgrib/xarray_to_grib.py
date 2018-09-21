@@ -157,6 +157,19 @@ def canonical_dataarray_to_grib(
 
     header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
     for items in itertools.product(*header_coords_values):
+        select = {n: v for n, v in zip(header_coords_names, items)}
+        field_values = data_var.sel(**select).values.flat[:]
+
+        # Missing values handling
+        nan_field_values = np.isnan(field_values)
+
+        # There's no need to save a message full of missing values
+        if nan_field_values.all():
+            continue
+
+        missing_value = merged_grib_keys.get('missingValue', 9999)
+        field_values[nan_field_values] = missing_value
+
         message = cfmessage.CfMessage.from_sample_name(sample_name)
         for key, value in merged_grib_keys.items():
             try:
@@ -167,8 +180,7 @@ def canonical_dataarray_to_grib(
         for coord_name, coord_value in zip(header_coords_names, items):
             message[coord_name] = coord_value
 
-        select = {n: v for n, v in zip(header_coords_names, items)}
-        message['values'] = data_var.sel(**select).values.flat[:].tolist()
+        message['values'] = field_values.tolist()
 
         message.write(file)
 
