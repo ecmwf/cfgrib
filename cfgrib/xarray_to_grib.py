@@ -161,14 +161,14 @@ def canonical_dataarray_to_grib(
         field_values = data_var.sel(**select).values.flat[:]
 
         # Missing values handling
-        nan_field_values = np.isnan(field_values)
+        invalid_field_values = np.logical_not(np.isfinite(field_values))
 
         # There's no need to save a message full of missing values
-        if nan_field_values.all():
+        if invalid_field_values.all():
             continue
 
         missing_value = merged_grib_keys.get('missingValue', 9999)
-        field_values[nan_field_values] = missing_value
+        field_values[invalid_field_values] = missing_value
 
         message = cfmessage.CfMessage.from_sample_name(sample_name)
         for key, value in merged_grib_keys.items():
