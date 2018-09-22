@@ -31,7 +31,8 @@ Work in progress:
 Limitations:
 
 - development stage: **Alpha**,
-- incomplete documentation (yet),
+- target is correctness, not performance, for now,
+- incomplete documentation, for now,
 - no support for opening multiple GRIB files, see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
