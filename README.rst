@@ -10,7 +10,7 @@ Low level access and decoding is performed via the
 
 Features:
 
-- provisional GRIB driver for *xarray*,
+- read-only GRIB driver for *xarray*,
 - support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
 - only system dependency is the ecCodes C-library (not the Python2-only module),
 - no install time build (binds with *CFFI* ABI mode),
