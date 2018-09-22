@@ -31,3 +31,4 @@ Features:
     messages
     dataset
     xarray_store
+    xarray_to_grib
