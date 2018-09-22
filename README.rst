@@ -50,7 +50,7 @@ The package is installed from PyPI with::
 System dependencies
 ~~~~~~~~~~~~~~~~~~~
 
-The python module depends on the ECMWF *ecCodes* library
+The Python module depends on the ECMWF *ecCodes* library
 that must be installed on the system and accessible as a shared library.
 Some Linux distributions ship a binary version that may be installed with the standard package manager.
 On Ubuntu 18.04 use the command::
@@ -86,7 +86,7 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 Dataset / Variable API
 ~~~~~~~~~~~~~~~~~~~~~~
 
-You may try out the high level API in a python interpreter:
+You may try out the high level API in a Python interpreter:
 
 .. code-block: python
 
@@ -117,14 +117,10 @@ You may try out the high level API in a python interpreter:
 262.92133
 
 
-Provisional *xarray* GRIB driver
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Read-only *xarray* GRIB driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have xarray installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
-
-    $ pip install xarray
-
-In a Python interpreter try:
+Additionally ``cfgrib`` can open a GRIB file as a ``xarray.Dataset`` in a Python interpreter try:
 
 .. code-block: python
 
