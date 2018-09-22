@@ -184,6 +184,7 @@ def canonical_dataarray_to_grib(
         for coord_name, coord_value in zip(header_coords_names, items):
             message[coord_name] = coord_value
 
+        # OPTIMIZE: convert to list because Message.message_set doesn't support np.ndarray
         message['values'] = field_values.tolist()
 
         message.write(file)

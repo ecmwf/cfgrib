@@ -178,6 +178,8 @@ def make_message_schema(message, schema_keys, log=LOG):
     return schema
 
 
+# OPTIMIZE: building an index requires a full scan of the GRIB file, making the index persistent
+#   as an auxiliary file would improve performance on all subsequent open.
 @attr.attrs()
 class FileIndex(collections.Mapping):
     filestream = attr.attrib()
@@ -186,14 +188,19 @@ class FileIndex(collections.Mapping):
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
+        # FIXME: using `Message.message_get` with an explicit message schema was a significant
+        #   optimization at some point, due to less calls to the slow CFFI ABI interface.
+        #   This doesn't appear to be reproducible at the moment so the optimisation is
+        #   disabled and we may choose to remove `make_message_schema` altogether.
         schema = make_message_schema(filestream.first(), index_keys)
         offsets = collections.OrderedDict()
         for message in filestream:
             header_values = []
             for key, args in schema.items():
-                # Note: optimisation
-                # value = message.message_get(key, *args, default='undef')
                 try:
+                    # if args and not key == 'time':
+                    #     value = message.message_get(key, *args)
+                    # else:
                     value = message[key]
                 except:
                     value = 'undef'
