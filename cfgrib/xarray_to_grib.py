@@ -174,7 +174,7 @@ def canonical_dataarray_to_grib(
         for key, value in merged_grib_keys.items():
             try:
                 message[key] = value
-            except eccodes.EcCodesError as ex:
+            except eccodes.EcCodesError:
                 LOGGER.exception("skipping key due to errors: %r" % key)
 
         for coord_name, coord_value in zip(header_coords_names, items):
@@ -185,7 +185,7 @@ def canonical_dataarray_to_grib(
         message.write(file)
 
 
-def to_grib(dataset, path, mode='wb', **kwargs):
+def canonical_dataset_to_grib(dataset, path, mode='wb', **kwargs):
     # validate Dataset keys, DataArray names, and attr keys/values
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)
@@ -193,3 +193,7 @@ def to_grib(dataset, path, mode='wb', **kwargs):
     with open(path, mode=mode) as file:
         for data_var in dataset.data_vars.values():
             canonical_dataarray_to_grib(file, data_var, **kwargs)
+
+
+def to_grib(*args, **kwargs):
+    return canonical_dataset_to_grib(*args, **kwargs)

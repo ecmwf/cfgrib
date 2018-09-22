@@ -65,7 +65,7 @@ def test_to_grib_eccodes(grib_name, tmpdir):
 
     res = xarray_store.open_dataset(grib_path, flavour_name='eccodes', cache=False)
 
-    xarray_to_grib.to_grib(res, out_path)
+    xarray_to_grib.canonical_dataset_to_grib(res, out_path)
     reread = xarray_store.open_dataset(out_path, flavour_name='eccodes', cache=False)
     assert res.equals(reread)
 
@@ -92,6 +92,6 @@ def test_to_grib_ecmwf(grib_name, tmpdir):
 
     res = xarray_store.open_dataset(grib_path, cache=False)
 
-    xarray_to_grib.to_grib(res, out_path)
+    xarray_to_grib.canonical_dataset_to_grib(res, out_path)
     reread = xarray_store.open_dataset(out_path, cache=False)
     assert res.equals(reread)

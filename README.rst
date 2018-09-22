@@ -235,7 +235,10 @@ Advanced write usage
 --------------------
 
 **Please note that write support is highly experimental.**
-Only ``xarray.Dataset``'s with the coordinates names matching the GRIB coordinates can be saved:
+
+Only ``xarray.Dataset``'s in *canonical* form,
+that is, with the coordinates names matching exactly the *cfgrib* coordinates,
+can be saved at the moment:
 
 .. code-block: python
 
@@ -260,7 +263,7 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
->>> cfgrib.to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
+>>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
 >>> cfgrib.open_dataset('out1.grib')
 <xarray.Dataset>
 Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
@@ -298,7 +301,7 @@ for example:
 ...     dims=['latitude', 'longitude'],
 ... ).to_dataset(name='skin_temperature')
 >>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
->>> cfgrib.to_grib(ds2, 'out2.grib')
+>>> cfgrib.canonical_dataset_to_grib(ds2, 'out2.grib')
 >>> cfgrib.open_dataset('out2.grib')
 <xarray.Dataset>
 Dimensions:     (latitude: 5, longitude: 6)

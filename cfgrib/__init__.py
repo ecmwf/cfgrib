@@ -19,6 +19,10 @@ from .dataset import Dataset
 from .eccodes import EcCodesError
 from .messages import FileStream
 from .xarray_store import open_dataset
-from .xarray_to_grib import to_grib
+from .xarray_to_grib import canonical_dataset_to_grib, to_grib
 
-__all__ = ['Dataset', 'EcCodesError', 'FileStream', 'open_dataset', 'to_grib']
+
+__all__ = [
+    'Dataset', 'EcCodesError', 'FileStream',
+    'canonical_dataset_to_grib', 'open_dataset', 'to_grib',
+]
