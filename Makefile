@@ -53,6 +53,7 @@ local-install-dev-req:
 
 local-install-test-req: $(PIP_FIND_LINKS)
 	$(PIP) install -r ci/requirements-tests.txt
+	$(PIP) install -r ci/requirements-docs.txt
 
 local-develop:
 	$(PIP) install -e .
