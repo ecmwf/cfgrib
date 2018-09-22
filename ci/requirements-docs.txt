@@ -5,31 +5,31 @@
 #    pip-compile --output-file ci/requirements-docs.txt setup.py ci/requirements-docs.in
 #
 alabaster==0.7.11         # via sphinx
-attrs==18.1.0
+attrs==18.2.0
 babel==2.6.0              # via sphinx
-certifi==2018.4.16        # via requests
+certifi==2018.8.24        # via requests
 cffi==1.11.5
 chardet==3.0.4            # via requests
 docutils==0.14            # via sphinx
 future==0.16.0
 idna==2.7                 # via requests
-imagesize==1.0.0          # via sphinx
+imagesize==1.1.0          # via sphinx
 jinja2==2.10              # via sphinx
 markupsafe==1.0           # via jinja2
-numpy==1.14.5
+numpy==1.15.1
 packaging==17.1           # via sphinx
-pandas==0.23.2            # via xarray
-pycparser==2.18           # via cffi
+pandas==0.23.4            # via xarray
+pycparser==2.19           # via cffi
 pygments==2.2.0           # via sphinx
-pyparsing==2.2.0          # via packaging
+pyparsing==2.2.1          # via packaging
 pytest-runner==4.2
 python-dateutil==2.7.3    # via pandas
 pytz==2018.5              # via babel, pandas
 requests==2.19.1          # via sphinx
 six==1.11.0               # via packaging, python-dateutil, sphinx
 snowballstemmer==1.2.1    # via sphinx
-sphinx==1.7.5
+sphinx==1.8.1
 sphinxcontrib-websupport==1.1.0  # via sphinx
-typing==3.6.4
+typing==3.6.6
 urllib3==1.23             # via requests
-xarray==0.10.7
+xarray==0.10.9
