@@ -88,6 +88,9 @@ FLAVOURS = {
 
 @attr.attrs()
 class GribDataStore(AbstractDataStore):
+    """
+    Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
+    """
     ds = attr.attrib()
     variable_map = attr.attrib(default={})
     type_of_level_map = attr.attrib(default={})
@@ -148,6 +151,11 @@ class GribDataStore(AbstractDataStore):
 
 
 def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore', **kwargs):
+    # type: (str, str, T.Mapping[str, T.Any], str, T.Any) -> xr.Dataset
+    """
+    Return a ``xr.Dataset`` with the requested ``flavor`` from a GRIB file.
+    """
+    # validate Dataset keys, DataArray names, and attr keys/values
     overrides = {
         'flavour_name': flavour_name,
         'filter_by_keys': filter_by_keys,

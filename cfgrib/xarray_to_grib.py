@@ -145,6 +145,10 @@ def canonical_dataarray_to_grib(
         sample_name_template='{geography}_{vertical}_grib2'
 ):
     # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], T.Mapping[str, T.Any], str) -> None
+    """
+    Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
+    """
+    # validate Dataset keys, DataArray names, and attr keys/values
     detected_grib_keys, suggested_grib_keys = detect_grib_keys(data_var, default_grib_keys)
     merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, suggested_grib_keys)
 
@@ -186,6 +190,10 @@ def canonical_dataarray_to_grib(
 
 
 def canonical_dataset_to_grib(dataset, path, mode='wb', **kwargs):
+    # type: (xr.Dataset, str, str, T.Any) -> None
+    """
+    Write a ``xr.Dataset`` in *canonical* form to a GRIB file.
+    """
     # validate Dataset keys, DataArray names, and attr keys/values
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)

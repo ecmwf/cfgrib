@@ -376,6 +376,9 @@ def build_dataset_components(
 
 @attr.attrs()
 class Dataset(object):
+    """
+    Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
+    """
     stream = attr.attrib()
     encode_parameter = attr.attrib(default=True)
     encode_time = attr.attrib(default=True)
@@ -385,6 +388,7 @@ class Dataset(object):
 
     @classmethod
     def from_path(cls, path, errors='ignore', **kwargs):
+        """Open a GRIB file as a ``Dataset``."""
         stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
         return cls(stream=stream, **kwargs)
 
