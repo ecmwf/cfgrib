@@ -113,7 +113,7 @@ def enforce_unique_attributes(
     for key in attributes_keys:
         values = index[key]
         if len(values) > 1:
-            raise ValueError("multiple values for unique attribute %r: %r" % (key, values))
+            raise ValueError("multiple values for unique key %r: %r" % (key, values), key, values)
         if values and values[0] not in ('undef', 'unknown'):
             attributes['GRIB_' + key] = values[0]
     return attributes
@@ -350,7 +350,7 @@ def dict_merge(master, update):
 def build_dataset_components(
         stream,
         encode_parameter=False, encode_time=False, encode_vertical=False, encode_geography=False,
-        filter_by_keys={},
+        filter_by_keys={}, log=LOG,
 ):
     index = stream.index(ALL_KEYS).subindex(filter_by_keys)
     param_ids = index['paramId']
@@ -365,8 +365,11 @@ def build_dataset_components(
             short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
-        dict_merge(dimensions, dims)
-        dict_merge(variables, vars)
+        try:
+            dict_merge(dimensions, dims)
+            dict_merge(variables, vars)
+        except ValueError:
+            log.exception("skipping variable with paramId==%r shortName=%r", param_id, short_name)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
     cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
     eccodes_ver = eccodes.codes_get_api_version()

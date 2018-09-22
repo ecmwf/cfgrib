@@ -18,11 +18,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from .dataset import Dataset
 from .eccodes import EcCodesError
 from .messages import FileStream
-from .xarray_store import open_dataset
+from .xarray_store import open_dataset, open_datasets
 from .xarray_to_grib import canonical_dataset_to_grib, to_grib
 
 
 __all__ = [
     'Dataset', 'EcCodesError', 'FileStream',
-    'canonical_dataset_to_grib', 'open_dataset', 'to_grib',
+    'canonical_dataset_to_grib', 'open_dataset', 'open_datasets', 'to_grib',
 ]

@@ -166,3 +166,23 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.from_path(path, **overrides)
     return _open_dataset(store, **kwargs)
+
+
+def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, **kwargs):
+    # type: (str, str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
+    """
+    Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
+    """
+    datasets = []
+    try:
+        datasets.append(open_dataset(path, flavour_name, filter_by_keys, **kwargs))
+    except ValueError as ex:
+        if len(ex.args) == 3:
+            key = ex.args[1]
+            for value in ex.args[2]:
+                fbk = filter_by_keys.copy()
+                fbk[key] = value
+                datasets.extend(open_datasets(path, flavour_name, fbk, **kwargs))
+        else:
+            raise
+    return datasets
