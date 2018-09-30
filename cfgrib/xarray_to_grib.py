@@ -51,8 +51,8 @@ def regular_ll_params(values, min_value=-180., max_value=360.):
 
 
 def detect_regular_ll_grib_keys(lon, lat):
-    # type: (np.ndarray, np.ndarray) -> T.Dict[bytes, T.Any]
-    grib_keys = {}  # type: T.Dict[bytes, T.Any]
+    # type: (np.ndarray, np.ndarray) -> T.Dict[str, T.Any]
+    grib_keys = {}  # type: T.Dict[str, T.Any]
 
     lon_start, lon_stop, lon_num = regular_ll_params(lon)
     lon_scan_negatively = lon_stop < lon_start
@@ -79,7 +79,7 @@ def detect_regular_ll_grib_keys(lon, lat):
 
 
 def detect_grib_keys(data_var, default_grib_keys):
-    # type: (xr.DataArray, dict) -> T.Tuple[dict, dict]
+    # type: (xr.DataArray, T.Dict[str, T.Any]) -> T.Tuple[dict, dict]
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
@@ -144,7 +144,7 @@ def canonical_dataarray_to_grib(
         file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS,
         sample_name_template='{geography}_{vertical}_grib2'
 ):
-    # type: (T.BinaryIO, xr.DataArray, T.Mapping[str, T.Any], T.Mapping[str, T.Any], str) -> None
+    # type: (T.IO[bytes], xr.DataArray, T.Mapping[str, T.Any], T.Dict[str, T.Any], str) -> None
     """
     Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
     """
