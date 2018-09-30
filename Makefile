@@ -80,7 +80,7 @@ shell:
 
 notebook: DOCKERFLAGS += -p 8888:8888
 notebook:
-	$(RUN) jupyter notebook --ip=* --allow-root
+	$(RUN) jupyter notebook --ip=0.0.0.0 --allow-root
 
 wheelhouse:
 	$(RUN) make local-wheelhouse
