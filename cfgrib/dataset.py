@@ -349,7 +349,7 @@ def dict_merge(master, update):
 
 def build_dataset_components(
         stream,
-        encode_parameter=False, encode_time=False, encode_vertical=False, encode_geography=False,
+        encode_parameter=True, encode_time=True, encode_vertical=True, encode_geography=True,
         filter_by_keys={}, log=LOG,
 ):
     index = stream.index(ALL_KEYS).subindex(filter_by_keys)
@@ -373,8 +373,17 @@ def build_dataset_components(
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
     cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
     eccodes_ver = eccodes.codes_get_api_version()
-    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s' % (cfgrib_ver, eccodes_ver)
-    return dimensions, variables, attributes
+    encoding = {
+        'source': stream.path,
+        'filter_by_keys': filter_by_keys,
+        'encode_parameter': encode_parameter,
+        'encode_time': encode_time,
+        'encode_vertical': encode_vertical,
+        'encode_geography': encode_geography,
+    }
+    open_text = ' '.join('%s=%r' % it for it in encoding.items())
+    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s file %r' % (cfgrib_ver, eccodes_ver, open_text)
+    return dimensions, variables, attributes, encoding
 
 
 @attr.attrs()
@@ -382,27 +391,19 @@ class Dataset(object):
     """
     Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
     """
-    stream = attr.attrib()
-    encode_parameter = attr.attrib(default=True)
-    encode_time = attr.attrib(default=True)
-    encode_vertical = attr.attrib(default=True)
-    encode_geography = attr.attrib(default=True)
-    filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
+    dimensions = attr.attrib(type=T.Dict[str, int])
+    variables = attr.attrib(type=T.Dict[str, Variable])
+    attributes = attr.attrib(type=T.Dict[str, T.Any])
+    encoding = attr.attrib(type=T.Dict[str, T.Any])
 
     @classmethod
     def from_path(cls, path, errors='ignore', **kwargs):
         """Open a GRIB file as a ``Dataset``."""
         stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
-        return cls(stream=stream, **kwargs)
+        return cls(*build_dataset_components(stream, **kwargs))
 
     @classmethod
     def frompath(cls, *args, **kwargs):
         """Deprecated! Use `.from_path` instead."""
         warnings.warn(".frompath is deprecated, use .from_path instead", FutureWarning)
         return cls.from_path(*args, **kwargs)
-
-    def __attrs_post_init__(self):
-        dims, vars, attrs = build_dataset_components(**self.__dict__)
-        self.dimensions = dims  # type: T.Dict[str, T.Optional[int]]
-        self.variables = vars  # type: T.Dict[str, Variable]
-        self.attributes = attrs  # type: T.Dict[str, T.Any]

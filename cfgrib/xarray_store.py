@@ -105,7 +105,7 @@ class GribDataStore(AbstractDataStore):
     def __attrs_post_init__(self):
         self.variable_map = self.variable_map.copy()
         for name, var in self.ds.variables.items():
-            if self.ds.encode_vertical and 'GRIB_typeOfLevel' in var.attributes:
+            if self.ds.encoding['encode_vertical'] and 'GRIB_typeOfLevel' in var.attributes:
                 type_of_level = var.attributes['GRIB_typeOfLevel']
                 coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
                 if isinstance(coord_name, T.Callable):
@@ -126,9 +126,7 @@ class GribDataStore(AbstractDataStore):
             coordinates = [self.variable_map.get(d, d) for d in attrs['coordinates'].split()]
             attrs['coordinates'] = ' '.join(coordinates)
 
-        encoding = {}
-        # save source so __repr__ can detect if it's local or not
-        encoding['source'] = self.ds.stream.path
+        encoding = self.ds.encoding.copy()
         encoding['original_shape'] = var.data.shape
 
         return Variable(dimensions, data, attrs, encoding)
