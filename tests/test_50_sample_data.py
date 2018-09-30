@@ -34,7 +34,7 @@ def test_open_dataset(grib_name):
 @pytest.mark.parametrize('grib_name', [
     't_on_different_level_types',
     'tp_on_different_grid_resolutions',
-    'uv_on_different_levels',
+    pytest.param('uv_on_different_levels', marks=pytest.mark.xfail),
 ])
 def test_open_dataset_fail(grib_name):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
