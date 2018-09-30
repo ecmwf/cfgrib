@@ -22,7 +22,7 @@ from builtins import bytes, isinstance, str, type
 
 import collections
 import logging
-import typing as T  # noqa
+import typing as T
 
 import attr
 
@@ -90,7 +90,7 @@ class Message(collections.MutableMapping):
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[str, None, None]
         if namespace is not None:
-            bnamespace = namespace.encode(self.encoding)
+            bnamespace = namespace.encode(self.encoding)  # type: T.Optional[bytes]
         else:
             bnamespace = None
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
@@ -131,7 +131,7 @@ class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
     computed_keys = attr.attrib(
         default={},
-        type=T.Mapping[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message], T.Any]]],
+        type=T.Dict[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message], T.Any]]],
     )
 
     def __getitem__(self, item):
@@ -178,13 +178,47 @@ def make_message_schema(message, schema_keys, log=LOG):
     return schema
 
 
+@attr.attrs()
+class FileStream(collections.Iterable):
+    """Iterator-like access to a filestream of Messages."""
+    path = attr.attrib(type=str)
+    message_class = attr.attrib(default=Message, type=Message, repr=False)
+    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
+
+    def __iter__(self):
+        # type: () -> T.Generator[Message, None, None]
+        with open(self.path, 'rb') as file:
+            while True:
+                try:
+                    yield self.message_from_file(file)
+                except EOFError:
+                    break
+                except Exception:
+                    if self.errors == 'ignore':
+                        LOG.exception("skipping corrupted Message")
+                    else:
+                        raise
+
+    def message_from_file(self, file, offset=None):
+        if offset is not None:
+            file.seek(offset)
+        return self.message_class.from_file(file=file)
+
+    def first(self):
+        # type: () -> Message
+        return next(iter(self))
+
+    def index(self, index_keys):
+        return FileIndex.from_filestream(filestream=self, index_keys=index_keys)
+
+
 # OPTIMIZE: building an index requires a full scan of the GRIB file, making the index persistent
 #   as an auxiliary file would improve performance on all subsequent open.
 @attr.attrs()
 class FileIndex(collections.Mapping):
-    filestream = attr.attrib()
+    filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
-    offsets = attr.attrib(repr=False)
+    offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
@@ -252,37 +286,3 @@ class FileIndex(collections.Mapping):
         with open(self.filestream.path) as file:
             first_offset = next(iter(self.offsets.values()))[0]
             return self.filestream.message_from_file(file, offset=first_offset)
-
-
-@attr.attrs()
-class FileStream(collections.Iterable):
-    """Iterator-like access to a filestream of Messages."""
-    path = attr.attrib(type=str)
-    message_class = attr.attrib(default=Message, type=Message, repr=False)
-    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
-
-    def __iter__(self):
-        # type: () -> T.Generator[Message, None, None]
-        with open(self.path, 'rb') as file:
-            while True:
-                try:
-                    yield self.message_from_file(file)
-                except EOFError:
-                    break
-                except Exception:
-                    if self.errors == 'ignore':
-                        LOG.exception("skipping corrupted Message")
-                    else:
-                        raise
-
-    def message_from_file(self, file, offset=None):
-        if offset is not None:
-            file.seek(offset)
-        return self.message_class.from_file(file=file)
-
-    def first(self):
-        # type: () -> Message
-        return next(iter(self))
-
-    def index(self, index_keys):
-        return FileIndex.from_filestream(filestream=self, index_keys=index_keys)
