@@ -41,11 +41,13 @@ LOG = logging.getLogger(__name__)
 #
 GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription', 'subCentre']
 
-# NOTE: 'dataType' may have multiple values for the same variable, i.e. ['an', 'fc']
 DATA_ATTRIBUTES_KEYS = [
-    'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName', 'missingValue',
-    'totalNumber', 'gridType', 'gridDefinitionDescription', 'numberOfPoints',
-    'stepUnits', 'stepType', 'typeOfLevel', 'NV',
+    'paramId', 'shortName', 'units', 'name', 'cfName', 'cfVarName',
+    'dataType', 'missingValue', 'numberOfPoints',
+    'totalNumber',
+    'typeOfLevel', 'NV',
+    'stepUnits', 'stepType',
+    'gridType', 'gridDefinitionDescription',
 ]
 
 GRID_TYPE_MAP = {
