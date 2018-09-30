@@ -182,6 +182,8 @@ def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, 
         datasets.append(open_dataset(path, flavour_name, filter_by_keys, **kwargs))
     except cfgrib.DatasetBuildError as ex:
         fbks.extend(ex.args[1])
+    # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
+    #   to the user a confusing error message due to exception chaining
     # OPTIMIZE: we need a way to cache the index
     for fbk in fbks:
         datasets.extend(open_datasets(path, flavour_name, fbk, no_warn=True, **kwargs))
