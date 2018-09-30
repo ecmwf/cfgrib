@@ -16,8 +16,8 @@ idna==2.7                 # via requests
 imagesize==1.1.0          # via sphinx
 jinja2==2.10              # via sphinx
 markupsafe==1.0           # via jinja2
-numpy==1.15.1
-packaging==17.1           # via sphinx
+numpy==1.15.2
+packaging==18.0           # via sphinx
 pandas==0.23.4            # via xarray
 pycparser==2.19           # via cffi
 pygments==2.2.0           # via sphinx
