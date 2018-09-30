@@ -106,16 +106,25 @@ ALL_HEADER_DIMS = [k for m in ALL_MAPS for k, _ in m]
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
 
-def enforce_unique_attributes(
-        index,
-        attributes_keys,
-):
-    # type: (messages.FileIndex, T.Sequence[str]) -> T.Dict[str, T.Any]
+class DatasetBuildError(ValueError):
+    def __str__(self):
+        return str(self.args[0])
+
+
+def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
+    # type: (messages.FileIndex, T.Sequence[str], dict) -> T.Dict[str, T.Any]
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
         if len(values) > 1:
-            raise ValueError("multiple values for unique key %r: %r" % (key, values), key, values)
+            error_message = "multiple values for unique key, try re-open the file with one of:"
+            fbks = []
+            for value in values:
+                fbk = {key: value}
+                fbk.update(filter_by_keys)
+                fbks.append(fbk)
+                error_message += "\n    filter_by_keys=%r" % fbk
+            raise DatasetBuildError(error_message, fbks)
         if values and values[0] not in ('undef', 'unknown'):
             attributes['GRIB_' + key] = values[0]
     return attributes
@@ -280,11 +289,11 @@ def do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, e
 def build_data_var_components(
         index,
         encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
-        log=LOG,
+        filter_by_keys={}, log=LOG,
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
-    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
+    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     coords_map = HEADER_COORDINATES_MAP[:]
 
     do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, encode_vertical)
@@ -345,8 +354,8 @@ def dict_merge(master, update):
         elif master[key] == value:
             pass
         else:
-            raise ValueError("key present and new value is different: "
-                             "key=%r value=%r new_value=%r" % (key, master[key], value))
+            raise DatasetBuildError("key present and new value is different: "
+                                    "key=%r value=%r new_value=%r" % (key, master[key], value))
 
 
 def build_dataset_components(
@@ -361,7 +370,7 @@ def build_dataset_components(
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
+            var_index, encode_parameter, encode_time, encode_geography, encode_vertical, filter_by_keys
         )
         if encode_parameter and var_name not in ('undef', 'unknown'):
             short_name = var_name
@@ -372,7 +381,7 @@ def build_dataset_components(
             dict_merge(variables, vars)
         except ValueError:
             log.exception("skipping variable with paramId==%r shortName=%r", param_id, short_name)
-    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
+    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
     eccodes_ver = eccodes.codes_get_api_version()
     encoding = {

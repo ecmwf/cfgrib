@@ -21,7 +21,7 @@ def test_dict_merge():
     dataset.dict_merge(master, {'two': 2})
     assert master == {'one': 1, 'two': 2}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(dataset.DatasetBuildError):
         dataset.dict_merge(master, {'two': 3})
 
 
