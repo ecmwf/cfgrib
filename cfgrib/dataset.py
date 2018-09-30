@@ -23,7 +23,7 @@ from builtins import list, object, set, str
 import collections
 import logging
 import pkg_resources
-import typing as T  # noqa
+import typing as T
 import warnings
 
 import attr
@@ -132,9 +132,9 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 @attr.attrs(cmp=False)
 class Variable(object):
-    dimensions = attr.attrib(type=T.Sequence[str])
+    dimensions = attr.attrib(type=T.Tuple[str, ...])
     data = attr.attrib(type=np.ndarray)
-    attributes = attr.attrib(default={}, type=T.Mapping[str, T.Any], repr=False)
+    attributes = attr.attrib(default={}, type=T.Dict[str, T.Any], repr=False)
 
     def __eq__(self, other):
         if other.__class__ is not self.__class__:
@@ -162,8 +162,8 @@ def expand_item(item, shape):
 @attr.attrs()
 class OnDiskArray(object):
     stream = attr.attrib()
-    shape = attr.attrib()
-    offsets = attr.attrib(repr=False)
+    shape = attr.attrib(type=T.Tuple[int, ...])
+    offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
     missing_value = attr.attrib()
     geo_ndim = attr.attrib(default=1, repr=False)
 
@@ -222,13 +222,13 @@ GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 
 def build_geography_coordinates(index, encode_geography, log=LOG):
-    # type: (messages.FileIndex, bool, logging.Logger) -> T.Tuple[T.Tuple[str], T.Tuple[int], dict]
+    # type: (messages.FileIndex, bool, logging.Logger) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], dict]
     first = index.first()
-    geo_coord_vars = collections.OrderedDict()
+    geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
     grid_type = index.getone('gridType')
     if encode_geography and grid_type in GRID_TYPES_COORD_VAR:
-        geo_dims = ('latitude', 'longitude')
-        geo_shape = (index.getone('Nj'), index.getone('Ni'))
+        geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
+        geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
         geo_coord_vars['latitude'] = Variable(
             dimensions=('latitude',), data=np.array(first['distinctLatitudes']),
             attributes=cfmessage.COORD_ATTRS['latitude'],

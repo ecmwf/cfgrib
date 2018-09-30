@@ -18,7 +18,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import str  # noqa
+from builtins import str
 
 import datetime
 import logging
@@ -113,12 +113,14 @@ def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_ke
     # step_seconds = np.timedelta64(step, 's').astype(int)
     step_s = int(step_ns) * 1e-9
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
+    if to_seconds is None:
+        raise ValueError("unsupported stepUnit %r" % step_unit)
     message[step_key] = step_s / to_seconds
     message[step_unit_key] = step_unit
 
 
 def build_valid_time(time, step):
-    # type: (np.ndarray, np.ndarray) -> T.Tuple[T.Sequence[int], np.ndarray]
+    # type: (np.ndarray, np.ndarray) -> T.Tuple[T.Tuple[str, ...], np.ndarray]
     """
     Return dimensions and data of the valid_time corresponding to the given ``time`` and ``step``.
     The data is seconds from the same epoch as ``time`` and may have one or two dimensions.
@@ -129,7 +131,7 @@ def build_valid_time(time, step):
     step_s = step * 3600
     if len(time.shape) == 0 and len(step.shape) == 0:
         data = time + step_s
-        dims = ()
+        dims = ()  # type: T.Tuple[str, ...]
     elif len(time.shape) > 0 and len(step.shape) == 0:
         data = time + step_s
         dims = ('time',)

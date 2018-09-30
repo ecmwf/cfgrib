@@ -21,9 +21,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import logging
-import typing as T  # noqa
+import typing as T
 
 import attr
+import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import FrozenOrderedDict
@@ -92,8 +93,8 @@ class GribDataStore(AbstractDataStore):
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
     ds = attr.attrib()
-    variable_map = attr.attrib(default={})
-    type_of_level_map = attr.attrib(default={})
+    variable_map = attr.attrib(default={}, type=T.Dict[str, str])
+    type_of_level_map = attr.attrib(default={}, type=T.Dict[str, T.Callable])
 
     @classmethod
     def from_path(cls, path, flavour_name='ecmwf', errors='ignore', **kwargs):
