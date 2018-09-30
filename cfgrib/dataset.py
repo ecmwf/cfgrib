@@ -221,8 +221,12 @@ GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
 GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 
-def build_geography_coordinates(index, encode_geography, log=LOG):
-    # type: (messages.FileIndex, bool, logging.Logger) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], dict]
+def build_geography_coordinates(
+        index,  # type: messages.FileIndex
+        encode_geography,  # type: bool
+        log=LOG,  # type: logging.Logger
+):
+    # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
     grid_type = index.getone('gridType')
@@ -370,7 +374,8 @@ def build_dataset_components(
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_data_var_components(
-            var_index, encode_parameter, encode_time, encode_geography, encode_vertical, filter_by_keys
+            var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
+            filter_by_keys,
         )
         if encode_parameter and var_name not in ('undef', 'unknown'):
             short_name = var_name
@@ -393,7 +398,8 @@ def build_dataset_components(
         'encode_geography': encode_geography,
     }
     open_text = ' '.join('%s=%r' % it for it in encoding.items())
-    attributes['history'] = 'GRIB to CDM+CF via cfgrib-%s/ecCodes-%s file %r' % (cfgrib_ver, eccodes_ver, open_text)
+    attributes['history'] = 'GRIB to CDM+CF via ' \
+        'cfgrib-%s/ecCodes-%s with %r' % (cfgrib_ver, eccodes_ver, open_text)
     return dimensions, variables, attributes, encoding
 
 
