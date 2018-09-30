@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import collections
 import logging
 import typing as T
+import warnings
 
 import attr
 import xarray as xr  # noqa
@@ -167,21 +168,20 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
     return _open_dataset(store, **kwargs)
 
 
-def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, **kwargs):
-    # type: (str, str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
+def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, **kwargs):
+    # type: (str, str, T.Dict[str, T.Any], bool, T.Any) -> T.List[xr.Dataset]
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
+    if not no_warn:
+        warnings.warn("open_datasets is experimental. It may be removed.", FutureWarning)
+
+    fbks = []
     datasets = []
     try:
         datasets.append(open_dataset(path, flavour_name, filter_by_keys, **kwargs))
-    except ValueError as ex:
-        if len(ex.args) == 3:
-            key = ex.args[1]
-            for value in ex.args[2]:
-                fbk = filter_by_keys.copy()
-                fbk[key] = value
-                datasets.extend(open_datasets(path, flavour_name, fbk, **kwargs))
-        else:
-            raise
+    except cfgrib.DatasetBuildError as ex:
+        fbks.extend(ex.args[1])
+    for fbk in fbks:
+        datasets.extend(open_datasets(path, flavour_name, fbk, no_warn=True, **kwargs))
     return datasets

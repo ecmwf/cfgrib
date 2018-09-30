@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from .dataset import Dataset
+from .dataset import Dataset, DatasetBuildError
 from .eccodes import EcCodesError
 from .messages import FileStream
 from .xarray_store import open_dataset, open_datasets
@@ -23,6 +23,6 @@ from .xarray_to_grib import canonical_dataset_to_grib, to_grib
 
 
 __all__ = [
-    'Dataset', 'EcCodesError', 'FileStream',
+    'Dataset', 'DatasetBuildError', 'EcCodesError', 'FileStream',
     'canonical_dataset_to_grib', 'open_dataset', 'open_datasets', 'to_grib',
 ]
