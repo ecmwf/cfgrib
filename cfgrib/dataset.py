@@ -82,10 +82,11 @@ HEADER_COORDINATES_MAP = [
     ('number', True),
 ]
 VERTICAL_COORDINATE_MAP = [
-    ('level', False),  # NOTE: no support for mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('level', False),
 ]
+PLEV_TYPE_OF_LEVELS = ('isobaricInhPa', 'isobaricInPa')
 PLEV_COORDINATE_MAP = [
-    ('air_pressure', False),  # NOTE: this supports mixed 'isobaricInPa' / 'isobaricInhPa'.
+    ('air_pressure', False),
 ]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', True),
@@ -284,7 +285,7 @@ def do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, e
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if encode_vertical and data_var_attrs.get('GRIB_typeOfLevel') in ('isobaricInhPa', 'isobaricInPa'):
+    if encode_vertical and data_var_attrs.get('GRIB_typeOfLevel') in PLEV_TYPE_OF_LEVELS:
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
