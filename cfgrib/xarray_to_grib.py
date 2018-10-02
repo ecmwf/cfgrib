@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 import logging
 import typing as T  # noqa
+import warnings
 
 import numpy as np
 import xarray as xr
@@ -190,11 +191,14 @@ def canonical_dataarray_to_grib(
         message.write(file)
 
 
-def canonical_dataset_to_grib(dataset, path, mode='wb', **kwargs):
-    # type: (xr.Dataset, str, str, T.Any) -> None
+def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, **kwargs):
+    # type: (xr.Dataset, str, str, bool, T.Any) -> None
     """
     Write a ``xr.Dataset`` in *canonical* form to a GRIB file.
     """
+    if not no_warn:
+        warnings.warn("GRIB write support is experimental, DO NOT RELY ON IT!", FutureWarning)
+
     # validate Dataset keys, DataArray names, and attr keys/values
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)

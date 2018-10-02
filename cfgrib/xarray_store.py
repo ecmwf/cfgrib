@@ -174,7 +174,7 @@ def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, 
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
     if not no_warn:
-        warnings.warn("open_datasets is experimental. It may be removed.", FutureWarning)
+        warnings.warn("open_datasets is an experimental API, DO NOT RELY ON IT!", FutureWarning)
 
     fbks = []
     datasets = []
