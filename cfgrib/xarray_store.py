@@ -75,7 +75,7 @@ FLAVOURS = {
         'variable_map': {
             'number': 'realization',
             'time': 'forecast_reference_time',
-            'valid_time': 'step',
+            'valid_time': 'time',
             'step': 'leadtime',
             'air_pressure': 'plev',
             'latitude': 'lat',
