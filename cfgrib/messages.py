@@ -107,8 +107,7 @@ class Message(collections.MutableMapping):
         try:
             return self.message_set(item, value)
         except eccodes.EcCodesError as ex:
-            message = ex.eccode_message + ' (%r = %r)' % (item, value)
-            raise eccodes.EcCodesError(ex.code, message=message)
+            raise KeyError("failed to set key %r to %r" % (item, value))
 
     def __delitem__(self, item):
         raise NotImplementedError

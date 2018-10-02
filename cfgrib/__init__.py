@@ -15,14 +15,19 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+# cfgrib core API depends on the ECMWF ecCodes C-library only
+
 from .dataset import Dataset, DatasetBuildError
-from .eccodes import EcCodesError
 from .messages import FileStream
-from .xarray_store import open_dataset, open_datasets
-from .xarray_to_grib import canonical_dataset_to_grib, to_grib
 
+__all__ = ['Dataset', 'DatasetBuildError', 'FileStream']
 
-__all__ = [
-    'Dataset', 'DatasetBuildError', 'EcCodesError', 'FileStream',
-    'canonical_dataset_to_grib', 'open_dataset', 'open_datasets', 'to_grib',
-]
+# NOTE: xarray is not a hard dependency, but let's provide helpers if it is available.
+
+try:
+    from .xarray_store import open_dataset
+    from .xarray_to_grib import canonical_dataset_to_grib, to_grib
+
+    __all__ += ['canonical_dataset_to_grib' 'open_dataset', 'to_grib']
+except ImportError:
+    pass

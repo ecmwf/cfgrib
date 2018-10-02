@@ -29,7 +29,6 @@ import xarray as xr
 
 from cfgrib import cfmessage
 from cfgrib import dataset
-from cfgrib import eccodes
 
 LOGGER = logging.getLogger(__name__)
 
@@ -121,8 +120,6 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
 
 
 def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
-    from cfgrib import dataset
-
     merged_grib_keys = {k: v for k, v in grib_keys.items()}
     dataset.dict_merge(merged_grib_keys, detected_grib_keys)
     for key, value in default_grib_keys.items():
@@ -179,7 +176,7 @@ def canonical_dataarray_to_grib(
         for key, value in merged_grib_keys.items():
             try:
                 message[key] = value
-            except eccodes.EcCodesError:
+            except KeyError:
                 LOGGER.exception("skipping key due to errors: %r" % key)
 
         for coord_name, coord_value in zip(header_coords_names, items):
