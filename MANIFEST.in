@@ -1,6 +1,8 @@
 include *.rst
 include Dockerfile
 include .dockerignore
+include *.grib
+include *.grib2
 include LICENSE
 include Makefile
 include tox.ini
