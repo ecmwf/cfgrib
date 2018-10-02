@@ -26,12 +26,7 @@ import warnings
 
 import attr
 import numpy as np
-import xarray as xr  # noqa
-from xarray import Variable
-from xarray.core import indexing
-from xarray.core.utils import FrozenOrderedDict
-from xarray.backends.api import open_dataset as _open_dataset
-from xarray.backends.common import AbstractDataStore, BackendArray
+import xarray as xr
 
 import cfgrib
 
@@ -39,7 +34,7 @@ import cfgrib
 LOGGER = logging.getLogger(__name__)
 
 
-class WrapGrib(BackendArray):
+class WrapGrib(xr.backends.common.BackendArray):
     def __init__(self, backend_array):
         self.backend_array = backend_array
 
@@ -47,13 +42,13 @@ class WrapGrib(BackendArray):
         return getattr(self.backend_array, item)
 
     def __getitem__(self, item):
-        key, np_inds = indexing.decompose_indexer(
-            item, self.shape, indexing.IndexingSupport.OUTER_1VECTOR)
+        key, np_inds = xr.core.indexing.decompose_indexer(
+            item, self.shape, xr.core.indexing.IndexingSupport.OUTER_1VECTOR)
 
         array = self.backend_array[key.tuple]
 
         if len(np_inds.tuple) > 0:
-            array = indexing.NumpyIndexingAdapter(array)[np_inds]
+            array = xr.core.indexing.NumpyIndexingAdapter(array)[np_inds]
 
         return array
 
@@ -69,7 +64,7 @@ FLAVOURS = {
     'ecmwf': {
         'variable_map': {},
         'type_of_level_map': {
-            'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
+            'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2,),
         },
     },
     'cds': {
@@ -90,7 +85,7 @@ FLAVOURS = {
 
 
 @attr.attrs()
-class GribDataStore(AbstractDataStore):
+class GribDataStore(xr.backends.common.AbstractDataStore):
     """
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
@@ -119,7 +114,7 @@ class GribDataStore(AbstractDataStore):
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
-            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
+            data = xr.core.indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
 
         dimensions = tuple(self.variable_map.get(dim, dim) for dim in var.dimensions)
         attrs = var.attributes
@@ -132,14 +127,16 @@ class GribDataStore(AbstractDataStore):
         encoding = self.ds.encoding.copy()
         encoding['original_shape'] = var.data.shape
 
-        return Variable(dimensions, data, attrs, encoding)
+        return xr.Variable(dimensions, data, attrs, encoding)
 
     def get_variables(self):
-        return FrozenOrderedDict((self.variable_map.get(k, k), self.open_store_variable(k, v))
-                                 for k, v in self.ds.variables.items())
+        variables = []
+        for k, v in self.ds.variables.items():
+            variables.append((self.variable_map.get(k, k), self.open_store_variable(k, v)))
+        return xr.core.utils.FrozenOrderedDict(variables)
 
     def get_attrs(self):
-        return FrozenOrderedDict(self.ds.attributes)
+        return xr.core.utils.FrozenOrderedDict(self.ds.attributes)
 
     def get_dimensions(self):
         return collections.OrderedDict((self.variable_map.get(d, d), s)
@@ -166,7 +163,7 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.from_path(path, **overrides)
-    return _open_dataset(store, **kwargs)
+    return xr.backends.api.open_dataset(store, **kwargs)
 
 
 def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, **kwargs):
