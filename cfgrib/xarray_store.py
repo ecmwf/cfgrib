@@ -25,6 +25,7 @@ import typing as T
 import warnings
 
 import attr
+import numpy as np
 import xarray as xr  # noqa
 from xarray import Variable
 from xarray.core import indexing
@@ -115,10 +116,10 @@ class GribDataStore(AbstractDataStore):
                 self.variable_map['level'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
-        if isinstance(var.data, cfgrib.dataset.OnDiskArray):
-            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
-        else:
+        if isinstance(var.data, np.ndarray):
             data = var.data
+        else:
+            data = indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
 
         dimensions = tuple(self.variable_map.get(dim, dim) for dim in var.dimensions)
         attrs = var.attributes
