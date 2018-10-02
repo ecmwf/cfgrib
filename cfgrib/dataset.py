@@ -399,9 +399,9 @@ def build_dataset_components(
         'encode_vertical': encode_vertical,
         'encode_geography': encode_geography,
     }
-    open_text = ' '.join('%s=%r' % it for it in encoding.items())
+    open_text = ', '.join('%s=%r' % it for it in encoding.items())
     attributes['history'] = 'GRIB to CDM+CF via ' \
-        'cfgrib-%s/ecCodes-%s with %r' % (cfgrib_ver, eccodes_ver, open_text)
+        'cfgrib-%s/ecCodes-%s with %s' % (cfgrib_ver, eccodes_ver, open_text)
     return dimensions, variables, attributes, encoding
 
 

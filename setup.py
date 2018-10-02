@@ -49,10 +49,10 @@ setuptools.setup(
         'future',
         'numpy',
         'typing',
-        'xarray',
     ],
     tests_require=[
         'pytest',
+        'xarray',
     ],
     test_suite='tests',
     zip_safe=True,
