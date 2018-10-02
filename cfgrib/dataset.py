@@ -284,7 +284,7 @@ def do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, e
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if encode_vertical and data_var_attrs['GRIB_typeOfLevel'] in ('isobaricInhPa', 'isobaricInPa'):
+    if encode_vertical and data_var_attrs.get('GRIB_typeOfLevel') in ('isobaricInhPa', 'isobaricInPa'):
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
@@ -337,10 +337,11 @@ def build_data_var_components(
         geo_ndim=len(geo_dims),
     )
 
-    if encode_time:
-        # add the valid 'time' secondary coordinate
+    if 'time' in coord_vars and encode_time:
+        # add the 'valid_time' secondary coordinate
+        step_data = coord_vars['step'].data if 'data' in coord_vars else np.array(0.)
         dims, time_data = cfmessage.build_valid_time(
-            coord_vars['time'].data, coord_vars['step'].data,
+            coord_vars['time'].data, step_data,
         )
         attrs = cfmessage.COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
