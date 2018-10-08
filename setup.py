@@ -58,7 +58,7 @@ setuptools.setup(
     zip_safe=True,
     keywords='eccodes grib',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         "Programming Language :: Python :: 2",

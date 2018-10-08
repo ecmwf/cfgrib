@@ -20,18 +20,22 @@ Features with development status **Beta**:
 - no install time build (binds with *CFFI* ABI mode),
 - read the data lazily and efficiently in terms of both memory usage and disk access.
 
-Work in progress (development status **Alpha**):
+Work in progress (development status **Pre-Alpha**):
 
 - limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
+- opening a GRIB file requires a full-file scan and the result is not saved to disk,
+  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 
 Limitations:
 
 - target is correctness, not performance, for now,
 - incomplete documentation, for now,
-- no Windows support, see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
-- no support for opening multiple GRIB files, see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
+- no Windows support,
+  see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
+- no support for opening multiple GRIB files,
+  see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - rely on *ecCodes* for the CF attributes of the data variables,
 - rely on *ecCodes* for the ``gridType`` handling.
 
@@ -338,7 +342,7 @@ Attributes:
 Advanced write usage
 --------------------
 
-**Please note that write support is pre-alpha and highly experimental.**
+**Please note that write support is Pre-Alpha and highly experimental.**
 
 Only ``xarray.Dataset``'s in *canonical* form,
 that is, with the coordinates names matching exactly the *cfgrib* coordinates,
