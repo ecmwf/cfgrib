@@ -8,7 +8,7 @@ and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
 `ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
 
-Features with development state **Beta**:
+Features with development status **Beta**:
 
 - read-only GRIB driver for *xarray*,
 - support reading most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
@@ -20,7 +20,7 @@ Features with development state **Beta**:
 - no install time build (binds with *CFFI* ABI mode),
 - read the data lazily and efficiently in terms of both memory usage and disk access.
 
-Work in progress (development state **Alpha**):
+Work in progress (development status **Alpha**):
 
 - limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
@@ -145,7 +145,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
 Lower level APIs
@@ -205,7 +205,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 >>> cfgrib.open_dataset('nam.t00z.awp21100.tm00.grib2',
 ...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'level': 2})
 <xarray.Dataset>
@@ -226,7 +226,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 *cfgrib* also provides an **experimental function** that automate the selection of
 appropriate ``filter_by_keys`` and returns a list of all valid ``xarray.Dataset``'s
@@ -366,7 +366,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 >>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
 >>> cfgrib.open_dataset('out1.grib')
 <xarray.Dataset>
@@ -387,7 +387,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by ``GRIB_``,
 for example:
@@ -423,7 +423,7 @@ Attributes:
     GRIB_centre:             consensus
     GRIB_centreDescription:  Consensus
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.../ecCodes-2...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
 Contributing
