@@ -27,8 +27,8 @@ import warnings
 import numpy as np
 import xarray as xr
 
-from cfgrib import cfmessage
-from cfgrib import dataset
+import cfgrib
+from cfgrib import dataset  # FIXME: write support needs internal functions
 
 LOGGER = logging.getLogger(__name__)
 
@@ -172,7 +172,7 @@ def canonical_dataarray_to_grib(
         missing_value = merged_grib_keys.get('missingValue', 9999)
         field_values[invalid_field_values] = missing_value
 
-        message = cfmessage.CfMessage.from_sample_name(sample_name)
+        message = cfgrib.CfMessage.from_sample_name(sample_name)
         for key, value in merged_grib_keys.items():
             try:
                 message[key] = value
