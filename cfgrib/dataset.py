@@ -428,6 +428,6 @@ class Dataset(object):
         return cls.from_path(*args, **kwargs)
 
 
-def open(path, **kwargs):
+def open_file(path, **kwargs):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     return Dataset.from_path(path, **kwargs)

@@ -92,7 +92,7 @@ You may try out the high level API in a Python interpreter:
 .. code-block: python
 
 >>> import cfgrib
->>> ds = cfgrib.Dataset.from_path('era5-levels-members.grib')
+>>> ds = cfgrib.open_file('era5-levels-members.grib')
 >>> ds.attributes['GRIB_edition']
 1
 >>> sorted(ds.dimensions.items())
@@ -104,7 +104,7 @@ You may try out the high level API in a Python interpreter:
 ('number', 'time', 'air_pressure', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
->>> ds = cfgrib.Dataset.from_path('era5-levels-members.grib')
+>>> ds = cfgrib.open_file('era5-levels-members.grib')
 >>> ds.attributes['GRIB_edition']
 1
 >>> sorted(ds.dimensions.items())
@@ -262,7 +262,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.5.2.dev0/ecCodes-2..., <xarray.Dataset>
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] ...
@@ -280,7 +280,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.5.2.dev0/ecCodes-2..., <xarray.Dataset>
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] ...
@@ -299,7 +299,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.5.2.dev0/ecCodes-2..., <xarray.Dataset>
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] ...
@@ -318,7 +318,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.5.2.dev0/ecCodes-2..., <xarray.Dataset>
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:       (x: 93, y: 65)
 Coordinates:
     time          datetime64[ns] ...
@@ -336,7 +336,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.8.5.2.dev0/ecCodes-2...]
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...]
 
 
 Advanced write usage
