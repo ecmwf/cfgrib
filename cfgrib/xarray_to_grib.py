@@ -15,6 +15,8 @@
 #
 # Authors:
 #   Alessandro Amici - B-Open - https://bopen.eu
+#   Aureliana Barghini - B-Open - https://bopen.eu
+#   Leonardo Barcaroli - B-Open - https://bopen.eu
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals

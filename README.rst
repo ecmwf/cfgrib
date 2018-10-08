@@ -442,11 +442,11 @@ Please see the CONTRIBUTING.rst document for the best way to help.
 
 Lead developer:
 
-- `Alessandro Amici <https://github.com/alexamici>`_ - B-Open
+- `Alessandro Amici <https://github.com/alexamici>`_ - `B-Open <https://bopen.eu>`_
 
 Main contributors:
 
-- Baudouin Raoult - ECMWF
+- Baudouin Raoult - `ECMWF <https://ecmwf.int>`_
 - `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
 - `Iain Russell <https://github.com/iainrussell>`_ - ECMWF
 - `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open

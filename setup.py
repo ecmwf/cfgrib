@@ -56,7 +56,7 @@ setuptools.setup(
     ],
     test_suite='tests',
     zip_safe=True,
-    keywords='eccodes grib',
+    keywords='eccodes grib xarray',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

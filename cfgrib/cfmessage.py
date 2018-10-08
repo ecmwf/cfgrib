@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 # Authors:
+#   Baudouin Raoult - ECMWF - https://ecmwf.int
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
