@@ -106,7 +106,7 @@ class Message(collections.MutableMapping):
         # type: (str, T.Any) -> None
         try:
             return self.message_set(item, value)
-        except eccodes.EcCodesError as ex:
+        except eccodes.EcCodesError:
             raise KeyError("failed to set key %r to %r" % (item, value))
 
     def __delitem__(self, item):
