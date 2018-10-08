@@ -17,10 +17,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 
-from .dataset import Dataset, DatasetBuildError
-from .messages import FileStream
+from .cfmessage import CfMessage
+from .dataset import Dataset, DatasetBuildError, open
+from .messages import Message, FileStream
 
-__all__ = ['Dataset', 'DatasetBuildError', 'FileStream']
+__all__ = ['CfMessage', 'Dataset', 'DatasetBuildError', 'FileStream', 'Message', 'open']
 
 # NOTE: xarray is not a hard dependency, but let's provide helpers if it is available.
 

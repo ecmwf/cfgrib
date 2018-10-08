@@ -426,3 +426,8 @@ class Dataset(object):
         """Deprecated! Use `.from_path` instead."""
         warnings.warn(".frompath is deprecated, use .from_path instead", FutureWarning)
         return cls.from_path(*args, **kwargs)
+
+
+def open(path, **kwargs):
+    """Open a GRIB file as a ``cfgrib.Dataset``."""
+    return Dataset.from_path(path, **kwargs)
