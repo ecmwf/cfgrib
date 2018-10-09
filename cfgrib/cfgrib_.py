@@ -21,9 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import logging
-import typing as T
 
-import attr
 import numpy as np
 
 from xarray.backends import common
@@ -62,9 +60,6 @@ FLAVOURS = {
     },
     'ecmwf': {
         'variable_map': {},
-        'type_of_level_map': {
-            'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2,),
-        },
     },
     'cds': {
         'variable_map': {
@@ -76,22 +71,18 @@ FLAVOURS = {
             'latitude': 'lat',
             'longitude': 'lon',
         },
-        'type_of_level_map': {
-            'hybrid': lambda attrs: 'L%d' % ((attrs['GRIB_NV'] - 2) // 2),
-        },
     },
 }
 
 
-@attr.attrs()
 class CfGribDataStore(common.AbstractDataStore):
     """
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
-    ds = attr.attrib()
-    variable_map = attr.attrib(default={}, type=T.Dict[str, str])
-    type_of_level_map = attr.attrib(default={}, type=T.Dict[str, T.Callable])
-    autoclose = attr.attrib(default=False, type=bool)
+    def __init__(self, ds, variable_map={}, autoclose=False):
+        self.ds = ds
+        self.variable_map = variable_map.copy()
+        self.autoclose = autoclose
 
     @classmethod
     def from_path(cls, path, flavour_name='ecmwf', errors='ignore', autoclose=False, **kwargs):
@@ -101,16 +92,6 @@ class CfGribDataStore(common.AbstractDataStore):
         config.update(kwargs)
         ds = cfgrib.open_file(path, errors=errors, **config)
         return cls(ds=ds, autoclose=autoclose, **flavour)
-
-    def __attrs_post_init__(self):
-        self.variable_map = self.variable_map.copy()
-        for name, var in self.ds.variables.items():
-            if self.ds.encoding['encode_vertical'] and 'GRIB_typeOfLevel' in var.attributes:
-                type_of_level = var.attributes['GRIB_typeOfLevel']
-                coord_name = self.type_of_level_map.get(type_of_level, type_of_level)
-                if isinstance(coord_name, T.Callable):
-                    coord_name = coord_name(var.attributes)
-                self.variable_map['level'] = coord_name.format(**var.attributes)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, np.ndarray):
