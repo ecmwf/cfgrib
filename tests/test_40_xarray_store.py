@@ -7,6 +7,7 @@ import pytest
 import xarray as xr
 
 from cfgrib import eccodes
+from cfgrib import cfgrib_
 from cfgrib import xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
@@ -14,14 +15,14 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 
-def test_GribDataStore():
-    datastore = xarray_store.GribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
+def test_CfGribDataStore():
+    datastore = cfgrib_.CfGribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
 def test_xarray_open_dataset():
-    datastore = xarray_store.GribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
+    datastore = cfgrib_.CfGribDataStore.from_path(TEST_DATA, flavour_name='eccodes')
     res = xr.open_dataset(datastore)
 
     assert res.attrs['GRIB_edition'] == 1
