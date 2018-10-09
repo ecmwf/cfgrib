@@ -86,7 +86,7 @@ FLAVOURS = {
 
 
 @attr.attrs()
-class GribDataStore(common.AbstractDataStore):
+class CfGribDataStore(common.AbstractDataStore):
     """
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
@@ -166,7 +166,7 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
     for k in list(kwargs):  # copy to allow the .pop()
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
-    store = GribDataStore.from_path(path, **overrides)
+    store = CfGribDataStore.from_path(path, **overrides)
     return api.open_dataset(store, **kwargs)
 
 
