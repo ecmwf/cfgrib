@@ -27,7 +27,7 @@ def test_xarray_open_dataset():
 
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
-    assert res['t'].attrs['units'] == 'K'
+    assert res['t'].attrs['GRIB_units'] == 'K'
     assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
 
     assert res['t'].mean() > 0.
@@ -62,7 +62,7 @@ def test_open_dataset_encode_time():
 
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
-    assert res['t'].attrs['units'] == 'K'
+    assert res['t'].attrs['GRIB_units'] == 'K'
     assert res['t'].dims == ('number', 'time', 'level', 'i')
 
     assert res['t'].mean() > 0.
@@ -84,7 +84,7 @@ def test_open_dataset_encode_geography():
 
     var = res['t']
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
-    assert var.attrs['units'] == 'K'
+    assert var.attrs['GRIB_units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'latitude', 'longitude')
 
     assert var.mean() > 0.

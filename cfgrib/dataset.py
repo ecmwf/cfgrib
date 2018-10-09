@@ -106,6 +106,21 @@ ALL_HEADER_DIMS = [k for m in ALL_MAPS for k, _ in m]
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
+FLAVOURS = {
+    'eccodes': {
+        'encode_parameter': False,
+        'encode_time': False,
+        'encode_vertical': False,
+        'encode_geography': False,
+    },
+    'ecmwf': {
+        'encode_parameter': True,
+        'encode_time': True,
+        'encode_vertical': True,
+        'encode_geography': True,
+    },
+}
+
 
 class DatasetBuildError(ValueError):
     def __str__(self):
@@ -416,10 +431,12 @@ class Dataset(object):
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
     @classmethod
-    def from_path(cls, path, errors='ignore', **kwargs):
+    def from_path(cls, path, errors='ignore', flavour_name='ecmwf', **kwargs):
         """Open a GRIB file as a ``Dataset``."""
+        flavour_kwargs = FLAVOURS[flavour_name].copy()
+        flavour_kwargs.update(kwargs)
         stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
-        return cls(*build_dataset_components(stream, **kwargs))
+        return cls(*build_dataset_components(stream, **flavour_kwargs))
 
     @classmethod
     def frompath(cls, *args, **kwargs):
