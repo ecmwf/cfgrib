@@ -362,6 +362,14 @@ def build_data_var_components(
         attrs = cfmessage.COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
+    if 'level' in coord_vars and encode_vertical and 'GRIB_typeOfLevel' in data_var_attrs:
+        type_of_level = data_var_attrs['GRIB_typeOfLevel']
+        coord_vars = collections.OrderedDict(
+            (type_of_level if k == 'level' else k, v) for k, v in coord_vars.items()
+        )
+        if 'level' in dimensions:
+            dimensions = tuple(type_of_level if d == 'level' else d for d in dimensions)
+
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
