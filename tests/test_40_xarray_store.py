@@ -101,16 +101,3 @@ def test_open_dataset_eccodes():
     assert var.dims == ('number', 'time', 'air_pressure', 'latitude', 'longitude')
 
     assert var.mean() > 0.
-
-
-def test_open_dataset_cds():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='cds')
-
-    assert res.attrs['GRIB_edition'] == 1
-
-    var = res['t']
-    assert var.attrs['GRIB_gridType'] == 'regular_ll'
-    assert var.attrs['units'] == 'K'
-    assert var.dims == ('realization', 'forecast_reference_time', 'plev', 'lat', 'lon')
-
-    assert var.mean() > 0.
