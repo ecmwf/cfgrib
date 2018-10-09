@@ -26,15 +26,16 @@ import warnings
 
 import attr
 import numpy as np
-import xarray as xr
 
-import cfgrib
+from xarray.backends import api
+from xarray.backends import common
+from xarray import core
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class WrapGrib(xr.backends.common.BackendArray):
+class WrapGrib(common.BackendArray):
     def __init__(self, backend_array):
         self.backend_array = backend_array
 
@@ -42,13 +43,13 @@ class WrapGrib(xr.backends.common.BackendArray):
         return getattr(self.backend_array, item)
 
     def __getitem__(self, item):
-        key, np_inds = xr.core.indexing.decompose_indexer(
-            item, self.shape, xr.core.indexing.IndexingSupport.OUTER_1VECTOR)
+        key, np_inds = core.indexing.decompose_indexer(
+            item, self.shape, core.indexing.IndexingSupport.OUTER_1VECTOR)
 
         array = self.backend_array[key.tuple]
 
         if len(np_inds.tuple) > 0:
-            array = xr.core.indexing.NumpyIndexingAdapter(array)[np_inds]
+            array = core.indexing.NumpyIndexingAdapter(array)[np_inds]
 
         return array
 
@@ -85,20 +86,23 @@ FLAVOURS = {
 
 
 @attr.attrs()
-class GribDataStore(xr.backends.common.AbstractDataStore):
+class GribDataStore(common.AbstractDataStore):
     """
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
     ds = attr.attrib()
     variable_map = attr.attrib(default={}, type=T.Dict[str, str])
     type_of_level_map = attr.attrib(default={}, type=T.Dict[str, T.Callable])
+    autoclose = attr.attrib(default=False, type=bool)
 
     @classmethod
-    def from_path(cls, path, flavour_name='ecmwf', errors='ignore', **kwargs):
+    def from_path(cls, path, flavour_name='ecmwf', errors='ignore', autoclose=False, **kwargs):
+        import cfgrib
         flavour = FLAVOURS[flavour_name].copy()
         config = flavour.pop('dataset', {}).copy()
         config.update(kwargs)
-        return cls(ds=cfgrib.Dataset.from_path(path, errors=errors, **config), **flavour)
+        ds = cfgrib.open_file(path, errors=errors, **config)
+        return cls(ds=ds, autoclose=autoclose, **flavour)
 
     def __attrs_post_init__(self):
         self.variable_map = self.variable_map.copy()
@@ -114,7 +118,7 @@ class GribDataStore(xr.backends.common.AbstractDataStore):
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
-            data = xr.core.indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
+            data = core.indexing.LazilyOuterIndexedArray(WrapGrib(var.data))
 
         dimensions = tuple(self.variable_map.get(dim, dim) for dim in var.dimensions)
         attrs = var.attributes
@@ -127,16 +131,16 @@ class GribDataStore(xr.backends.common.AbstractDataStore):
         encoding = self.ds.encoding.copy()
         encoding['original_shape'] = var.data.shape
 
-        return xr.Variable(dimensions, data, attrs, encoding)
+        return core.variable.Variable(dimensions, data, attrs, encoding)
 
     def get_variables(self):
         variables = []
         for k, v in self.ds.variables.items():
             variables.append((self.variable_map.get(k, k), self.open_store_variable(k, v)))
-        return xr.core.utils.FrozenOrderedDict(variables)
+        return core.utils.FrozenOrderedDict(variables)
 
     def get_attrs(self):
-        return xr.core.utils.FrozenOrderedDict(self.ds.attributes)
+        return core.utils.FrozenOrderedDict(self.ds.attributes)
 
     def get_dimensions(self):
         return collections.OrderedDict((self.variable_map.get(d, d), s)
@@ -163,7 +167,7 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
     store = GribDataStore.from_path(path, **overrides)
-    return xr.backends.api.open_dataset(store, **kwargs)
+    return api.open_dataset(store, **kwargs)
 
 
 def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, **kwargs):
@@ -171,6 +175,8 @@ def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, 
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
+    import cfgrib
+
     if not no_warn:
         warnings.warn("open_datasets is an experimental API, DO NOT RELY ON IT!", FutureWarning)
 
