@@ -384,6 +384,7 @@ def build_dataset_components(
         encode_parameter=True, encode_time=True, encode_vertical=True, encode_geography=True,
         filter_by_keys={}, log=LOG,
 ):
+    filter_by_keys = dict(filter_by_keys)
     index = stream.index(ALL_KEYS).subindex(filter_by_keys)
     param_ids = index['paramId']
     dimensions = collections.OrderedDict()
