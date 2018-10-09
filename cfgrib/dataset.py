@@ -431,7 +431,7 @@ class Dataset(object):
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
     @classmethod
-    def from_path(cls, path, errors='ignore', flavour_name='ecmwf', **kwargs):
+    def from_path(cls, path, mode='r', errors='ignore', flavour_name='ecmwf', **kwargs):
         """Open a GRIB file as a ``Dataset``."""
         flavour_kwargs = FLAVOURS[flavour_name].copy()
         flavour_kwargs.update(kwargs)
