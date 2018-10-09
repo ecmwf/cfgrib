@@ -17,18 +17,12 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import collections
-import logging
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
 from xarray.backends import common
 from xarray import core
-
-
-LOGGER = logging.getLogger(__name__)
 
 
 class WrapGrib(common.BackendArray):
@@ -122,8 +116,8 @@ class CfGribDataStore(common.AbstractDataStore):
         return core.utils.FrozenOrderedDict(self.ds.attributes)
 
     def get_dimensions(self):
-        return collections.OrderedDict((self.variable_map.get(d, d), s)
-                                       for d, s in self.ds.dimensions.items())
+        return core.utils.FrozenOrderedDict((self.variable_map.get(d, d), s)
+                                            for d, s in self.ds.dimensions.items())
 
     def get_encoding(self):
         encoding = {}
