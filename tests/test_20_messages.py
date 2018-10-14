@@ -22,7 +22,7 @@ def test_Message():
     assert list(res)[0] == 'globalDomain'
     assert list(res.message_iterkeys('time'))[0] == 'dataDate'
     assert 'paramId' in res
-    assert len(res) == 192
+    assert len(res) > 100
 
     with pytest.raises(KeyError):
         res['non-existent-key']
@@ -48,7 +48,7 @@ def test_ComputedKeysMessage():
 
     assert res['paramId'] == 129
     assert res['ref_time'] == '201701010'
-    assert len(res) == 194
+    assert len(res) > 100
     assert res['centre'] == -1
 
     with pytest.raises(ZeroDivisionError):
@@ -103,6 +103,6 @@ def test_FileIndex_errors():
 def test_FileStream():
     res = messages.FileStream(TEST_DATA)
     leader = res.first()
-    assert len(leader) == 192
+    assert len(leader) > 100
     assert sum(1 for _ in res) == leader['count']
     assert len(res.index(['paramId'])) == 1
