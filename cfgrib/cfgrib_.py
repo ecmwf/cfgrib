@@ -25,7 +25,6 @@ from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import Frozen, FrozenOrderedDict
 from xarray.backends.common import AbstractDataStore, BackendArray
-from xarray.backends.file_manager import CachingFileManager
 from xarray.backends.locks import ensure_lock, SerializableLock
 
 # FIXME: Add a dedicated lock just in case, even if ecCodes is supposed to be thread-safe in most
@@ -42,7 +41,7 @@ class CfGribArrayWrapper(BackendArray):
 
     def __getitem__(self, key):
         return indexing.explicit_indexing_adapter(
-            key, self.shape, indexing.IndexingSupport.BASIC, self._getitem)
+            key, self.shape, indexing.IndexingSupport.OUTER, self._getitem)
 
     def _getitem(self, key):
         with self.datastore.lock:
@@ -58,17 +57,12 @@ class CfGribDataStore(AbstractDataStore):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = ensure_lock(lock)
-        backend_kwargs['filter_by_keys'] = tuple(backend_kwargs.get('filter_by_keys', {}).items())
-        self._manager = CachingFileManager(
-            cfgrib.open_file, filename, lock=lock, mode='r', kwargs=backend_kwargs)
 
-    @classmethod
-    def from_path(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
+        # NOTE: filter_by_keys is a dict, but CachingFileManager only accepts hashable types
+        if 'filter_by_keys' in backend_kwargs:
+            backend_kwargs['filter_by_keys'] = tuple(backend_kwargs['filter_by_keys'].items())
 
-    @property
-    def ds(self):
-        return self._manager.acquire()
+        self.ds = cfgrib.open_file(filename, mode='r', **backend_kwargs)
 
     def open_store_variable(self, name, var):
         if isinstance(var.data, np.ndarray):
@@ -95,6 +89,3 @@ class CfGribDataStore(AbstractDataStore):
         encoding = {}
         encoding['unlimited_dims'] = {k for k, v in self.ds.dimensions.items() if v is None}
         return encoding
-
-    def close(self):
-        self._manager.close()
