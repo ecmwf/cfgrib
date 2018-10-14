@@ -44,7 +44,7 @@ def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore',
     for k in list(kwargs):  # copy to allow the .pop()
         if k.startswith('encode_'):
             overrides[k] = kwargs.pop(k)
-    store = cfgrib_.CfGribDataStore.from_path(path, **overrides)
+    store = cfgrib_.CfGribDataStore(path, **overrides)
     return api.open_dataset(store, **kwargs)
 
 
