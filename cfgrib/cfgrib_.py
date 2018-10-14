@@ -25,7 +25,20 @@ from xarray import Variable
 from xarray.core import indexing
 from xarray.core.utils import Frozen, FrozenOrderedDict
 from xarray.backends.common import AbstractDataStore, BackendArray
-from xarray.backends.locks import ensure_lock, SerializableLock
+try:
+    from xarray.backends.locks import ensure_lock, SerializableLock
+except ImportError:
+    # no locking for xarray <= 0.11
+    def ensure_lock(lock):
+        return lock
+
+    class SerializableLock(object):
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
 
 # FIXME: Add a dedicated lock just in case, even if ecCodes is supposed to be thread-safe in most
 # circumstances. See: https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
