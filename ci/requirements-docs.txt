@@ -4,10 +4,10 @@
 #
 #    pip-compile --output-file ci/requirements-docs.txt setup.py ci/requirements-docs.in
 #
-alabaster==0.7.11         # via sphinx
+alabaster==0.7.12         # via sphinx
 attrs==18.2.0
 babel==2.6.0              # via sphinx
-certifi==2018.8.24        # via requests
+certifi==2018.10.15       # via requests
 cffi==1.11.5
 chardet==3.0.4            # via requests
 docutils==0.14            # via sphinx
@@ -21,7 +21,7 @@ packaging==18.0           # via sphinx
 pandas==0.23.4            # via xarray
 pycparser==2.19           # via cffi
 pygments==2.2.0           # via sphinx
-pyparsing==2.2.1          # via packaging
+pyparsing==2.2.2          # via packaging
 pytest-runner==4.2
 python-dateutil==2.7.3    # via pandas
 pytz==2018.5              # via babel, pandas
