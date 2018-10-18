@@ -447,12 +447,6 @@ class Dataset(object):
         stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
         return cls(*build_dataset_components(stream, **flavour_kwargs))
 
-    @classmethod
-    def frompath(cls, *args, **kwargs):
-        """Deprecated! Use `.from_path` instead."""
-        warnings.warn(".frompath is deprecated, use .from_path instead", FutureWarning)
-        return cls.from_path(*args, **kwargs)
-
 
 def open_file(path, **kwargs):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
