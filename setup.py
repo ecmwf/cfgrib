@@ -33,7 +33,7 @@ setuptools.setup(
     version=version,
     description='Python interface to map GRIB files to the NetCDF Common Data Model '
                 'following the CF Convention using ecCodes.',
-    long_description=read('README.rst'),
+    long_description=read('README.rst') + read('CHANGELOG.rst'),
     author='European Centre for Medium-Range Weather Forecasts (ECMWF)',
     author_email='software.support@ecmwf.int',
     license='Apache License Version 2.0',
