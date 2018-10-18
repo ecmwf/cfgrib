@@ -24,7 +24,6 @@ import collections
 import logging
 import pkg_resources
 import typing as T
-import warnings
 
 import attr
 import numpy as np
