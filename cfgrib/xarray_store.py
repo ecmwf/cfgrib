@@ -23,33 +23,31 @@ import logging
 import typing as T  # noqa
 import warnings
 
-from xarray.backends import api
+import xarray as xr
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def open_dataset(path, flavour_name='ecmwf', filter_by_keys={}, errors='ignore', **kwargs):
-    # type: (str, str, T.Mapping[str, T.Any], str, T.Any) -> xr.Dataset
+def open_dataset(path, backend_kwargs={}, **kwargs):
+    # type: (str, T.Mapping[str, T.Any], T.Any) -> xr.Dataset
     """
     Return a ``xr.Dataset`` with the requested ``flavor`` from a GRIB file.
     """
     # validate Dataset keys, DataArray names, and attr keys/values
     from . import cfgrib_
-    overrides = {
-        'flavour_name': flavour_name,
-        'filter_by_keys': filter_by_keys,
-        'errors': errors,
+    real_backend_kwargs = {
+        'flavour_name': 'ecmwf',
+        'filter_by_keys': {},
+        'errors': 'ignore',
     }
-    for k in list(kwargs):  # copy to allow the .pop()
-        if k.startswith('encode_'):
-            overrides[k] = kwargs.pop(k)
-    store = cfgrib_.CfGribDataStore(path, **overrides)
-    return api.open_dataset(store, **kwargs)
+    real_backend_kwargs.update(backend_kwargs)
+    store = cfgrib_.CfGribDataStore(path, **real_backend_kwargs)
+    return xr.backends.api.open_dataset(store, **kwargs)
 
 
-def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, **kwargs):
-    # type: (str, str, T.Dict[str, T.Any], bool, T.Any) -> T.List[xr.Dataset]
+def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
+    # type: (str, T.Dict[str, T.Any], bool, T.Any) -> T.List[xr.Dataset]
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
@@ -61,12 +59,14 @@ def open_datasets(path, flavour_name='ecmwf', filter_by_keys={}, no_warn=False, 
     fbks = []
     datasets = []
     try:
-        datasets.append(open_dataset(path, flavour_name, filter_by_keys, **kwargs))
+        datasets.append(open_dataset(path, backend_kwargs=backend_kwargs, **kwargs))
     except cfgrib.DatasetBuildError as ex:
         fbks.extend(ex.args[1])
     # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
     #   to the user a confusing error message due to exception chaining
     # OPTIMIZE: we need a way to cache the index
     for fbk in fbks:
-        datasets.extend(open_datasets(path, flavour_name, fbk, no_warn=True, **kwargs))
+        bks = backend_kwargs.copy()
+        bks['filter_by_keys'] = fbk
+        datasets.extend(open_datasets(path, backend_kwargs=bks, no_warn=True, **kwargs))
     return datasets

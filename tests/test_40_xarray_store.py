@@ -54,11 +54,12 @@ def test_open_dataset_corrupted():
     assert len(res.data_vars) == 1
 
     with pytest.raises(eccodes.EcCodesError):
-        xarray_store.open_dataset(TEST_CORRUPTED, errors='strict')
+        xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={'errors': 'strict'})
 
 
 def test_open_dataset_encode_time():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_time=True)
+    backend_kwargs = {'flavour_name': 'eccodes', 'encode_time': True}
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
@@ -69,7 +70,8 @@ def test_open_dataset_encode_time():
 
 
 def test_open_dataset_encode_vertical():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_vertical=True)
+    backend_kwargs = {'flavour_name': 'eccodes', 'encode_vertical': True}
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     var = res['t']
     assert var.dims == ('number', 'dataDate', 'dataTime', 'air_pressure', 'i')
@@ -78,7 +80,8 @@ def test_open_dataset_encode_vertical():
 
 
 def test_open_dataset_encode_geography():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='eccodes', encode_geography=True)
+    backend_kwargs = {'flavour_name': 'eccodes', 'encode_geography': True}
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1
 
@@ -91,7 +94,7 @@ def test_open_dataset_encode_geography():
 
 
 def test_open_dataset_eccodes():
-    res = xarray_store.open_dataset(TEST_DATA, flavour_name='ecmwf')
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs={'flavour_name': 'ecmwf'})
 
     assert res.attrs['GRIB_edition'] == 1
 
