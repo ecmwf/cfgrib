@@ -178,7 +178,7 @@ Opening a non-conformant GRIB file will fail with a ``ValueError: key present an
 error message, see `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 
 In most cases you can handle complex GRIB files containing heterogeneous messages by using
-the ``filter_by_keys`` keyword to select which GRIB messages belong to a
+the ``filter_by_keys`` key in ``backend_kwargs`` to select which GRIB messages belong to a
 well formed set of hypercubes.
 
 For example to open
@@ -188,7 +188,7 @@ you can use:
 .. code-block: python
 
 >>> cfgrib.open_dataset('nam.t00z.awp21100.tm00.grib2',
-...              filter_by_keys={'typeOfLevel': 'surface', 'stepType': 'instant'})
+...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'surface', 'stepType': 'instant'}})
 <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -211,7 +211,7 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 >>> cfgrib.open_dataset('nam.t00z.awp21100.tm00.grib2',
-...              filter_by_keys={'typeOfLevel': 'heightAboveGround', 'level': 2})
+...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
 <xarray.Dataset>
 Dimensions:            (x: 93, y: 65)
 Coordinates:
