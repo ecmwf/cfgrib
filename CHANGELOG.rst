@@ -5,7 +5,7 @@ Changelog for cfgrib
 0.9.1.1 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fix PyPI description.
 
 
 0.9.1 (2018-10-19)
