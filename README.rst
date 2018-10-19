@@ -41,7 +41,7 @@ Limitations:
 
 
 Installation
-------------
+============
 
 The package is installed from PyPI with::
 
@@ -49,7 +49,7 @@ The package is installed from PyPI with::
 
 
 System dependencies
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 The Python module depends on the ECMWF *ecCodes* library
 that must be installed on the system and accessible as a shared library.
@@ -85,7 +85,7 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 
 
 Dataset / Variable API
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 You may try out the high level API in a Python interpreter:
 
@@ -119,7 +119,7 @@ You may try out the high level API in a Python interpreter:
 
 
 Read-only *xarray* GRIB driver
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Additionally if you have *xarray* installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
 
@@ -153,7 +153,7 @@ Attributes:
 
 
 Lower level APIs
-~~~~~~~~~~~~~~~~
+----------------
 
 Lower level APIs are not stable and should not be considered public yet.
 In particular the internal Python 3 *ecCodes* bindings are not compatible with
@@ -161,7 +161,7 @@ the standard *ecCodes* python module.
 
 
 Advanced usage
---------------
+==============
 
 ``cfgrib.Dataset`` and ``cfgrib.open_dataset`` can open a GRIB file only if all the messages
 with the same ``shortName`` can be represented as a single ``cfgrib.Variable`` hypercube.
@@ -340,7 +340,7 @@ Attributes:
 
 
 Advanced write usage
---------------------
+====================
 
 **Please note that write support is Pre-Alpha and highly experimental.**
 
@@ -431,7 +431,7 @@ Attributes:
 
 
 Contributing
-------------
+============
 
 The main repository is hosted on GitHub,
 testing, bug reports and contributions are highly welcomed and appreciated:
