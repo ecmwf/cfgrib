@@ -1,8 +1,8 @@
 Changelog for cfgrib
 ====================
 
-0.9.1 (unreleased)
---------------------
+0.9.1 (2018-10-19)
+------------------
 
 - Change the usage of ``cfgrib.open_dataset`` to allign it with ``xarray.open_dataset``,
   in particular ``filter_by_key`` must be added into the ``backend_kwargs`` dictionary.
