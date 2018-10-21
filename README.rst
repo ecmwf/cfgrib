@@ -96,24 +96,24 @@ You may try out the high level API in a Python interpreter:
 >>> ds.attributes['GRIB_edition']
 1
 >>> sorted(ds.dimensions.items())
-[('air_pressure', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
 >>> sorted(ds.variables)
-['air_pressure', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
 >>> var = ds.variables['t']
 >>> var.dimensions
-('number', 'time', 'air_pressure', 'latitude', 'longitude')
+('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
 >>> ds = cfgrib.open_file('era5-levels-members.grib')
 >>> ds.attributes['GRIB_edition']
 1
 >>> sorted(ds.dimensions.items())
-[('air_pressure', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
 >>> sorted(ds.variables)
-['air_pressure', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
 >>> var = ds.variables['t']
 >>> var.dimensions
-('number', 'time', 'air_pressure', 'latitude', 'longitude')
+('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
 >>> var.data[:, :, :, :, :].mean()
 262.92133
 
@@ -132,18 +132,18 @@ In a Python interpreter try:
 >>> ds = cfgrib.open_dataset('era5-levels-members.grib')
 >>> ds
 <xarray.Dataset>
-Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
-  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
-    step          timedelta64[ns] ...
-  * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
-    valid_time    (time) datetime64[ns] ...
+  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step           timedelta64[ns] ...
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+  * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+    valid_time     (time) datetime64[ns] ...
 Data variables:
-    z             (number, time, air_pressure, latitude, longitude) float32 ...
-    t             (number, time, air_pressure, latitude, longitude) float32 ...
+    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            1
     GRIB_centre:             ecmf
@@ -242,21 +242,21 @@ and it is not part of the stable API. In the future it may change or be removed 
 >>> from cfgrib import xarray_store
 >>> xarray_store.open_datasets('nam.t00z.awp21100.tm00.grib2')
 [<xarray.Dataset>
-Dimensions:       (air_pressure: 19, x: 93, y: 65)
+Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
 Coordinates:
-    time          datetime64[ns] ...
-    step          timedelta64[ns] ...
-  * air_pressure  (air_pressure) float64 1e+03 950.0 900.0 ... 200.0 150.0 100.0
-    latitude      (y, x) float64 ...
-    longitude     (y, x) float64 ...
-    valid_time    datetime64[ns] ...
+    time           datetime64[ns] ...
+    step           timedelta64[ns] ...
+  * isobaricInhPa  (isobaricInhPa) float64 1e+03 950.0 900.0 ... 150.0 100.0
+    latitude       (y, x) float64 ...
+    longitude      (y, x) float64 ...
+    valid_time     datetime64[ns] ...
 Dimensions without coordinates: x, y
 Data variables:
-    gh            (air_pressure, y, x) float32 ...
-    t             (air_pressure, y, x) float32 ...
-    r             (air_pressure, y, x) float32 ...
-    w             (air_pressure, y, x) float32 ...
-    u             (air_pressure, y, x) float32 ...
+    gh             (isobaricInhPa, y, x) float32 ...
+    t              (isobaricInhPa, y, x) float32 ...
+    r              (isobaricInhPa, y, x) float32 ...
+    w              (isobaricInhPa, y, x) float32 ...
+    u              (isobaricInhPa, y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
@@ -353,18 +353,18 @@ can be saved at the moment:
 >>> ds = cfgrib.open_dataset('era5-levels-members.grib')
 >>> ds
 <xarray.Dataset>
-Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
-  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
-    step          timedelta64[ns] ...
-  * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
-    valid_time    (time) datetime64[ns] ...
+  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step           timedelta64[ns] ...
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+  * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+    valid_time     (time) datetime64[ns] ...
 Data variables:
-    z             (number, time, air_pressure, latitude, longitude) float32 ...
-    t             (number, time, air_pressure, latitude, longitude) float32 ...
+    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            1
     GRIB_centre:             ecmf
@@ -374,18 +374,18 @@ Attributes:
 >>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
 >>> cfgrib.open_dataset('out1.grib')
 <xarray.Dataset>
-Dimensions:       (air_pressure: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
-  * number        (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time          (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
-    step          timedelta64[ns] ...
-  * air_pressure  (air_pressure) float64 850.0 500.0
-  * latitude      (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
-  * longitude     (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
-    valid_time    (time) datetime64[ns] ...
+  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step           timedelta64[ns] ...
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
+  * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+    valid_time     (time) datetime64[ns] ...
 Data variables:
-    z             (number, time, air_pressure, latitude, longitude) float32 ...
-    t             (number, time, air_pressure, latitude, longitude) float32 ...
+    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             ecmf

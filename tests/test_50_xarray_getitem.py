@@ -24,9 +24,9 @@ def test_getitem_int(cache):
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars['t']
     va = da.values[:]
 
-    assert da.isel(air_pressure=1).values.shape == va[:, :, 1].shape
-    assert da.isel(air_pressure=1).mean() == va[:, :, 1].mean()
-    assert da.sel(air_pressure=500).mean() == va[:, :, 1].mean()
+    assert da.isel(isobaricInhPa=1).values.shape == va[:, :, 1].shape
+    assert da.isel(isobaricInhPa=1).mean() == va[:, :, 1].mean()
+    assert da.sel(isobaricInhPa=500).mean() == va[:, :, 1].mean()
 
 
 @pytest.mark.parametrize('cache', [True, False])

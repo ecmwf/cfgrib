@@ -59,7 +59,7 @@ COORD_ATTRS = {
         'units': 'degrees_east',
         'standard_name': 'longitude', 'long_name': 'longitude',
     },
-    'air_pressure': {
+    'isobaricInhPa': {
         'units': 'hPa', 'positive': 'down',
         'standard_name': 'air_pressure', 'long_name': 'pressure',
     },
@@ -167,7 +167,7 @@ def to_grib_pl_level(message, coord, level_key='level'):
 COMPUTED_KEYS = {
     'time': (from_grib_date_time, to_grib_date_time),
     'step': (from_grib_step, to_grib_step),
-    'air_pressure': (from_grib_pl_level, to_grib_pl_level),
+    'isobaricInhPa': (from_grib_pl_level, to_grib_pl_level),
 }
 
 

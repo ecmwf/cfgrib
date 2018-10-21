@@ -85,7 +85,7 @@ VERTICAL_COORDINATE_MAP = [
 ]
 PLEV_TYPE_OF_LEVELS = ('isobaricInhPa', 'isobaricInPa')
 PLEV_COORDINATE_MAP = [
-    ('air_pressure', False),
+    ('isobaricInhPa', False),
 ]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', True),
