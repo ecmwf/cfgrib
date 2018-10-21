@@ -93,7 +93,7 @@ def detect_grib_keys(data_var, default_grib_keys):
         regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
         detected_grib_keys.update(regular_ll_grib_keys)
 
-    if 'air_pressure' in data_var.dims or 'air_pressure' in data_var.coords:
+    if 'isobaricInhPa' in data_var.dims or 'isobaricInhPa' in data_var.coords:
         detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
 
     if 'number' in data_var.dims or 'number' in data_var.coords:

@@ -18,7 +18,7 @@ def canonic_da():
             np.linspace(90., -90., 5),
             np.linspace(0., 360., 6, endpoint=False),
         ],
-        dims=['time', 'step', 'air_pressure', 'latitude', 'longitude'],
+        dims=['time', 'step', 'isobaricInhPa', 'latitude', 'longitude'],
     )
     return da
 
