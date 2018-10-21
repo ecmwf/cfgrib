@@ -5,7 +5,9 @@ Changelog for cfgrib
 0.9.1.1 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Rename coordinate ``air_pressure`` to ``isobaricInhPa`` for consistency
+  with all other vertical ``level`` coordinates.
+  See: `#25 <https://github.com/ecmwf/cfgrib/issues/25>`_.
 
 
 0.9.1.post1 (2018-10-19)
