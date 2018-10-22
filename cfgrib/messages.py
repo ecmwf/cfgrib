@@ -40,7 +40,10 @@ class Message(collections.MutableMapping):
     encoding = attr.attrib(default='ascii', type=str)
 
     @classmethod
-    def from_file(cls, file, **kwargs):
+    def from_file(cls, file, offset=None, **kwargs):
+        # type: (T.IO[bytes], int, T.Any) -> Message
+        if offset is not None:
+            file.seek(offset)
         codes_id = eccodes.codes_handle_new_from_file(file)
         if codes_id is None:
             raise EOFError("end-of-file reached.")
@@ -199,9 +202,7 @@ class FileStream(collections.Iterable):
                         raise
 
     def message_from_file(self, file, offset=None):
-        if offset is not None:
-            file.seek(offset)
-        return self.message_class.from_file(file=file)
+        return self.message_class.from_file(file=file, offset=offset)
 
     def first(self):
         # type: () -> Message
