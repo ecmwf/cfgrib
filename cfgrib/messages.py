@@ -22,6 +22,7 @@ from builtins import bytes, isinstance, str, type
 
 import collections
 import logging
+import os.path
 import pickle
 import typing as T
 
@@ -251,22 +252,28 @@ class FileIndex(collections.Mapping):
             return pickle.load(file)
 
     @classmethod
-    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx'):
-        # (FileStream, T.List[str], T.Optional[str]) -> FileIndex
+    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx', log=LOG):
+        # (FileStream, T.List[str], T.Optional[str], logging.Logger) -> FileIndex
         self = None
         if indexpath:
             indexpath = indexpath.format(path=filestream.path)
+            filestream_mtime = os.path.getmtime(filestream.path)
             try:
-                self = cls.from_indexpath(indexpath)
+                index_mtime = os.path.getmtime(indexpath)
+                if index_mtime >= filestream_mtime:
+                    self = cls.from_indexpath(indexpath)
+                else:
+                    log.warning("Index file %r older than GRIB file, remove it.", indexpath)
             except FileNotFoundError:
                 pass
         if not (self and getattr(self, 'index_keys', None) == index_keys and
                 getattr(self, 'filestream', None) == filestream):
+            log.warning("Computing GRIB file index.")
             self = cls.from_filestream(filestream, index_keys)
             try:
                 self.to_indexpath(indexpath)
             except IOError:
-                pass
+                log.exception("Save of GRIB file index %r failed.", indexpath)
         return self
 
     def to_indexpath(self, indexpath):
