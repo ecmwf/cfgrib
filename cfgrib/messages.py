@@ -209,7 +209,7 @@ class FileStream(collections.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, index_keys, indexpath='{path}.ix'):
+    def index(self, index_keys, indexpath='{path}.idx'):
         # (T.List[str], T.Optional[str]) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
@@ -251,7 +251,7 @@ class FileIndex(collections.Mapping):
             return pickle.load(file)
 
     @classmethod
-    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.ix'):
+    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx'):
         # (FileStream, T.List[str], T.Optional[str]) -> FileIndex
         self = None
         if indexpath:
