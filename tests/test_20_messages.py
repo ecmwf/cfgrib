@@ -13,7 +13,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
-def test_Message():
+def test_Message_read():
     with open(TEST_DATA) as file:
         res = messages.Message.from_file(file)
 
@@ -37,11 +37,35 @@ def test_Message():
                 messages.Message.from_file(file)
 
 
-def test_ComputedKeysMessage():
+def test_Message_write():
+    res = messages.Message.from_sample_name('regular_ll_pl_grib2')
+    assert res['gridType'] == 'regular_ll'
+
+    res.message_set('Ni', 20)
+    assert res['Ni'] == 20
+
+    res['iDirectionIncrementInDegrees'] = 1.
+    assert res['iDirectionIncrementInDegrees'] == 1.
+
+    res.message_set('gridType', 'reduced_gg')
+    assert res['gridType'] == 'reduced_gg'
+
+    res['pl'] = [2., 3.]
+    assert res['pl'] == [2., 3.]
+
+
+    with pytest.raises(KeyError):
+        res['centreDescription'] = 'DUMMY'
+
+    with pytest.raises(NotImplementedError):
+        del res['gridType']
+
+
+def test_ComputedKeysMessage_read():
     computed_keys = {
         'ref_time': (lambda m: str(m['dataDate']) + str(m['dataTime']), None),
         'error_key': (lambda m: 1 / 0, None),
-        'centre': (lambda m: -1, None),
+        'centre': (lambda m: -1, lambda m, v: None),
     }
     with open(TEST_DATA) as file:
         res = messages.ComputedKeysMessage.from_file(file, computed_keys=computed_keys)
@@ -53,6 +77,20 @@ def test_ComputedKeysMessage():
 
     with pytest.raises(ZeroDivisionError):
         res['error_key']
+
+
+def test_ComputedKeysMessage_write():
+    computed_keys = {
+        'ref_time': (lambda m: '%s%04d' % (m['dataDate'], m['dataTime']), None),
+        'error_key': (lambda m: 1 / 0, None),
+        'centre': (lambda m: -1, lambda m, v: None),
+    }
+    res = messages.ComputedKeysMessage.from_sample_name('regular_ll_pl_grib2', computed_keys=computed_keys)
+    res['dataDate'] = 20180101
+    res['dataTime'] = 0
+    assert res['ref_time'] == '201801010000'
+
+    res['centre'] = 1
 
 
 def test_make_message_schema():
