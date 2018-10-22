@@ -53,7 +53,6 @@ def test_Message_write():
     res['pl'] = [2., 3.]
     assert res['pl'] == [2., 3.]
 
-
     with pytest.raises(KeyError):
         res['centreDescription'] = 'DUMMY'
 
@@ -85,7 +84,9 @@ def test_ComputedKeysMessage_write():
         'error_key': (lambda m: 1 / 0, None),
         'centre': (lambda m: -1, lambda m, v: None),
     }
-    res = messages.ComputedKeysMessage.from_sample_name('regular_ll_pl_grib2', computed_keys=computed_keys)
+    res = messages.ComputedKeysMessage.from_sample_name(
+        'regular_ll_pl_grib2', computed_keys=computed_keys,
+    )
     res['dataDate'] = 20180101
     res['dataTime'] = 0
     assert res['ref_time'] == '201801010000'
