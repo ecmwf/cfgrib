@@ -22,6 +22,7 @@ from builtins import bytes, isinstance, str, type
 
 import collections
 import logging
+import pickle
 import typing as T
 
 import attr
@@ -208,8 +209,9 @@ class FileStream(collections.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, index_keys):
-        return FileIndex.from_filestream(filestream=self, index_keys=index_keys)
+    def index(self, index_keys, indexpath='{path}.ix'):
+        # (T.List[str], T.Optional[str]) -> FileIndex
+        return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
 
 # OPTIMIZE: building an index requires a full scan of the GRIB file, making the index persistent
@@ -242,6 +244,34 @@ class FileIndex(collections.Mapping):
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
         return cls(filestream=filestream, index_keys=index_keys, offsets=offsets)
+
+    @classmethod
+    def from_indexpath(cls, indexpath):
+        with open(indexpath, 'rb') as file:
+            return pickle.load(file)
+
+    @classmethod
+    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.ix'):
+        # (FileStream, T.List[str], T.Optional[str]) -> FileIndex
+        self = None
+        if indexpath:
+            indexpath = indexpath.format(path=filestream.path)
+            try:
+                self = cls.from_indexpath(indexpath)
+            except FileNotFoundError:
+                pass
+        if not (self and getattr(self, 'index_keys', None) == index_keys and
+                getattr(self, 'filestream', None) == filestream):
+            self = cls.from_filestream(filestream, index_keys)
+            try:
+                self.to_indexpath(indexpath)
+            except IOError:
+                pass
+        return self
+
+    def to_indexpath(self, indexpath):
+        with open(indexpath, 'wb') as file:
+            return pickle.dump(self, file)
 
     def __iter__(self):
         return iter(self.index_keys)
