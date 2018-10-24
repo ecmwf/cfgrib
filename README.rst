@@ -11,18 +11,17 @@ Low level access and decoding is performed via the
 Features with development status **Beta**:
 
 - read-only GRIB driver for *xarray*,
-- support reading most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
+- reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
-- support all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
-- support most Linux distributions and MacOS,
-- only system dependency is the ecCodes C-library (not the Python2-only module),
-- no install time build (binds with *CFFI* ABI mode),
-- read the data lazily and efficiently in terms of both memory usage and disk access.
+- supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
+- works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
+- PyPI package with no install time build (binds with *CFFI* ABI mode),
+- reads the data lazily and efficiently in terms of both memory usage and disk access.
 
 Work in progress:
 
-- **Alpha** support for saving the index of a GRIB file to disk, saves a full-file scan on open,
+- **Alpha** supports saving the index of a GRIB file to disk, to save a full-file scan on open,
   see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 - **Pre-Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
@@ -31,13 +30,15 @@ Work in progress:
 
 Limitations:
 
+- no *conda* package, for now,
+  see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
 - incomplete documentation, for now,
 - no Windows support,
   see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - no support for opening multiple GRIB files,
   see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
-- rely on *ecCodes* for the CF attributes of the data variables,
-- rely on *ecCodes* for the ``gridType`` handling.
+- relys on *ecCodes* for the CF attributes of the data variables,
+- relys on *ecCodes* for the ``gridType`` handling.
 
 
 Installation
