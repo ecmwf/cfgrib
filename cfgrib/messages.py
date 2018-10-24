@@ -264,16 +264,17 @@ class FileIndex(collections.Mapping):
                     self = cls.from_indexpath(indexpath)
                 else:
                     log.warning("Index file %r older than GRIB file, remove it.", indexpath)
-            except FileNotFoundError:
+            except OSError:
                 pass
         if not (self and getattr(self, 'index_keys', None) == index_keys and
                 getattr(self, 'filestream', None) == filestream):
             log.warning("Computing GRIB file index.")
             self = cls.from_filestream(filestream, index_keys)
-            try:
-                self.to_indexpath(indexpath)
-            except IOError:
-                log.exception("Save of GRIB file index %r failed.", indexpath)
+            if indexpath:
+                try:
+                    self.to_indexpath(indexpath)
+                except Exception:
+                    log.exception("Save of GRIB file index %r failed.", indexpath)
         return self
 
     def to_indexpath(self, indexpath):
