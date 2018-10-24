@@ -340,7 +340,7 @@ def build_data_var_components(
     coord_vars.update(geo_coord_vars)
 
     offsets = collections.OrderedDict()
-    for header_values, offset in index.offsets.items():
+    for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions:
             header_value = header_values[index.index_keys.index(dim)]

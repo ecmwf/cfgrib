@@ -221,7 +221,7 @@ class FileStream(collections.Iterable):
 class FileIndex(collections.Mapping):
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
-    offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
+    offsets = attr.attrib(repr=False, type=T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[int]]])
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
@@ -244,7 +244,7 @@ class FileIndex(collections.Mapping):
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
-        return cls(filestream=filestream, index_keys=index_keys, offsets=offsets)
+        return cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
 
     @classmethod
     def from_indexpath(cls, indexpath):
@@ -291,7 +291,7 @@ class FileIndex(collections.Mapping):
     def header_values(self):
         if not hasattr(self, '_header_values'):
             self._header_values = {}
-            for header_values in self.offsets:
+            for header_values, _ in self.offsets:
                 for i, value in enumerate(header_values):
                     values = self._header_values.setdefault(self.index_keys[i], [])
                     if value not in values:
@@ -311,16 +311,16 @@ class FileIndex(collections.Mapping):
     def subindex(self, filter_by_keys={}, **query):
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = collections.OrderedDict()
-        for header_values in self.offsets:
+        offsets = []
+        for header_values, offsets_values in self.offsets:
             for idx, val in raw_query:
                 if header_values[idx] != val:
                     break
             else:
-                offsets[header_values] = self.offsets[header_values]
+                offsets.append((header_values, offsets_values))
         return type(self)(filestream=self.filestream, index_keys=self.index_keys, offsets=offsets)
 
     def first(self):
         with open(self.filestream.path) as file:
-            first_offset = next(iter(self.offsets.values()))[0]
+            first_offset = self.offsets[0][1][0]
             return self.filestream.message_from_file(file, offset=first_offset)
