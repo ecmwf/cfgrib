@@ -27,10 +27,10 @@ Work in progress:
 - **Pre-Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
+- the aim is mostly correctness, but we started working on performance as well.
 
 Limitations:
 
-- target is correctness, not performance, for now,
 - incomplete documentation, for now,
 - no Windows support,
   see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
