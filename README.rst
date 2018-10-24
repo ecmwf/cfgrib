@@ -21,6 +21,7 @@ Features with development status **Beta**:
 - read the data lazily and efficiently in terms of both memory usage and disk access.
 
 Work in progress:
+
 - **Alpha** support for saving the index of a GRIB file to disk, saves a full-file scan on open,
   see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 - **Pre-Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
