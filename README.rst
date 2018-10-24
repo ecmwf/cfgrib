@@ -32,6 +32,8 @@ Limitations:
 
 - no *conda* package, for now,
   see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
+- PyPI binary packages do not include ecCodes,
+  see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
 - no Windows support,
   see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
