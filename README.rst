@@ -123,7 +123,7 @@ Read-only *xarray* GRIB driver
 
 Additionally if you have *xarray* installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
 
-    $ pip install xarray
+    $ pip install xarray>=0.10.9
 
 In a Python interpreter try:
 
