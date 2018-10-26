@@ -12,7 +12,6 @@ Features with development status **Beta**:
 
 - read-only GRIB driver for *xarray*,
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
-  `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_,
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
 - works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
@@ -32,7 +31,7 @@ Limitations:
 
 - no *conda* package, for now,
   see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
-- PyPI binary packages do not include ecCodes,
+- *PyPI* binary packages do not include ecCodes,
   see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
 - no Windows support,
