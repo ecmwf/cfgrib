@@ -2,8 +2,8 @@
 Changelog for cfgrib
 ====================
 
-0.9.4 (unreleased)
-------------------
+0.9.3.1 (2018-10-28)
+--------------------
 
 - Assorted README fixes, in particular advertise index file support as alpha.
 
