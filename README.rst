@@ -17,15 +17,14 @@ Features with development status **Beta**:
 - works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
 - PyPI package with no install time build (binds with *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access.
-- supports saving the index of a GRIB file to disk, to save a full-file scan on open,
-  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 
 Work in progress:
 
+- **Alpha** supports writing the index of a GRIB file to disk, to save a full-file scan on open,
+  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 - **Pre-Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
-- the aim is mostly correctness, but we started working on performance as well.
 
 Limitations:
 
@@ -64,6 +63,10 @@ On a MacOS with HomeBrew use::
 
     $ brew install eccodes
 
+Or if you manage binary packages with *Conda* use::
+
+    $ conda install eccodes
+
 As an alternative you may install the official source distribution
 by following the instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
@@ -78,7 +81,7 @@ You may run a simple selfcheck command to ensure that your system is set up corr
 
 
 Usage
------
+=====
 
 First, you need a well-formed GRIB file, if you don't have one at hand you can download our
 `ERA5 on pressure levels sample <http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib>`_::
@@ -152,6 +155,11 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
+
+*cfgrib* saves the index of the GRIB file to disk appending `.idx` to the GRIB file name.
+Index files are an **experimental** and completely optional feature, feel free to
+remove them and try again in case of problems. Index files saving can be disable passing
+adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
 Lower level APIs
