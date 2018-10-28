@@ -5,7 +5,9 @@ Changelog for cfgrib
 0.9.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Big performance improvement: add support to save/read to/from disk the
+  GRIB index produced by the full-file scan at the first open.
+  See: `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 
 
 0.9.2 (2018-10-22)

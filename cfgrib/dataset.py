@@ -387,7 +387,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath=None,
+        stream, indexpath='{path}.idx',
         encode_parameter=True, encode_time=True, encode_vertical=True, encode_geography=True,
         filter_by_keys={}, log=LOG,
 ):
