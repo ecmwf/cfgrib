@@ -26,8 +26,8 @@ pytest-flakes==4.0.0
 pytest-mccabe==0.1
 pytest-pep8==1.0.6
 pytest-runner==4.2
-pytest==3.9.2
-python-dateutil==2.7.3    # via pandas
+pytest==3.9.3
+python-dateutil==2.7.5    # via pandas
 pytz==2018.6              # via pandas
 six==1.11.0               # via more-itertools, pytest, python-dateutil
 typing==3.6.6

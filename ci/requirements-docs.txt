@@ -23,7 +23,7 @@ pycparser==2.19           # via cffi
 pygments==2.2.0           # via sphinx
 pyparsing==2.2.2          # via packaging
 pytest-runner==4.2
-python-dateutil==2.7.3    # via pandas
+python-dateutil==2.7.5    # via pandas
 pytz==2018.6              # via babel, pandas
 requests==2.20.0          # via sphinx
 six==1.11.0               # via packaging, python-dateutil, sphinx
