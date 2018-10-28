@@ -17,11 +17,11 @@ Features with development status **Beta**:
 - works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
 - PyPI package with no install time build (binds with *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access.
+- supports saving the index of a GRIB file to disk, to save a full-file scan on open,
+  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 
 Work in progress:
 
-- **Alpha** supports saving the index of a GRIB file to disk, to save a full-file scan on open,
-  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
 - **Pre-Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
