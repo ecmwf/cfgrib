@@ -21,8 +21,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import bytes, isinstance, str, type
 
 import collections
+import contextlib
+import io
 import logging
-import os.path
+import os
 import pickle
 import typing as T
 
@@ -215,6 +217,17 @@ class FileStream(collections.Iterable):
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
 
+@contextlib.contextmanager
+def compat_create_exclusive(path, *args, **kwargs):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    with io.open(fd, mode='wb', *args, **kwargs) as file:
+        try:
+            yield file
+        except Exception:
+            os.unlink(path)
+            raise
+
+
 # OPTIMIZE: building an index requires a full scan of the GRIB file, making the index persistent
 #   as an auxiliary file would improve performance on all subsequent open.
 @attr.attrs()
@@ -248,38 +261,43 @@ class FileIndex(collections.Mapping):
 
     @classmethod
     def from_indexpath(cls, indexpath):
-        with open(indexpath, 'rb') as file:
+        with io.open(indexpath, 'rb') as file:
             return pickle.load(file)
 
     @classmethod
     def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx', log=LOG):
-        # (FileStream, T.List[str], T.Optional[str], logging.Logger) -> FileIndex
-        self = None
-        if indexpath:
-            indexpath = indexpath.format(path=filestream.path)
-            filestream_mtime = os.path.getmtime(filestream.path)
-            try:
-                index_mtime = os.path.getmtime(indexpath)
-                if index_mtime >= filestream_mtime:
-                    self = cls.from_indexpath(indexpath)
-                else:
-                    log.warning("Index file %r older than GRIB file, remove it.", indexpath)
-            except OSError:
-                pass
-        if not (self and getattr(self, 'index_keys', None) == index_keys and
-                getattr(self, 'filestream', None) == filestream):
-            log.warning("Computing GRIB file index.")
-            self = cls.from_filestream(filestream, index_keys)
-            if indexpath:
+        # type: (FileStream, T.List[str], T.Optional[str], logging.Logger) -> FileIndex
+        indexpath = indexpath.format(path=filestream.path)
+        try:
+            with compat_create_exclusive(indexpath) as new_index_file:
+                self = cls.from_filestream(filestream, index_keys)
                 try:
-                    self.to_indexpath(indexpath)
+                    pickle.dump(self, new_index_file)
                 except Exception:
-                    log.exception("Save of GRIB file index %r failed.", indexpath)
-        return self
+                    log.exception("Can't pickle index to file %r" % new_index_file)
+                    os.unlink(indexpath)
+                return self
+        except OSError:
+            pass
+        except Exception:
+            log.exception("Can't create file %r", indexpath)
 
-    def to_indexpath(self, indexpath):
-        with open(indexpath, 'wb') as file:
-            return pickle.dump(self, file)
+        try:
+            index_mtime = os.path.getmtime(indexpath)
+            filestream_mtime = os.path.getmtime(filestream.path)
+            if index_mtime >= filestream_mtime:
+                self = cls.from_indexpath(indexpath)
+                if getattr(self, 'index_keys', None) == index_keys and \
+                        getattr(self, 'filestream', None) == filestream:
+                    return self
+                else:
+                    log.warning("Ignoring index file %r incompatible with GRIB file", indexpath)
+            else:
+                log.warning("Ignoring index file %r older than GRIB file", indexpath)
+        except Exception:
+            log.exception("Can't read index file %r", indexpath)
+
+        return cls.from_filestream(filestream, index_keys)
 
     def __iter__(self):
         return iter(self.index_keys)
