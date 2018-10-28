@@ -20,6 +20,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import bytes, isinstance, str, type
 
+# Python 2 compatibility bit not in python-future
+try:
+    FileExistsError
+except NameError:
+    FileExistsError = OSError
+
 import collections
 import contextlib
 import io
@@ -213,7 +219,7 @@ class FileStream(collections.Iterable):
         return next(iter(self))
 
     def index(self, index_keys, indexpath='{path}.idx'):
-        # (T.List[str], T.Optional[str]) -> FileIndex
+        # type: (T.List[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
 
@@ -228,8 +234,6 @@ def compat_create_exclusive(path, *args, **kwargs):
             raise
 
 
-# OPTIMIZE: building an index requires a full scan of the GRIB file, making the index persistent
-#   as an auxiliary file would improve performance on all subsequent open.
 @attr.attrs()
 class FileIndex(collections.Mapping):
     filestream = attr.attrib(type=FileStream)
@@ -266,18 +270,14 @@ class FileIndex(collections.Mapping):
 
     @classmethod
     def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx', log=LOG):
-        # type: (FileStream, T.List[str], T.Optional[str], logging.Logger) -> FileIndex
+        # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
         indexpath = indexpath.format(path=filestream.path)
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
                 self = cls.from_filestream(filestream, index_keys)
-                try:
-                    pickle.dump(self, new_index_file)
-                except Exception:
-                    log.exception("Can't pickle index to file %r" % new_index_file)
-                    os.unlink(indexpath)
+                pickle.dump(self, new_index_file)
                 return self
-        except OSError:
+        except FileExistsError:
             pass
         except Exception:
             log.exception("Can't create file %r", indexpath)

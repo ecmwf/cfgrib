@@ -106,6 +106,23 @@ def test_make_message_schema():
     assert res['non-existent'] == ()
 
 
+def test_compat_create_exclusive(tmpdir):
+    test_file = tmpdir.join('file.grib.idx')
+
+    try:
+        with messages.compat_create_exclusive(str(test_file)):
+            raise RuntimeError("Test remove")
+    except RuntimeError:
+        pass
+
+    with messages.compat_create_exclusive(str(test_file)) as file:
+        file.write(b'Hi!')
+
+    with pytest.raises(OSError):
+        with messages.compat_create_exclusive(str(test_file)) as file:
+            file.write(b'Hi!')
+
+
 def test_FileIndex():
     res = messages.FileIndex.from_filestream(messages.FileStream(TEST_DATA), ['paramId'])
     assert res['paramId'] == [129, 130]
@@ -124,6 +141,46 @@ def test_FileIndex():
     assert subres.get('paramId') == [130]
     assert subres.getone('paramId') == 130
     assert len(subres) == 1
+
+
+def test_FileIndex_from_indexpath_or_filestream(tmpdir):
+    grib_file = tmpdir.join('file.grib')
+
+    with open(TEST_DATA, 'rb') as file:
+        grib_file.write_binary(file.read())
+
+    # create index file
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+    )
+    assert isinstance(res, messages.FileIndex)
+
+    # read index file
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+    )
+    assert isinstance(res, messages.FileIndex)
+
+    # can't create nor read index file
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+        indexpath='',
+    )
+    assert isinstance(res, messages.FileIndex)
+
+    # trigger mtime check
+    grib_file.remove()
+    with open(TEST_DATA, 'rb') as file:
+        grib_file.write_binary(file.read())
+
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+    )
+    assert isinstance(res, messages.FileIndex)
 
 
 def test_FileIndex_errors():
