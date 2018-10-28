@@ -52,6 +52,8 @@ setuptools.setup(
     ],
     tests_require=[
         'pytest',
+        'pytest-cov',
+        'pytest-flakes',
         'xarray>=0.10.9',
     ],
     test_suite='tests',
