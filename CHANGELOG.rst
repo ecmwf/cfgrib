@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.3 (unreleased)
+0.9.3 (2018-10-28)
 ------------------
 
 - Big performance improvement: add support to save to and read from disk
