@@ -1,9 +1,9 @@
 
 Python interface to map GRIB files to the
-`NetCDF Common Data Model <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
+`Unidata's Common Data Model v4 <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
 following the `CF Conventions <http://cfconventions.org/>`_.
 The high level API is designed to support a GRIB backend for `xarray <http://xarray.pydata.org/>`_
-and it is inspired by `NetCDF-python <http://unidata.github.io/netcdf4-python/>`_
+and it is inspired by `netCDF4-python <http://unidata.github.io/netcdf4-python/>`_
 and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
 `ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
@@ -156,7 +156,11 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
-*cfgrib* saves the index of the GRIB file to disk appending `.idx` to the GRIB file name.
+GRIB index file
+---------------
+
+By default *cfgrib* saves the index of the GRIB file to disk appending ``.idx``
+to the GRIB file name.
 Index files are an **experimental** and completely optional feature, feel free to
 remove them and try again in case of problems. Index files saving can be disable passing
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
