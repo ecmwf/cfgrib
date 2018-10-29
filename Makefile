@@ -63,7 +63,7 @@ local-wheel:
 	$(PIP) wheel -e .
 
 testclean:
-	$(RM) -r */__pycache__ .coverage .cache tests/.ipynb_checkpoints *.idx tests/sample-data/*.idx
+	$(RM) -r */__pycache__ .coverage .cache tests/.ipynb_checkpoints *.idx tests/sample-data/*.idx out*.grib
 
 clean: testclean
 	$(RM) -r */*.pyc htmlcov dist build .eggs
