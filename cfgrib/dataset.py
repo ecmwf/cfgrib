@@ -75,7 +75,7 @@ GRID_TYPE_MAP = {
     'reduced_gg': ['N'],  # FIXME: no 'pl' because messages.FileIndex doesn't support lists
     'sh': ['M', 'K', 'J'],
 }
-GRID_TYPE_KEYS = list(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
+GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 HEADER_COORDINATES_MAP = [
     ('number', True),
@@ -387,7 +387,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath='{path}.idx',
+        stream, indexpath='{path}.{short_hash}.idx',
         encode_parameter=True, encode_time=True, encode_vertical=True, encode_geography=True,
         filter_by_keys={}, log=LOG,
 ):

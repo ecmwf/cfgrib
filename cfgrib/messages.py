@@ -28,6 +28,7 @@ except NameError:
 
 import collections
 import contextlib
+import hashlib
 import io
 import logging
 import os
@@ -218,7 +219,7 @@ class FileStream(collections.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, index_keys, indexpath='{path}.idx'):
+    def index(self, index_keys, indexpath='{path}.{short_hash}.idx'):
         # type: (T.List[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
@@ -269,9 +270,10 @@ class FileIndex(collections.Mapping):
             return pickle.load(file)
 
     @classmethod
-    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.idx', log=LOG):
+    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG):
         # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
-        indexpath = indexpath.format(path=filestream.path)
+        hash = hashlib.md5(repr(index_keys).encode('utf-8')).hexdigest()
+        indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
                 self = cls.from_filestream(filestream, index_keys)
