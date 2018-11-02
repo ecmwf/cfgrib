@@ -11,7 +11,6 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 
 @pytest.mark.parametrize('grib_name', [
     'era5-levels-members',
-    pytest.param('hpa_and_pa', marks=pytest.mark.xfail),
     'fields_with_missing_values',
     'lambert_grid',
     'reduced_gg',
@@ -32,6 +31,7 @@ def test_open_dataset(grib_name):
 
 
 @pytest.mark.parametrize('grib_name', [
+    'hpa_and_pa',
     't_on_different_level_types',
     'tp_on_different_grid_resolutions',
     pytest.param('uv_on_different_levels', marks=pytest.mark.xfail),
