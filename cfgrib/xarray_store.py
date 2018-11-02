@@ -32,14 +32,13 @@ LOGGER = logging.getLogger(__name__)
 def open_dataset(path, backend_kwargs={}, filter_by_keys={}, **kwargs):
     # type: (str, T.Mapping[str, T.Any], dict, T.Any) -> xr.Dataset
     """
-    Return a ``xr.Dataset`` with the requested ``flavor`` from a GRIB file.
+    Return a ``xr.Dataset`` with the requested ``backend_kwargs`` from a GRIB file.
     """
     # validate Dataset keys, DataArray names, and attr keys/values
     from . import cfgrib_
     if filter_by_keys:
         warnings.warn("passing filter_by_keys is depreciated use backend_kwargs", FutureWarning)
     real_backend_kwargs = {
-        'flavour_name': 'ecmwf',
         'filter_by_keys': filter_by_keys,
         'errors': 'ignore',
     }

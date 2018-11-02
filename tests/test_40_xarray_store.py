@@ -13,16 +13,20 @@ from cfgrib import xarray_store
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
+ENCODE_ECCODES = {
+    'encode_parameter': False, 'encode_time': False, 'encode_vertical': False,
+    'encode_geography': False,
+}
 
 
 def test_CfGribDataStore():
-    datastore = cfgrib_.CfGribDataStore(TEST_DATA, flavour_name='eccodes')
+    datastore = cfgrib_.CfGribDataStore(TEST_DATA, **ENCODE_ECCODES)
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
 def test_xarray_open_dataset():
-    datastore = cfgrib_.CfGribDataStore(TEST_DATA, flavour_name='eccodes')
+    datastore = cfgrib_.CfGribDataStore(TEST_DATA, **ENCODE_ECCODES)
     res = xr.open_dataset(datastore)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -58,7 +62,8 @@ def test_open_dataset_corrupted():
 
 
 def test_open_dataset_encode_time():
-    backend_kwargs = {'flavour_name': 'eccodes', 'encode_time': True}
+    backend_kwargs = ENCODE_ECCODES.copy()
+    backend_kwargs.update({'encode_time': True})
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -70,7 +75,8 @@ def test_open_dataset_encode_time():
 
 
 def test_open_dataset_encode_vertical():
-    backend_kwargs = {'flavour_name': 'eccodes', 'encode_vertical': True}
+    backend_kwargs = ENCODE_ECCODES.copy()
+    backend_kwargs.update({'encode_vertical': True})
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     var = res['t']
@@ -80,7 +86,8 @@ def test_open_dataset_encode_vertical():
 
 
 def test_open_dataset_encode_geography():
-    backend_kwargs = {'flavour_name': 'eccodes', 'encode_geography': True}
+    backend_kwargs = ENCODE_ECCODES.copy()
+    backend_kwargs.update({'encode_geography': True})
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -94,7 +101,7 @@ def test_open_dataset_encode_geography():
 
 
 def test_open_dataset_eccodes():
-    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs={'flavour_name': 'ecmwf'})
+    res = xarray_store.open_dataset(TEST_DATA)
 
     assert res.attrs['GRIB_edition'] == 1
 
