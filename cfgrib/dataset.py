@@ -223,14 +223,14 @@ GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
 
 def build_geography_coordinates(
         index,  # type: messages.FileIndex
-        encode_geography,  # type: bool
+        cfencode,  # type: T.Sequence[str]
         log=LOG,  # type: logging.Logger
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
     grid_type = index.getone('gridType')
-    if encode_geography and grid_type in GRID_TYPES_COORD_VAR:
+    if 'geography' in cfencode and grid_type in GRID_TYPES_COORD_VAR:
         geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
         geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
         geo_coord_vars['latitude'] = Variable(
@@ -241,7 +241,7 @@ def build_geography_coordinates(
             dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
             attributes=cfmessage.COORD_ATTRS['longitude'],
         )
-    elif encode_geography and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
+    elif 'geography' in cfencode and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
         geo_coord_vars['latitude'] = Variable(
@@ -272,35 +272,31 @@ def build_geography_coordinates(
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, encode_vertical):
-    if encode_parameter:
+def do_cfencode_first(data_var_attrs, coords_map, cfencode):
+    if 'parameter' in cfencode:
         if 'GRIB_cfName' in data_var_attrs:
             data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
         if 'GRIB_name' in data_var_attrs:
             data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
         if 'GRIB_units' in data_var_attrs:
             data_var_attrs['units'] = data_var_attrs['GRIB_units']
-    if encode_time:
+    if 'time' in cfencode:
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if encode_vertical and data_var_attrs.get('GRIB_typeOfLevel') in PLEV_TYPE_OF_LEVELS:
+    if 'vertical' in cfencode and data_var_attrs.get('GRIB_typeOfLevel') in PLEV_TYPE_OF_LEVELS:
         coords_map.extend(PLEV_COORDINATE_MAP)
     else:
         coords_map.extend(VERTICAL_COORDINATE_MAP)
 
 
-def build_data_var_components(
-        index,
-        encode_parameter=False, encode_time=False, encode_geography=False, encode_vertical=False,
-        filter_by_keys={}, log=LOG,
-):
+def build_data_var_components(index, cfencode=(), filter_by_keys={}, log=LOG):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     coords_map = HEADER_COORDINATES_MAP[:]
 
-    do_encode_first(data_var_attrs, coords_map, encode_parameter, encode_time, encode_vertical)
+    do_cfencode_first(data_var_attrs, coords_map, cfencode)
 
     coord_vars = collections.OrderedDict()
     for coord_key, increasing in coords_map:
@@ -319,7 +315,7 @@ def build_data_var_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_geography)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, cfencode)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -337,7 +333,7 @@ def build_data_var_components(
         geo_ndim=len(geo_dims),
     )
 
-    if 'time' in coord_vars and encode_time:
+    if 'time' in coord_vars and 'time' in cfencode:
         # add the 'valid_time' secondary coordinate
         step_data = coord_vars['step'].data if 'data' in coord_vars else np.array(0.)
         dims, time_data = cfmessage.build_valid_time(
@@ -346,7 +342,7 @@ def build_data_var_components(
         attrs = cfmessage.COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
-    if 'level' in coord_vars and encode_vertical and 'GRIB_typeOfLevel' in data_var_attrs:
+    if 'level' in coord_vars and 'vertical' in cfencode and 'GRIB_typeOfLevel' in data_var_attrs:
         type_of_level = data_var_attrs['GRIB_typeOfLevel']
         coord_vars = collections.OrderedDict(
             (type_of_level if k == 'level' else k, v) for k, v in coord_vars.items()
@@ -372,9 +368,8 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath='{path}.{short_hash}.idx',
-        encode_parameter=True, encode_time=True, encode_vertical=True, encode_geography=True,
-        filter_by_keys={}, log=LOG,
+        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={},
+        cfencode=('parameter', 'time', 'geography', 'vertical'), log=LOG,
 ):
     filter_by_keys = dict(filter_by_keys)
     index = stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
@@ -383,11 +378,8 @@ def build_dataset_components(
     variables = collections.OrderedDict()
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
-        dims, data_var, coord_vars = build_data_var_components(
-            var_index, encode_parameter, encode_time, encode_geography, encode_vertical,
-            filter_by_keys,
-        )
-        if encode_parameter and var_name not in ('undef', 'unknown'):
+        dims, data_var, coord_vars = build_data_var_components(var_index, cfencode, filter_by_keys)
+        if 'parameter' in cfencode and var_name not in ('undef', 'unknown'):
             short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
@@ -402,10 +394,7 @@ def build_dataset_components(
     encoding = {
         'source': stream.path,
         'filter_by_keys': filter_by_keys,
-        'encode_parameter': encode_parameter,
-        'encode_time': encode_time,
-        'encode_vertical': encode_vertical,
-        'encode_geography': encode_geography,
+        'cfencode': cfencode,
     }
     open_text = ', '.join('%s=%r' % it for it in encoding.items())
     attributes['history'] = 'GRIB to CDM+CF via ' \

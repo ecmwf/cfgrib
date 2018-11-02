@@ -119,5 +119,5 @@ def test_reanalysis_Dataset(test_file):
     dataset, request, key_count = TEST_FILES[test_file]
     path = cdscommon.ensure_data(dataset, request, name='cds-' + test_file + '-{uuid}.grib')
 
-    res = cfgrib.xarray_store.open_dataset(path, flavour_name='cds')
+    res = cfgrib.xarray_store.open_dataset(path)
     res.to_netcdf(path[:-5] + '.nc')
