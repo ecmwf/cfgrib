@@ -270,7 +270,9 @@ class FileIndex(collections.Mapping):
             return pickle.load(file)
 
     @classmethod
-    def from_indexpath_or_filestream(cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG):
+    def from_indexpath_or_filestream(
+            cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG,
+    ):
         # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
         hash = hashlib.md5(repr(index_keys).encode('utf-8')).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
