@@ -34,7 +34,7 @@ install:
 script:
   - which python
   - python --version
-  - python -OO -c "import cfgrib"
+  - python -c "import cfgrib"
   - if [[ "$CONDA_ENV" == "docs" ]]; then
       conda install -c conda-forge sphinx sphinx_rtd_theme sphinx-gallery numpydoc;
       sphinx-build -n -j auto -b html -d _build/doctrees doc _build/html;

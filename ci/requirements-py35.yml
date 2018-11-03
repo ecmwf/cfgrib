@@ -3,7 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - nomkl
-  - python=3.7
+  - python=3.5
   - pytest
   - flake8
   - xarray
