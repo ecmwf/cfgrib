@@ -34,8 +34,10 @@ script:
   - if [[ "$CONDA_ENV" == "docs" ]]; then
       conda install -c conda-forge sphinx sphinx_rtd_theme sphinx-gallery numpydoc;
       sphinx-build -n -j auto -b html -d _build/doctrees doc _build/html;
+    elif [[ "$CONDA_ENV" == "qc" ]]; then
+      pytest -v --flakes --pep8 --mccabe $EXTRA_FLAGS;
     else
-      pytest --cov=cfgrib --cov-report term-missing --verbose $EXTRA_FLAGS;
+      pytest -v --flakes --cov=cfgrib --cov-report term-missing $EXTRA_FLAGS;
     fi
 
 after_success:

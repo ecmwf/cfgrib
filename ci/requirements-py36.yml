@@ -5,12 +5,13 @@ dependencies:
   - python=3.6
   - nomkl
   - pytest
-  - flake8
   - xarray
   - eccodes
   - cffi
+  - typing
   - pip:
     - coveralls
     - pytest-cov
+    - pytest-flakes
     - future
     - attrs
