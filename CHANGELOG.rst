@@ -5,7 +5,9 @@ Changelog for cfgrib
 0.9.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Saves one index file per set of ``index_keys`` in a much more robust way.
+- Refactor CF-encoding and add the new ``encode_cf`` option to ``backend_kwargs``.
+  See: `#23 <https://github.com/ecmwf/cfgrib/issues/23>`_.
 
 
 0.9.3.1 (2018-10-28)
