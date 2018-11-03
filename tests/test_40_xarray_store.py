@@ -17,7 +17,7 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 def test_CfGribDataStore():
     datastore = cfgrib_.CfGribDataStore(TEST_DATA, encode_cf=())
-    expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
+    expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'values': 7320}
     assert datastore.get_dimensions() == expected
 
 
@@ -28,7 +28,7 @@ def test_xarray_open_dataset():
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['GRIB_units'] == 'K'
-    assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'level', 'i')
+    assert res['t'].dims == ('number', 'dataDate', 'dataTime', 'level', 'values')
 
     assert res['t'].mean() > 0.
 
@@ -64,7 +64,7 @@ def test_open_dataset_encode_cf_time():
     assert res.attrs['GRIB_edition'] == 1
     assert res['t'].attrs['GRIB_gridType'] == 'regular_ll'
     assert res['t'].attrs['GRIB_units'] == 'K'
-    assert res['t'].dims == ('number', 'time', 'level', 'i')
+    assert res['t'].dims == ('number', 'time', 'level', 'values')
 
     assert res['t'].mean() > 0.
 
@@ -74,7 +74,7 @@ def test_open_dataset_encode_cf_vertical():
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     var = res['t']
-    assert var.dims == ('number', 'dataDate', 'dataTime', 'isobaricInhPa', 'i')
+    assert var.dims == ('number', 'dataDate', 'dataTime', 'isobaricInhPa', 'values')
 
     assert var.mean() > 0.
 

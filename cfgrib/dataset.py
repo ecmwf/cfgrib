@@ -253,19 +253,19 @@ def build_geography_coordinates(
             attributes=cfmessage.COORD_ATTRS['longitude'],
         )
     else:
-        geo_dims = ('i',)
+        geo_dims = ('values',)
         geo_shape = (index.getone('numberOfPoints'),)
         # add secondary coordinates if ecCodes provides them
         try:
             latitude = first['latitudes']
             geo_coord_vars['latitude'] = Variable(
-                dimensions=('i',), data=np.array(latitude),
-                attributes=cfmessage.COORD_ATTRS['latitude'],
+                dimensions=('values',), data=np.array(latitude),
+                attributes=COORD_ATTRS['latitude'],
             )
             longitude = first['longitudes']
             geo_coord_vars['longitude'] = Variable(
-                dimensions=('i',), data=np.array(longitude),
-                attributes=cfmessage.COORD_ATTRS['longitude'],
+                dimensions=('values',), data=np.array(longitude),
+                attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:
             log.warning('No latitudes/longitudes provided by ecCodes for gridType = %r', grid_type)

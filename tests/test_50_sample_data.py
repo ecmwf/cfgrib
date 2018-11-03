@@ -44,7 +44,6 @@ def test_open_dataset_fail(grib_name):
 
 @pytest.mark.parametrize('grib_name', [
     'era5-levels-members',
-    pytest.param('hpa_and_pa', marks=pytest.mark.xfail),
     pytest.param('fields_with_missing_values', marks=pytest.mark.xfail),
     pytest.param('lambert_grid', marks=pytest.mark.xfail),
     pytest.param('reduced_gg', marks=pytest.mark.xfail),
