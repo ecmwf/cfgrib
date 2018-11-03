@@ -72,7 +72,7 @@ GRID_TYPE_MAP = {
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfSouthernPoleInDegrees',
         'DyInMetres', 'DxInMetres', 'Latin2InDegrees', 'Latin1InDegrees', 'Ny', 'Nx',
     ],
-    'reduced_gg': ['N'],  # FIXME: no 'pl' because messages.FileIndex doesn't support lists
+    'reduced_gg': ['N', 'pl'],
     'sh': ['M', 'K', 'J'],
 }
 GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))

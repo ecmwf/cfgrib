@@ -264,6 +264,8 @@ class FileIndex(collections.Mapping):
                     value = message[key]
                 except:
                     value = 'undef'
+                if isinstance(value, list):
+                    value = tuple(value)
                 header_values.append(value)
             offset = message.message_get('offset', eccodes.CODES_TYPE_LONG)
             offsets.setdefault(tuple(header_values), []).append(offset)
