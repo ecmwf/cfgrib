@@ -105,6 +105,37 @@ ALL_HEADER_DIMS = [k for m in ALL_MAPS for k, _ in m]
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
+COORD_ATTRS = {
+    'time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
+    },
+    'step': {
+        'units': 'hours',
+        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
+    },
+    'valid_time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'time', 'long_name': 'time',
+    },
+    'latitude': {
+        'units': 'degrees_north',
+        'standard_name': 'latitude', 'long_name': 'latitude',
+    },
+    'longitude': {
+        'units': 'degrees_east',
+        'standard_name': 'longitude', 'long_name': 'longitude',
+    },
+    'isobaricInhPa': {
+        'units': 'hPa', 'positive': 'down',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    'number': {
+        'units': '1',
+        'standard_name': 'realization', 'long_name': 'ensemble member numerical id',
+    }
+}
+
 
 class DatasetBuildError(ValueError):
     def __str__(self):
@@ -235,22 +266,22 @@ def build_geography_coordinates(
         geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
         geo_coord_vars['latitude'] = Variable(
             dimensions=('latitude',), data=np.array(first['distinctLatitudes']),
-            attributes=cfmessage.COORD_ATTRS['latitude'],
+            attributes=COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
             dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
-            attributes=cfmessage.COORD_ATTRS['longitude'],
+            attributes=COORD_ATTRS['longitude'],
         )
     elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
         geo_coord_vars['latitude'] = Variable(
             dimensions=('y', 'x'), data=np.array(first['latitudes']).reshape(geo_shape),
-            attributes=cfmessage.COORD_ATTRS['latitude'],
+            attributes=COORD_ATTRS['latitude'],
         )
         geo_coord_vars['longitude'] = Variable(
             dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
-            attributes=cfmessage.COORD_ATTRS['longitude'],
+            attributes=COORD_ATTRS['longitude'],
         )
     else:
         geo_dims = ('values',)
@@ -304,7 +335,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
-        attributes = cfmessage.COORD_ATTRS.get(coord_key, {}).copy()
+        attributes = COORD_ATTRS.get(coord_key, {}).copy()
         data = np.array(values)
         dimensions = (coord_key,)
         if len(values) == 1:
@@ -339,7 +370,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
         dims, time_data = cfmessage.build_valid_time(
             coord_vars['time'].data, step_data,
         )
-        attrs = cfmessage.COORD_ATTRS['valid_time']
+        attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
     if 'level' in coord_vars and 'vertical' in encode_cf and 'GRIB_typeOfLevel' in data_var_attrs:

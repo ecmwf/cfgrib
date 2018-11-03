@@ -37,34 +37,6 @@ GRIB_STEP_UNITS_TO_SECONDS = [
     60, 3600, 86400, None, None, None, None, None, None, None,
     10800, 21600, 43200, 1, 900, 1800,
 ]
-
-COORD_ATTRS = {
-    'time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
-    },
-    'step': {
-        'units': 'hours',
-        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
-    },
-    'valid_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'time', 'long_name': 'time',
-    },
-    'latitude': {
-        'units': 'degrees_north',
-        'standard_name': 'latitude', 'long_name': 'latitude',
-    },
-    'longitude': {
-        'units': 'degrees_east',
-        'standard_name': 'longitude', 'long_name': 'longitude',
-    },
-    'isobaricInhPa': {
-        'units': 'hPa', 'positive': 'down',
-        'standard_name': 'air_pressure', 'long_name': 'pressure',
-    },
-}
-
 DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 
 
