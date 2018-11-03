@@ -134,6 +134,8 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
         vertical = 'pl'
     elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_SFC:
         vertical = 'sfc'
+    elif grib_keys['typeOfLevel'] == 'hybrid':
+        vertical = 'ml'
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
 
