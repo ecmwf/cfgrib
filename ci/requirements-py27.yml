@@ -9,6 +9,10 @@ dependencies:
   - pandas=0.19
   - xarray
   - eccodes
+  - cffi
   - pip:
     - coveralls
     - pytest-cov
+    - future
+    - attrs
+
