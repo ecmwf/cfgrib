@@ -90,9 +90,9 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
-    for key in ['shortName', 'gridType', 'typeOfLevel', 'totalNumber', 'N', 'pl']:
-        if 'GRIB_' + key in data_var.attrs:
-            suggested_grib_keys[key] = data_var.attrs['GRIB_' + key]
+    for key, value in data_var.attrs.items():
+        if key[:5] == 'GRIB_':
+            suggested_grib_keys[key[5:]] = value
 
     if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
         try:
@@ -112,6 +112,11 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
 
     if 'values' in data_var.dims:
         detected_grib_keys['numberOfPoints'] = data_var.shape[data_var.dims.index('values')]
+
+    type_of_level = suggested_grib_keys.get('typeOfLevel')
+    if type_of_level in TYPE_OF_LEVELS_SFC and type_of_level in data_var.coords and \
+            data_var.coords[type_of_level].size == 1:
+        suggested_grib_keys['level'] = float(data_var.coords[type_of_level])
 
     return detected_grib_keys, suggested_grib_keys
 
