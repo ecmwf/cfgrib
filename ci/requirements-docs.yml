@@ -4,13 +4,10 @@ channels:
 dependencies:
   - python=3.6
   - nomkl
-  - pytest
-  - flake8
   - xarray
   - eccodes
   - cffi
   - pip:
-    - coveralls
-    - pytest-cov
     - future
     - attrs
+    - sphinx

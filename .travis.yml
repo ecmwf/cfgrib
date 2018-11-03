@@ -5,12 +5,12 @@ sudo: false # use container based build
 matrix:
   fast_finish: true
   include:
-  - env: CONDA_ENV=py27
-  - env: CONDA_ENV=py35
-  - env: CONDA_ENV=py36
-  - env: CONDA_ENV=py37
-  - env: CONDA_ENV=docs
   - env: CONDA_ENV=qc
+  - env: CONDA_ENV=docs
+  - env: CONDA_ENV=py37
+  - env: CONDA_ENV=py36
+  - env: CONDA_ENV=py35
+  - env: CONDA_ENV=py27
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
@@ -32,8 +32,7 @@ script:
   - python --version
   - python -c "import cfgrib"
   - if [[ "$CONDA_ENV" == "docs" ]]; then
-      conda install -c conda-forge sphinx sphinx_rtd_theme sphinx-gallery numpydoc;
-      sphinx-build -n -j auto -b html -d _build/doctrees doc _build/html;
+      sphinx-build -W -b html docs build/sphinx/html;
     elif [[ "$CONDA_ENV" == "qc" ]]; then
       pytest -v --flakes --pep8 --mccabe $EXTRA_FLAGS;
     else
