@@ -624,11 +624,21 @@ def codes_set_double_array(handle, key, values):
     codes_set_double_array(handle, key, c_values, size)
 
 
+def codes_set_long_array(handle, key, values):
+    # type: (cffi.FFI.CData, bytes, T.List[int]) -> None
+    size = len(values)
+    c_values = ffi.new("long []", values)
+    codes_set_long_array = check_return(lib.codes_set_long_array)
+    codes_set_long_array(handle, key, c_values, size)
+
+
 def codes_set_array(handle, key, values):
     # type: (cffi.FFI.CData, bytes, T.List[T.Any]) -> None
     if len(values) > 0:
         if isinstance(values[0], float):
             codes_set_double_array(handle, key, values)
+        elif isinstance(values[0], int):
+            codes_set_long_array(handle, key, values)
         else:
             raise NotImplementedError("Unsupported value type: %r" % type(values[0]))
     else:
