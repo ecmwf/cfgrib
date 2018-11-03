@@ -90,13 +90,16 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
-    for key in ['shortName', 'gridType', 'typeOfLevel', 'totalNumber']:
+    for key in ['shortName', 'gridType', 'typeOfLevel', 'totalNumber', 'N', 'pl']:
         if 'GRIB_' + key in data_var.attrs:
             suggested_grib_keys[key] = data_var.attrs['GRIB_' + key]
 
     if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
-        regular_ll_grib_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
-        detected_grib_keys.update(regular_ll_grib_keys)
+        try:
+            regular_ll_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
+            detected_grib_keys.update(regular_ll_keys)
+        except:
+            pass
 
     if 'isobaricInhPa' in data_var.dims or 'isobaricInhPa' in data_var.coords:
         detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
@@ -107,11 +110,16 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
         # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
         detected_grib_keys['productDefinitionTemplateNumber'] = 1
 
+    if 'values' in data_var.dims:
+        detected_grib_keys['numberOfPoints'] = data_var.shape[data_var.dims.index('values')]
+
     return detected_grib_keys, suggested_grib_keys
 
 
-def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_grib2'):
+def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_grib{edition}'):
     # type: (T.Mapping, str) -> str
+    edition = grib_keys.get('edition', 2)
+
     if grib_keys['gridType'] in GRID_TYPES:
         geography = grib_keys['gridType']
     else:
