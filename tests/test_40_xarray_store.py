@@ -16,13 +16,13 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
 
 
 def test_CfGribDataStore():
-    datastore = cfgrib_.CfGribDataStore(TEST_DATA, cfencode=())
+    datastore = cfgrib_.CfGribDataStore(TEST_DATA, encode_cf=())
     expected = {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert datastore.get_dimensions() == expected
 
 
 def test_xarray_open_dataset():
-    datastore = cfgrib_.CfGribDataStore(TEST_DATA, cfencode=())
+    datastore = cfgrib_.CfGribDataStore(TEST_DATA, encode_cf=())
     res = xr.open_dataset(datastore)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -57,8 +57,8 @@ def test_open_dataset_corrupted():
         xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={'errors': 'strict'})
 
 
-def test_open_dataset_cfencode_time():
-    backend_kwargs = {'cfencode': ('time',)}
+def test_open_dataset_encode_cf_time():
+    backend_kwargs = {'encode_cf': ('time',)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1
@@ -69,8 +69,8 @@ def test_open_dataset_cfencode_time():
     assert res['t'].mean() > 0.
 
 
-def test_open_dataset_cfencode_vertical():
-    backend_kwargs = {'cfencode': ('vertical',)}
+def test_open_dataset_encode_cf_vertical():
+    backend_kwargs = {'encode_cf': ('vertical',)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     var = res['t']
@@ -79,8 +79,8 @@ def test_open_dataset_cfencode_vertical():
     assert var.mean() > 0.
 
 
-def test_open_dataset_cfencode_geography():
-    backend_kwargs = {'cfencode': ('geography',)}
+def test_open_dataset_encode_cf_geography():
+    backend_kwargs = {'encode_cf': ('geography',)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
     assert res.attrs['GRIB_edition'] == 1

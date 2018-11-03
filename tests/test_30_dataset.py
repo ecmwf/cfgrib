@@ -27,7 +27,7 @@ def test_dict_merge():
 
 def test_build_data_var_components_no_encode():
     index = messages.FileStream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
-    dims, data_var, coord_vars = dataset.build_data_var_components(index=index)
+    dims, data_var, coord_vars = dataset.build_variable_components(index=index)
     assert dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'i': 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
@@ -35,11 +35,11 @@ def test_build_data_var_components_no_encode():
     assert data_var.data[:, :, :, :, :].mean() > 0.
 
 
-def test_build_data_var_components_cfencode_geography():
+def test_build_data_var_components_encode_cf_geography():
     stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index = stream.index(dataset.ALL_KEYS).subindex(paramId=130)
-    dims, data_var, coord_vars = dataset.build_data_var_components(
-        index=index, cfencode='geography',
+    dims, data_var, coord_vars = dataset.build_variable_components(
+        index=index, encode_cf='geography',
     )
     assert dims == {
         'number': 10, 'dataDate': 2, 'dataTime': 2,
@@ -62,7 +62,7 @@ def test_Dataset():
 
 def test_Dataset_no_encode():
     res = dataset.Dataset.from_path(
-        TEST_DATA, cfencode=()
+        TEST_DATA, encode_cf=()
     )
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
@@ -70,8 +70,8 @@ def test_Dataset_no_encode():
     assert len(res.variables) == 9
 
 
-def test_Dataset_cfencode_time():
-    res = dataset.Dataset.from_path(TEST_DATA, cfencode=('time',))
+def test_Dataset_encode_cf_time():
+    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('time',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'time', 'level', 'i')
@@ -81,8 +81,8 @@ def test_Dataset_cfencode_time():
     assert res.variables['t'].data[:, :, :, :].mean() > 0.
 
 
-def test_Dataset_cfencode_geography():
-    res = dataset.Dataset.from_path(TEST_DATA, cfencode=('geography',))
+def test_Dataset_encode_cf_geography():
+    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('geography',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -93,8 +93,8 @@ def test_Dataset_cfencode_geography():
     assert res.variables['t'].data[:, :, :, :, :, :].mean() > 0.
 
 
-def test_Dataset_cfencode_vertical():
-    res = dataset.Dataset.from_path(TEST_DATA, cfencode=('vertical',))
+def test_Dataset_encode_cf_vertical():
+    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('vertical',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'isobaricInhPa', 'i')
