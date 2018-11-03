@@ -40,7 +40,8 @@ def open_dataset(path, backend_kwargs={}, filter_by_keys={}, **kwargs):
         warnings.warn("passing filter_by_keys is depreciated use backend_kwargs", FutureWarning)
     real_backend_kwargs = {
         'filter_by_keys': filter_by_keys,
-        'errors': 'ignore',
+        'errors': 'strict',
+        'grib_errors': 'ignore',
     }
     real_backend_kwargs.update(backend_kwargs)
     store = cfgrib_.CfGribDataStore(path, **real_backend_kwargs)

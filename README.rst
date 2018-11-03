@@ -248,13 +248,14 @@ Attributes:
 
 *cfgrib* also provides an **experimental function** that automate the selection of
 appropriate ``filter_by_keys`` and returns a list of all valid ``xarray.Dataset``'s
-in the GRIB file. The ``open_datasets`` is intended for interactive exploration of a file
+in the GRIB file (add ``backend_kwargs={'errors': 'ignore'}`` for extra robustness).
+The ``open_datasets`` is intended for interactive exploration of a file
 and it is not part of the stable API. In the future it may change or be removed altogether.
 
 .. code-block: python
 
 >>> from cfgrib import xarray_store
->>> xarray_store.open_datasets('nam.t00z.awp21100.tm00.grib2')
+>>> xarray_store.open_datasets('nam.t00z.awp21100.tm00.grib2', backend_kwargs={'errors': 'ignore'})
 [<xarray.Dataset>
 Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
 Coordinates:

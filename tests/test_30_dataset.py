@@ -52,7 +52,7 @@ def test_build_data_var_components_encode_cf_geography():
 
 
 def test_Dataset():
-    res = dataset.Dataset.from_path(TEST_DATA)
+    res = dataset.open_file(TEST_DATA)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -61,7 +61,7 @@ def test_Dataset():
 
 
 def test_Dataset_no_encode():
-    res = dataset.Dataset.from_path(
+    res = dataset.open_file(
         TEST_DATA, encode_cf=()
     )
     assert 'history' in res.attributes
@@ -71,7 +71,7 @@ def test_Dataset_no_encode():
 
 
 def test_Dataset_encode_cf_time():
-    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('time',))
+    res = dataset.open_file(TEST_DATA, encode_cf=('time',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'time', 'level', 'i')
@@ -82,7 +82,7 @@ def test_Dataset_encode_cf_time():
 
 
 def test_Dataset_encode_cf_geography():
-    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('geography',))
+    res = dataset.open_file(TEST_DATA, encode_cf=('geography',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == \
@@ -94,7 +94,7 @@ def test_Dataset_encode_cf_geography():
 
 
 def test_Dataset_encode_cf_vertical():
-    res = dataset.Dataset.from_path(TEST_DATA, encode_cf=('vertical',))
+    res = dataset.open_file(TEST_DATA, encode_cf=('vertical',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
     assert tuple(res.dimensions.keys()) == ('number', 'dataDate', 'dataTime', 'isobaricInhPa', 'i')
@@ -106,7 +106,7 @@ def test_Dataset_encode_cf_vertical():
 
 def test_Dataset_reguler_gg_surface():
     path = os.path.join(SAMPLE_DATA_FOLDER, 'regular_gg_sfc.grib')
-    res = dataset.Dataset.from_path(path)
+    res = dataset.open_file(path)
 
     assert res.dimensions == {'latitude': 96, 'longitude': 192}
     assert np.allclose(res.variables['latitude'].data[:2], [88.57216851, 86.72253095])

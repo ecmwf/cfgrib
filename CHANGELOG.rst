@@ -8,6 +8,8 @@ Changelog for cfgrib
 - Saves one index file per set of ``index_keys`` in a much more robust way.
 - Refactor CF-encoding and add the new ``encode_cf`` option to ``backend_kwargs``.
   See: `#23 <https://github.com/ecmwf/cfgrib/issues/23>`_.
+- Refactor error handling and the option to ignore errors (not well documented yet).
+  See: `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 
 
 0.9.3.1 (2018-10-28)

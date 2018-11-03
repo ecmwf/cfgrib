@@ -368,7 +368,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={},
+        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='ignore',
         encode_cf=('parameter', 'time', 'geography', 'vertical'), log=LOG,
 ):
     filter_by_keys = dict(filter_by_keys)
@@ -389,7 +389,10 @@ def build_dataset_components(
             dict_merge(dimensions, dims)
             dict_merge(variables, vars)
         except ValueError:
-            log.exception("skipping variable with paramId==%r shortName=%r", param_id, short_name)
+            if errors == 'ignore':
+                log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
+            else:
+                raise
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
     eccodes_ver = eccodes.codes_get_api_version()
@@ -414,13 +417,8 @@ class Dataset(object):
     attributes = attr.attrib(type=T.Dict[str, T.Any])
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
-    @classmethod
-    def from_path(cls, path, mode='r', errors='ignore', **kwargs):
-        """Open a GRIB file as a ``Dataset``."""
-        stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=errors)
-        return cls(*build_dataset_components(stream, **kwargs))
 
-
-def open_file(path, **kwargs):
+def open_file(path, grib_errors='ignore', **kwargs):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    return Dataset.from_path(path, **kwargs)
+    stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
+    return Dataset(*build_dataset_components(stream, **kwargs))
