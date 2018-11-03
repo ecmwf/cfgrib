@@ -49,6 +49,7 @@ class Message(collections.MutableMapping):
     """Dictionary-line interface to access Message headers."""
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
+    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
 
     @classmethod
     def from_file(cls, file, offset=None, **kwargs):
@@ -120,8 +121,12 @@ class Message(collections.MutableMapping):
         # type: (str, T.Any) -> None
         try:
             return self.message_set(item, value)
-        except eccodes.EcCodesError:
-            raise KeyError("failed to set key %r to %r" % (item, value))
+        except eccodes.EcCodesError as ex:
+            if self.errors == 'ignore' and ex.code == eccodes.lib.GRIB_READ_ONLY:
+                # Very noisy error when trying to set computed keys
+                pass
+            else:
+                raise KeyError("failed to set key %r to %r" % (item, value))
 
     def __delitem__(self, item):
         raise NotImplementedError
@@ -203,7 +208,7 @@ class FileStream(collections.Iterable):
         with open(self.path, 'rb') as file:
             while True:
                 try:
-                    yield self.message_from_file(file)
+                    yield self.message_from_file(file, errors=self.errors)
                 except EOFError:
                     break
                 except Exception:
@@ -212,8 +217,8 @@ class FileStream(collections.Iterable):
                     else:
                         raise
 
-    def message_from_file(self, file, offset=None):
-        return self.message_class.from_file(file=file, offset=offset)
+    def message_from_file(self, file, offset=None, **kwargs):
+        return self.message_class.from_file(file=file, offset=offset, **kwargs)
 
     def first(self):
         # type: () -> Message

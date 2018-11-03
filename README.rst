@@ -386,7 +386,7 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
->>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'centre': 'ecmf'})
+>>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
 >>> cfgrib.open_dataset('out1.grib')
 <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)

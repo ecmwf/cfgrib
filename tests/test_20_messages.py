@@ -38,7 +38,7 @@ def test_Message_read():
 
 
 def test_Message_write():
-    res = messages.Message.from_sample_name('regular_ll_pl_grib2')
+    res = messages.Message.from_sample_name('regular_ll_pl_grib2', errors='strict')
     assert res['gridType'] == 'regular_ll'
 
     res.message_set('Ni', 20)

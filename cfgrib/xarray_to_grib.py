@@ -39,6 +39,11 @@ DEFAULT_GRIB_KEYS = {
     'centre': 255,  # missing value, see: http://apps.ecmwf.int/codes/grib/format/grib1/centre/0/
     'typeOfLevel': 'surface',
 }
+TYPE_OF_LEVELS_SFC = ['surface', 'meanSea', 'cloudBase', 'cloudTop']
+GRID_TYPES = [
+    'polar_stereographic', 'reduced_gg', 'reduced_ll', 'regular_gg', 'regular_ll', 'rotated_gg',
+    'rotated_ll', 'sh',
+]
 
 
 def regular_ll_params(values, min_value=-180., max_value=360.):
@@ -80,8 +85,8 @@ def detect_regular_ll_grib_keys(lon, lat):
     return grib_keys
 
 
-def detect_grib_keys(data_var, default_grib_keys):
-    # type: (xr.DataArray, T.Dict[str, T.Any]) -> T.Tuple[dict, dict]
+def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
+    # type: (xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Tuple[dict, dict]
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
@@ -95,8 +100,10 @@ def detect_grib_keys(data_var, default_grib_keys):
 
     if 'isobaricInhPa' in data_var.dims or 'isobaricInhPa' in data_var.coords:
         detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
+    elif 'isobaricInPa' in data_var.dims or 'isobaricInPa' in data_var.coords:
+        detected_grib_keys['typeOfLevel'] = 'isobaricInPa'
 
-    if 'number' in data_var.dims or 'number' in data_var.coords:
+    if 'number' in data_var.dims or 'number' in data_var.coords and grib_keys.get('edition') != 1:
         # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
         detected_grib_keys['productDefinitionTemplateNumber'] = 1
 
@@ -105,14 +112,14 @@ def detect_grib_keys(data_var, default_grib_keys):
 
 def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_grib2'):
     # type: (T.Mapping, str) -> str
-    if grib_keys['gridType'] == 'regular_ll':
-        geography = 'regular_ll'
+    if grib_keys['gridType'] in GRID_TYPES:
+        geography = grib_keys['gridType']
     else:
         raise NotImplementedError("Unsupported 'gridType': %r" % grib_keys['gridType'])
 
-    if grib_keys['typeOfLevel'] == 'isobaricInhPa':
+    if grib_keys['typeOfLevel'] in ('isobaricInhPa', 'isobaricInPa'):
         vertical = 'pl'
-    elif grib_keys['typeOfLevel'] in ('surface', 'meanSea'):
+    elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_SFC:
         vertical = 'sfc'
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
@@ -141,21 +148,21 @@ def expand_dims(data_var):
 
 
 def canonical_dataarray_to_grib(
-        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS,
-        sample_name_template='{geography}_{vertical}_grib2'
+        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, sample_name=None
 ):
-    # type: (T.IO[bytes], xr.DataArray, T.Mapping[str, T.Any], T.Dict[str, T.Any], str) -> None
+    # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], str) -> None
     """
     Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
     """
     # validate Dataset keys, DataArray names, and attr keys/values
-    detected_grib_keys, suggested_grib_keys = detect_grib_keys(data_var, default_grib_keys)
-    merged_grib_keys = merge_grib_keys(grib_keys, detected_grib_keys, suggested_grib_keys)
+    detected_keys, suggested_keys = detect_grib_keys(data_var, default_grib_keys, grib_keys)
+    merged_grib_keys = merge_grib_keys(grib_keys, detected_keys, suggested_keys)
 
     if 'gridType' not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
-    sample_name = detect_sample_name(merged_grib_keys, sample_name_template=sample_name_template)
+    if sample_name is None:
+        sample_name = detect_sample_name(merged_grib_keys)
 
     header_coords_names, data_var = expand_dims(data_var)
 
@@ -190,8 +197,8 @@ def canonical_dataarray_to_grib(
         message.write(file)
 
 
-def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, **kwargs):
-    # type: (xr.Dataset, str, str, bool, T.Any) -> None
+def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, grib_keys={}, **kwargs):
+    # type: (xr.Dataset, str, str, bool, T.Dict[str, T.Any] T.Any) -> None
     """
     Write a ``xr.Dataset`` in *canonical* form to a GRIB file.
     """
@@ -202,9 +209,12 @@ def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, **kwargs)
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)
 
+    real_grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == 'GRIB_'}
+    real_grib_keys.update(grib_keys)
+
     with open(path, mode=mode) as file:
         for data_var in dataset.data_vars.values():
-            canonical_dataarray_to_grib(file, data_var, **kwargs)
+            canonical_dataarray_to_grib(file, data_var, grib_keys=real_grib_keys, **kwargs)
 
 
 def to_grib(*args, **kwargs):
