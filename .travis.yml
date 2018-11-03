@@ -10,7 +10,7 @@ matrix:
   - env: CONDA_ENV=py36
   - env: CONDA_ENV=py37
   - env: CONDA_ENV=docs
-  - env: CONDA_ENV=rc
+  - env: CONDA_ENV=qc
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
@@ -22,11 +22,7 @@ before_install:
   - conda info -a
 
 install:
-  - if [[ "$CONDA_ENV" == "docs" ]]; then
-      conda env create -n test_env --file doc/environment.yml;
-    else
-      conda env create -n test_env --file ci/requirements-$CONDA_ENV.yml;
-    fi
+  - conda env create -n test_env --file ci/requirements-$CONDA_ENV.yml;
   - source activate test_env
   - conda list
   - pip install --no-deps -e .
