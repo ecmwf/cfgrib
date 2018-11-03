@@ -63,7 +63,7 @@ GRID_TYPE_MAP = {
     'regular_gg': [
         'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
-        'N',
+        'N', 'Nj',
     ],
     'lambert': [
         'LaDInDegrees', 'LoVInDegrees', 'iScansNegatively',
