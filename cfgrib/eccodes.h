@@ -193,6 +193,15 @@ int codes_write_message(codes_handle* h,const char* file,const char* mode);
 codes_handle* codes_grib_handle_new_from_samples (codes_context* c, const char* sample_name);
 
 /**
+*  Clone an existing handle using the context of the original handle,
+*  The message is copied and reparsed
+*
+* @param h           : The handle to be cloned
+* @return            the new handle, NULL if the message is invalid or a problem is encountered
+*/
+codes_handle* codes_handle_clone(codes_handle* h)                 ;
+
+/**
 *  Frees a handle, also frees the message if it is not a user message
 *  @see  codes_handle_new_from_message
 * @param h           : The handle to be deleted

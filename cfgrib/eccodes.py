@@ -166,6 +166,14 @@ def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
         raise
 
 
+def codes_handle_clone(handle):
+    # type: (cffi.FFI.CData) -> cffi.FFI.CData
+    cloned_handle = lib.codes_handle_clone(handle)
+    if cloned_handle is ffi.NULL:
+        raise EcCodesError(lib.GRIB_NULL_POINTER)
+    return cloned_handle
+
+
 codes_index_delete = lib.codes_index_delete
 codes_handle_delete = lib.codes_handle_delete
 

@@ -57,13 +57,16 @@ class Message(collections.MutableMapping):
         if offset is not None:
             file.seek(offset)
         codes_id = eccodes.codes_handle_new_from_file(file)
-        if codes_id is None:
-            raise EOFError("end-of-file reached.")
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
     def from_sample_name(cls, sample_name, **kwargs):
         codes_id = eccodes.codes_new_from_samples(sample_name.encode('ASCII'))
+        return cls(codes_id=codes_id, **kwargs)
+
+    @classmethod
+    def from_message(cls, message, **kwargs):
+        codes_id = eccodes.codes_handle_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
 
     def __del__(self):

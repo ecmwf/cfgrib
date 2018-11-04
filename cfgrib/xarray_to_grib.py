@@ -159,10 +159,32 @@ def expand_dims(data_var):
     return coords_names, data_var
 
 
+def make_template_message(merged_grib_keys, template_path=None, sample_name=None):
+    # type: (T.Dict[str, T.Any], str, str) -> cfgrib.CfMessage
+    if template_path and sample_name:
+        raise ValueError("template_path and sample_name should not be both set")
+
+    if template_path:
+        with open(template_path) as file:
+            template_message = cfgrib.CfMessage.from_file(file)
+    else:
+        if sample_name is None:
+            sample_name = detect_sample_name(merged_grib_keys)
+        template_message = cfgrib.CfMessage.from_sample_name(sample_name)
+
+    for key, value in merged_grib_keys.items():
+        try:
+            template_message[key] = value
+        except KeyError:
+            LOGGER.exception("skipping key due to errors: %r" % key)
+
+    return template_message
+
+
 def canonical_dataarray_to_grib(
-        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, sample_name=None
+        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
 ):
-    # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], str) -> None
+    # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
     """
     Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
     """
@@ -173,8 +195,7 @@ def canonical_dataarray_to_grib(
     if 'gridType' not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
-    if sample_name is None:
-        sample_name = detect_sample_name(merged_grib_keys)
+    template_message = make_template_message(merged_grib_keys, **kwargs)
 
     coords_names, data_var = expand_dims(data_var)
 
@@ -193,13 +214,7 @@ def canonical_dataarray_to_grib(
         missing_value = merged_grib_keys.get('missingValue', 9999)
         field_values[invalid_field_values] = missing_value
 
-        message = cfgrib.CfMessage.from_sample_name(sample_name)
-        for key, value in merged_grib_keys.items():
-            try:
-                message[key] = value
-            except KeyError:
-                LOGGER.exception("skipping key due to errors: %r" % key)
-
+        message = cfgrib.CfMessage.from_message(template_message)
         for coord_name, coord_value in zip(coords_names, items):
             if coord_name in ALL_TYPE_OF_LEVELS:
                 coord_name = 'level'
