@@ -44,14 +44,14 @@ def da2():
 
 
 @pytest.fixture
-def dataarray3():
+def da3():
     latitude = [0., 0.5]
     longitude = [10., 10.5]
     step = [0, 24, 48]
-    time = ['2017-12-01T00:00:00']
+    time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00']
     level = [950, 500]
     data = xr.DataArray(
-        np.zeros((2, 2, 3, 1, 2), dtype='float32'),
+        np.zeros((2, 2, 3, 2, 2), dtype='float32'),
         coords=[
             ('lat', latitude, {'units': 'degrees_north'}),
             ('lon', longitude, {'units': 'degrees_east'}),
@@ -105,15 +105,23 @@ def test_translate_coords(da1, da2):
     assert 'valid_time' in result.coords
 
 
-def test_ensure_valid_time(da1, dataarray3):
-    result1 = cfcoords.ensure_valid_time(da1.squeeze())
-    result2 = cfcoords.ensure_valid_time(result1)
+def test_ensure_valid_time(da1, da3):
+    res1 = cfcoords.ensure_valid_time(da1.squeeze())
+    res2 = cfcoords.ensure_valid_time(res1)
 
-    assert 'valid_time' in result1.coords
-    assert result2 is result1
+    assert 'valid_time' in res1.coords
+    assert res2 is res1
 
-    result1 = cfcoords.ensure_valid_time(dataarray3.squeeze())
-    result2 = cfcoords.ensure_valid_time(result1)
+    res1 = cfcoords.ensure_valid_time(da3.isel(ref_time=0).squeeze())
+    res2 = cfcoords.ensure_valid_time(res1)
 
-    assert 'valid_time' in result1.coords
-    assert result2 is result1
+    assert 'valid_time' in res1.coords
+    assert res2 is res1
+
+    res1 = cfcoords.ensure_valid_time(da3.squeeze())
+    assert 'valid_time' in res1.coords
+    coords1 = res1.coords
+    assert coords1['valid_time'].shape == (coords1['ref_time'].size, coords1['step'].size)
+
+    with pytest.raises(ValueError):
+        cfcoords.ensure_valid_time(da3.mean(dim='ref_time').squeeze())

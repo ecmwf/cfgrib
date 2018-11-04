@@ -177,6 +177,6 @@ def ensure_valid_time(data):
     if valid_time not in data.dims:
         if data.coords[time].size == data.coords[valid_time].size:
             return data.swap_dims({time: valid_time})
-        if data.coords[step].size == data.coords[step].size:
+        if data.coords[step].size == data.coords[valid_time].size:
             return data.swap_dims({step: valid_time})
     return data
