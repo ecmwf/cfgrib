@@ -32,7 +32,7 @@ def test_Message_read():
     list()
 
     res2 = messages.Message.from_message(res1)
-    assert res2.items()  == res1.items()
+    assert res2.items() == res1.items()
 
     with open(TEST_DATA) as file:
         with pytest.raises(EOFError):
