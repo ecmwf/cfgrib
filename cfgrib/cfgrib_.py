@@ -40,8 +40,9 @@ except ImportError:
             pass
 
 
-# FIXME: Add a dedicated lock just in case, even if ecCodes is supposed to be thread-safe in most
-# circumstances. See: https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
+# FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
+#   in most circumstances. See:
+#       https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
 ECCODES_LOCK = SerializableLock()
 
 
@@ -76,7 +77,8 @@ class CfGribDataStore(AbstractDataStore):
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
-            data = indexing.LazilyOuterIndexedArray(CfGribArrayWrapper(self, var.data))
+            wrapped_array = CfGribArrayWrapper(self, var.data)
+            data = indexing.LazilyOuterIndexedArray(wrapped_array)
 
         encoding = self.ds.encoding.copy()
         encoding['original_shape'] = var.data.shape
@@ -94,6 +96,8 @@ class CfGribDataStore(AbstractDataStore):
         return Frozen(self.ds.dimensions)
 
     def get_encoding(self):
-        encoding = {}
-        encoding['unlimited_dims'] = {k for k, v in self.ds.dimensions.items() if v is None}
+        dims = self.get_dimensions()
+        encoding = {
+            'unlimited_dims': {k for k, v in dims.items() if v is None},
+        }
         return encoding
