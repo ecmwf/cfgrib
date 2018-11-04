@@ -183,14 +183,10 @@ class OnDiskArray(object):
     offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
     missing_value = attr.attrib()
     geo_ndim = attr.attrib(default=1, repr=False)
-
-    @property
-    def array(self):
-        if not hasattr(self, '_array'):
-            self._array = self.build_array()
-        return self._array
+    dtype = np.dtype('float32')
 
     def build_array(self):
+        """Helper method used to test __getitem__"""
         # type: () -> np.ndarray
         array = np.full(self.shape, fill_value=np.nan, dtype='float32')
         with open(self.stream.path) as file:
@@ -228,10 +224,6 @@ class OnDiskArray(object):
             if isinstance(it, int):
                 array = array[(slice(None, None, None),) * i + (0,)]
         return array
-
-    @property
-    def dtype(self):
-        return self.array.dtype
 
 
 GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
