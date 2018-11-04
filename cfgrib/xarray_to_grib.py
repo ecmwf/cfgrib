@@ -40,6 +40,9 @@ DEFAULT_GRIB_KEYS = {
     'typeOfLevel': 'surface',
 }
 TYPE_OF_LEVELS_SFC = ['surface', 'meanSea', 'cloudBase', 'cloudTop']
+TYPE_OF_LEVELS_PL = ['isobaricInhPa', 'isobaricInPa']
+TYPE_OF_LEVELS_ML = ['hybrid']
+ALL_TYPE_OF_LEVELS = TYPE_OF_LEVELS_SFC + TYPE_OF_LEVELS_PL + TYPE_OF_LEVELS_ML
 GRID_TYPES = [
     'polar_stereographic', 'reduced_gg', 'reduced_ll', 'regular_gg', 'regular_ll', 'rotated_gg',
     'rotated_ll', 'sh',
@@ -101,10 +104,9 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
         except:
             pass
 
-    if 'isobaricInhPa' in data_var.dims or 'isobaricInhPa' in data_var.coords:
-        detected_grib_keys['typeOfLevel'] = 'isobaricInhPa'
-    elif 'isobaricInPa' in data_var.dims or 'isobaricInPa' in data_var.coords:
-        detected_grib_keys['typeOfLevel'] = 'isobaricInPa'
+    for tol in ALL_TYPE_OF_LEVELS:
+        if tol in data_var.dims or tol in data_var.coords:
+            detected_grib_keys['typeOfLevel'] = tol
 
     if 'number' in data_var.dims or 'number' in data_var.coords and grib_keys.get('edition') != 1:
         # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
@@ -112,11 +114,6 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
 
     if 'values' in data_var.dims:
         detected_grib_keys['numberOfPoints'] = data_var.shape[data_var.dims.index('values')]
-
-    type_of_level = suggested_grib_keys.get('typeOfLevel')
-    if type_of_level in TYPE_OF_LEVELS_SFC and type_of_level in data_var.coords and \
-            data_var.coords[type_of_level].size == 1:
-        suggested_grib_keys['level'] = float(data_var.coords[type_of_level])
 
     return detected_grib_keys, suggested_grib_keys
 
@@ -130,11 +127,11 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
     else:
         raise NotImplementedError("Unsupported 'gridType': %r" % grib_keys['gridType'])
 
-    if grib_keys['typeOfLevel'] in ('isobaricInhPa', 'isobaricInPa'):
+    if grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_PL:
         vertical = 'pl'
     elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_SFC:
         vertical = 'sfc'
-    elif grib_keys['typeOfLevel'] == 'hybrid':
+    elif grib_keys['typeOfLevel']in TYPE_OF_LEVELS_ML:
         vertical = 'ml'
     else:
         raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
@@ -153,13 +150,13 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
 
 
 def expand_dims(data_var):
-    header_coords_names = []
-    for coord_name in dataset.ALL_HEADER_DIMS:
+    coords_names = []
+    for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS:
         if coord_name in set(data_var.coords):
-            header_coords_names.append(coord_name)
+            coords_names.append(coord_name)
             if coord_name not in data_var.dims:
                 data_var = data_var.expand_dims(coord_name)
-    return header_coords_names, data_var
+    return coords_names, data_var
 
 
 def canonical_dataarray_to_grib(
@@ -179,11 +176,11 @@ def canonical_dataarray_to_grib(
     if sample_name is None:
         sample_name = detect_sample_name(merged_grib_keys)
 
-    header_coords_names, data_var = expand_dims(data_var)
+    coords_names, data_var = expand_dims(data_var)
 
-    header_coords_values = [data_var.coords[name].values.tolist() for name in header_coords_names]
+    header_coords_values = [data_var.coords[name].values.tolist() for name in coords_names]
     for items in itertools.product(*header_coords_values):
-        select = {n: v for n, v in zip(header_coords_names, items)}
+        select = {n: v for n, v in zip(coords_names, items)}
         field_values = data_var.sel(**select).values.flat[:]
 
         # Missing values handling
@@ -203,7 +200,9 @@ def canonical_dataarray_to_grib(
             except KeyError:
                 LOGGER.exception("skipping key due to errors: %r" % key)
 
-        for coord_name, coord_value in zip(header_coords_names, items):
+        for coord_name, coord_value in zip(coords_names, items):
+            if coord_name in ALL_TYPE_OF_LEVELS:
+                coord_name = 'level'
             message[coord_name] = coord_value
 
         # OPTIMIZE: convert to list because Message.message_set doesn't support np.ndarray
