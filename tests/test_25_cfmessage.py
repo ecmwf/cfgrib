@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os.path
 import numpy as np
+import pytest
 
 from cfgrib import cfmessage
 
@@ -48,6 +49,9 @@ def test_to_grib_step():
 
     assert message['endStep'] == 1
     assert message['stepUnits'] == 1
+
+    with pytest.raises(ValueError):
+        cfmessage.to_grib_step(message, 0, step_unit=3)
 
 
 def test_build_valid_time():
