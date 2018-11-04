@@ -61,8 +61,8 @@ def test_canonical_dataset_to_grib(grib_name, tmpdir):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
     out_path = str(tmpdir.join(grib_name + '.grib'))
 
-    res = xarray_store.open_dataset(grib_path, cache=False)
+    res = xarray_store.open_dataset(grib_path)
 
     xarray_to_grib.canonical_dataset_to_grib(res, out_path)
-    reread = xarray_store.open_dataset(out_path, cache=False)
+    reread = xarray_store.open_dataset(out_path)
     assert res.equals(reread)
