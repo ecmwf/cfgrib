@@ -97,8 +97,6 @@ class Message(collections.MutableMapping):
         key = item.encode(self.encoding)
         set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
         if set_array:
-            if value and isinstance(value[0], str):
-                value = [v.encode(self.encoding) for v in value]
             eccodes.codes_set_array(self.codes_id, key, value)
         else:
             if isinstance(value, str):

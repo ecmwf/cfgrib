@@ -15,21 +15,24 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 def test_Message_read():
     with open(TEST_DATA) as file:
-        res = messages.Message.from_file(file)
+        res1 = messages.Message.from_file(file)
 
-    assert res.message_get('paramId') == 129
-    assert res['paramId'] == 129
-    assert list(res)[0] == 'globalDomain'
-    assert list(res.message_iterkeys('time'))[0] == 'dataDate'
-    assert 'paramId' in res
-    assert len(res) > 100
+    assert res1.message_get('paramId') == 129
+    assert res1['paramId'] == 129
+    assert list(res1)[0] == 'globalDomain'
+    assert list(res1.message_iterkeys('time'))[0] == 'dataDate'
+    assert 'paramId' in res1
+    assert len(res1) > 100
 
     with pytest.raises(KeyError):
-        res['non-existent-key']
+        res1['non-existent-key']
 
-    assert res.message_get('non-existent-key', default=1) == 1
+    assert res1.message_get('non-existent-key', default=1) == 1
 
-    list(res.items())
+    list()
+
+    res2 = messages.Message.from_message(res1)
+    assert res2.items()  == res1.items()
 
     with open(TEST_DATA) as file:
         with pytest.raises(EOFError):
@@ -37,7 +40,7 @@ def test_Message_read():
                 messages.Message.from_file(file)
 
 
-def test_Message_write():
+def test_Message_write(tmpdir):
     res = messages.Message.from_sample_name('regular_ll_pl_grib2', errors='strict')
     assert res['gridType'] == 'regular_ll'
 
@@ -58,6 +61,10 @@ def test_Message_write():
 
     with pytest.raises(NotImplementedError):
         del res['gridType']
+
+    out = tmpdir.join('test.grib')
+    with open(str(out), 'wb') as file:
+        res.write(file)
 
 
 def test_ComputedKeysMessage_read():
