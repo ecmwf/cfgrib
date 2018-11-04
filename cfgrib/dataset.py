@@ -111,6 +111,10 @@ COORD_ATTRS = {
         'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
         'standard_name': 'air_pressure', 'long_name': 'pressure',
     },
+    'hybrid': {
+        'units': '1', 'positive': 'down', 'long_name': 'hybrid level',
+        'standard_name': 'atmosphere_hybrid_sigma_pressure_coordinate',
+    },
     'number': {
         'units': '1',
         'standard_name': 'realization', 'long_name': 'ensemble member numerical id',
