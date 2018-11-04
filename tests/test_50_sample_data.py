@@ -49,7 +49,7 @@ def test_open_dataset_fail(grib_name):
     'reduced_gg',
     'regular_gg_sfc',
     'regular_gg_pl',
-    pytest.param('regular_gg_ml', marks=pytest.mark.xfail),
+    'regular_gg_ml',
     pytest.param('regular_gg_ml_g2', marks=pytest.mark.xfail),
     'regular_ll_sfc',
     'regular_ll_msl',
