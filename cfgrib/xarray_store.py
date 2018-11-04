@@ -66,7 +66,6 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
         fbks.extend(ex.args[1])
     # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
     #   to the user a confusing error message due to exception chaining
-    # OPTIMIZE: we need a way to cache the index
     for fbk in fbks:
         bks = backend_kwargs.copy()
         bks['filter_by_keys'] = fbk
