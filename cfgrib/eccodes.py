@@ -648,7 +648,7 @@ def codes_set_array(handle, key, values):
         elif isinstance(values[0], int):
             codes_set_long_array(handle, key, values)
         else:
-            raise NotImplementedError("Unsupported value type: %r" % type(values[0]))
+            raise TypeError("Unsupported value type: %r" % type(values[0]))
     else:
         raise ValueError("Cannot set an empty list.")
 

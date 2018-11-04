@@ -59,6 +59,15 @@ def test_codes_handle_new_from_file():
     assert "'grib_handle *'" in repr(res)
 
 
+def test_codes_handle_clone():
+    handle = eccodes.codes_handle_new_from_file(open(TEST_DATA))
+
+    res = eccodes.codes_handle_clone(handle)
+
+    assert isinstance(res, eccodes.ffi.CData)
+    assert "'grib_handle *'" in repr(res)
+
+
 def test_codes_handle_new_from_file_errors(tmpdir):
     empty_grib = tmpdir.join('empty.grib')
     empty_grib.ensure()
@@ -229,7 +238,21 @@ def test_codes_set():
     eccodes.codes_set(message_id, b'longitudeOfFirstGridPointInDegrees', 1.)
     eccodes.codes_set(message_id, b'gridType', b'regular_ll')
 
+    with pytest.raises(TypeError):
+        eccodes.codes_set(message_id, b'endStep', [])
+
+
+def test_codes_set_array():
+    message_id = eccodes.codes_new_from_samples(b'regular_ll_sfc_grib2')
+
     eccodes.codes_set_array(message_id, b'values', [0.])
+    eccodes.codes_set_array(message_id, b'values', [0])
+
+    with pytest.raises(ValueError):
+        eccodes.codes_set_array(message_id, b'values', [])
+
+    with pytest.raises(TypeError):
+        eccodes.codes_set_array(message_id, b'values', ['a'])
 
 
 def test_codes_write(tmpdir):
