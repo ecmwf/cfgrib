@@ -77,13 +77,12 @@ GRID_TYPE_MAP = {
 }
 GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-HEADER_COORDINATES = ['number']
-VERTICAL_COORDINATES = ['level']
-DATA_TIME_COORDINATES = ['dataDate', 'dataTime', 'endStep']
-REF_TIME_COORDINATES = ['time', 'step', ]
+ENSEMBLE_KEYS = ['number']
+VERTICAL_KEYS = ['level']
+DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
+REF_TIME_KEYS = ['time', 'step']
 
-ALL_HEADER_DIMS = HEADER_COORDINATES + VERTICAL_COORDINATES + DATA_TIME_COORDINATES + \
-    REF_TIME_COORDINATES
+ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
@@ -285,7 +284,8 @@ def build_geography_coordinates(
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def encode_cf_first(data_var_attrs, coords_map, encode_cf):
+def encode_cf_first(data_var_attrs, encode_cf):
+    coords_map = ENSEMBLE_KEYS[:]
     if 'parameter' in encode_cf:
         if 'GRIB_cfName' in data_var_attrs:
             data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
@@ -294,19 +294,18 @@ def encode_cf_first(data_var_attrs, coords_map, encode_cf):
         if 'GRIB_units' in data_var_attrs:
             data_var_attrs['units'] = data_var_attrs['GRIB_units']
     if 'time' in encode_cf:
-        coords_map.extend(REF_TIME_COORDINATES)
+        coords_map.extend(REF_TIME_KEYS)
     else:
-        coords_map.extend(DATA_TIME_COORDINATES)
-    coords_map.extend(VERTICAL_COORDINATES)
+        coords_map.extend(DATA_TIME_KEYS)
+    coords_map.extend(VERTICAL_KEYS)
+    return coords_map
 
 
 def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    coords_map = HEADER_COORDINATES[:]
-
-    encode_cf_first(data_var_attrs, coords_map, encode_cf)
+    coords_map = encode_cf_first(data_var_attrs, encode_cf)
 
     coord_name_key_map = {}
     coord_vars = collections.OrderedDict()
