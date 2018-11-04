@@ -46,6 +46,9 @@ def test_open_dataset():
 
     assert var.mean() > 0.
 
+    with pytest.warns(FutureWarning):
+        xarray_store.open_dataset(TEST_DATA, filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
+
 
 def test_open_dataset_corrupted():
     res = xarray_store.open_dataset(TEST_CORRUPTED)
