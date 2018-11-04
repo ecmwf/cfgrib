@@ -14,6 +14,31 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
+def test_enforce_unique_attributes():
+    assert dataset.enforce_unique_attributes({'key': [1]}, ['key'])
+    assert not dataset.enforce_unique_attributes({'key': ['undef']}, ['key'])
+
+    with pytest.raises(dataset.DatasetBuildError):
+        assert dataset.enforce_unique_attributes({'key': [1, 2]}, ['key'])
+
+
+def test_Variable():
+    res = dataset.Variable(dimensions=('lat'), data=np.array([0.]), attributes={})
+
+    assert res == res
+    assert res != 1
+
+
+@pytest.mark.parametrize('item,shape,expected', [
+    (([1, 5],), (10,), ([1, 5],)),
+    ((np.array([1]),), (10,), ([1],)),
+    ((slice(0, 3, 2),), (10,), ([0, 2],)),
+    ((1,), (10,), ([1],)),
+])
+def test_expand_item(item, shape, expected):
+    assert dataset.expand_item(item, shape) == expected
+
+
 def test_dict_merge():
     master = {'one': 1}
     dataset.dict_merge(master, {'two': 2})
@@ -114,3 +139,13 @@ def test_Dataset_reguler_gg_surface():
 
     assert res.dimensions == {'latitude': 96, 'longitude': 192}
     assert np.allclose(res.variables['latitude'].data[:2], [88.57216851, 86.72253095])
+
+
+def test_OnDiskArray():
+    res = dataset.open_file(TEST_DATA).variables['t']
+
+    assert isinstance(res.data, dataset.OnDiskArray)
+    assert np.allclose(
+        res.data[2:4:2, [0, 3], 0, 0, 0],
+        res.data.build_array()[2:4:2, [0, 3], 0, 0, 0],
+    )
