@@ -77,28 +77,13 @@ GRID_TYPE_MAP = {
 }
 GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-HEADER_COORDINATES_MAP = [
-    ('number', True),
-]
-VERTICAL_COORDINATE_MAP = [
-    ('level', False),
-]
-PLEV_TYPE_OF_LEVELS = ('isobaricInhPa', 'isobaricInPa')
-DATA_TIME_COORDINATE_MAP = [
-    ('dataDate', True),
-    ('dataTime', True),
-    ('endStep', True),
-]
-REF_TIME_COORDINATE_MAP = [
-    ('time', True),
-    ('step', True),
-]
+HEADER_COORDINATES = ['number']
+VERTICAL_COORDINATES = ['level']
+DATA_TIME_COORDINATES = ['dataDate', 'dataTime', 'endStep']
+REF_TIME_COORDINATES = ['time', 'step', ]
 
-ALL_MAPS = [
-    HEADER_COORDINATES_MAP, VERTICAL_COORDINATE_MAP, DATA_TIME_COORDINATE_MAP,
-    REF_TIME_COORDINATE_MAP,
-]
-ALL_HEADER_DIMS = [k for m in ALL_MAPS for k, _ in m]
+ALL_HEADER_DIMS = HEADER_COORDINATES + VERTICAL_COORDINATES + DATA_TIME_COORDINATES + \
+    REF_TIME_COORDINATES
 
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
@@ -124,7 +109,7 @@ COORD_ATTRS = {
         'standard_name': 'longitude', 'long_name': 'longitude',
     },
     'isobaricInhPa': {
-        'units': 'hPa', 'positive': 'down',
+        'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
         'standard_name': 'air_pressure', 'long_name': 'pressure',
     },
     'number': {
@@ -309,24 +294,24 @@ def encode_cf_first(data_var_attrs, coords_map, encode_cf):
         if 'GRIB_units' in data_var_attrs:
             data_var_attrs['units'] = data_var_attrs['GRIB_units']
     if 'time' in encode_cf:
-        coords_map.extend(REF_TIME_COORDINATE_MAP)
+        coords_map.extend(REF_TIME_COORDINATES)
     else:
-        coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    coords_map.extend(VERTICAL_COORDINATE_MAP)
+        coords_map.extend(DATA_TIME_COORDINATES)
+    coords_map.extend(VERTICAL_COORDINATES)
 
 
 def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    coords_map = HEADER_COORDINATES_MAP[:]
+    coords_map = HEADER_COORDINATES[:]
 
     encode_cf_first(data_var_attrs, coords_map, encode_cf)
 
     coord_name_key_map = {}
     coord_vars = collections.OrderedDict()
-    for coord_key, increasing in coords_map:
-        values = sorted(index[coord_key], reverse=not increasing)
+    for coord_key in coords_map:
+        values = index[coord_key]
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
@@ -336,7 +321,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
             coord_name = data_var_attrs['GRIB_typeOfLevel']
             coord_name_key_map[coord_name] = coord_key
         attributes = COORD_ATTRS.get(coord_name, {}).copy()
-        data = np.array(values)
+        data = np.array(sorted(values, reverse=attributes.get('stored_direction') == 'decreasing'))
         dimensions = (coord_name,)
         if len(values) == 1:
             data = data[0]
