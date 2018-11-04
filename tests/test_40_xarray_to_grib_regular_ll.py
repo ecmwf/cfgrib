@@ -23,26 +23,42 @@ def canonic_da():
     return da
 
 
-def test_canonical_dataarray_to_grib_with_grik_keys(canonic_da, tmpdir):
+def test_canonical_dataarray_to_grib_with_grib_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     grib_keys = {
         'gridType': 'regular_ll',
     }
     with open(str(out_path), 'wb') as file:
-        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da, grib_keys=grib_keys)
+        xarray_to_grib.canonical_dataarray_to_grib(canonic_da, file, grib_keys=grib_keys)
 
 
-def test_canonical_dataarray_to_grib_detect_grik_keys(canonic_da, tmpdir):
+def test_canonical_dataarray_to_grib_detect_grib_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     with open(str(out_path), 'wb') as file:
-        xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da)
+        xarray_to_grib.canonical_dataarray_to_grib(canonic_da, file)
 
 
-def test_canonical_dataarray_to_grib_conflicting_detect_grik_keys(canonic_da, tmpdir):
+def test_canonical_dataarray_to_grib_conflicting_detect_grib_keys(canonic_da, tmpdir):
     out_path = tmpdir.join('res.grib')
     grib_keys = {
         'gridType': 'reduced_ll',
     }
     with open(str(out_path), 'wb') as file:
         with pytest.raises(ValueError):
-            xarray_to_grib.canonical_dataarray_to_grib(file, canonic_da, grib_keys=grib_keys)
+            xarray_to_grib.canonical_dataarray_to_grib(canonic_da, file, grib_keys=grib_keys)
+
+
+def test_canonical_dataset_to_grib(canonic_da, tmpdir):
+    out_path = tmpdir.join('res.grib')
+    canonic_ds = canonic_da.to_dataset(name='t')
+    with pytest.warns(FutureWarning):
+        xarray_to_grib.canonical_dataset_to_grib(canonic_ds, str(out_path))
+
+    xarray_to_grib.canonical_dataset_to_grib(canonic_ds, str(out_path), no_warn=True)
+
+
+def test_to_grib(canonic_da, tmpdir):
+    out_path = tmpdir.join('res.grib')
+    canonic_ds = canonic_da.to_dataset(name='t')
+    with pytest.warns(FutureWarning):
+        xarray_to_grib.to_grib(canonic_ds, str(out_path))

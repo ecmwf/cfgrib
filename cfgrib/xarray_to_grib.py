@@ -182,7 +182,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
 
 
 def canonical_dataarray_to_grib(
-        file, data_var, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
+        data_var, file, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
 ):
     # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
     """
@@ -243,7 +243,7 @@ def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, grib_keys
 
     with open(path, mode=mode) as file:
         for data_var in dataset.data_vars.values():
-            canonical_dataarray_to_grib(file, data_var, grib_keys=real_grib_keys, **kwargs)
+            canonical_dataarray_to_grib(data_var, file, grib_keys=real_grib_keys, **kwargs)
 
 
 def to_grib(*args, **kwargs):
