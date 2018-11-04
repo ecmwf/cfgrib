@@ -84,9 +84,6 @@ VERTICAL_COORDINATE_MAP = [
     ('level', False),
 ]
 PLEV_TYPE_OF_LEVELS = ('isobaricInhPa', 'isobaricInPa')
-PLEV_COORDINATE_MAP = [
-    ('isobaricInhPa', False),
-]
 DATA_TIME_COORDINATE_MAP = [
     ('dataDate', True),
     ('dataTime', True),
@@ -98,7 +95,7 @@ REF_TIME_COORDINATE_MAP = [
 ]
 
 ALL_MAPS = [
-    HEADER_COORDINATES_MAP, VERTICAL_COORDINATE_MAP, PLEV_COORDINATE_MAP, DATA_TIME_COORDINATE_MAP,
+    HEADER_COORDINATES_MAP, VERTICAL_COORDINATE_MAP, DATA_TIME_COORDINATE_MAP,
     REF_TIME_COORDINATE_MAP,
 ]
 ALL_HEADER_DIMS = [k for m in ALL_MAPS for k, _ in m]
@@ -315,10 +312,7 @@ def encode_cf_first(data_var_attrs, coords_map, encode_cf):
         coords_map.extend(REF_TIME_COORDINATE_MAP)
     else:
         coords_map.extend(DATA_TIME_COORDINATE_MAP)
-    if 'vertical' in encode_cf and data_var_attrs.get('GRIB_typeOfLevel') in PLEV_TYPE_OF_LEVELS:
-        coords_map.extend(PLEV_COORDINATE_MAP)
-    else:
-        coords_map.extend(VERTICAL_COORDINATE_MAP)
+    coords_map.extend(VERTICAL_COORDINATE_MAP)
 
 
 def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
@@ -329,19 +323,25 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
 
     encode_cf_first(data_var_attrs, coords_map, encode_cf)
 
+    coord_name_key_map = {}
     coord_vars = collections.OrderedDict()
     for coord_key, increasing in coords_map:
         values = sorted(index[coord_key], reverse=not increasing)
         if len(values) == 1 and values[0] == 'undef':
             log.info("missing from GRIB stream: %r" % coord_key)
             continue
-        attributes = COORD_ATTRS.get(coord_key, {}).copy()
+        coord_name = coord_key
+        if 'vertical' in encode_cf and coord_key == 'level' and \
+                'GRIB_typeOfLevel' in data_var_attrs:
+            coord_name = data_var_attrs['GRIB_typeOfLevel']
+            coord_name_key_map[coord_name] = coord_key
+        attributes = COORD_ATTRS.get(coord_name, {}).copy()
         data = np.array(values)
-        dimensions = (coord_key,)
+        dimensions = (coord_name,)
         if len(values) == 1:
             data = data[0]
             dimensions = ()
-        coord_vars[coord_key] = Variable(dimensions=dimensions, data=data, attributes=attributes)
+        coord_vars[coord_name] = Variable(dimensions=dimensions, data=data, attributes=attributes)
 
     header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
@@ -355,7 +355,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions:
-            header_value = header_values[index.index_keys.index(dim)]
+            header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
             header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get('missingValue', 9999)
@@ -372,14 +372,6 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
         )
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
-
-    if 'level' in coord_vars and 'vertical' in encode_cf and 'GRIB_typeOfLevel' in data_var_attrs:
-        type_of_level = data_var_attrs['GRIB_typeOfLevel']
-        coord_vars = collections.OrderedDict(
-            (type_of_level if k == 'level' else k, v) for k, v in coord_vars.items()
-        )
-        if 'level' in dimensions:
-            dimensions = tuple(type_of_level if d == 'level' else d for d in dimensions)
 
     data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
