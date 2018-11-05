@@ -72,22 +72,22 @@ def test_match_values():
 
 
 def test_coord_translator(da1):
-    res = cfcoords.coord_translator('level', 'hPa', lambda x: False, 'level', da1)
+    res = cfcoords.coord_translator('level', 'hPa', 'decreasing', lambda x: False, 'lvl', da1)
     assert da1.equals(res)
 
     with pytest.raises(ValueError):
-        cfcoords.coord_translator('level', 'hPa', lambda x: True, 'level', da1)
+        cfcoords.coord_translator('level', 'hPa', 'decreasing', lambda x: True, 'lvl', da1)
 
-    res = cfcoords.coord_translator('level', 'hPa', cfcoords.is_isobaric, 'level', da1)
+    res = cfcoords.coord_translator('level', 'hPa', 'decreasing', cfcoords.is_isobaric, 'lvl', da1)
     assert da1.equals(res)
 
     with pytest.raises(ValueError):
-        cfcoords.coord_translator('level', 'hPa', cfcoords.is_latitude, 'level', da1)
+        cfcoords.coord_translator('level', 'hPa', 'decreasing', cfcoords.is_latitude, 'lvl', da1)
 
-    res = cfcoords.coord_translator('level', 'Pa', cfcoords.is_isobaric, 'level', da1)
+    res = cfcoords.coord_translator('level', 'Pa', 'decreasing', cfcoords.is_isobaric, 'lvl', da1)
     assert not da1.equals(res)
 
-    res = cfcoords.coord_translator('step', 'h', cfcoords.is_step, 'step', da1)
+    res = cfcoords.coord_translator('step', 'h', 'increasing', cfcoords.is_step, 'step', da1)
     assert da1.equals(res)
 
 

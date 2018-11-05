@@ -36,12 +36,27 @@ def match_values(match_value_func, mapping):
     return matched_names
 
 
+def translate_direction(data, out_name, stored_direction):
+    if stored_direction not in ('increasing', 'decreasing'):
+        raise ValueError("unknown stored_direction %r" % stored_direction)
+    if len(data.coords[out_name].shape) == 0:
+        return data
+    direction = data.coords[out_name].values[-1] - data.coords[out_name].values[0]
+    if int(direction) > 0 and stored_direction == 'decreasing':
+        data = data.isel({out_name: slice(None, None, -1)})
+    elif int(direction) < 0 and stored_direction == 'increasing':
+        data = data.isel({out_name: slice(None, None, -1)})
+    return data
+
+
 def coord_translator(
-        default_out_name, default_units, is_cf_type, cf_type, data, coord_model=COORD_MODEL
+        default_out_name, default_units, default_direction, is_cf_type, cf_type, data,
+        coord_model=COORD_MODEL
 ):
-    # type: (str, str, T.Callable, str, xr.DataArray, dict) -> xr.DataArray
+    # type: (str, str, T.Callable, str, str, xr.DataArray, dict) -> xr.DataArray
     out_name = coord_model.get(cf_type, {}).get('out_name', default_out_name)
     units = coord_model.get(cf_type, {}).get('units', default_units)
+    stored_direction = coord_model.get(cf_type, {}).get('stored_direction', default_direction)
     matches = match_values(is_cf_type, data.coords)
     if len(matches) > 1:
         raise ValueError("found more than one CF coordinate with type %r." % cf_type)
@@ -55,7 +70,8 @@ def coord_translator(
     coord = data.coords[out_name]
     if 'units' in coord.attrs:
         data.coords[out_name] = cfunits.convert_units(coord, units, coord.attrs['units'])
-        data.coords[out_name].attrs['untis'] = units
+        data.coords[out_name].attrs['units'] = units
+    data = translate_direction(data, out_name, stored_direction)
     return data
 
 
@@ -68,7 +84,7 @@ def is_latitude(coord):
 
 
 COORD_TRANSLATORS['latitude'] = functools.partial(
-    coord_translator, 'latitude', 'degrees_north', is_latitude,
+    coord_translator, 'latitude', 'degrees_north', 'decreasing', is_latitude,
 )
 
 
@@ -81,7 +97,7 @@ def is_longitude(coord):
 
 
 COORD_TRANSLATORS['longitude'] = functools.partial(
-    coord_translator, 'longitude', 'degrees_east', is_longitude,
+    coord_translator, 'longitude', 'degrees_east', 'increasing', is_longitude,
 )
 
 
@@ -94,7 +110,7 @@ TIME_CF_UNITS = 'seconds since 1970-01-01T00:00:00+00:00'
 
 
 COORD_TRANSLATORS['time'] = functools.partial(
-    coord_translator, 'time', TIME_CF_UNITS, is_time,
+    coord_translator, 'time', TIME_CF_UNITS, 'increasing', is_time,
 )
 
 
@@ -104,7 +120,7 @@ def is_step(coord):
 
 
 COORD_TRANSLATORS['step'] = functools.partial(
-    coord_translator, 'step', 'h', is_step,
+    coord_translator, 'step', 'h', 'increasing', is_step,
 )
 
 
@@ -118,7 +134,7 @@ def is_valid_time(coord):
 
 
 COORD_TRANSLATORS['valid_time'] = functools.partial(
-    coord_translator, 'valid_time', TIME_CF_UNITS, is_valid_time,
+    coord_translator, 'valid_time', TIME_CF_UNITS, 'increasing', is_valid_time,
 )
 
 
@@ -128,7 +144,7 @@ def is_isobaric(coord):
 
 
 COORD_TRANSLATORS['isobaricInhPa'] = functools.partial(
-    coord_translator, 'isobaricInhPa', 'hPa', is_isobaric,
+    coord_translator, 'isobaricInhPa', 'hPa', 'decreasing', is_isobaric,
 )
 
 
@@ -138,7 +154,7 @@ def is_number(coord):
 
 
 COORD_TRANSLATORS['number'] = functools.partial(
-    coord_translator, 'number', '1', is_number,
+    coord_translator, 'number', '1', 'increasing', is_number,
 )
 
 
