@@ -42,9 +42,9 @@ def translate_direction(data, out_name, stored_direction):
     if len(data.coords[out_name].shape) == 0:
         return data
     direction = data.coords[out_name].values[-1] - data.coords[out_name].values[0]
-    if int(direction) > 0 and stored_direction == 'decreasing':
+    if direction > 0 and stored_direction == 'decreasing':
         data = data.isel({out_name: slice(None, None, -1)})
-    elif int(direction) < 0 and stored_direction == 'increasing':
+    elif direction < 0 and stored_direction == 'increasing':
         data = data.isel({out_name: slice(None, None, -1)})
     return data
 

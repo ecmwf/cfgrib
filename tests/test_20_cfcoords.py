@@ -10,7 +10,7 @@ from cf2cdm import cfcoords
 
 @pytest.fixture
 def da1():
-    latitude = [0., 0.5]
+    latitude = [0.5, 0.]
     longitude = [10., 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
     level = [950, 500]
@@ -28,7 +28,7 @@ def da1():
 
 @pytest.fixture
 def da2():
-    latitude = [0., 0.5]
+    latitude = [0.5, 0.]
     longitude = [10., 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
     level = [950, 500]
@@ -45,7 +45,7 @@ def da2():
 
 @pytest.fixture
 def da3():
-    latitude = [0., 0.5]
+    latitude = [0.5, 0.]
     longitude = [10., 10.5]
     step = [0, 24, 48]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00']
@@ -69,6 +69,26 @@ def test_match_values():
     res = cfcoords.match_values(callable, mapping)
 
     assert res == ['callable']
+
+
+def test_translate_direction(da1):
+    res = cfcoords.translate_direction(da1, 'lat', 'increasing')
+    assert res.lat.values[-1] > res.lat.values[0]
+
+    res = cfcoords.translate_direction(da1, 'lat', 'decreasing')
+    assert res.lat.values[-1] < res.lat.values[0]
+
+    res = cfcoords.translate_direction(da1, 'lon', 'decreasing')
+    assert res.lon.values[-1] < res.lon.values[0]
+
+    res = cfcoords.translate_direction(da1, 'lon', 'increasing')
+    assert res.lon.values[-1] > res.lon.values[0]
+
+    res = cfcoords.translate_direction(da1.isel(lon=0), 'lon', 'increasing')
+    assert len(res.lon.shape) == 0
+
+    with pytest.raises(ValueError):
+        cfcoords.translate_direction(da1, 'lat', 'wrong')
 
 
 def test_coord_translator(da1):
