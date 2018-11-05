@@ -242,14 +242,19 @@ def build_geography_coordinates(
     if 'geography' in encode_cf and grid_type in GRID_TYPES_COORD_VAR:
         geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
         geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
+        latitudes = np.array(first['distinctLatitudes'])
         geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=np.array(first['distinctLatitudes']),
-            attributes=COORD_ATTRS['latitude'],
+            dimensions=('latitude',), data=latitudes, attributes=COORD_ATTRS['latitude'].copy(),
         )
+        if latitudes[0] > latitudes[-1]:
+            geo_coord_vars['latitude'].attributes['stored_direction'] = 'decreasing'
+        longitudes = np.array(first['distinctLongitudes'])
         geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
+            dimensions=('longitude',), data=longitudes,
             attributes=COORD_ATTRS['longitude'],
         )
+        if longitudes[0] > longitudes[-1]:
+            geo_coord_vars['longitude'].attributes['stored_direction'] = 'decreasing'
     elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
