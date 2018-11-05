@@ -41,10 +41,10 @@ def translate_direction(data, out_name, stored_direction):
         raise ValueError("unknown stored_direction %r" % stored_direction)
     if len(data.coords[out_name].shape) == 0:
         return data
-    direction = data.coords[out_name].values[-1] - data.coords[out_name].values[0]
-    if direction > 0 and stored_direction == 'decreasing':
+    values = data.coords[out_name].values
+    if values[-1] > values[0] and stored_direction == 'decreasing':
         data = data.isel({out_name: slice(None, None, -1)})
-    elif direction < 0 and stored_direction == 'increasing':
+    elif values[-1] < values[0] and stored_direction == 'increasing':
         data = data.isel({out_name: slice(None, None, -1)})
     return data
 
