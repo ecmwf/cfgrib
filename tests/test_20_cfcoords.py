@@ -58,7 +58,7 @@ def da3():
             ('step', np.array(step, dtype=np.timedelta64), {'standard_name': 'forecast_period'}),
             ('ref_time', np.array(time, dtype=np.datetime64),
                 {'standard_name': 'forecast_reference_time'}),
-            ('level', np.array(level), {'units': 'hPa'}),
+            ('time', np.array(level), {'units': 'hPa'}),
         ])
 
     return data
@@ -78,31 +78,38 @@ def test_coord_translator(da1):
     with pytest.raises(ValueError):
         cfcoords.coord_translator('level', 'hPa', lambda x: True, 'level', da1)
 
-    res = cfcoords.coord_translator('level', 'hPa', cfcoords.is_vertical_pressure, 'level', da1)
+    res = cfcoords.coord_translator('level', 'hPa', cfcoords.is_isobaric, 'level', da1)
     assert da1.equals(res)
 
     with pytest.raises(ValueError):
         cfcoords.coord_translator('level', 'hPa', cfcoords.is_latitude, 'level', da1)
 
-    res = cfcoords.coord_translator('level', 'Pa', cfcoords.is_vertical_pressure, 'level', da1)
+    res = cfcoords.coord_translator('level', 'Pa', cfcoords.is_isobaric, 'level', da1)
     assert not da1.equals(res)
 
-    res = cfcoords.coord_translator('step', 'h', cfcoords.is_forecast_period, 'step', da1)
+    res = cfcoords.coord_translator('step', 'h', cfcoords.is_step, 'step', da1)
     assert da1.equals(res)
 
 
-def test_translate_coords(da1, da2):
-    result = cfcoords.translate_coords(da1)
+def test_translate_coords(da1, da2, da3):
+    res = cfcoords.translate_coords(da1)
 
-    assert 'latitude' in result.coords
-    assert 'longitude' in result.coords
-    assert 'time' in result.coords
+    assert 'latitude' in res.coords
+    assert 'longitude' in res.coords
+    assert 'time' in res.coords
 
-    result = cfcoords.translate_coords(da2)
+    res = cfcoords.translate_coords(da2)
 
-    assert 'latitude' in result.coords
-    assert 'longitude' in result.coords
-    assert 'valid_time' in result.coords
+    assert 'latitude' in res.coords
+    assert 'longitude' in res.coords
+    assert 'valid_time' in res.coords
+
+    with pytest.raises(ValueError):
+        cfcoords.translate_coords(da3)
+
+    res = cfcoords.translate_coords(da3, errors='ignore')
+    assert 'latitude' in res.coords
+    assert 'longitude' in res.coords
 
 
 def test_ensure_valid_time(da1, da3):

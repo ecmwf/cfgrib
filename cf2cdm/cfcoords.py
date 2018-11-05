@@ -142,7 +142,9 @@ COORD_TRANSLATORS['number'] = functools.partial(
 )
 
 
-def translate_coords(data, errors='strict', coord_model=COORD_MODEL, coord_translators=COORD_TRANSLATORS):
+def translate_coords(
+        data, errors='strict', coord_model=COORD_MODEL, coord_translators=COORD_TRANSLATORS
+):
     # type: (xr.Dataset, str, T.Dict, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
