@@ -85,7 +85,7 @@ COORD_TRANSLATORS['longitude'] = functools.partial(
 )
 
 
-def is_forecast_reference_time(coord):
+def is_time(coord):
     # type: (xr.Coordinate) -> bool
     return coord.attrs.get('standard_name') == 'forecast_reference_time'
 
@@ -93,18 +93,18 @@ def is_forecast_reference_time(coord):
 TIME_CF_UNITS = 'seconds since 1970-01-01T00:00:00+00:00'
 
 
-COORD_TRANSLATORS['forecast_reference_time'] = functools.partial(
-    coord_translator, 'time', TIME_CF_UNITS, is_forecast_reference_time,
+COORD_TRANSLATORS['time'] = functools.partial(
+    coord_translator, 'time', TIME_CF_UNITS, is_time,
 )
 
 
-def is_forecast_period(coord):
+def is_step(coord):
     # type: (xr.Coordinate) -> bool
     return coord.attrs.get('standard_name') == 'forecast_period'
 
 
-COORD_TRANSLATORS['forecast_period'] = functools.partial(
-    coord_translator, 'step', 'h', is_forecast_period,
+COORD_TRANSLATORS['step'] = functools.partial(
+    coord_translator, 'step', 'h', is_step,
 )
 
 
@@ -122,38 +122,42 @@ COORD_TRANSLATORS['valid_time'] = functools.partial(
 )
 
 
-def is_vertical_pressure(coord):
+def is_isobaric(coord):
     # type: (xr.Coordinate) -> bool
     return cfunits.are_convertible(coord.attrs.get('units', ''), 'Pa')
 
 
-COORD_TRANSLATORS['vertical_pressure'] = functools.partial(
-    coord_translator, 'level', 'hPa', is_vertical_pressure,
+COORD_TRANSLATORS['isobaricInhPa'] = functools.partial(
+    coord_translator, 'isobaricInhPa', 'hPa', is_isobaric,
 )
 
 
-def is_realization(coord):
+def is_number(coord):
     # type: (xr.Coordinate) -> bool
     return coord.attrs.get('standard_name') == 'realization'
 
 
-COORD_TRANSLATORS['realization'] = functools.partial(
-    coord_translator, 'number', '1', is_realization,
+COORD_TRANSLATORS['number'] = functools.partial(
+    coord_translator, 'number', '1', is_number,
 )
 
 
-def translate_coords(data, coord_model=COORD_MODEL, coord_translators=COORD_TRANSLATORS):
-    # type: (xr.Dataset, T.Dict, T.Dict) -> xr.Dataset
+def translate_coords(data, errors='strict', coord_model=COORD_MODEL, coord_translators=COORD_TRANSLATORS):
+    # type: (xr.Dataset, str, T.Dict, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
-        data = translator(cf_name, data, coord_model=coord_model)
+        try:
+            data = translator(cf_name, data, coord_model=coord_model)
+        except:
+            if errors != 'ignore':
+                raise
     return data
 
 
 def ensure_valid_time_present(data, valid_time_name='valid_time'):
     # type: (xr.Dataset, str) -> T.Tuple[str, str, str]
     valid_times = match_values(is_valid_time, data.coords)
-    times = match_values(is_forecast_reference_time, data.coords)
-    steps = match_values(is_forecast_period, data.coords)
+    times = match_values(is_time, data.coords)
+    steps = match_values(is_step, data.coords)
     time = step = ''
     if not valid_times:
         if not times:
