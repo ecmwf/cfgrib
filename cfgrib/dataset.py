@@ -248,13 +248,10 @@ def build_geography_coordinates(
         )
         if latitudes[0] > latitudes[-1]:
             geo_coord_vars['latitude'].attributes['stored_direction'] = 'decreasing'
-        longitudes = np.array(first['distinctLongitudes'])
         geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',), data=longitudes,
+            dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
             attributes=COORD_ATTRS['longitude'],
         )
-        if longitudes[0] > longitudes[-1]:
-            geo_coord_vars['longitude'].attributes['stored_direction'] = 'decreasing'
     elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
