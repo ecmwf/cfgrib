@@ -33,5 +33,5 @@ def main(argv=None):
         raise RuntimeError("Command not recognised %r. See usage with --help." % args.command)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

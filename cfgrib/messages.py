@@ -23,7 +23,7 @@ from builtins import bytes, isinstance, str, type
 # Python 2 compatibility bit not in python-future
 try:
     FileExistsError
-except NameError:
+except NameError:  # pragma: no cover
     FileExistsError = OSError
 
 import collections
@@ -84,7 +84,7 @@ class Message(collections.MutableMapping):
                     raise KeyError(item)
                 else:
                     return default
-            else:
+            else:  # pragma: no cover
                 raise
         if values and isinstance(values[0], bytes):
             values = [v.decode(self.encoding) for v in values]
@@ -184,7 +184,7 @@ def make_message_schema(message, schema_keys, log=LOG):
         try:
             key_type = eccodes.codes_get_native_type(message.codes_id, bkey)
         except eccodes.EcCodesError as ex:
-            if ex.code != eccodes.lib.GRIB_NOT_FOUND:
+            if ex.code != eccodes.lib.GRIB_NOT_FOUND:  # pragma: no cover
                 log.exception("key %r failed", key)
             schema[key] = ()
             continue
