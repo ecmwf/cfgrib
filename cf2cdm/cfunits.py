@@ -19,10 +19,10 @@ import typing as T  # noqa
 
 
 PRESSURE_CONVERSION_RULES = {
-    ('Pa', 'pascal'): 1.,
-    ('hPa', 'hectopascal', 'hpascal', 'millibar', 'mbar'): 100.,
+    ('Pa', 'pascal', 'pascals'): 1.,
+    ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.,
     ('decibar', 'dbar'): 10000.,
-    ('bar',): 100000.,
+    ('bar', 'bars'): 100000.,
     ('atmosphere', 'atm'): 101325.,
 }  # type: T.Dict[T.Tuple, float]
 
