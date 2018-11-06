@@ -25,6 +25,8 @@ import warnings
 
 import xarray as xr
 
+from . import cfgrib_
+from . import dataset
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +36,6 @@ def open_dataset(path, backend_kwargs={}, filter_by_keys={}, **kwargs):
     """
     Return a ``xr.Dataset`` with the requested ``backend_kwargs`` from a GRIB file.
     """
-    # validate Dataset keys, DataArray names, and attr keys/values
-    from . import cfgrib_
     if filter_by_keys:
         warnings.warn("passing filter_by_keys is depreciated use backend_kwargs", FutureWarning)
     real_backend_kwargs = {
@@ -53,8 +53,6 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
-    import cfgrib
-
     if not no_warn:
         warnings.warn("open_datasets is an experimental API, DO NOT RELY ON IT!", FutureWarning)
 
@@ -62,7 +60,7 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
     datasets = []
     try:
         datasets.append(open_dataset(path, backend_kwargs=backend_kwargs, **kwargs))
-    except cfgrib.DatasetBuildError as ex:
+    except dataset.DatasetBuildError as ex:
         fbks.extend(ex.args[1])
     # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
     #   to the user a confusing error message due to exception chaining
