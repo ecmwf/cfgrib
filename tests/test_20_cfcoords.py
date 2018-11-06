@@ -1,6 +1,8 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -124,12 +126,15 @@ def test_translate_coords(da1, da2, da3):
     assert 'longitude' in res.coords
     assert 'valid_time' in res.coords
 
-    with pytest.raises(ValueError):
-        cfcoords.translate_coords(da3)
-
     res = cfcoords.translate_coords(da3, errors='ignore')
     assert 'latitude' in res.coords
     assert 'longitude' in res.coords
+
+
+@pytest.mark.skipif(sys.version_info < (3, 6), reason="test needs stable dict's")
+def test_translate_coords_errors(da3):
+    with pytest.raises(ValueError):
+        cfcoords.translate_coords(da3)
 
 
 def test_ensure_valid_time(da1, da3):
