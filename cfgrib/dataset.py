@@ -283,7 +283,7 @@ def build_geography_coordinates(
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def encode_cf_first(data_var_attrs, encode_cf):
+def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     coords_map = ENSEMBLE_KEYS[:]
     if 'parameter' in encode_cf:
         if 'GRIB_cfName' in data_var_attrs:

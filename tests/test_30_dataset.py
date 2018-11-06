@@ -55,6 +55,10 @@ def test_dict_merge():
         dataset.dict_merge(master, {'two': 3})
 
 
+def test_encode_cf_first():
+    assert dataset.encode_cf_first({})
+
+
 def test_build_data_var_components_no_encode():
     index = messages.FileStream(path=TEST_DATA).index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
