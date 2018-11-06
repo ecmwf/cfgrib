@@ -39,6 +39,11 @@ def test_expand_item(item, shape, expected):
     assert dataset.expand_item(item, shape) == expected
 
 
+def test_expand_item_error():
+    with pytest.raises(TypeError):
+        dataset.expand_item((None,), (1,))
+
+
 def test_dict_merge():
     master = {'one': 1}
     dataset.dict_merge(master, {'two': 2})

@@ -172,7 +172,7 @@ def expand_item(item, shape):
         elif isinstance(i, int):
             expanded_item.append([i])
         else:
-            TypeError("Unsupported index type %r" % type(i))
+            raise TypeError("Unsupported index type %r" % type(i))
     return tuple(expanded_item)
 
 
