@@ -30,15 +30,16 @@ Limitations:
 
 - no *conda* package, for now,
   see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
-- *PyPI* binary packages do not include ecCodes,
+- *PyPI* binary packages do not include *ecCodes*,
   see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
 - no Windows support,
   see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - no support for opening multiple GRIB files,
   see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
-- relys on *ecCodes* for the CF attributes of the data variables,
-- relys on *ecCodes* for the ``gridType`` handling.
+- relies on *ecCodes* for the CF attributes of the data variables,
+- relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
+  see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.
 
 
 Installation
