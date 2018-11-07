@@ -226,8 +226,9 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
-GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers')
+GRID_TYPES_DIMENSION_COORDS = ('regular_ll', 'regular_gg')
+GRID_TYPES_2D_NON_DIMENSION_COORDS = ('lambert', 'albers')
+GRID_TYPES_1D_NON_DIMENSION_COORDS = ('reduced_ll', 'reduced_gg')
 
 
 def build_geography_coordinates(
@@ -239,7 +240,7 @@ def build_geography_coordinates(
     first = index.first()
     geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
     grid_type = index.getone('gridType')
-    if 'geography' in encode_cf and grid_type in GRID_TYPES_COORD_VAR:
+    if 'geography' in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
         geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
         latitudes = np.array(first['distinctLatitudes'])
@@ -252,7 +253,7 @@ def build_geography_coordinates(
             dimensions=('longitude',), data=np.array(first['distinctLongitudes']),
             attributes=COORD_ATTRS['longitude'],
         )
-    elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_AUX_COORD_VAR:
+    elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
         geo_coord_vars['latitude'] = Variable(
@@ -279,6 +280,8 @@ def build_geography_coordinates(
                 attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:
+            if grid_type in GRID_TYPES_1D_NON_DIMENSION_COORDS:
+                raise
             log.warning('No latitudes/longitudes provided by ecCodes for gridType = %r', grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
