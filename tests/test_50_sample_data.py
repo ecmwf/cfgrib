@@ -38,8 +38,22 @@ def test_open_dataset(grib_name):
 ])
 def test_open_dataset_fail(grib_name):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
+
     with pytest.raises(ValueError):
         xarray_store.open_dataset(grib_path, cache=False)
+
+
+@pytest.mark.parametrize('grib_name', [
+    'hpa_and_pa',
+    't_on_different_level_types',
+    'tp_on_different_grid_resolutions',
+])
+def test_open_datasets(grib_name):
+    grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
+
+    res = xarray_store.open_datasets(grib_path)
+
+    assert len(res) > 1
 
 
 @pytest.mark.parametrize('grib_name', [

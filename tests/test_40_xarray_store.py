@@ -11,6 +11,8 @@ from cfgrib import xarray_store
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-corrupted.grib')
+TEST_DATASETS = os.path.join(SAMPLE_DATA_FOLDER, 't_on_different_level_types.grib')
+TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, 'uv_on_different_levels.grib')
 
 
 def test_open_dataset():
@@ -28,6 +30,13 @@ def test_open_dataset():
 
     with pytest.warns(FutureWarning):
         xarray_store.open_dataset(TEST_DATA, filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
+
+    with pytest.raises(ValueError):
+        xarray_store.open_dataset(TEST_IGNORE)
+
+    res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={'errors': 'ignore'})
+
+    assert 'isobaricInhPa' in res.dims
 
 
 def test_open_dataset_corrupted():
@@ -90,7 +99,7 @@ def test_open_dataset_eccodes():
 
 
 def test_open_datasets():
-    res = xarray_store.open_datasets(TEST_DATA)
+    res = xarray_store.open_datasets(TEST_DATASETS)
 
-    assert len(res) == 1
+    assert len(res) > 1
     assert res[0].attrs['GRIB_edition'] == 1
