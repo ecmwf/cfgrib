@@ -446,6 +446,21 @@ Attributes:
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
+Project resources
+=================
+
+============= =========================================================
+Development   https://github.com/ecmwf/cfgrib
+Download      https://pypi.org/project/cfgrib
+Code quality  .. image:: https://api.travis-ci.org/ecmwf/cfgrib.svg?branch=master
+                :target: https://travis-ci.org/ecmwf/cfgrib/branches
+                :alt: Build Status on Travis CI
+              .. image:: https://coveralls.io/repos/ecmwf/cfgrib/badge.svg?branch=master&service=github
+                :target: https://coveralls.io/github/ecmwf/cfgrib
+                :alt: Coverage Status on Coveralls
+============= =========================================================
+
+
 Contributing
 ============
 
@@ -471,7 +486,7 @@ See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors
 
 
 License
--------
+=======
 
 Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
 
