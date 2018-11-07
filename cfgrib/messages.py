@@ -23,7 +23,7 @@ from builtins import bytes, isinstance, str, type
 # Python 2 compatibility bit not in python-future
 try:
     FileExistsError
-except NameError:  # pragma: no cover
+except NameError:
     FileExistsError = OSError
 
 import collections
