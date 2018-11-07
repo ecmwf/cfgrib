@@ -227,7 +227,7 @@ class OnDiskArray(object):
 
 
 GRID_TYPES_COORD_VAR = ('regular_ll', 'regular_gg')
-GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers', 'polar_stereographic')
+GRID_TYPES_2D_AUX_COORD_VAR = ('lambert', 'albers')
 
 
 def build_geography_coordinates(
