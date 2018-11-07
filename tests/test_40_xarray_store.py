@@ -87,3 +87,10 @@ def test_open_dataset_eccodes():
     assert var.dims == ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
 
     assert var.mean() > 0.
+
+
+def test_open_datasets():
+    res = xarray_store.open_datasets(TEST_DATA)
+
+    assert len(res) == 1
+    assert res[0].attrs['GRIB_edition'] == 1
