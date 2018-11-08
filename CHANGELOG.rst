@@ -17,7 +17,7 @@ Changelog for cfgrib
 - Refactor error handling and the option to ignore errors (not well documented yet).
   See: `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 - Do not crash on ``gridType`` not fully supported by the installed *ecCodes*
-  See: `#27 https://github.com/ecmwf/cfgrib/issues/27`_.
+  See: `#27 <https://github.com/ecmwf/cfgrib/issues/27>`_.
 - Several smaller bug fixes and performance improvements.
 
 
