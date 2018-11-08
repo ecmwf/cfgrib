@@ -2,10 +2,10 @@
 Changelog for cfgrib
 ====================
 
-0.9.5 (unreleased)
-------------------
+0.9.4.1 (2018-11-08)
+--------------------
 
-- Nothing changed yet.
+- Fix formatting for PyPI page.
 
 
 0.9.4 (2018-11-08)
