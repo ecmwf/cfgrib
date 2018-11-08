@@ -9,7 +9,7 @@ dependencies:
   - pytest
   - python==3.5
   - typing
-  - xarray>=0.10.9
+  - xarray==0.10.9
   - pip:
     - attrs
     - coveralls
