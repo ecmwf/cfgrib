@@ -9,6 +9,7 @@ include tox.ini
 include tests/sample-data/era5-levels-members.grib
 recursive-include ci *.in
 recursive-include ci *.txt
+recursive-include ci *.yml
 recursive-include docs *.gitkeep
 recursive-include docs *.py
 recursive-include docs *.rst
