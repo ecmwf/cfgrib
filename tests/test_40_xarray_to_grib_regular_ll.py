@@ -1,7 +1,7 @@
 
 import numpy as np
-import pandas as pd
 import pytest
+pd = pytest.importorskip('pandas')  # noqa
 xr = pytest.importorskip('xarray')  # noqa
 
 from cfgrib import xarray_to_grib
