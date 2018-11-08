@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.4 (unreleased)
+0.9.4 (2018-11-08)
 ------------------
 
 - Saves one index file per set of ``index_keys`` in a much more robust way.
