@@ -7,7 +7,7 @@ matrix:
   include:
   - env: CONDA_ENV=py36-qc
   - env: CONDA_ENV=py36-without-xarray
-  - env: CONDA_ENV=py35-old
+  - env: CONDA_ENV=py36-old
   - env: CONDA_ENV=py27
   - env: CONDA_ENV=docs
   - env: CONDA_ENV=py37
