@@ -7,7 +7,7 @@ dependencies:
   - nomkl
   - numpy==1.11.0
   - pytest
-  - python=3.5
+  - python==3.5
   - typing
   - xarray>=0.10.9
   - pip:

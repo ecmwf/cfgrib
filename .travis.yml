@@ -37,7 +37,7 @@ script:
     elif [[ "$CONDA_ENV" == *"-qc" ]]; then
       pytest -v --flakes --doctest-glob="*.rst" --cov=cfgrib --cov cf2cdm --cov-report term-missing --pep8 --mccabe $EXTRA_FLAGS;
     else
-      pytest -v --flakes --doctest-glob="*.rst" --cov=cfgrib --cov cf2cdm --cov-report term-missing $EXTRA_FLAGS;
+      pytest -v --flakes --cov=cfgrib --cov cf2cdm --cov-report term-missing $EXTRA_FLAGS;
     fi
 
 after_success:
