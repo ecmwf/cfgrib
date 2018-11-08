@@ -227,7 +227,7 @@ class OnDiskArray(object):
 
 
 GRID_TYPES_DIMENSION_COORDS = ('regular_ll', 'regular_gg')
-GRID_TYPES_2D_NON_DIMENSION_COORDS = ('lambert', 'albers')
+GRID_TYPES_2D_NON_DIMENSION_COORDS = ('lambert', 'albers', 'polar_stereographic')
 GRID_TYPES_1D_NON_DIMENSION_COORDS = ('reduced_ll', 'reduced_gg')
 
 
@@ -256,14 +256,17 @@ def build_geography_coordinates(
     elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
         geo_dims = ('y', 'x')
         geo_shape = (index.getone('Ny'), index.getone('Nx'))
-        geo_coord_vars['latitude'] = Variable(
-            dimensions=('y', 'x'), data=np.array(first['latitudes']).reshape(geo_shape),
-            attributes=COORD_ATTRS['latitude'],
-        )
-        geo_coord_vars['longitude'] = Variable(
-            dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
-            attributes=COORD_ATTRS['longitude'],
-        )
+        try:
+            geo_coord_vars['latitude'] = Variable(
+                dimensions=('y', 'x'), data=np.array(first['latitudes']).reshape(geo_shape),
+                attributes=COORD_ATTRS['latitude'],
+            )
+            geo_coord_vars['longitude'] = Variable(
+                dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
+                attributes=COORD_ATTRS['longitude'],
+            )
+        except KeyError:
+            log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
     else:
         geo_dims = ('values',)
         geo_shape = (index.getone('numberOfPoints'),)
@@ -280,9 +283,7 @@ def build_geography_coordinates(
                 attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:
-            if grid_type in GRID_TYPES_1D_NON_DIMENSION_COORDS:  # pragma: no cover
-                raise
-            log.warning('No latitudes/longitudes provided by ecCodes for gridType = %r', grid_type)
+            log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
 
