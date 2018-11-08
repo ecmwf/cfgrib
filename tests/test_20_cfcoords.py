@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 import pytest
-import xarray as xr
+xr = pytest.importorskip('xarray')
 
 from cf2cdm import cfcoords
 

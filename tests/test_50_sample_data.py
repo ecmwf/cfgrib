@@ -2,6 +2,7 @@
 import os.path
 
 import pytest
+xr = pytest.importorskip('xarray')
 
 from cfgrib import xarray_store
 from cfgrib import xarray_to_grib

@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-import xarray as xr
+xr = pytest.importorskip('xarray')
 
 from cfgrib import xarray_to_grib
 

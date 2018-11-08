@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os.path
 
 import pytest
+xr = pytest.importorskip('xarray')
 
 from cfgrib import eccodes
 from cfgrib import xarray_store
