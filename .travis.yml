@@ -7,11 +7,11 @@ matrix:
   include:
   - env: CONDA_ENV=py36-qc
   - env: CONDA_ENV=py36-without-xarray
+  - env: CONDA_ENV=py35-old
+  - env: CONDA_ENV=py27
   - env: CONDA_ENV=docs
   - env: CONDA_ENV=py37
   - env: CONDA_ENV=py35
-  - env: CONDA_ENV=py35-old
-  - env: CONDA_ENV=py27
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
