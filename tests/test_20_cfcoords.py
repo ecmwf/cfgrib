@@ -5,9 +5,10 @@ import sys
 
 import numpy as np
 import pytest
-xr = pytest.importorskip('xarray')
 
 from cf2cdm import cfcoords
+
+xr = pytest.importorskip('xarray')
 
 
 @pytest.fixture
