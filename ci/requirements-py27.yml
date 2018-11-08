@@ -2,17 +2,17 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python=2.7
-  - nomkl
-  - pytest
-  - xarray
-  - eccodes
   - cffi
+  - eccodes
+  - nomkl
+  - numpy
+  - pytest
+  - python=2.7
   - typing
+  - xarray>=0.10.9
   - pip:
+    - attrs
     - coveralls
+    - future
     - pytest-cov
     - pytest-flakes
-    - future
-    - attrs
-

@@ -5,11 +5,12 @@ sudo: false # use container based build
 matrix:
   fast_finish: true
   include:
-  - env: CONDA_ENV=qc
+  - env: CONDA_ENV=py36-qc
+  - env: CONDA_ENV=py36-without-xarray
   - env: CONDA_ENV=docs
   - env: CONDA_ENV=py37
-  - env: CONDA_ENV=py36
   - env: CONDA_ENV=py35
+  - env: CONDA_ENV=py35-old
   - env: CONDA_ENV=py27
 
 before_install:
@@ -33,10 +34,10 @@ script:
   - python -c "import cfgrib"
   - if [[ "$CONDA_ENV" == "docs" ]]; then
       sphinx-build -W -b html docs build/sphinx/html;
-    elif [[ "$CONDA_ENV" == "qc" ]]; then
-      pytest -v --flakes --pep8 --mccabe $EXTRA_FLAGS;
+    elif [[ "$CONDA_ENV" == *"-qc" ]]; then
+      pytest -v --flakes --doctest-glob="*.rst" --cov=cfgrib --cov cf2cdm --cov-report term-missing --pep8 --mccabe $EXTRA_FLAGS;
     else
-      pytest -v --flakes --cov=cfgrib --cov cf2cdm --cov-report term-missing $EXTRA_FLAGS;
+      pytest -v --flakes --doctest-glob="*.rst" --cov=cfgrib --cov cf2cdm --cov-report term-missing $EXTRA_FLAGS;
     fi
 
 after_success:

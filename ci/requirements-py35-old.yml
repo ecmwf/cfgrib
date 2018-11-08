@@ -2,10 +2,10 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - cffi
-  - eccodes
+  - cffi==1.5.2
+  - eccodes==2.9.0
   - nomkl
-  - numpy
+  - numpy==1.11.0
   - pytest
   - python=3.5
   - typing

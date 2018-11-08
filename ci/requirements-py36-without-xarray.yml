@@ -2,19 +2,16 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
-  - nomkl
-  - pytest
-  - flake8
-  - xarray
-  - eccodes
   - cffi
+  - eccodes
+  - nomkl
+  - numpy
+  - pytest
+  - python=3.6
   - typing
   - pip:
+    - attrs
     - coveralls
+    - future
     - pytest-cov
     - pytest-flakes
-    - pytest-mccabe
-    - pytest-pep8
-    - future
-    - attrs
