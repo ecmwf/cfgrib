@@ -2,10 +2,9 @@
 import os.path
 
 import pytest
+xr = pytest.importorskip('xarray')  # noqa
 
 from cfgrib import xarray_store
-
-xr = pytest.importorskip('xarray')
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')

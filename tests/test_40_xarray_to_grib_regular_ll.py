@@ -2,10 +2,9 @@
 import numpy as np
 import pandas as pd
 import pytest
+xr = pytest.importorskip('xarray')  # noqa
 
 from cfgrib import xarray_to_grib
-
-xr = pytest.importorskip('xarray')
 
 
 @pytest.fixture()
