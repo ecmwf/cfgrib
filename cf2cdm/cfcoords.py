@@ -53,7 +53,7 @@ def coord_translator(
         default_out_name, default_units, default_direction, is_cf_type, cf_type, data,
         coord_model=COORD_MODEL
 ):
-    # type: (str, str, T.Callable, str, str, xr.DataArray, dict) -> xr.DataArray
+    # type: (str, str, str, T.Callable, str, xr.DataArray, dict) -> xr.DataArray
     out_name = coord_model.get(cf_type, {}).get('out_name', default_out_name)
     units = coord_model.get(cf_type, {}).get('units', default_units)
     stored_direction = coord_model.get(cf_type, {}).get('stored_direction', default_direction)
