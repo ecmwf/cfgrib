@@ -12,6 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Authors:
+#   Alessandro Amici - B-Open - https://bopen.eu
+#
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
@@ -23,7 +27,7 @@ PRESSURE_CONVERSION_RULES = {
     ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.,
     ('decibar', 'dbar'): 10000.,
     ('bar', 'bars'): 100000.,
-    ('atmosphere', 'atm'): 101325.,
+    ('atmosphere', 'atmospheres', 'atm'): 101325.,
 }  # type: T.Dict[T.Tuple, float]
 
 
