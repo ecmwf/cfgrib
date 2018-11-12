@@ -1,6 +1,9 @@
 
 import os.path
 
+import pytest
+xr = pytest.importorskip('xarray')  # noqa
+
 from cf2cdm import cfcoords
 from cf2cdm import datamodels
 from cfgrib import xarray_store
