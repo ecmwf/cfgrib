@@ -382,7 +382,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='ignore',
+        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='strict',
         encode_cf=('parameter', 'time', 'geography', 'vertical'), log=LOG,
 ):
     filter_by_keys = dict(filter_by_keys)
