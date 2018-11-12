@@ -33,6 +33,10 @@ from . import cfmessage
 from . import eccodes
 from . import messages
 
+try:
+    __version__ = pkg_resources.get_distribution('cfgib').version
+except pkg_resources.DistributionNotFound:  # noqa
+    __version__ = 'Unknown'
 LOG = logging.getLogger(__name__)
 
 #
@@ -404,7 +408,6 @@ def build_dataset_components(
             else:
                 raise
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
-    cfgrib_ver = pkg_resources.get_distribution("cfgrib").version
     eccodes_ver = eccodes.codes_get_api_version()
     encoding = {
         'source': stream.path,
@@ -413,7 +416,7 @@ def build_dataset_components(
     }
     open_text = ', '.join('%s=%r' % it for it in encoding.items())
     attributes['history'] = 'GRIB to CDM+CF via ' \
-        'cfgrib-%s/ecCodes-%s with %s' % (cfgrib_ver, eccodes_ver, open_text)
+        'cfgrib-%s/ecCodes-%s with %s' % (__version__, eccodes_ver, open_text)
     return dimensions, variables, attributes, encoding
 
 

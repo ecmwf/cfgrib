@@ -15,14 +15,15 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import pkg_resources
-
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage
-from .dataset import Dataset, DatasetBuildError, open_file
+from .dataset import __version__, Dataset, DatasetBuildError, open_file
 from .messages import Message, FileStream
 
-__all__ = ['CfMessage', 'Dataset', 'DatasetBuildError', 'FileStream', 'Message', 'open_file']
+__all__ = [
+    '__version__', 'CfMessage', 'Dataset', 'DatasetBuildError', 'FileStream', 'Message',
+    'open_file',
+]
 
 # NOTE: xarray is not a hard dependency, but let's provide helpers if it is available.
 try:
@@ -32,8 +33,3 @@ try:
     __all__ += ['canonical_dataset_to_grib', 'open_dataset', 'to_grib']
 except ImportError:
     pass
-
-try:
-    __version__ = pkg_resources.get_distribution('cfgib').version
-except pkg_resources.DistributionNotFound:  # noqa
-    __version__ = 'Unknown'
