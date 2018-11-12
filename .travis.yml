@@ -11,7 +11,7 @@ matrix:
   - env: ENV=py27
   - env: ENV=docs
   - env: ENV=py37
-  - env: ENV=py35
+#  - env: ENV=py35
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
@@ -36,6 +36,8 @@ script:
       sphinx-build -W -b html docs build/sphinx/html;
     elif [[ "$ENV" == *"-qc" ]]; then
       pytest -v --flakes --doctest-glob="*.rst" --cov=cfgrib --cov cf2cdm --cov-report term-missing --pep8 --mccabe $EXTRA_FLAGS;
+    elif [[ "$ENV" == *"-without-xarray" ]]; then
+      pytest -v --flakes --cov=cfgrib --cov-report term-missing $EXTRA_FLAGS cfgrib tests;
     else
       pytest -v --flakes --cov=cfgrib --cov cf2cdm --cov-report term-missing $EXTRA_FLAGS;
     fi
