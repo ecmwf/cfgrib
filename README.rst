@@ -94,7 +94,8 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
 Read-only *xarray* GRIB engine
 ------------------------------
 
-Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and will have *xarray* installed::
+Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and
+need to have *xarray>=0.11.0* installed::
 
     $ pip install xarray>=0.11.0
 
@@ -125,11 +126,11 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
-*cfgrib* supports all read-only features of *xarray* like:
+The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
 
- * merge the content of several GRIB files into a single dataset using ``xarray.open_mfdataset``,
- * work with larger-than-memory datasets with `*dask* <https://dask.org/>`_,
- * allow distributed processing with `*dask.distributed* <http://distributed.dask.org>`_.
+* merge the content of several GRIB files into a single dataset using ``xarray.open_mfdataset``,
+* work with larger-than-memory datasets with `*dask* <https://dask.org/>`_,
+* allow distributed processing with `*dask.distributed* <http://distributed.dask.org>`_.
 
 
 Dataset / Variable API
