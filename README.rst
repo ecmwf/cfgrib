@@ -129,8 +129,8 @@ Attributes:
 The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
 
 * merge the content of several GRIB files into a single dataset using ``xarray.open_mfdataset``,
-* work with larger-than-memory datasets with `*dask* <https://dask.org/>`_,
-* allow distributed processing with `*dask.distributed* <http://distributed.dask.org>`_.
+* work with larger-than-memory datasets with `dask <https://dask.org/>`_,
+* allow distributed processing with `dask.distributed <http://distributed.dask.org>`_.
 
 
 Dataset / Variable API
