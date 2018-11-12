@@ -19,6 +19,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import collections
 import functools
 import typing as T  # noqa
 
@@ -28,7 +29,7 @@ from . import cfunits
 
 
 COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
-COORD_TRANSLATORS = {}  # type: T.Dict[str, T.Callable]
+COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
 
 
 def match_values(match_value_func, mapping):
