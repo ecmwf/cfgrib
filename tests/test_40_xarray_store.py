@@ -30,9 +30,6 @@ def test_open_dataset():
 
     assert var.mean() > 0.
 
-    with pytest.warns(FutureWarning):
-        xarray_store.open_dataset(TEST_DATA, filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
-
     with pytest.raises(ValueError):
         xarray_store.open_dataset(TEST_IGNORE)
 
