@@ -16,21 +16,29 @@
 
 import io
 import os
+import re
 
 import setuptools
 
 
-def read(fname):
-    file_path = os.path.join(os.path.dirname(__file__), fname)
+def read(path):
+    file_path = os.path.join(os.path.dirname(__file__), *path.split('/'))
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.9.5.dev0'
+# single-sourcing the package version using method 1 of:
+#   https://packaging.python.org/guides/single-sourcing-package-version/
+def parse_version_from(path):
+    version_file = read(path)
+    version_match = re.search(r"^__version__ = '(.*)'", version_file, re.M)
+    if version_match is None or len(version_match.groups()) > 1:
+        raise ValueError("couldn't parse version")
+    return version_match.group(1)
 
 
 setuptools.setup(
     name='cfgrib',
-    version=version,
+    version=parse_version_from('cfgrib/__init__.py'),
     description='Python interface to map GRIB files to the NetCDF Common Data Model '
                 'following the CF Convention using ecCodes.',
     long_description=read('README.rst') + read('CHANGELOG.rst'),

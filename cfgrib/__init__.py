@@ -15,9 +15,11 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+__version__ = '0.9.5.dev0'
+
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage
-from .dataset import __version__, Dataset, DatasetBuildError, open_file
+from .dataset import Dataset, DatasetBuildError, open_file
 from .messages import Message, FileStream
 
 __all__ = [

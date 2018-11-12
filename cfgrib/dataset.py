@@ -22,21 +22,17 @@ from builtins import list, object, set, str
 
 import collections
 import logging
-import pkg_resources
 import typing as T
 import warnings
 
 import attr
 import numpy as np
 
+from . import __version__
 from . import cfmessage
 from . import eccodes
 from . import messages
 
-try:
-    __version__ = pkg_resources.get_distribution('cfgib').version
-except pkg_resources.DistributionNotFound:  # noqa
-    __version__ = 'Unknown'
 LOG = logging.getLogger(__name__)
 
 #
