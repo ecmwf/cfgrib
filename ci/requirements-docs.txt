@@ -11,25 +11,25 @@ certifi==2018.10.15       # via requests
 cffi==1.11.5
 chardet==3.0.4            # via requests
 docutils==0.14            # via sphinx
-future==0.16.0
+future==0.17.1
 idna==2.7                 # via requests
 imagesize==1.1.0          # via sphinx
 jinja2==2.10              # via sphinx
-markupsafe==1.0           # via jinja2
-numpy==1.15.3
+markupsafe==1.1.0         # via jinja2
+numpy==1.15.4
 packaging==18.0           # via sphinx
 pandas==0.23.4            # via xarray
 pycparser==2.19           # via cffi
 pygments==2.2.0           # via sphinx
-pyparsing==2.2.2          # via packaging
+pyparsing==2.3.0          # via packaging
 pytest-runner==4.2
 python-dateutil==2.7.5    # via pandas
-pytz==2018.6              # via babel, pandas
-requests==2.20.0          # via sphinx
+pytz==2018.7              # via babel, pandas
+requests==2.20.1          # via sphinx
 six==1.11.0               # via packaging, python-dateutil, sphinx
 snowballstemmer==1.2.1    # via sphinx
-sphinx==1.8.1
+sphinx==1.8.2
 sphinxcontrib-websupport==1.1.0  # via sphinx
 typing==3.6.6
-urllib3==1.24             # via requests
-xarray==0.10.9
+urllib3==1.24.1           # via requests
+xarray==0.11.0

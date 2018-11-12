@@ -25,27 +25,20 @@ import warnings
 
 import xarray as xr
 
-from . import cfgrib_
-from . import dataset
+from . import DatasetBuildError
 
 LOGGER = logging.getLogger(__name__)
 
 
-def open_dataset(path, backend_kwargs={}, filter_by_keys={}, **kwargs):
-    # type: (str, T.Mapping[str, T.Any], dict, T.Any) -> xr.Dataset
+def open_dataset(path, **kwargs):
+    # type: (str, T.Any) -> xr.Dataset
     """
     Return a ``xr.Dataset`` with the requested ``backend_kwargs`` from a GRIB file.
     """
-    if filter_by_keys:
-        warnings.warn("passing filter_by_keys is depreciated use backend_kwargs", FutureWarning)
-    real_backend_kwargs = {
-        'filter_by_keys': filter_by_keys,
-        'errors': 'strict',
-        'grib_errors': 'ignore',
-    }
-    real_backend_kwargs.update(backend_kwargs)
-    store = cfgrib_.CfGribDataStore(path, **real_backend_kwargs)
-    return xr.backends.api.open_dataset(store, **kwargs)
+    if 'engine' in kwargs and kwargs['engine'] != 'cfgrib':
+        raise ValueError("only engine=='cfgrib' is supported")
+    kwargs['engine'] = 'cfgrib'
+    return xr.backends.api.open_dataset(path, **kwargs)
 
 
 def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
@@ -60,7 +53,7 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
     datasets = []
     try:
         datasets.append(open_dataset(path, backend_kwargs=backend_kwargs, **kwargs))
-    except dataset.DatasetBuildError as ex:
+    except DatasetBuildError as ex:
         fbks.extend(ex.args[1])
     # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
     #   to the user a confusing error message due to exception chaining
