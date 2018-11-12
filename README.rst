@@ -21,7 +21,7 @@ Features with development status **Beta**:
 Work in progress:
 
 - **Alpha** supports writing the index of a GRIB file to disk, to save a full-file scan on open,
-  see `#20 <https://github.com/ecmwf/cfgrib/issues/20>`_.
+  see `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
 - **Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
