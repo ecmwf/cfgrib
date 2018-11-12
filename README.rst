@@ -90,6 +90,40 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
     $ wget http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib
 
 
+Read-only *xarray* GRIB driver
+------------------------------
+
+Additionally if you have *xarray* installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
+
+    $ pip install xarray>=0.10.9
+
+In a Python interpreter try:
+
+.. code-block: python
+
+>>> ds = cfgrib.open_dataset('era5-levels-members.grib')
+>>> ds
+<xarray.Dataset>
+Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Coordinates:
+  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step           timedelta64[ns] ...
+  * isobaricInhPa  (isobaricInhPa) int64 850 500
+  * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+    valid_time     (time) datetime64[ns] ...
+Data variables:
+    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            1
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
+
+
 Dataset / Variable API
 ----------------------
 
@@ -123,39 +157,6 @@ You may try out the high level API in a Python interpreter:
 >>> var.data[:, :, :, :, :].mean()
 262.92133
 
-
-Read-only *xarray* GRIB driver
-------------------------------
-
-Additionally if you have *xarray* installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
-
-    $ pip install xarray>=0.10.9
-
-In a Python interpreter try:
-
-.. code-block: python
-
->>> ds = cfgrib.open_dataset('era5-levels-members.grib')
->>> ds
-<xarray.Dataset>
-Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
-Coordinates:
-  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
-  * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
-    step           timedelta64[ns] ...
-  * isobaricInhPa  (isobaricInhPa) int64 850 500
-  * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
-  * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
-    valid_time     (time) datetime64[ns] ...
-Data variables:
-    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
-    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
-Attributes:
-    GRIB_edition:            1
-    GRIB_centre:             ecmf
-    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
-    GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 GRIB index file
 ---------------
