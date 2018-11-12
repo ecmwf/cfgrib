@@ -8,11 +8,13 @@ Changelog for cfgrib
 - Drop support for *xarray* versions prior to *v0.11* to reduce complexity.
   (This is really only v0.10.9).
   See: `#32 <https://github.com/ecmwf/cfgrib/issues/32>`_.
+- Tested larger-than-memory and distributed processing via *dask* and *dask.distributed*.
+  See: `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
+- Promote write support via ``cfgrib.to_grib`` to **Alpha**.
+  See: `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - Provide the ``cf2cdm.translate_coords`` utility function to translate the coordinates
   between CF-compliant data models, defined by `out_name`, `units` and `store_direction`.
   See: `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
-- Promote write support to **Alpha** stage.
-  See: `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - Provide `cfgrib.__version__`.
   See: `#31 <https://github.com/ecmwf/cfgrib/issues/31>`_.
 

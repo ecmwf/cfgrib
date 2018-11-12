@@ -2,7 +2,7 @@
 Python interface to map GRIB files to the
 `Unidata's Common Data Model v4 <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
 following the `CF Conventions <http://cfconventions.org/>`_.
-The high level API is designed to support a GRIB backend for `xarray <http://xarray.pydata.org/>`_
+The high level API is designed to support a GRIB engine for `xarray <http://xarray.pydata.org/>`_
 and it is inspired by `netCDF4-python <http://unidata.github.io/netcdf4-python/>`_
 and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
@@ -10,13 +10,14 @@ Low level access and decoding is performed via the
 
 Features with development status **Beta**:
 
-- read-only GRIB driver for *xarray*,
+- enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
 - works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
 - PyPI package with no install time build (binds with *CFFI* ABI mode),
-- reads the data lazily and efficiently in terms of both memory usage and disk access.
+- reads the data lazily and efficiently in terms of both memory usage and disk access,
+- allows larger-than-memory and distributed processing via *dask*.
 
 Work in progress:
 
@@ -25,6 +26,8 @@ Work in progress:
 - **Alpha** limited support to write carefully-crafted ``xarray.Dataset``'s to a GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
+- **Alpha** support translating coordinates to different data models and naming conventions,
+  `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
 
 Limitations:
 
@@ -35,8 +38,6 @@ Limitations:
 - incomplete documentation, for now,
 - no Windows support,
   see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
-- no support for opening multiple GRIB files,
-  see `#15 <https://github.com/ecmwf/cfgrib/issues/15>`_,
 - relies on *ecCodes* for the CF attributes of the data variables,
 - relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
   see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.
@@ -90,18 +91,19 @@ First, you need a well-formed GRIB file, if you don't have one at hand you can d
     $ wget http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib
 
 
-Read-only *xarray* GRIB driver
+Read-only *xarray* GRIB engine
 ------------------------------
 
-Additionally if you have *xarray* installed ``cfgrib`` can open a GRIB file as a ``xarray.Dataset``::
+Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and will have *xarray* installed::
 
-    $ pip install xarray>=0.10.9
+    $ pip install xarray>=0.11.0
 
 In a Python interpreter try:
 
 .. code-block: python
 
->>> ds = cfgrib.open_dataset('era5-levels-members.grib')
+>>> import xarray as xr
+>>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> ds
 <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
@@ -123,11 +125,18 @@ Attributes:
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
+*cfgrib* supports all read-only features of *xarray* like:
+
+ * merge the content of several GRIB files into a single dataset using ``xarray.open_mfdataset``,
+ * work with larger-than-memory datasets with `*dask* <https://dask.org/>`_,
+ * allow distributed processing with `*dask.distributed* <http://distributed.dask.org>`_.
+
 
 Dataset / Variable API
 ----------------------
 
-You may try out the high level API in a Python interpreter:
+The use of *xarray* is not mandatory and you can access the content of a GRIB file as
+an hypercube with the high level API in a Python interpreter:
 
 .. code-block: python
 
@@ -179,21 +188,21 @@ the standard *ecCodes* python module.
 Advanced usage
 ==============
 
-``cfgrib.Dataset`` and ``cfgrib.open_dataset`` can open a GRIB file only if all the messages
-with the same ``shortName`` can be represented as a single ``cfgrib.Variable`` hypercube.
+``cfgrib.open_file`` and ``xr.open_dataset`` can open a GRIB file only if all the messages
+with the same ``shortName`` can be represented as a single hypercube.
 For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
-as this would result in multiple hypercubes for variable ``t``.
+as this would result in multiple hypercubes for the same variable.
 Opening a non-conformant GRIB file will fail with a ``ValueError: multiple values for unique key...``
 error message, see `#2 <https://github.com/ecmwf/cfgrib/issues/2>`_.
 
-Furthermore if different ``cfgrib.Variable``'s depend on the same coordinate,
+Furthermore if different variables depend on the same coordinate, for example ``step``,
 the values of the coordinate must match exactly.
-For example, if variables ``t`` and ``z`` share the same step coordinate,
+For example, if variables ``t`` and ``z`` share the same ``step`` coordinate,
 they must both have exactly the same set of steps.
 Opening a non-conformant GRIB file will fail with a ``ValueError: key present and new value is different...``
 error message, see `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_.
 
-In most cases you can handle complex GRIB files containing heterogeneous messages by using
+In most cases you can handle complex GRIB files containing heterogeneous messages by passing
 the ``filter_by_keys`` key in ``backend_kwargs`` to select which GRIB messages belong to a
 well formed set of hypercubes.
 
@@ -203,7 +212,7 @@ you can use:
 
 .. code-block: python
 
->>> cfgrib.open_dataset('nam.t00z.awp21100.tm00.grib2',
+>>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'surface', 'stepType': 'instant'}})
 <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
@@ -226,7 +235,7 @@ Attributes:
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
->>> cfgrib.open_dataset('nam.t00z.awp21100.tm00.grib2',
+>>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
 <xarray.Dataset>
 Dimensions:            (x: 93, y: 65)
@@ -367,7 +376,7 @@ can be saved at the moment:
 
 .. code-block: python
 
->>> ds = cfgrib.open_dataset('era5-levels-members.grib')
+>>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> ds
 <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
@@ -388,8 +397,8 @@ Attributes:
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
->>> cfgrib.canonical_dataset_to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
->>> cfgrib.open_dataset('out1.grib')
+>>> cfgrib.to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
+>>> xr.open_dataset('out1.grib', engine='cfgrib')
 <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
 Coordinates:
@@ -426,8 +435,8 @@ for example:
 ...     dims=['latitude', 'longitude'],
 ... ).to_dataset(name='skin_temperature')
 >>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
->>> cfgrib.canonical_dataset_to_grib(ds2, 'out2.grib')
->>> cfgrib.open_dataset('out2.grib')
+>>> cfgrib.to_grib(ds2, 'out2.grib')
+>>> xr.open_dataset('out2.grib', engine='cfgrib')
 <xarray.Dataset>
 Dimensions:     (latitude: 5, longitude: 6)
 Coordinates:
