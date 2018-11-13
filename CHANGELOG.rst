@@ -13,9 +13,9 @@ Changelog for cfgrib
 - Promote write support via ``cfgrib.to_grib`` to **Alpha**.
   See: `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - Provide the ``cf2cdm.translate_coords`` utility function to translate the coordinates
-  between CF-compliant data models, defined by `out_name`, `units` and `store_direction`.
+  between CF-compliant data models, defined by ``out_name``, ``units`` and ``store_direction``.
   See: `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
-- Provide `cfgrib.__version__`.
+- Provide ``cfgrib.__version__``.
   See: `#31 <https://github.com/ecmwf/cfgrib/issues/31>`_.
 
 
