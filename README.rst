@@ -226,7 +226,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.9.5.dev0/ecCodes-2.6...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 To translate to the Common Data Model of the Climate Data Store use:
 
@@ -252,7 +252,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
-    history:                 GRIB to CDM+CF via cfgrib-0.9.5.dev0/ecCodes-2.6...
+    history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
 Filter heterogeneous GRIB files
