@@ -31,6 +31,9 @@ def test_open_dataset():
     assert var.mean() > 0.
 
     with pytest.raises(ValueError):
+        xarray_store.open_dataset(TEST_DATA, engine='netcdf4')
+
+    with pytest.raises(ValueError):
         xarray_store.open_dataset(TEST_IGNORE)
 
     res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={'errors': 'ignore'})

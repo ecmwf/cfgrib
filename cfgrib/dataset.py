@@ -265,7 +265,7 @@ def build_geography_coordinates(
                 dimensions=('y', 'x'), data=np.array(first['longitudes']).reshape(geo_shape),
                 attributes=COORD_ATTRS['longitude'],
             )
-        except KeyError:
+        except KeyError:  # pragma: no cover
             log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
     else:
         geo_dims = ('values',)
@@ -282,7 +282,7 @@ def build_geography_coordinates(
                 dimensions=('values',), data=np.array(longitude),
                 attributes=COORD_ATTRS['longitude'],
             )
-        except KeyError:
+        except KeyError:  # pragma: no cover
             log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
