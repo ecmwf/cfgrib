@@ -189,6 +189,75 @@ the standard *ecCodes* python module.
 Advanced usage
 ==============
 
+Translate to a custom data model
+--------------------------------
+
+Contrary to netCDF the GRIB data format is not self-describing and several details of the mapping
+to the *Unidata Common Data Model* are arbitrarily set by the software components decoding the format.
+Details like names and units of the coordinates are particularly important because
+*xarray* broadcast and selection rules depend on them.
+``cf2cfm`` is a small coordinate translation module distributed with *cfgrib* that make it easy to
+translate CF compliant coordinates, like the one provided by *cfgrib*, to a user-defined
+custom data model with set ``out_name``, ``units`` and ``stored_direction``.
+
+For example to translate a *cfgrib* styled `xr.Dataset` to the classic *ECMWF* coordinate
+naming conventions you can:
+
+.. code-block: python
+
+>>> import cf2cdm
+>>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
+>>> cf2cdm.translate_coords(ds, cf2cdm.ECMWF)
+<xarray.Dataset>
+Dimensions:     (latitude: 61, level: 2, longitude: 120, number: 10, time: 4)
+Coordinates:
+  * number      (number) int64 0 1 2 3 4 5 6 7 8 9
+  * time        (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step        timedelta64[ns] ...
+  * level       (level) int64 850 500
+  * latitude    (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
+  * longitude   (longitude) float64 0.0 3.0 6.0 9.0 ... 348.0 351.0 354.0 357.0
+    valid_time  (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+Data variables:
+    z           (number, time, level, latitude, longitude) float32 ...
+    t           (number, time, level, latitude, longitude) float32 ...
+Attributes:
+    GRIB_edition:            1
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.9.5.dev0/ecCodes-2.6...
+
+To translate to the Common Data Model of the Climate Data Store use:
+
+.. code-block: python
+
+>>> import cf2cdm
+>>> cf2cdm.translate_coords(ds, cf2cdm.CDS)
+<xarray.Dataset>
+Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, plev: 2, realization: 10)
+Coordinates:
+  * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
+  * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    step                     timedelta64[ns] ...
+  * plev                     (plev) float64 8.5e+04 5e+04
+  * lat                      (lat) float64 -90.0 -87.0 -84.0 ... 84.0 87.0 90.0
+  * lon                      (lon) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
+    time                     (forecast_reference_time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+Data variables:
+    z                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+    t                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+Attributes:
+    GRIB_edition:            1
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    history:                 GRIB to CDM+CF via cfgrib-0.9.5.dev0/ecCodes-2.6...
+
+
+Filter heterogeneous GRIB files
+-------------------------------
+
 ``cfgrib.open_file`` and ``xr.open_dataset`` can open a GRIB file only if all the messages
 with the same ``shortName`` can be represented as a single hypercube.
 For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
@@ -257,6 +326,10 @@ Attributes:
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
+
+
+Automatic filtering
+-------------------
 
 *cfgrib* also provides an **experimental function** that automate the selection of
 appropriate ``filter_by_keys`` and returns a list of all valid ``xarray.Dataset``'s
