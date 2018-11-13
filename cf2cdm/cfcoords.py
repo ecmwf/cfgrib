@@ -164,9 +164,9 @@ COORD_TRANSLATORS['number'] = functools.partial(
 
 
 def translate_coords(
-        data, errors='strict', coord_model=COORD_MODEL, coord_translators=COORD_TRANSLATORS
+        data, coord_model=COORD_MODEL, errors='strict', coord_translators=COORD_TRANSLATORS
 ):
-    # type: (xr.Dataset, str, T.Dict, T.Dict) -> xr.Dataset
+    # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
             data = translator(cf_name, data, coord_model=coord_model)
