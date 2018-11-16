@@ -353,7 +353,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
 
     if 'time' in coord_vars and 'time' in encode_cf:
         # add the 'valid_time' secondary coordinate
-        step_data = coord_vars['step'].data if 'data' in coord_vars else np.array(0.)
+        step_data = coord_vars['step'].data if 'step' in coord_vars else np.array(0.)
         dims, time_data = cfmessage.build_valid_time(
             coord_vars['time'].data, step_data,
         )
