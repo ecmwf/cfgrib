@@ -414,7 +414,7 @@ def codes_get_long_array(handle, key, size):
 _codes_get_double_array = check_return(lib.codes_get_double_array)
 
 
-def codes_get_double_array(handle, key, size=None):
+def codes_get_double_array(handle, key, size):
     # type: (cffi.FFI.CData, bytes, int) -> T.List[float]
     """
     Get double array values from a key.
@@ -423,8 +423,6 @@ def codes_get_double_array(handle, key, size=None):
 
     :rtype: T.List(float)
     """
-    if size is None:
-        size = codes_get_size(handle, key)
     values = ffi.new('double[]', size)
     size_p = ffi.new('size_t *', size)
     _codes_get_double_array(handle, key, values, size_p)
