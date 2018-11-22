@@ -378,7 +378,7 @@ def codes_get_length(handle, key):
 _codes_get_bytes = check_return(lib.codes_get_bytes)
 
 
-def codes_get_bytes_array(handle, key, size=None):
+def codes_get_bytes_array(handle, key, size):
     # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
     """
     Get unsigned chars array values from a key.
@@ -387,8 +387,6 @@ def codes_get_bytes_array(handle, key, size=None):
 
     :rtype: List(int)
     """
-    if size is None:
-        size = codes_get_size(handle, key)
     values = ffi.new('unsigned char[]', size)
     size_p = ffi.new('size_t *', size)
     _codes_get_bytes(handle, key, values, size_p)
@@ -398,7 +396,7 @@ def codes_get_bytes_array(handle, key, size=None):
 _codes_get_long_array = check_return(lib.codes_get_long_array)
 
 
-def codes_get_long_array(handle, key, size=None):
+def codes_get_long_array(handle, key, size):
     # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
     """
     Get long array values from a key.
@@ -407,8 +405,6 @@ def codes_get_long_array(handle, key, size=None):
 
     :rtype: List(int)
     """
-    if size is None:
-        size = codes_get_size(handle, key)
     values = ffi.new('long[]', size)
     size_p = ffi.new('size_t *', size)
     _codes_get_long_array(handle, key, values, size_p)
@@ -438,7 +434,7 @@ def codes_get_double_array(handle, key, size=None):
 _codes_get_string_array = check_return(lib.codes_get_string_array)
 
 
-def codes_get_string_array(handle, key, size=None, length=None):
+def codes_get_string_array(handle, key, size, length=None):
     # type: (cffi.FFI.CData, bytes, int, int) -> T.List[bytes]
     """
     Get string array values from a key.
@@ -447,8 +443,6 @@ def codes_get_string_array(handle, key, size=None, length=None):
 
     :rtype: T.List[bytes]
     """
-    if size is None:
-        size = codes_get_size(handle, key)
     if length is None:
         length = codes_get_length(handle, key)
     values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
@@ -513,15 +507,17 @@ def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG
     # type: (cffi.FFI.CData, bytes, int, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
+    if size is None:
+        size = codes_get_size(handle, key)
 
     if key_type == CODES_TYPE_LONG:
-        return codes_get_long_array(handle, key, size=size)
+        return codes_get_long_array(handle, key, size)
     elif key_type == CODES_TYPE_DOUBLE:
-        return codes_get_double_array(handle, key, size=size)
+        return codes_get_double_array(handle, key, size)
     elif key_type == CODES_TYPE_STRING:
-        return codes_get_string_array(handle, key, size=size, length=length)
+        return codes_get_string_array(handle, key, size, length=length)
     elif key_type == CODES_TYPE_BYTES:
-        return codes_get_bytes_array(handle, key, size=size)
+        return codes_get_bytes_array(handle, key, size)
     else:
         log.warning("Unknown GRIB key type: %r", key_type)
 
