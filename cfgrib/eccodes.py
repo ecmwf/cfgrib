@@ -469,6 +469,22 @@ def codes_get_bytes(handle, key):
     return values[-1]
 
 
+def codes_get_long(handle, key):
+    # type: (cffi.FFI.CData, bytes) -> int
+    value = ffi.new('long *')
+    _codes_get_long = check_return(lib.codes_get_long)
+    _codes_get_long(handle, key, value)
+    return value[0]
+
+
+def codes_get_double(handle, key):
+    # type: (cffi.FFI.CData, bytes) -> int
+    value = ffi.new('double *')
+    _codes_get_long = check_return(lib.codes_get_double)
+    _codes_get_long(handle, key, value)
+    return value[0]
+
+
 def codes_get_string(handle, key, length=None):
     # type: (cffi.FFI.CData, bytes, int) -> bytes
     """
@@ -486,8 +502,8 @@ def codes_get_string(handle, key, length=None):
         length = codes_get_length(handle, key)
     values = ffi.new('char[]', length)
     length_p = ffi.new('size_t *', length)
-    codes_get_string = check_return(lib.codes_get_string)
-    codes_get_string(handle, key, values, length_p)
+    _codes_get_string = check_return(lib.codes_get_string)
+    _codes_get_string(handle, key, values, length_p)
     return ffi.string(values, length_p[0])
 
 
@@ -526,11 +542,9 @@ def codes_get(handle, key, key_type=None, length=None, log=LOG):
         key_type = codes_get_native_type(handle, key)
 
     if key_type == CODES_TYPE_LONG:
-        values = codes_get_long_array(handle, key, size=1)  # type: T.Sequence[T.Any]
-        return values[0]
+        return codes_get_long(handle, key)
     elif key_type == CODES_TYPE_DOUBLE:
-        values = codes_get_double_array(handle, key, size=1)
-        return values[0]
+        return codes_get_double(handle, key)
     elif key_type == CODES_TYPE_STRING:
         return codes_get_string(handle, key, length=length)
     elif key_type == CODES_TYPE_BYTES:

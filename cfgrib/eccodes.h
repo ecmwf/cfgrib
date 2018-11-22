@@ -255,6 +255,28 @@ int codes_get_size(codes_handle* h, const char* key,size_t *size);
 int codes_get_length(codes_handle* h, const char* key,size_t *length);
 
 /**
+*  Get a long value from a key, if several keys of the same name are present, the last one is returned
+*  @see  codes_set_long
+*
+* @param h           : the handle to get the data from
+* @param key         : the key to be searched
+* @param value       : the address of a long where the data will be retrieved
+* @return            0 if OK, integer value on error
+*/
+int codes_get_long(codes_handle* h, const char* key, long*   value  );
+
+/**
+*  Get a double value from a key, if several keys of the same name are present, the last one is returned
+*  @see  codes_set_double
+*
+* @param h           : the handle to get the data from
+* @param key         : the key to be searched
+* @param value       : the address of a double where the data will be retrieved
+* @return            0 if OK, integer value on error
+*/
+int codes_get_double(codes_handle* h, const char* key, double* value                             );
+
+/**
 *  Get a string value from a key, if several keys of the same name are present, the last one is returned
 * @see  codes_set_string
 *

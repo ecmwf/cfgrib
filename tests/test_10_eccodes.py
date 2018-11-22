@@ -88,15 +88,17 @@ def test_codes_handle_new_from_file_errors(tmpdir):
         eccodes.codes_handle_new_from_file(open(str(bad_grib)))
 
 
-@pytest.mark.parametrize('key, expected_value', [
-    (b'numberOfDataPoints', 7320),
-    (b'gridType', b'regular_ll'),
+@pytest.mark.parametrize('key, expected_type, expected_value', [
+    (b'numberOfDataPoints', int, 7320),
+    (b'latitudeOfFirstGridPointInDegrees', float, 90.0),
+    (b'gridType', bytes, b'regular_ll'),
 ])
-def test_codes_get(key, expected_value):
+def test_codes_get(key, expected_type, expected_value):
     grib = eccodes.codes_handle_new_from_file(open(TEST_DATA))
 
     result = eccodes.codes_get(grib, key)
 
+    assert isinstance(result, expected_type)
     assert result == expected_value
 
 
@@ -140,6 +142,7 @@ def test_codes_index_get(key, ktype, expected_value):
 
 @pytest.mark.parametrize('key, expected_value', [
     (b'numberOfDataPoints', [7320]),
+    (b'latitudeOfFirstGridPointInDegrees', [90.0]),
     (b'gridType', [b'regular_ll']),
 ])
 def test_codes_get_array(key, expected_value):
