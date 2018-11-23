@@ -29,8 +29,6 @@ def test_Message_read():
 
     assert res1.message_get('non-existent-key', default=1) == 1
 
-    list()
-
     res2 = messages.Message.from_message(res1)
     assert res2.items() == res1.items()
 
