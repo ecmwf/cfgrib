@@ -20,7 +20,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        192,
+        193,
     ],
 }
 
