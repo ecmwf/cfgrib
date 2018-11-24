@@ -23,7 +23,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        192,
+        193,
     ],
     'seasonal-original-pressure-levels-ukmo': [
         'seasonal-original-pressure-levels',
@@ -42,7 +42,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        192,
+        193,
     ],
     'seasonal-postprocessed-single-levels-ukmo': [
         'seasonal-postprocessed-single-levels',
@@ -56,7 +56,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        210,
+        212,
     ],
     'seasonal-monthly-single-levels-monthly_mean-ukmo': [
         'seasonal-monthly-single-levels',
@@ -70,7 +70,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        210,
+        212,
     ],
     'seasonal-monthly-single-levels-ensemble_mean-ukmo': [
         'seasonal-monthly-single-levels',
@@ -84,7 +84,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        210,
+        212,
     ],
     'seasonal-monthly-single-levels-hindcast_climate_mean-ukmo': [
         'seasonal-monthly-single-levels',
@@ -98,7 +98,7 @@ TEST_FILES = {
             'grid': ['3', '3'],
             'format': 'grib',
         },
-        210,
+        212,
     ],
 }
 
