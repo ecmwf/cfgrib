@@ -52,11 +52,11 @@ class Message(collections.MutableMapping):
     errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
 
     @classmethod
-    def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], int, T.Any) -> Message
+    def from_file(cls, file, offset=None, product_kind=eccodes.CODES_PRODUCT_GRIB, **kwargs):
+        # type: (T.IO[bytes], int, int, T.Any) -> Message
         if offset is not None:
             file.seek(offset)
-        codes_id = eccodes.codes_handle_new_from_file(file)
+        codes_id = eccodes.codes_handle_new_from_file(file, product_kind=product_kind)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
