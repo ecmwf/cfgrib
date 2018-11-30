@@ -207,10 +207,14 @@ class FileStream(collections.Iterable):
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, 'rb') as file:
+            valid_grib_message_found = False
             while True:
                 try:
                     yield self.message_from_file(file, errors=self.errors)
+                    valid_grib_message_found = True
                 except EOFError:
+                    if not valid_grib_message_found:
+                        raise EOFError("No valid GRIB message found in file: %r" % self.path)
                     break
                 except Exception:
                     if self.errors == 'ignore':
