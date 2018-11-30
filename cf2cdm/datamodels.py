@@ -51,8 +51,8 @@ CDS = {
         'out_name': 'time',
         'stored_direction': 'increasing',
     },
-    'leadtime': {
-        'out_name': 'forecast_period',
+    'step': {
+        'out_name': 'leadtime',
         'stored_direction': 'increasing',
     },
 }

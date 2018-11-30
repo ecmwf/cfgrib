@@ -239,7 +239,7 @@ Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, ple
 Coordinates:
   * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
   * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
-    step                     timedelta64[ns] ...
+    leadtime                 timedelta64[ns] ...
   * plev                     (plev) float64 8.5e+04 5e+04
   * lat                      (lat) float64 -90.0 -87.0 -84.0 ... 84.0 87.0 90.0
   * lon                      (lon) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
