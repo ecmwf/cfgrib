@@ -17,6 +17,8 @@ Changelog for cfgrib
   See: `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
 - Provide ``cfgrib.__version__``.
   See: `#31 <https://github.com/ecmwf/cfgrib/issues/31>`_.
+- Raise with a better error message when users attempt to open a file that is not a GRIB.
+  See: `#34 <https://github.com/ecmwf/cfgrib/issues/34>`_.
 
 
 0.9.4.1 (2018-11-08)
