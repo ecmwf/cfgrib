@@ -57,6 +57,15 @@ GRID_TYPE_MAP = {
         'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
     ],
+    'rotated_ll': [
+        'Ni', 'Nj', 'angleOfRotationInDegrees',
+        'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'latitudeOfSouthernPoleInDegrees',
+        'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+        'longitudeOfSouthernPoleInDegrees',
+    ],
     'reduced_ll': [
         'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
@@ -65,6 +74,15 @@ GRID_TYPE_MAP = {
         'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
         'N', 'Nj',
+    ],
+    'rotated_gg': [
+        'Ni', 'Nj', 'angleOfRotationInDegrees',
+        'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'jPointsAreConsecutive', 'jScansPositively',
+        'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
+        'latitudeOfSouthernPoleInDegrees',
+        'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
+        'longitudeOfSouthernPoleInDegrees', 'N',
     ],
     'lambert': [
         'LaDInDegrees', 'LoVInDegrees', 'iScansNegatively',
@@ -226,9 +244,11 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_DIMENSION_COORDS = ('regular_ll', 'regular_gg')
-GRID_TYPES_2D_NON_DIMENSION_COORDS = ('lambert', 'albers', 'polar_stereographic')
-GRID_TYPES_1D_NON_DIMENSION_COORDS = ('reduced_ll', 'reduced_gg')
+GRID_TYPES_DIMENSION_COORDS = ['regular_ll', 'regular_gg']
+GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+    'rotated_ll', 'rotated_gg', 'lambert', 'albers', 'polar_stereographic',
+]
+GRID_TYPES_1D_NON_DIMENSION_COORDS = ['reduced_ll', 'reduced_gg']
 
 
 def build_geography_coordinates(

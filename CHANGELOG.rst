@@ -19,6 +19,8 @@ Changelog for cfgrib
   See: `#31 <https://github.com/ecmwf/cfgrib/issues/31>`_.
 - Raise with a better error message when users attempt to open a file that is not a GRIB.
   See: `#34 <https://github.com/ecmwf/cfgrib/issues/34>`_.
+- Make 2D grids for ``rotated_ll`` and ``rotated_gg`` ``gridType``'s.
+  See: `#35 <https://github.com/ecmwf/cfgrib/issues/35>`_.
 
 
 0.9.4.1 (2018-11-08)
