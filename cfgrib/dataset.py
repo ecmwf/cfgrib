@@ -52,13 +52,13 @@ DATA_ATTRIBUTES_KEYS = [
 
 GRID_TYPE_MAP = {
     'regular_ll': [
-        'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'Nx', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
-        'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'Ny', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
     ],
     'rotated_ll': [
-        'Ni', 'Nj', 'angleOfRotationInDegrees',
+        'Nx', 'Ny', 'angleOfRotationInDegrees',
         'iDirectionIncrementInDegrees', 'iScansNegatively',
         'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
@@ -67,16 +67,16 @@ GRID_TYPE_MAP = {
         'longitudeOfSouthernPoleInDegrees',
     ],
     'reduced_ll': [
-        'Nj', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
+        'Ny', 'jDirectionIncrementInDegrees', 'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
     ],
     'regular_gg': [
-        'Ni', 'iDirectionIncrementInDegrees', 'iScansNegatively',
+        'Nx', 'iDirectionIncrementInDegrees', 'iScansNegatively',
         'longitudeOfFirstGridPointInDegrees', 'longitudeOfLastGridPointInDegrees',
-        'N', 'Nj',
+        'N', 'Ny',
     ],
     'rotated_gg': [
-        'Ni', 'Nj', 'angleOfRotationInDegrees',
+        'Nx', 'Ny', 'angleOfRotationInDegrees',
         'iDirectionIncrementInDegrees', 'iScansNegatively',
         'jPointsAreConsecutive', 'jScansPositively',
         'latitudeOfFirstGridPointInDegrees', 'latitudeOfLastGridPointInDegrees',
@@ -248,7 +248,6 @@ GRID_TYPES_DIMENSION_COORDS = ['regular_ll', 'regular_gg']
 GRID_TYPES_2D_NON_DIMENSION_COORDS = [
     'rotated_ll', 'rotated_gg', 'lambert', 'albers', 'polar_stereographic',
 ]
-GRID_TYPES_1D_NON_DIMENSION_COORDS = ['reduced_ll', 'reduced_gg']
 
 
 def build_geography_coordinates(
@@ -262,7 +261,7 @@ def build_geography_coordinates(
     grid_type = index.getone('gridType')
     if 'geography' in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
-        geo_shape = (index.getone('Nj'), index.getone('Ni'))  # type: T.Tuple[int, ...]
+        geo_shape = (index.getone('Ny'), index.getone('Nx'))  # type: T.Tuple[int, ...]
         latitudes = np.array(first['distinctLatitudes'])
         geo_coord_vars['latitude'] = Variable(
             dimensions=('latitude',), data=latitudes, attributes=COORD_ATTRS['latitude'].copy(),
