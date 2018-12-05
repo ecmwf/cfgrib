@@ -430,6 +430,7 @@ def build_dataset_components(
         'encode_cf': encode_cf,
     }
     open_text = ', '.join('%s=%r' % it for it in encoding.items())
+    attributes['Conventions'] = 'CF-1.7'
     attributes['history'] = 'GRIB to CDM+CF via ' \
         'cfgrib-%s/ecCodes-%s with %s' % (__version__, eccodes_ver, open_text)
     return dimensions, variables, attributes, encoding
