@@ -134,6 +134,10 @@ COORD_ATTRS = {
         'units': '1', 'positive': 'down', 'long_name': 'hybrid level',
         'standard_name': 'atmosphere_hybrid_sigma_pressure_coordinate',
     },
+    'heightAboveGround': {
+        'units': 'm', 'positive': 'up', 'long_name': 'height above the surface',
+        'standard_name': 'height',
+    },
     'number': {
         'units': '1',
         'standard_name': 'realization', 'long_name': 'ensemble member numerical id',
