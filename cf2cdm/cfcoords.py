@@ -75,6 +75,7 @@ def coord_translator(
     coord = data.coords[out_name]
     if 'units' in coord.attrs:
         data.coords[out_name] = cfunits.convert_units(coord, units, coord.attrs['units'])
+        data.coords[out_name].attrs.update(coord.attrs)
         data.coords[out_name].attrs['units'] = units
     data = translate_direction(data, out_name, stored_direction)
     return data
@@ -172,7 +173,7 @@ def translate_coords(
             data = translator(cf_name, data, coord_model=coord_model)
         except:
             if errors != 'ignore':
-                raise
+                raise RuntimeError("error while translating coordinate: %r" % cf_name)
     return data
 
 
