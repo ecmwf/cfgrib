@@ -133,7 +133,7 @@ def test_translate_coords(da1, da2, da3):
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason="test needs stable dict's")
 def test_translate_coords_errors(da3):
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         cfcoords.translate_coords(da3)
 
 
