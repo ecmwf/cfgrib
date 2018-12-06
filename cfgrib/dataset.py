@@ -444,6 +444,7 @@ def build_dataset_components(
     attributes['Conventions'] = 'CF-1.7'
     attributes['history'] = 'GRIB to CDM+CF via ' \
         'cfgrib-%s/ecCodes-%s with %s' % (__version__, eccodes_ver, open_text)
+    attributes['institution'] = attributes['GRIB_centreDescription']
     return dimensions, variables, attributes, encoding
 
 
