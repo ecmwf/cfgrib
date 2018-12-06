@@ -312,6 +312,9 @@ def build_geography_coordinates(
 
 def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     coords_map = ENSEMBLE_KEYS[:]
+    param_id = data_var_attrs.get('GRIB_paramId', 'undef')
+    data_var_attrs['long_name'] = 'original GRIB paramId: %s' % param_id
+    data_var_attrs['units'] = '1'
     if 'parameter' in encode_cf:
         if 'GRIB_cfName' in data_var_attrs:
             data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
