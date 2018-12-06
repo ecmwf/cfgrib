@@ -345,7 +345,11 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
                 'GRIB_typeOfLevel' in data_var_attrs:
             coord_name = data_var_attrs['GRIB_typeOfLevel']
             coord_name_key_map[coord_name] = coord_key
-        attributes = COORD_ATTRS.get(coord_name, {}).copy()
+        attributes = {
+            'long_name': 'original GRIB coordinate for key: %s(%s)' % (coord_key, coord_name),
+            'units': '1',
+        }
+        attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
         data = np.array(sorted(values, reverse=attributes.get('stored_direction') == 'decreasing'))
         dimensions = (coord_name,)
         if len(values) == 1:
