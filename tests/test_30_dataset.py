@@ -89,6 +89,7 @@ def test_Dataset():
     res = dataset.open_file(TEST_DATA)
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
+    assert 'Conventions' in res.attributes
     assert tuple(res.dimensions.keys()) == \
         ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
     assert len(res.variables) == 9
