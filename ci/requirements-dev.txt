@@ -1,11 +1,11 @@
 check-manifest
 detox
-flake8
-ipython
+IPython
 matplotlib
 notebook
 pip-tools
-# pytest-mypy
+pyroma
+pytest-mypy
 setuptools
 tox
 tox-pyenv

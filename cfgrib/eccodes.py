@@ -593,9 +593,12 @@ def codes_get_api_version():
 
 def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
     # type: (bytes, int) -> cffi.FFI.CData
-    if product_kind != CODES_PRODUCT_GRIB:
-        raise NotImplementedError("Support implemented only for GRIB.")
-    handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+    if product_kind == CODES_PRODUCT_GRIB:
+        handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+    elif product_kind == CODES_PRODUCT_BUFR:
+        handle = lib.codes_bufr_handle_new_from_samples(ffi.NULL, samplename)
+    else:
+        raise NotImplementedError("product kind not supported: %r" % product_kind)
     if handle == ffi.NULL:
         raise ValueError("sample not found: %r" % samplename)
     return handle

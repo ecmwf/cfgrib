@@ -56,12 +56,12 @@ class Message(collections.MutableMapping):
         # type: (T.IO[bytes], int, int, T.Any) -> Message
         if offset is not None:
             file.seek(offset)
-        codes_id = eccodes.codes_handle_new_from_file(file, product_kind=product_kind)
+        codes_id = eccodes.codes_handle_new_from_file(file, product_kind)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
-    def from_sample_name(cls, sample_name, **kwargs):
-        codes_id = eccodes.codes_new_from_samples(sample_name.encode('ASCII'))
+    def from_sample_name(cls, sample_name, product_kind=eccodes.CODES_PRODUCT_GRIB, **kwargs):
+        codes_id = eccodes.codes_new_from_samples(sample_name.encode('ASCII'), product_kind)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod

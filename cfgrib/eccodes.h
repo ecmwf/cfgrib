@@ -193,6 +193,17 @@ int codes_write_message(codes_handle* h,const char* file,const char* mode);
 codes_handle* codes_grib_handle_new_from_samples (codes_context* c, const char* sample_name);
 
 /**
+ *  Create a handle from a BUFR message contained in a samples directory.
+ *  The message is copied at the creation of the handle
+ *
+ * @param c           : the context from which the handle will be created (NULL for default context)
+ * @param sample_name : the name of the sample file (without the .tmpl extension)
+ * @return            the new handle, NULL if the resource is invalid or a problem is encountered
+ */
+codes_handle* codes_bufr_handle_new_from_samples (codes_context* c, const char* sample_name);
+
+
+/**
 *  Clone an existing handle using the context of the original handle,
 *  The message is copied and reparsed
 *
