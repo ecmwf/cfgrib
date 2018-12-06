@@ -8,6 +8,8 @@ Changelog for cfgrib
 - Drop support for *xarray* versions prior to *v0.11* to reduce complexity.
   (This is really only v0.10.9).
   See: `#32 <https://github.com/ecmwf/cfgrib/issues/32>`_.
+- Declare the data as ``CF-1.7`` compliant via the  ``Conventions`` global attribute.
+  See: `#36 <https://github.com/ecmwf/cfgrib/issues/36>`_.
 - Tested larger-than-memory and distributed processing via *dask* and *dask.distributed*.
   See: `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
 - Promote write support via ``cfgrib.to_grib`` to **Alpha**.

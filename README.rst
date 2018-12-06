@@ -124,6 +124,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
@@ -226,6 +227,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 To translate to the Common Data Model of the Climate Data Store use:
@@ -252,6 +254,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
@@ -304,6 +307,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
@@ -325,6 +329,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
@@ -362,6 +367,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -380,6 +386,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -399,6 +406,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -418,6 +426,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2..., <xarray.Dataset>
 Dimensions:       (x: 93, y: 65)
 Coordinates:
@@ -436,6 +445,7 @@ Attributes:
     GRIB_centre:             kwbc
     GRIB_centreDescription:  US National Weather Service - NCEP...
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...]
 
 
@@ -470,6 +480,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 >>> cfgrib.to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
 >>> xr.open_dataset('out1.grib', engine='cfgrib')
@@ -491,6 +502,7 @@ Attributes:
     GRIB_centre:             ecmf
     GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 Per-variable GRIB keys can be set by setting the ``attrs`` variable with key prefixed by ``GRIB_``,
@@ -527,6 +539,7 @@ Attributes:
     GRIB_centre:             consensus
     GRIB_centreDescription:  Consensus
     GRIB_subCentre:          0
+    Conventions:             CF-1.7
     history:                 GRIB to CDM+CF via cfgrib-0.9.../ecCodes-2...
 
 
