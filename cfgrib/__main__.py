@@ -17,6 +17,8 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
+import os.path
+
 import click
 
 from . import eccodes
@@ -31,6 +33,19 @@ def cfgrib_cli():
 def selfcheck():
     print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
     print("Your system is ready.")
+
+
+@cfgrib_cli.command('to_netcdf')
+@click.argument('inpath')
+@click.option('--outpath', '-o', default=None)
+def to_netcdf(inpath, outpath):
+    import xarray as xr
+
+    if not outpath:
+        outpath = os.path.splitext(inpath)[0] + '.nc'
+
+    ds = xr.open_dataset(inpath, engine='cfgrib')
+    ds.to_netcdf(outpath)
 
 
 if __name__ == '__main__':  # pragma: no cover
