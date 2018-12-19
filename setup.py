@@ -85,4 +85,9 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Operating System :: OS Independent',
     ],
+    entry_points={
+        'console_scripts': [
+            'cfgrib=cfgrib.__main__:cfgrib_cli',
+        ],
+    },
 )
