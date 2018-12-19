@@ -17,21 +17,21 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import argparse
+import click
 
 from . import eccodes
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('command')
-    args = parser.parse_args(args=argv)
-    if args.command == 'selfcheck':
-        print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
-        print("Your system is ready.")
-    else:
-        raise RuntimeError("Command not recognised %r. See usage with --help." % args.command)
+@click.group()
+def cfgrib_cli():
+    pass
+
+
+@cfgrib_cli.command('selfcheck')
+def selfcheck():
+    print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
+    print("Your system is ready.")
 
 
 if __name__ == '__main__':  # pragma: no cover
-    main()
+    cfgrib_cli()

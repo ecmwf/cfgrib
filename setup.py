@@ -54,6 +54,7 @@ setuptools.setup(
     install_requires=[
         'attrs',
         'cffi',
+        'click',
         'future',
         'numpy',
         'typing',
