@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5 (unreleased)
+0.9.5 (2018-12-20)
 ------------------
 
 - Drop support for *xarray* versions prior to *v0.11* to reduce complexity.
