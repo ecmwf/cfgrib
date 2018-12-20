@@ -21,6 +21,7 @@ import os.path
 
 import click
 
+import cf2cdm
 from . import eccodes
 
 
@@ -38,13 +39,17 @@ def selfcheck():
 @cfgrib_cli.command('to_netcdf')
 @click.argument('inpath')
 @click.option('--outpath', '-o', default=None)
-def to_netcdf(inpath, outpath):
+@click.option('--cdm', '-c', default=None)
+def to_netcdf(inpath, outpath, cdm):
     import xarray as xr
 
     if not outpath:
         outpath = os.path.splitext(inpath)[0] + '.nc'
 
     ds = xr.open_dataset(inpath, engine='cfgrib')
+    if cdm:
+        coord_model = getattr(cf2cdm, cdm)
+        ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
     ds.to_netcdf(outpath)
 
 
