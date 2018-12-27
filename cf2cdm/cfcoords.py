@@ -77,7 +77,8 @@ def coord_translator(
         data.coords[out_name] = cfunits.convert_units(coord, units, coord.attrs['units'])
         data.coords[out_name].attrs.update(coord.attrs)
         data.coords[out_name].attrs['units'] = units
-    data = translate_direction(data, out_name, stored_direction)
+    if out_name in data.dims:
+        data = translate_direction(data, out_name, stored_direction)
     return data
 
 
