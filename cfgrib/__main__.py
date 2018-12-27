@@ -43,8 +43,8 @@ def selfcheck():
 @click.option('--cdm', '-c', default=None)
 @click.option('--engine', '-e', default='cfgrib')
 def to_netcdf(inpaths, outpath, cdm, engine):
-    import xarray as xr
     import cf2cdm
+    import xarray as xr
 
     # NOTE: noop if no input argument
     if len(inpaths) == 0:

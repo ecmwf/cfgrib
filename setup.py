@@ -63,9 +63,11 @@ setuptools.setup(
         'xarray': ['xarray>=0.11.0'],
     },
     tests_require=[
+        'dask[array]',
         'pytest',
         'pytest-cov',
         'pytest-flakes',
+        'scipy',
         'xarray>=0.11.0',
     ],
     test_suite='tests',

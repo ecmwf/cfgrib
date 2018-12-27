@@ -10,6 +10,7 @@ attrs==18.2.0
 cffi==1.11.5
 click==7.0
 coverage==4.5.2           # via pytest-cov
+dask[array]==1.0.0
 execnet==1.5.0            # via pytest-cache
 future==0.17.1
 mccabe==0.6.1             # via pytest-mccabe
@@ -30,6 +31,8 @@ pytest-runner==4.2
 pytest==4.0.2
 python-dateutil==2.7.5    # via pandas
 pytz==2018.7              # via pandas
+scipy==1.2.0
 six==1.12.0               # via more-itertools, pytest, python-dateutil
+toolz==0.9.0              # via dask
 typing==3.6.6
 xarray==0.11.0

@@ -4,11 +4,13 @@ channels:
 dependencies:
   - cffi
   - click
+  - dask[array]
   - eccodes=2.9.0
   - nomkl
   - numpy
   - pytest
   - python=3.6
+  - scipy
   - typing
   - xarray=0.11.0
   - pip:
