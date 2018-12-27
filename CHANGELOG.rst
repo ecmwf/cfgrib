@@ -2,7 +2,14 @@
 Changelog for cfgrib
 ====================
 
-0.9.5 (unreleased)
+0.9.5.1 (unreleased)
+--------------------
+
+- Fix the crash when using ``cf2cdm.translate_coords`` on datasets with non-dimension coordinates.
+  See: `#41 <https://github.com/ecmwf/cfgrib/issues/41>`_.
+
+
+0.9.5 (2018-12-20)
 ------------------
 
 - Drop support for *xarray* versions prior to *v0.11* to reduce complexity.

@@ -8,7 +8,7 @@ apipkg==1.5               # via execnet
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0
 cffi==1.11.5
-coverage==4.5.1           # via pytest-cov
+coverage==4.5.2           # via pytest-cov
 execnet==1.5.0            # via pytest-cache
 future==0.17.1
 mccabe==0.6.1             # via pytest-mccabe
@@ -26,9 +26,9 @@ pytest-flakes==4.0.0
 pytest-mccabe==0.1
 pytest-pep8==1.0.6
 pytest-runner==4.2
-pytest==3.10.1
+pytest==4.0.2
 python-dateutil==2.7.5    # via pandas
 pytz==2018.7              # via pandas
-six==1.11.0               # via more-itertools, pytest, python-dateutil
+six==1.12.0               # via more-itertools, pytest, python-dateutil
 typing==3.6.6
 xarray==0.11.0

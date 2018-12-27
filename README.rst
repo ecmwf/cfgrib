@@ -67,7 +67,7 @@ On a MacOS with HomeBrew use::
 
 Or if you manage binary packages with *Conda* use::
 
-    $ conda install eccodes
+    $ conda install -c conda-forge eccodes
 
 As an alternative you may install the official source distribution
 by following the instructions at
