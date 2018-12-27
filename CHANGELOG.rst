@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.1 (unreleased)
+0.9.5.1 (2018-12-27)
 --------------------
 
 - Fix the crash when using ``cf2cdm.translate_coords`` on datasets with non-dimension coordinates.
