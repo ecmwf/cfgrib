@@ -39,7 +39,7 @@ def test_ecmwf():
     res = cfcoords.translate_coords(ds, coord_model=datamodels.ECMWF)
 
     assert set(res.dims) == {'latitude', 'level', 'longitude', 'number', 'time'}
-    assert set(res.coords) ==  {
+    assert set(res.coords) == {
         'latitude', 'level', 'longitude', 'number', 'step', 'time', 'valid_time',
     }
 
