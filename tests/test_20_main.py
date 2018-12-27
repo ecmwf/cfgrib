@@ -1,6 +1,5 @@
 
 import click.testing
-import pytest
 
 from cfgrib import __main__
 
