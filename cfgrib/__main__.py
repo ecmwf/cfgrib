@@ -21,8 +21,7 @@ import os.path
 
 import click
 
-import cf2cdm
-from . import eccodes
+# NOTE: imports are executed inside functions so missing dependencies don't break all commands
 
 
 @click.group()
@@ -32,21 +31,29 @@ def cfgrib_cli():
 
 @cfgrib_cli.command('selfcheck')
 def selfcheck():
+    from . import eccodes
+
     print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
     print("Your system is ready.")
 
 
 @cfgrib_cli.command('to_netcdf')
-@click.argument('inpath')
+@click.argument('inpaths', nargs=-1)
 @click.option('--outpath', '-o', default=None)
 @click.option('--cdm', '-c', default=None)
-def to_netcdf(inpath, outpath, cdm):
+@click.option('--engine', '-e', default='cfgrib')
+def to_netcdf(inpaths, outpath, cdm, engine):
     import xarray as xr
+    import cf2cdm
+
+    # NOTE: noop if no input argument
+    if len(inpaths) == 0:
+        return
 
     if not outpath:
-        outpath = os.path.splitext(inpath)[0] + '.nc'
+        outpath = os.path.splitext(inpaths[0])[0] + '.nc'
 
-    ds = xr.open_dataset(inpath, engine='cfgrib')
+    ds = xr.open_mfdataset(inpaths, engine=engine)
     if cdm:
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
