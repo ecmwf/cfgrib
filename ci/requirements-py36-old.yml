@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - cffi
+  - click
   - eccodes=2.9.0
   - nomkl
   - numpy
