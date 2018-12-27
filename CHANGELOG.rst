@@ -7,6 +7,8 @@ Changelog for cfgrib
 
 - Fix the crash when using ``cf2cdm.translate_coords`` on datasets with non-dimension coordinates.
   See: `#41 <https://github.com/ecmwf/cfgrib/issues/41>`_.
+- Added a ``cfgrib`` script that can translate GRIB to netCDF.
+  See: `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
 
 
 0.9.5 (2018-12-20)
