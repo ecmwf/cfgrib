@@ -21,6 +21,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import list, object, set, str
 
 import collections
+import datetime
+import json
 import logging
 import typing as T
 import warnings
@@ -409,7 +411,7 @@ def dict_merge(master, update):
 
 def build_dataset_components(
         stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='strict',
-        encode_cf=('parameter', 'time', 'geography', 'vertical'), log=LOG,
+        encode_cf=('parameter', 'time', 'geography', 'vertical'), timestamp=None, log=LOG,
 ):
     filter_by_keys = dict(filter_by_keys)
     index = stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
@@ -434,17 +436,22 @@ def build_dataset_components(
             else:
                 raise
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
-    eccodes_ver = eccodes.codes_get_api_version()
     encoding = {
         'source': stream.path,
         'filter_by_keys': filter_by_keys,
         'encode_cf': encode_cf,
     }
-    open_text = ', '.join('%s=%r' % it for it in encoding.items())
     attributes['Conventions'] = 'CF-1.7'
     attributes['institution'] = attributes['GRIB_centreDescription']
-    attributes['history'] = 'GRIB to CDM+CF via ' \
-        'cfgrib-%s/ecCodes-%s with %s' % (__version__, eccodes_ver, open_text)
+    attributes_namespace = {
+        'cfgrib_version': __version__,
+        'cfgrib_open_kwargs': json.dumps(encoding),
+        'eccodes_version': eccodes.codes_get_api_version(),
+        'timestamp': timestamp or datetime.datetime.now().isoformat(timespec='seconds')
+    }
+    history_in = '{timestamp} GRIB to CDM+CF via ' \
+                 'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
+    attributes['history'] = history_in.format(**attributes_namespace)
     return dimensions, variables, attributes, encoding
 
 
