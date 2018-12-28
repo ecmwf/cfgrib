@@ -447,7 +447,7 @@ def build_dataset_components(
         'cfgrib_version': __version__,
         'cfgrib_open_kwargs': json.dumps(encoding),
         'eccodes_version': eccodes.codes_get_api_version(),
-        'timestamp': timestamp or datetime.datetime.now().isoformat(timespec='seconds')
+        'timestamp': timestamp or datetime.datetime.now().isoformat().partition('.')[0]
     }
     history_in = '{timestamp} GRIB to CDM+CF via ' \
                  'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
