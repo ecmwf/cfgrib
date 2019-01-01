@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -133,7 +133,8 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
     if grib_keys['gridType'] in GRID_TYPES:
         geography = grib_keys['gridType']
     else:
-        raise NotImplementedError("Unsupported 'gridType': %r" % grib_keys['gridType'])
+        LOGGER.info("unknown 'gridType': %r. Using GRIB2 template", grib_keys['gridType'])
+        return 'GRIB2'
 
     if grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_PL:
         vertical = 'pl'
@@ -142,7 +143,8 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
     elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_ML:
         vertical = 'ml'
     else:
-        raise NotImplementedError("Unsupported 'typeOfLevel': %r" % grib_keys['typeOfLevel'])
+        LOGGER.info("unknown 'typeOfLevel': %r. Using GRIB2 template", grib_keys['typeOfLevel'])
+        return 'GRIB2'
 
     sample_name = sample_name_template.format(**locals())
     return sample_name
