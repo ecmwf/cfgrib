@@ -5,7 +5,8 @@ Changelog for cfgrib
 0.9.5.2 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fall back to using the generic ``GRIB2`` *ecCodes* template when no better option is found.
+  See: `#39 <https://github.com/ecmwf/cfgrib/issues/39>`_.
 
 
 0.9.5.1 (2018-12-27)
