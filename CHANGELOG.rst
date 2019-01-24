@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.2 (unreleased)
+0.9.5.2 (2019-01-24)
 --------------------
 
 - Set valid_time as preferred time dimension for the CDS data model.
