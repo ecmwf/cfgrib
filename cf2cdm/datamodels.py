@@ -55,6 +55,9 @@ CDS = {
         'out_name': 'leadtime',
         'stored_direction': 'increasing',
     },
+    'config': {
+        'preferred_time_dimension': 'valid_time',
+    },
 }
 
 
