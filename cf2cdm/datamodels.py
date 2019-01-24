@@ -36,23 +36,10 @@ CDS = {
         'units': 'm',
         'stored_direction': 'increasing',
     },
-    'depthBelowLandLayer': {
-        'out_name': 'depth',
-        'units': 'm',
-    },
     'isobaricInhPa': {
         'out_name': 'plev',
         'units': 'Pa',
         'stored_direction': 'decreasing',
-    },
-    'isobaricInPa': {
-        'out_name': 'plev',
-        'units': 'Pa',
-        'stored_direction': 'decreasing',
-    },
-    'isobaricLayer': {
-        'out_name': 'plev',
-        'units': 'Pa',
     },
     # ensemble
     'number': {
@@ -76,6 +63,11 @@ CDS = {
 
 
 ECMWF = {
+    'depthBelowLand': {
+        'out_name': 'level',
+        'units': 'm',
+        'stored_direction': 'increasing',
+    },
     'isobaricInhPa': {
         'out_name': 'level',
         'units': 'hPa',

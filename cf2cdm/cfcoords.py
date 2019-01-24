@@ -145,6 +145,16 @@ COORD_TRANSLATORS['valid_time'] = functools.partial(
 )
 
 
+def is_depth(coord):
+    # type: (xr.Coordinate) -> bool
+    return coord.attrs.get('standard_name') == 'depth'
+
+
+COORD_TRANSLATORS['depthBelowLand'] = functools.partial(
+    coord_translator, 'depthBelowLand', 'm', 'decreasing', is_depth,
+)
+
+
 def is_isobaric(coord):
     # type: (xr.Coordinate) -> bool
     return cfunits.are_convertible(coord.attrs.get('units', ''), 'Pa')
