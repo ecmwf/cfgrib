@@ -242,18 +242,18 @@ To translate to the Common Data Model of the Climate Data Store use:
 >>> import cf2cdm
 >>> cf2cdm.translate_coords(ds, cf2cdm.CDS)
 <xarray.Dataset>
-Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, plev: 2, realization: 10)
+Dimensions:                  (lat: 61, lon: 120, plev: 2, realization: 10, time: 4)
 Coordinates:
   * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
-  * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+    forecast_reference_time  (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     leadtime                 timedelta64[ns] ...
   * plev                     (plev) float64 8.5e+04 5e+04
   * lat                      (lat) float64 -90.0 -87.0 -84.0 ... 84.0 87.0 90.0
   * lon                      (lon) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
-    time                     (forecast_reference_time) datetime64[ns] ...
+  * time                     (time) datetime64[ns] ...
 Data variables:
-    z                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
-    t                        (realization, forecast_reference_time, plev, lat, lon) float32 ...
+    z                        (realization, time, plev, lat, lon) float32 ...
+    t                        (realization, time, plev, lat, lon) float32 ...
 Attributes:
     GRIB_edition:            1
     GRIB_centre:             ecmf
