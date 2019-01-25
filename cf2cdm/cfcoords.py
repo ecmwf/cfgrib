@@ -218,5 +218,5 @@ def ensure_valid_time(data):
         if step and time and step in data.dims and time in data.dims and \
                 data.coords[step].size * data.coords[time].size == data.coords[valid_time].size:
             data = data.stack(tmp_coord=(time, step))
-            data = data.swap_dims({'tmp_coord': valid_time}).drop('tmp_coord')
+            data = data.swap_dims({'tmp_coord': valid_time}).drop('tmp_coord').dropna(valid_time)
     return data
