@@ -5,13 +5,13 @@ Changelog for cfgrib
 0.9.5.3 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Also convert is valid_time can index all times and steps in ``translate_coords``.
 
 
 0.9.5.2 (2019-01-24)
 --------------------
 
-- Set valid_time as preferred time dimension for the CDS data model.
+- Set ``valid_time`` as preferred time dimension for the CDS data model.
 - Fall back to using the generic ``GRIB2`` *ecCodes* template when no better option is found.
   See: `#39 <https://github.com/ecmwf/cfgrib/issues/39>`_.
 
