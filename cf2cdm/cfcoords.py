@@ -214,4 +214,9 @@ def ensure_valid_time(data):
             return data.swap_dims({time: valid_time})
         if step and step in data.dims and data.coords[step].size == data.coords[valid_time].size:
             return data.swap_dims({step: valid_time})
+        # also convert is valid_time can index all times and steps
+        if step and time and step in data.dims and time in data.dims and \
+                data.coords[step].size * data.coords[time].size == data.coords[valid_time].size:
+            data = data.stack(tmp_coord=(time, step))
+            data = data.swap_dims({'tmp_coord': valid_time}).drop('tmp_coord')
     return data
