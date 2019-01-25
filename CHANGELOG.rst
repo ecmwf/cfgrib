@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.3 (unreleased)
+0.9.5.3 (2019-01-25)
 --------------------
 
 - Also convert is valid_time can index all times and steps in ``translate_coords``.
