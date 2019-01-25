@@ -152,8 +152,6 @@ def test_ensure_valid_time(da1, da3):
 
     res1 = cfcoords.ensure_valid_time(da3.squeeze())
     assert 'valid_time' in res1.coords
-    coords1 = res1.coords
-    assert coords1['valid_time'].shape == (coords1['ref_time'].size, coords1['step'].size)
 
     with pytest.raises(ValueError):
         cfcoords.ensure_valid_time(da3.mean(dim='ref_time').squeeze())
