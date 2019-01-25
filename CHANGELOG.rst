@@ -5,13 +5,13 @@ Changelog for cfgrib
 0.9.5.4 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Add support for building ``valid_time`` from a bad ``time-step`` hypercube.
 
 
 0.9.5.3 (2019-01-25)
 --------------------
 
-- Also convert is valid_time can index all times and steps in ``translate_coords``.
+- Also convert is ``valid_time`` can index all times and steps in ``translate_coords``.
 
 
 0.9.5.2 (2019-01-24)
