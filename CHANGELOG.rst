@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.4 (unreleased)
+0.9.5.4 (2019-01-25)
 --------------------
 
 - Add support for building ``valid_time`` from a bad ``time-step`` hypercube.
