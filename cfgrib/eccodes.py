@@ -77,6 +77,10 @@ CODES_PRODUCT_GTS = 4
 CODES_PRODUCT_TAF = 5
 """ TAF product kind """
 
+# Constants for 'missing'
+GRIB_MISSING_DOUBLE = -1e+100
+GRIB_MISSING_LONG = 2147483647
+
 
 #
 # Helper values to discriminate key types
