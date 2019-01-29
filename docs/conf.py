@@ -33,7 +33,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'cfgrib'
-copyright = u"2017-2018, European Centre for Medium-Range Weather Forecasts (ECMWF)."
+copyright = u"2017-2019, European Centre for Medium-Range Weather Forecasts (ECMWF)."
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
