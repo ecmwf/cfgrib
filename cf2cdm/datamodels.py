@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 
 CDS = {
+    # geography
     'latitude': {
         'out_name': 'lat',
         'stored_direction': 'increasing',
@@ -29,20 +30,23 @@ CDS = {
         'out_name': 'lon',
         'stored_direction': 'increasing',
     },
+    # vertical
+    'depthBelowLand': {
+        'out_name': 'depth',
+        'units': 'm',
+        'stored_direction': 'increasing',
+    },
     'isobaricInhPa': {
         'out_name': 'plev',
         'units': 'Pa',
         'stored_direction': 'decreasing',
     },
-    'isobaricInPa': {
-        'out_name': 'plev',
-        'units': 'Pa',
-        'stored_direction': 'decreasing',
-    },
+    # ensemble
     'number': {
         'out_name': 'realization',
         'stored_direction': 'increasing',
     },
+    # time
     'time': {
         'out_name': 'forecast_reference_time',
         'stored_direction': 'increasing',
@@ -62,6 +66,11 @@ CDS = {
 
 
 ECMWF = {
+    'depthBelowLand': {
+        'out_name': 'level',
+        'units': 'm',
+        'stored_direction': 'increasing',
+    },
     'isobaricInhPa': {
         'out_name': 'level',
         'units': 'hPa',

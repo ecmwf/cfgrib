@@ -108,18 +108,7 @@ ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
 COORD_ATTRS = {
-    'time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
-    },
-    'step': {
-        'units': 'hours',
-        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
-    },
-    'valid_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'time', 'long_name': 'time',
-    },
+    # geography
     'latitude': {
         'units': 'degrees_north',
         'standard_name': 'latitude', 'long_name': 'latitude',
@@ -128,9 +117,14 @@ COORD_ATTRS = {
         'units': 'degrees_east',
         'standard_name': 'longitude', 'long_name': 'longitude',
     },
-    'isobaricInhPa': {
-        'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
-        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    # vertical
+    'depthBelowLand': {
+        'units': 'm', 'positive': 'down', 'long_name': 'soil depth',
+        'standard_name': 'depth',
+    },
+    'depthBelowLandLayer': {
+        'units': 'm', 'positive': 'down', 'long_name': 'soil depth',
+        'standard_name': 'depth',
     },
     'hybrid': {
         'units': '1', 'positive': 'down', 'long_name': 'hybrid level',
@@ -140,10 +134,36 @@ COORD_ATTRS = {
         'units': 'm', 'positive': 'up', 'long_name': 'height above the surface',
         'standard_name': 'height',
     },
+    'isobaricInhPa': {
+        'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    'isobaricInPa': {
+        'units': 'Pa', 'positive': 'down', 'stored_direction': 'decreasing',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    'isobaricLayer': {
+        'units': 'Pa', 'positive': 'down',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    # ensemble
     'number': {
         'units': '1',
         'standard_name': 'realization', 'long_name': 'ensemble member numerical id',
-    }
+    },
+    # time
+    'step': {
+        'units': 'hours',
+        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
+    },
+    'time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
+    },
+    'valid_time': {
+        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'time', 'long_name': 'time',
+    },
 }
 
 
