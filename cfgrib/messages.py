@@ -286,6 +286,11 @@ class FileIndex(collections.Mapping):
             cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG,
     ):
         # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
+
+        # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
+        if not indexpath:
+            return cls.from_filestream(filestream, index_keys)
+
         hash = hashlib.md5(repr(index_keys).encode('utf-8')).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:

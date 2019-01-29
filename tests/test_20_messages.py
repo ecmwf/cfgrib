@@ -168,11 +168,19 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
     )
     assert isinstance(res, messages.FileIndex)
 
-    # can't create nor read index file
+    # do not read nor create the index file
     res = messages.FileIndex.from_indexpath_or_filestream(
         messages.FileStream(str(grib_file)),
         ['paramId'],
         indexpath='',
+    )
+    assert isinstance(res, messages.FileIndex)
+
+    # can't create nor read index file
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+        indexpath=str(tmpdir.join('non-existent-folder').join('non-existent-file')),
     )
     assert isinstance(res, messages.FileIndex)
 
