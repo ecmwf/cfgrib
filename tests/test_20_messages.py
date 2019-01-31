@@ -5,7 +5,7 @@ import os.path
 
 import pytest
 
-from cfgrib import eccodes
+from cfgrib import bindings
 from cfgrib import messages
 
 
@@ -105,9 +105,9 @@ def test_make_message_schema():
 
     res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
 
-    assert res['paramId'] == (eccodes.CODES_TYPE_LONG, 1)
-    assert res['shortName'] == (eccodes.CODES_TYPE_STRING, 1, 256)
-    assert res['values'] == (eccodes.CODES_TYPE_DOUBLE, 7320)
+    assert res['paramId'] == (bindings.CODES_TYPE_LONG, 1)
+    assert res['shortName'] == (bindings.CODES_TYPE_STRING, 1, 256)
+    assert res['values'] == (bindings.CODES_TYPE_DOUBLE, 7320)
     assert res['non-existent'] == ()
 
 
