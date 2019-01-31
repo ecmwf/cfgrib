@@ -128,6 +128,6 @@ Then you can run::
     $ pytest -vv tests/cds_test_*.py
 
 
-.. cfgrib: https://github.com/ecmwk/cfgrib
+.. cfgrib: https://github.com/ecmwf/cfgrib
 .. virtualenv: https://virtualenv.pypa.io/en/stable/installation
 .. git: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
