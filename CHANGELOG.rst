@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.5 (unreleased)
+0.9.5.5 (2019-02-02)
 --------------------
 
 - Enable ecCodes implicit MULTI-FIELD support by default, needed for NAM Products by NCEP.
