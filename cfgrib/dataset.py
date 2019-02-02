@@ -157,11 +157,11 @@ COORD_ATTRS = {
         'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
     },
     'time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'units': 'seconds since 1970-01-01T00:00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
     },
     'valid_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
+        'units': 'seconds since 1970-01-01T00:00:00', 'calendar': 'proleptic_gregorian',
         'standard_name': 'time', 'long_name': 'time',
     },
 }
