@@ -159,9 +159,11 @@ def codes_index_new_from_file(path, keys):
     return check_last(lib.codes_index_new_from_file)(ffi.NULL, path, keys_enc)
 
 
-def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB):
+def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB, context=None):
+    if context is None:
+        context = ffi.NULL
     try:
-        retval = check_last(lib.codes_handle_new_from_file)(ffi.NULL, fileobj, product_kind)
+        retval = check_last(lib.codes_handle_new_from_file)(context, fileobj, product_kind)
         if retval == ffi.NULL:
             raise EOFError("End of file: %r" % fileobj)
         else:
@@ -668,6 +670,18 @@ def codes_set_array(handle, key, values):
             raise TypeError("Unsupported value type: %r" % type(values[0]))
     else:
         raise ValueError("Cannot set an empty list.")
+
+
+def codes_grib_multi_support_on(context=None):
+    if context is None:
+        context = ffi.NULL
+    lib.codes_grib_multi_support_on(context)
+
+
+def codes_grib_multi_support_off(context=None):
+    if context is None:
+        context = ffi.NULL
+    lib.codes_grib_multi_support_off(context)
 
 
 def codes_write(handle, outfile):

@@ -43,6 +43,11 @@ from . import bindings
 LOG = logging.getLogger(__name__)
 _MARKER = object()
 
+#
+# No explicit support for MULTI-FIELD at Message level, let ecCodes simulate normal messages.
+#
+bindings.codes_grib_multi_support_on()
+
 
 @attr.attrs()
 class Message(collections.MutableMapping):

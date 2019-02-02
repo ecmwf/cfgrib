@@ -418,6 +418,27 @@ int codes_set_double_array(codes_handle* h, const char* key, const double* vals,
 int codes_set_long_array(codes_handle* h, const char* key, const long* vals, size_t length);
 
 /**
+*  Frees the cached definition files of the context
+*
+* @param c           : the context to be deleted
+*/
+void codes_context_delete(codes_context* c);
+
+/**
+*  Turn on support for multiple fields in single GRIB messages
+*
+* @param c            : the context to be modified
+*/
+void codes_grib_multi_support_on(codes_context* c);
+
+/**
+*  Turn off support for multiple fields in single GRIB messages
+*
+* @param c            : the context to be modified
+*/
+void codes_grib_multi_support_off(codes_context* c);
+
+/**
 *  Get the API version
 *
 *  @return        API version
