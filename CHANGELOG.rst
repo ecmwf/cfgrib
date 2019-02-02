@@ -5,7 +5,7 @@ Changelog for cfgrib
 0.9.6 (unreleased)
 ------------------
 
-- Do not set explicit timezone in `units` to avoid crashing some versions of xarray.
+- Do not set explicit timezone in ``units`` to avoid crashing some versions of xarray.
   See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
 
 
