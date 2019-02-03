@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import attr
 import numpy as np
 
 from . import __version__
+from . import bindings
 from . import cfmessage
-from . import eccodes
 from . import messages
 
 LOG = logging.getLogger(__name__)
@@ -109,18 +109,7 @@ ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS
 ALL_KEYS = GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS
 
 COORD_ATTRS = {
-    'time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
-    },
-    'step': {
-        'units': 'hours',
-        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
-    },
-    'valid_time': {
-        'units': 'seconds since 1970-01-01T00:00:00+00:00', 'calendar': 'proleptic_gregorian',
-        'standard_name': 'time', 'long_name': 'time',
-    },
+    # geography
     'latitude': {
         'units': 'degrees_north',
         'standard_name': 'latitude', 'long_name': 'latitude',
@@ -129,9 +118,14 @@ COORD_ATTRS = {
         'units': 'degrees_east',
         'standard_name': 'longitude', 'long_name': 'longitude',
     },
-    'isobaricInhPa': {
-        'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
-        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    # vertical
+    'depthBelowLand': {
+        'units': 'm', 'positive': 'down', 'long_name': 'soil depth',
+        'standard_name': 'depth',
+    },
+    'depthBelowLandLayer': {
+        'units': 'm', 'positive': 'down', 'long_name': 'soil depth',
+        'standard_name': 'depth',
     },
     'hybrid': {
         'units': '1', 'positive': 'down', 'long_name': 'hybrid level',
@@ -141,10 +135,36 @@ COORD_ATTRS = {
         'units': 'm', 'positive': 'up', 'long_name': 'height above the surface',
         'standard_name': 'height',
     },
+    'isobaricInhPa': {
+        'units': 'hPa', 'positive': 'down', 'stored_direction': 'decreasing',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    'isobaricInPa': {
+        'units': 'Pa', 'positive': 'down', 'stored_direction': 'decreasing',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    'isobaricLayer': {
+        'units': 'Pa', 'positive': 'down',
+        'standard_name': 'air_pressure', 'long_name': 'pressure',
+    },
+    # ensemble
     'number': {
         'units': '1',
         'standard_name': 'realization', 'long_name': 'ensemble member numerical id',
-    }
+    },
+    # time
+    'step': {
+        'units': 'hours',
+        'standard_name': 'forecast_period', 'long_name': 'time since forecast_reference_time',
+    },
+    'time': {
+        'units': 'seconds since 1970-01-01T00:00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time', 'long_name': 'initial time of forecast',
+    },
+    'valid_time': {
+        'units': 'seconds since 1970-01-01T00:00:00', 'calendar': 'proleptic_gregorian',
+        'standard_name': 'time', 'long_name': 'time',
+    },
 }
 
 
@@ -218,7 +238,7 @@ class OnDiskArray(object):
             for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+                values = message.message_get('values', bindings.CODES_TYPE_DOUBLE)
                 array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -240,7 +260,7 @@ class OnDiskArray(object):
                     continue
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', eccodes.CODES_TYPE_DOUBLE)
+                values = message.message_get('values', bindings.CODES_TYPE_DOUBLE)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = array_field[(Ellipsis,) + item[-self.geo_ndim:]]
@@ -448,7 +468,7 @@ def build_dataset_components(
     attributes_namespace = {
         'cfgrib_version': __version__,
         'cfgrib_open_kwargs': json.dumps(encoding),
-        'eccodes_version': eccodes.codes_get_api_version(),
+        'eccodes_version': bindings.codes_get_api_version(),
         'timestamp': timestamp or datetime.datetime.now().isoformat().partition('.')[0]
     }
     history_in = '{timestamp} GRIB to CDM+CF via ' \

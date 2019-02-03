@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ def cfgrib_cli():
 
 @cfgrib_cli.command('selfcheck')
 def selfcheck():
-    from . import eccodes
+    from . import bindings
 
-    print("Found: ecCodes v%s." % eccodes.codes_get_api_version())
+    print("Found: ecCodes v%s." % bindings.codes_get_api_version())
     print("Your system is ready.")
 
 

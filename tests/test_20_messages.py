@@ -5,7 +5,7 @@ import os.path
 
 import pytest
 
-from cfgrib import eccodes
+from cfgrib import bindings
 from cfgrib import messages
 
 
@@ -105,9 +105,9 @@ def test_make_message_schema():
 
     res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
 
-    assert res['paramId'] == (eccodes.CODES_TYPE_LONG, 1)
-    assert res['shortName'] == (eccodes.CODES_TYPE_STRING, 1, 256)
-    assert res['values'] == (eccodes.CODES_TYPE_DOUBLE, 7320)
+    assert res['paramId'] == (bindings.CODES_TYPE_LONG, 1)
+    assert res['shortName'] == (bindings.CODES_TYPE_STRING, 1, 256)
+    assert res['values'] == (bindings.CODES_TYPE_DOUBLE, 7320)
     assert res['non-existent'] == ()
 
 
@@ -168,11 +168,19 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
     )
     assert isinstance(res, messages.FileIndex)
 
-    # can't create nor read index file
+    # do not read nor create the index file
     res = messages.FileIndex.from_indexpath_or_filestream(
         messages.FileStream(str(grib_file)),
         ['paramId'],
         indexpath='',
+    )
+    assert isinstance(res, messages.FileIndex)
+
+    # can't create nor read index file
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ['paramId'],
+        indexpath=str(tmpdir.join('non-existent-folder').join('non-existent-file')),
     )
     assert isinstance(res, messages.FileIndex)
 

@@ -6,7 +6,7 @@ import os.path
 import pytest
 xr = pytest.importorskip('xarray')  # noqa
 
-from cfgrib import eccodes
+from cfgrib import bindings
 from cfgrib import xarray_store
 
 
@@ -47,7 +47,7 @@ def test_open_dataset_corrupted():
     assert res.attrs['GRIB_edition'] == 1
     assert len(res.data_vars) == 1
 
-    with pytest.raises(eccodes.EcCodesError):
+    with pytest.raises(bindings.EcCodesError):
         xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={'grib_errors': 'strict'})
 
 

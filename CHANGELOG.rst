@@ -2,10 +2,19 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.5 (unreleased)
+0.9.6 (unreleased)
+------------------
+
+- Do not set explicit timezone in ``units`` to avoid crashing some versions of xarray.
+  See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
+
+
+0.9.5.5 (2019-02-02)
 --------------------
 
-- Nothing changed yet.
+- Enable ecCodes implicit MULTI-FIELD support by default, needed for NAM Products by NCEP.
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_.
+- Added support for ``depthBelowLand`` coordinate.
 
 
 0.9.5.4 (2019-01-25)

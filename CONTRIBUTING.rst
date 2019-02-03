@@ -8,6 +8,8 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
+Please note, that we have hooked a CLA assiatant to this GitHub Repo. Please accept the contributors license agreement to allow us to keep a legal track of contributions and keep this package open source for the future.  
+
 You can contribute in many ways:
 
 Types of Contributions
@@ -126,6 +128,6 @@ Then you can run::
     $ pytest -vv tests/cds_test_*.py
 
 
-.. cfgrib: https://github.com/ecmwk/cfgrib
+.. cfgrib: https://github.com/ecmwf/cfgrib
 .. virtualenv: https://virtualenv.pypa.io/en/stable/installation
 .. git: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git

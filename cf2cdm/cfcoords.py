@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -142,6 +142,16 @@ def is_valid_time(coord):
 
 COORD_TRANSLATORS['valid_time'] = functools.partial(
     coord_translator, 'valid_time', TIME_CF_UNITS, 'increasing', is_valid_time,
+)
+
+
+def is_depth(coord):
+    # type: (xr.Coordinate) -> bool
+    return coord.attrs.get('standard_name') == 'depth'
+
+
+COORD_TRANSLATORS['depthBelowLand'] = functools.partial(
+    coord_translator, 'depthBelowLand', 'm', 'decreasing', is_depth,
 )
 
 
