@@ -185,8 +185,12 @@ def translate_coords(
         try:
             data = translator(cf_name, data, coord_model=coord_model)
         except:
-            if errors != 'ignore':
+            if errors == 'ignore':
+                pass
+            elif errors == 'raise':
                 raise RuntimeError("error while translating coordinate: %r" % cf_name)
+            else:
+                LOG.warning("error while translating coordinate: %r", cf_name)
     config = coord_model.get('config', {})
     if config.get('preferred_time_dimension', 'time') == 'valid_time':
         try:
