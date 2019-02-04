@@ -54,7 +54,10 @@ class Message(collections.MutableMapping):
     """Dictionary-line interface to access Message headers."""
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
-    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
+    errors = attr.attrib(
+        default='warn',
+        validator=attr.validators.in_(['ignore', 'warn', 'raise']),
+    )
 
     @classmethod
     def from_file(cls, file, offset=None, product_kind=bindings.CODES_PRODUCT_GRIB, **kwargs):
@@ -128,11 +131,16 @@ class Message(collections.MutableMapping):
         try:
             return self.message_set(item, value)
         except bindings.EcCodesError as ex:
-            if self.errors == 'ignore' and ex.code == bindings.lib.GRIB_READ_ONLY:
-                # Very noisy error when trying to set computed keys
+            if self.errors == 'ignore':
                 pass
-            else:
+            elif self.errors == 'raise':
                 raise KeyError("failed to set key %r to %r" % (item, value))
+            else:
+                if ex.code == bindings.lib.GRIB_READ_ONLY:
+                    # Very noisy error when trying to set computed keys
+                    pass
+                else:
+                    LOG.warning("failed to set key %r to %r", item, value)
 
     def __delitem__(self, item):
         raise NotImplementedError
@@ -207,7 +215,10 @@ class FileStream(collections.Iterable):
     """Iterator-like access to a filestream of Messages."""
     path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
-    errors = attr.attrib(default='ignore', validator=attr.validators.in_(['ignore', 'strict']))
+    errors = attr.attrib(
+        default='warn',
+        validator=attr.validators.in_(['ignore', 'warn', 'raise']),
+    )
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
@@ -223,9 +234,11 @@ class FileStream(collections.Iterable):
                     break
                 except Exception:
                     if self.errors == 'ignore':
-                        LOG.exception("skipping corrupted Message")
-                    else:
+                        pass
+                    elif self.errors == 'raise':
                         raise
+                    else:
+                        LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
         return self.message_class.from_file(file=file, offset=offset, **kwargs)

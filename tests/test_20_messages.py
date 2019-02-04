@@ -39,7 +39,7 @@ def test_Message_read():
 
 
 def test_Message_write(tmpdir):
-    res = messages.Message.from_sample_name('regular_ll_pl_grib2', errors='strict')
+    res = messages.Message.from_sample_name('regular_ll_pl_grib2')
     assert res['gridType'] == 'regular_ll'
 
     res.message_set('Ni', 20)
@@ -54,6 +54,19 @@ def test_Message_write(tmpdir):
     res['pl'] = [2., 3.]
     assert res['pl'] == [2., 3.]
 
+    # warn on errors
+    res['centreDescription'] = 'DUMMY'
+    assert res['centreDescription'] != 'DUMMY'
+    res['edition'] = -1
+    assert res['edition'] != -1
+
+    # ignore errors
+    res.errors = 'ignore'
+    res['centreDescription'] = 'DUMMY'
+    assert res['centreDescription'] != 'DUMMY'
+
+    # raise errors
+    res.errors = 'raise'
     with pytest.raises(KeyError):
         res['centreDescription'] = 'DUMMY'
 
@@ -219,4 +232,12 @@ def test_FileStream():
     # __file__ is not a GRIB, but contains the "GRIB" string, so it is a very tricky corner case
     res = messages.FileStream(str(__file__))
     with pytest.raises(EOFError):
+        res.first()
+
+    res = messages.FileStream(str(__file__), errors='ignore')
+    with pytest.raises(EOFError):
+        res.first()
+
+    res = messages.FileStream(str(__file__), errors='raise')
+    with pytest.raises(bindings.EcCodesError):
         res.first()
