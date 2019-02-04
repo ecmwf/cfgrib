@@ -486,7 +486,7 @@ class Dataset(object):
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
 
-def open_file(path, grib_errors='ignore', **kwargs):
+def open_file(path, grib_errors='warn', **kwargs):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     if 'mode' in kwargs:
         warnings.warn("the `mode` keyword argument is ignored and deprecated", FutureWarning)

@@ -48,7 +48,7 @@ def test_open_dataset_corrupted():
     assert len(res.data_vars) == 1
 
     with pytest.raises(bindings.EcCodesError):
-        xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={'grib_errors': 'strict'})
+        xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={'grib_errors': 'raise'})
 
 
 def test_open_dataset_encode_cf_time():
