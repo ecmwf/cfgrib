@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import functools
+import logging
 import typing as T  # noqa
 
 import xarray as xr  # noqa
@@ -30,6 +31,7 @@ from . import cfunits
 
 COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
 COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
+LOG = logging.getLogger(__name__)
 
 
 def match_values(match_value_func, mapping):
@@ -176,7 +178,7 @@ COORD_TRANSLATORS['number'] = functools.partial(
 
 
 def translate_coords(
-        data, coord_model=COORD_MODEL, errors='strict', coord_translators=COORD_TRANSLATORS
+        data, coord_model=COORD_MODEL, errors='warn', coord_translators=COORD_TRANSLATORS
 ):
     # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
@@ -190,8 +192,12 @@ def translate_coords(
         try:
             data = ensure_valid_time(data)
         except Exception:
-            if errors != 'ignore':
+            if errors == 'ignore':
+                pass
+            elif errors == 'raise':
                 raise RuntimeError("error while ensuring valid_time coordinate")
+            else:
+                LOG.exception("error while ensuring valid_time coordinate")
     return data
 
 
