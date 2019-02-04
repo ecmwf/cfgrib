@@ -2,8 +2,8 @@
 Changelog for cfgrib
 ====================
 
-0.9.6 (unreleased)
-------------------
+0.9.5.6 (2019-02-04)
+--------------------
 
 - Do not set explicit timezone in ``units`` to avoid crashing some versions of xarray.
   See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
