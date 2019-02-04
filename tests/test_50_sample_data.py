@@ -42,7 +42,7 @@ def test_open_dataset_fail(grib_name):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + '.grib')
 
     with pytest.raises(ValueError):
-        xarray_store.open_dataset(grib_path, cache=False)
+        xarray_store.open_dataset(grib_path, cache=False, backend_kwargs={'errors': 'raise'})
 
 
 @pytest.mark.parametrize('grib_name', [

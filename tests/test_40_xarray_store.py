@@ -33,12 +33,14 @@ def test_open_dataset():
     with pytest.raises(ValueError):
         xarray_store.open_dataset(TEST_DATA, engine='netcdf4')
 
-    with pytest.raises(ValueError):
-        xarray_store.open_dataset(TEST_IGNORE)
+    res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={'errors': 'warn'})
+    assert 'isobaricInhPa' in res.dims
 
     res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={'errors': 'ignore'})
-
     assert 'isobaricInhPa' in res.dims
+
+    with pytest.raises(ValueError):
+        xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={'errors': 'raise'})
 
 
 def test_open_dataset_corrupted():

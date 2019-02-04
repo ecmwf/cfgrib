@@ -279,6 +279,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = [
 def build_geography_coordinates(
         index,  # type: messages.FileIndex
         encode_cf,  # type: T.Sequence[str]
+        errors,  # type: str
         log=LOG,  # type: logging.Logger
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
@@ -311,7 +312,8 @@ def build_geography_coordinates(
                 attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:  # pragma: no cover
-            log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
+            if errors != 'ignore':
+                log.warning('ecCodes provides no latitudes/longitudes for gridType=%r', grid_type)
     else:
         geo_dims = ('values',)
         geo_shape = (index.getone('numberOfPoints'),)
@@ -328,7 +330,8 @@ def build_geography_coordinates(
                 attributes=COORD_ATTRS['longitude'],
             )
         except KeyError:  # pragma: no cover
-            log.warning('No latitudes/longitudes provided by ecCodes for gridType=%r', grid_type)
+            if errors != 'ignore':
+                log.warning('ecCodes provides no latitudes/longitudes for gridType=%r', grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
 
@@ -352,7 +355,7 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     return coords_map
 
 
-def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
+def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn'):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
@@ -385,7 +388,7 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG):
     header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -430,7 +433,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='strict',
+        stream, indexpath='{path}.{short_hash}.idx', filter_by_keys={}, errors='warn',
         encode_cf=('parameter', 'time', 'geography', 'vertical'), timestamp=None, log=LOG,
 ):
     filter_by_keys = dict(filter_by_keys)
@@ -441,7 +444,7 @@ def build_dataset_components(
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
         dims, data_var, coord_vars = build_variable_components(
-            var_index, encode_cf, filter_by_keys,
+            var_index, encode_cf, filter_by_keys, errors=errors,
         )
         if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
             short_name = var_name
@@ -452,9 +455,11 @@ def build_dataset_components(
             dict_merge(variables, vars)
         except ValueError:
             if errors == 'ignore':
-                log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
-            else:
+                pass
+            elif errors == 'raise':
                 raise
+            else:
+                log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     encoding = {
         'source': stream.path,
