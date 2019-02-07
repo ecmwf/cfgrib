@@ -488,8 +488,8 @@ def codes_get_long(handle, key):
 def codes_get_double(handle, key):
     # type: (cffi.FFI.CData, bytes) -> int
     value = ffi.new('double *')
-    _codes_get_long = check_return(lib.codes_get_double)
-    _codes_get_long(handle, key, value)
+    _codes_get_double = check_return(lib.codes_get_double)
+    _codes_get_double(handle, key, value)
     return value[0]
 
 
@@ -698,3 +698,8 @@ def codes_write(handle, outfile):
     codes_get_message(handle, mess, mess_len)
     message = ffi.buffer(mess[0], size=mess_len[0])
     outfile.write(message)
+
+
+def codes_set_missing(handle, key):
+    # type: (cffi.FFI.CData, bytes) -> None
+    check_return(lib.codes_set_missing)(handle, key)
