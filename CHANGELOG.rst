@@ -2,9 +2,37 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.2 (unreleased)
+0.9.6 (unreleased)
+------------------
+
+- Do not set explicit timezone in ``units`` to avoid crashing some versions of xarray.
+  See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
+
+
+0.9.5.5 (2019-02-02)
 --------------------
 
+- Enable ecCodes implicit MULTI-FIELD support by default, needed for NAM Products by NCEP.
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_.
+- Added support for ``depthBelowLand`` coordinate.
+
+
+0.9.5.4 (2019-01-25)
+--------------------
+
+- Add support for building ``valid_time`` from a bad ``time-step`` hypercube.
+
+
+0.9.5.3 (2019-01-25)
+--------------------
+
+- Also convert is ``valid_time`` can index all times and steps in ``translate_coords``.
+
+
+0.9.5.2 (2019-01-24)
+--------------------
+
+- Set ``valid_time`` as preferred time dimension for the CDS data model.
 - Fall back to using the generic ``GRIB2`` *ecCodes* template when no better option is found.
   See: `#39 <https://github.com/ecmwf/cfgrib/issues/39>`_.
 

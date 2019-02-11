@@ -13,7 +13,7 @@ dependencies:
   - scipy
   - typing
   - toolz
-  - xarray>=0.11.0
+  - xarray
   - pip:
     - attrs
     - coveralls

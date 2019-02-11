@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,12 @@ PRESSURE_CONVERSION_RULES = {
     ('atmosphere', 'atmospheres', 'atm'): 101325.,
 }  # type: T.Dict[T.Tuple, float]
 
+LENGTH_CONVERSION_RULES = {
+    ('m', 'meter', 'meters'): 1.,
+    ('cm', 'centimeter', 'centimeters'): 0.01,
+    ('km', 'kilometer', 'kilometers'): 1000.,
+}
+
 
 class ConversionError(Exception):
     pass
@@ -55,7 +61,7 @@ def convert_units(data, target_units, source_units):
     # type: (T.Any, str, str) -> T.Any
     if target_units == source_units:
         return data
-    for rules in [PRESSURE_CONVERSION_RULES]:
+    for rules in [PRESSURE_CONVERSION_RULES, LENGTH_CONVERSION_RULES]:
         try:
             return data * simple_conversion_factor(target_units, source_units, rules)
         except ConversionError:

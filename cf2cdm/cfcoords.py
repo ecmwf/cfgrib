@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import functools
+import logging
 import typing as T  # noqa
 
 import xarray as xr  # noqa
@@ -30,6 +31,7 @@ from . import cfunits
 
 COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
 COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
+LOG = logging.getLogger(__name__)
 
 
 def match_values(match_value_func, mapping):
@@ -145,6 +147,16 @@ COORD_TRANSLATORS['valid_time'] = functools.partial(
 )
 
 
+def is_depth(coord):
+    # type: (xr.Coordinate) -> bool
+    return coord.attrs.get('standard_name') == 'depth'
+
+
+COORD_TRANSLATORS['depthBelowLand'] = functools.partial(
+    coord_translator, 'depthBelowLand', 'm', 'decreasing', is_depth,
+)
+
+
 def is_isobaric(coord):
     # type: (xr.Coordinate) -> bool
     return cfunits.are_convertible(coord.attrs.get('units', ''), 'Pa')
@@ -166,15 +178,30 @@ COORD_TRANSLATORS['number'] = functools.partial(
 
 
 def translate_coords(
-        data, coord_model=COORD_MODEL, errors='strict', coord_translators=COORD_TRANSLATORS
+        data, coord_model=COORD_MODEL, errors='warn', coord_translators=COORD_TRANSLATORS
 ):
     # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
             data = translator(cf_name, data, coord_model=coord_model)
         except:
-            if errors != 'ignore':
+            if errors == 'ignore':
+                pass
+            elif errors == 'raise':
                 raise RuntimeError("error while translating coordinate: %r" % cf_name)
+            else:
+                LOG.warning("error while translating coordinate: %r", cf_name)
+    config = coord_model.get('config', {})
+    if config.get('preferred_time_dimension', 'time') == 'valid_time':
+        try:
+            data = ensure_valid_time(data)
+        except Exception:
+            if errors == 'ignore':
+                pass
+            elif errors == 'raise':
+                raise RuntimeError("error while ensuring valid_time coordinate")
+            else:
+                LOG.exception("error while ensuring valid_time coordinate")
     return data
 
 
@@ -183,14 +210,13 @@ def ensure_valid_time_present(data, valid_time_name='valid_time'):
     valid_times = match_values(is_valid_time, data.coords)
     times = match_values(is_time, data.coords)
     steps = match_values(is_step, data.coords)
-    time = step = ''
+    time = times[0] if times else ''
+    step = steps[0] if steps else ''
     if not valid_times:
-        if not times:
+        if not time:
             raise ValueError("not enough information to ensure a 'valid_time'.")
         valid_time = valid_time_name
-        time = times[0]
-        if steps:
-            step = steps[0]
+        if step:
             data.coords[valid_time] = data.coords[time] + data.coords[step]
         else:
             data.coords[valid_time] = data.coords[time]
@@ -204,8 +230,13 @@ def ensure_valid_time(data):
     # type: (xr.Dataset) -> xr.Dataset
     valid_time, time, step = ensure_valid_time_present(data)
     if valid_time not in data.dims:
-        if data.coords[time].size == data.coords[valid_time].size:
+        if time and time in data.dims and data.coords[time].size == data.coords[valid_time].size:
             return data.swap_dims({time: valid_time})
-        if data.coords[step].size == data.coords[valid_time].size:
+        if step and step in data.dims and data.coords[step].size == data.coords[valid_time].size:
             return data.swap_dims({step: valid_time})
+        # also convert is valid_time can index all times and steps
+        if step and time and step in data.dims and time in data.dims and \
+                data.coords[step].size * data.coords[time].size == data.coords[valid_time].size:
+            data = data.stack(tmp_coord=(time, step))
+            data = data.swap_dims({'tmp_coord': valid_time}).drop('tmp_coord').dropna(valid_time)
     return data

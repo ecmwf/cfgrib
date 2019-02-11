@@ -133,8 +133,19 @@ def test_translate_coords(da1, da2, da3):
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason="test needs stable dict's")
 def test_translate_coords_errors(da3):
+    cfcoords.translate_coords(da3)
+    cfcoords.translate_coords(da3, errors='ignore')
     with pytest.raises(RuntimeError):
-        cfcoords.translate_coords(da3)
+        cfcoords.translate_coords(da3, errors='raise')
+
+    DATA_MODEL = {'config': {'preferred_time_dimension': 'valid_time'}}
+    cfcoords.translate_coords(da3, DATA_MODEL)
+
+    da3_fail = da3.drop('time')
+    cfcoords.translate_coords(da3_fail, DATA_MODEL)
+    cfcoords.translate_coords(da3_fail, DATA_MODEL, errors='ignore')
+    with pytest.raises(RuntimeError):
+        cfcoords.translate_coords(da3_fail, DATA_MODEL, errors='raise')
 
 
 def test_ensure_valid_time(da1, da3):
@@ -152,8 +163,6 @@ def test_ensure_valid_time(da1, da3):
 
     res1 = cfcoords.ensure_valid_time(da3.squeeze())
     assert 'valid_time' in res1.coords
-    coords1 = res1.coords
-    assert coords1['valid_time'].shape == (coords1['ref_time'].size, coords1['step'].size)
 
     with pytest.raises(ValueError):
         cfcoords.ensure_valid_time(da3.mean(dim='ref_time').squeeze())

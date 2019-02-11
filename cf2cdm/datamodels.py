@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2018 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 
 CDS = {
+    # geography
     'latitude': {
         'out_name': 'lat',
         'stored_direction': 'increasing',
@@ -29,20 +30,23 @@ CDS = {
         'out_name': 'lon',
         'stored_direction': 'increasing',
     },
+    # vertical
+    'depthBelowLand': {
+        'out_name': 'depth',
+        'units': 'm',
+        'stored_direction': 'increasing',
+    },
     'isobaricInhPa': {
         'out_name': 'plev',
         'units': 'Pa',
         'stored_direction': 'decreasing',
     },
-    'isobaricInPa': {
-        'out_name': 'plev',
-        'units': 'Pa',
-        'stored_direction': 'decreasing',
-    },
+    # ensemble
     'number': {
         'out_name': 'realization',
         'stored_direction': 'increasing',
     },
+    # time
     'time': {
         'out_name': 'forecast_reference_time',
         'stored_direction': 'increasing',
@@ -55,10 +59,18 @@ CDS = {
         'out_name': 'leadtime',
         'stored_direction': 'increasing',
     },
+    'config': {
+        'preferred_time_dimension': 'valid_time',
+    },
 }
 
 
 ECMWF = {
+    'depthBelowLand': {
+        'out_name': 'level',
+        'units': 'm',
+        'stored_direction': 'increasing',
+    },
     'isobaricInhPa': {
         'out_name': 'level',
         'units': 'hPa',
