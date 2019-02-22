@@ -14,7 +14,7 @@ Features with development status **Beta**:
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
-- works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
+- works on most *Linux* distributions, *MacOS* and *Windows*, the *ecCodes* C-library is the only system dependency,
 - PyPI package with no install time build (binds with *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
 - allows larger-than-memory and distributed processing via *dask*.
@@ -28,7 +28,7 @@ Work in progress:
   see `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
 - **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
   see the *Advanced write usage* section below and
-  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
+  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - **Alpha** support translating coordinates to different data models and naming conventions,
   `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
 
@@ -39,8 +39,6 @@ Limitations:
 - *PyPI* binary packages do not include *ecCodes*,
   see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
-- no Windows support,
-  see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - relies on *ecCodes* for the CF attributes of the data variables,
 - relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
   see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.

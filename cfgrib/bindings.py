@@ -599,8 +599,34 @@ def codes_get_api_version():
     return "%d.%d.%d" % (major, minor, patch)
 
 
+def portable_handle_new_from_samples(samplename, product_kind):
+    #
+    # re-implement codes_grib_handle_new_from_samples in a portable way.
+    # imports are here not to pollute the head of the file with (hopfully!) temporary stuff
+    #
+    import os.path
+    import platform
+    handle = ffi.NULL
+    if platform.platform().startswith('Windows'):
+        samples_folder = ffi.string(lib.codes_samples_folder(ffi.NULL))
+        sample_path = os.path.join(samples_folder, samplename + b'.tmpl')
+        try:
+            with open(sample_path) as file:
+                handle = codes_handle_new_from_file(file, product_kind)
+        except Exception:
+            pass
+    return handle
+
+
 def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
     # type: (bytes, int) -> cffi.FFI.CData
+
+    # work around an ecCodes bug on Windows, hopefully this will go away soon
+    handle = portable_handle_new_from_samples(samplename, product_kind)
+    if handle != ffi.NULL:
+        return handle
+    # end of work-around
+
     if product_kind == CODES_PRODUCT_GRIB:
         handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
     elif product_kind == CODES_PRODUCT_BUFR:

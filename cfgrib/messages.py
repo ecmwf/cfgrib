@@ -259,6 +259,7 @@ def compat_create_exclusive(path, *args, **kwargs):
         try:
             yield file
         except Exception:
+            file.close()
             os.unlink(path)
             raise
 

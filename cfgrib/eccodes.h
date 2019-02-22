@@ -438,6 +438,8 @@ void codes_grib_multi_support_on(codes_context* c);
 */
 void codes_grib_multi_support_off(codes_context* c);
 
+char* codes_samples_path(const codes_context *c);
+
 /**
 *  Get the API version
 *
