@@ -608,9 +608,10 @@ def portable_handle_new_from_samples(samplename, product_kind):
     import platform
     handle = ffi.NULL
     if platform.platform().startswith('Windows'):
-        samplepath = os.path.join(ffi.string(lib.codes_samples_path(ffi.NULL)), samplename + b'.tmpl')
+        samples_folder = ffi.string(lib.codes_samples_folder(ffi.NULL))
+        sample_path = os.path.join(samples_folder, samplename + b'.tmpl')
         try:
-            with open(samplepath) as file:
+            with open(sample_path) as file:
                 handle = codes_handle_new_from_file(file, product_kind)
         except FileNotFoundError:
             pass
