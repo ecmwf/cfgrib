@@ -31,13 +31,11 @@ Work in progress:
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - **Alpha** support translating coordinates to different data models and naming conventions,
   `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
+- The *conda-forge* package is in progress,
+  `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
 
 Limitations:
 
-- no *conda* package, for now,
-  see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
-- *PyPI* binary packages do not include *ecCodes*,
-  see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
 - relies on *ecCodes* for the CF attributes of the data variables,
 - relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
