@@ -5,7 +5,11 @@ Changelog for cfgrib
 0.9.6 (unreleased)
 ------------------
 
-- Do not set explicit timezone in ``units`` to avoid crashing some versions of xarray.
+- The *conda-forge* package is in progress.
+  See: `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
+- Add support for *Windows* by installing *ecCodes* via *conda*.
+  See: `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_.
+- Do not set explicit timezone in ``units`` to avoid crashing some versions of *xarray*.
   See: `#44 <https://github.com/ecmwf/cfgrib/issues/44>`_.
 
 
