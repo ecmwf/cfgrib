@@ -613,7 +613,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
         try:
             with open(sample_path) as file:
                 handle = codes_handle_new_from_file(file, product_kind)
-        except FileNotFoundError:
+        except Exception:
             pass
     return handle
 
