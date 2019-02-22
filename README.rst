@@ -26,10 +26,9 @@ Work in progress:
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
 - **Alpha** supports writing the index of a GRIB file to disk, to save a full-file scan on open,
   see `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
-- **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file on Linux and MacOS,
-  see the *Advanced write usage* section below,
-  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_ and
-  `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
+- **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
+  see the *Advanced write usage* section below and
+  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 - **Alpha** support translating coordinates to different data models and naming conventions,
   `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
 
