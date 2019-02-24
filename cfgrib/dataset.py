@@ -433,11 +433,13 @@ def build_dataset_components(
 ):
     filter_by_keys = dict(filter_by_keys)
     index = stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
-    param_ids = index['paramId']
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
-    for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
+    for param_id in index['paramId']:
         var_index = index.subindex(paramId=param_id)
+        first = var_index.first()
+        short_name = first['shortName']
+        var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
                 var_index, encode_cf, filter_by_keys,
