@@ -5,7 +5,14 @@ Changelog for cfgrib
 0.9.5.7 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fixed a serious bug in the computation of the suggested ``filter_by_keys`` for non-cubic
+  GRIB files. As a result ``cfgrib.xarray_store.open_datasets`` was not finding all the
+  variables in the files.
+  See: `#54 <https://github.com/ecmwf/cfgrib/issues/54>`_.
+- Fixed a serious bug in variable naming that could drop or at worse mix the values of variables.
+  Again see: `#54 <https://github.com/ecmwf/cfgrib/issues/54>`_.
+- Re-opened `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_ as the fix was returning wrong data.
+  Now we are back to dropping all variable in a MULTI-FIELD except the first.
 
 
 0.9.5.6 (2019-02-04)
