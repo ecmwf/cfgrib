@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.5.7 (unreleased)
+0.9.5.7 (2019-02-24)
 --------------------
 
 - Fixed a serious bug in the computation of the suggested ``filter_by_keys`` for non-cubic
