@@ -5,6 +5,10 @@ Changelog for cfgrib
 0.9.6 (unreleased)
 ------------------
 
+- Fixed a serious bug in the computation of the suggested ``filter_by_keys`` for non-cubic
+  GRIB files. As a result ``cfgrib.xarray_store.open_datasets`` was not finding all the
+  variables in the files.
+  See: `#54 <https://github.com/ecmwf/cfgrib/issues/54>`_.
 - The *conda-forge* package is in progress.
   See: `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
 - Add support for *Windows* by installing *ecCodes* via *conda*.

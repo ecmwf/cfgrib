@@ -178,14 +178,12 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
     for key in attributes_keys:
         values = index[key]
         if len(values) > 1:
-            error_message = "multiple values for unique key, try re-open the file with one of:"
             fbks = []
             for value in values:
                 fbk = {key: value}
                 fbk.update(filter_by_keys)
                 fbks.append(fbk)
-                error_message += "\n    filter_by_keys=%r" % fbk
-            raise DatasetBuildError(error_message, fbks)
+            raise DatasetBuildError("multiple values for key %r" % key, key, fbks)
         if values and values[0] not in ('undef', 'unknown'):
             attributes['GRIB_' + key] = values[0]
     return attributes
@@ -443,9 +441,22 @@ def build_dataset_components(
     variables = collections.OrderedDict()
     for param_id, short_name, var_name in zip(param_ids, index['shortName'], index['cfVarName']):
         var_index = index.subindex(paramId=param_id)
-        dims, data_var, coord_vars = build_variable_components(
-            var_index, encode_cf, filter_by_keys, errors=errors,
-        )
+        try:
+            dims, data_var, coord_vars = build_variable_components(
+                var_index, encode_cf, filter_by_keys, errors=errors,
+            )
+        except DatasetBuildError as ex:
+            # NOTE: When a variable has more than one value for an attribute we need to raise all
+            #   the values in the file, not just the ones associated with that variable. See #54.
+            key = ex.args[1]
+            error_message = "multiple values for unique key, try re-open the file with one of:"
+            fbks = []
+            for value in index[key]:
+                fbk = {key: value}
+                fbk.update(filter_by_keys)
+                fbks.append(fbk)
+                error_message += "\n    filter_by_keys=%r" % fbk
+            raise DatasetBuildError(error_message, key, fbks)
         if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
             short_name = var_name
         vars = collections.OrderedDict([(short_name, data_var)])
