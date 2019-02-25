@@ -307,10 +307,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ...
 >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
@@ -330,10 +330,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ...
 
 
@@ -366,10 +366,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -396,10 +396,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
 Coordinates:
@@ -416,14 +416,13 @@ Data variables:
     r              (isobaricInhPa, y, x) float32 ...
     w              (isobaricInhPa, y, x) float32 ...
     u              (isobaricInhPa, y, x) float32 ...
-    v              (isobaricInhPa, y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:            (x: 93, y: 65)
 Coordinates:
@@ -438,14 +437,13 @@ Data variables:
     t2m                (y, x) float32 ...
     r2                 (y, x) float32 ...
     u10                (y, x) float32 ...
-    v10                (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -461,10 +459,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -481,10 +479,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -502,10 +500,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:                 (heightAboveGroundLayer: 2, x: 93, y: 65)
 Coordinates:
@@ -521,10 +519,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -542,10 +540,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -560,14 +558,13 @@ Data variables:
     pres        (y, x) float32 ...
     gh          (y, x) float32 ...
     u           (y, x) float32 ...
-    v           (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:       (x: 93, y: 65)
 Coordinates:
@@ -584,10 +581,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:                  (pressureFromGroundLayer: 5, x: 93, y: 65)
 Coordinates:
@@ -602,16 +599,15 @@ Data variables:
     t                        (pressureFromGroundLayer, y, x) float32 ...
     r                        (pressureFromGroundLayer, y, x) float32 ...
     u                        (pressureFromGroundLayer, y, x) float32 ...
-    v                        (pressureFromGroundLayer, y, x) float32 ...
     pli                      (y, x) float32 ...
     4lftx                    (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ...]
 
 

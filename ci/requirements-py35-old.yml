@@ -6,13 +6,17 @@ dependencies:
   - cffi
   - click
   - coveralls
-  - eccodes
+  - dask
+  - eccodes=2.9.0
   - future
   - nomkl
   - numpy
   - pytest
   - pytest-cov
   - pytest-flakes
-  - python=3.6
+  - python=3.5
+  - scipy
   - typing
+  - toolz
+  - xarray=0.11.0
 

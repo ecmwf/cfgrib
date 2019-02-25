@@ -2,21 +2,21 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
+  - attrs
   - cffi
   - click
+  - coveralls
   - dask
-  - eccodes=2.9.0
+  - eccodes
+  - future
   - nomkl
   - numpy
   - pytest
+  - pytest-cov
+  - pytest-flakes
   - python=3.6
   - scipy
   - typing
   - toolz
   - xarray
-  - pip:
-    - attrs
-    - coveralls
-    - future
-    - pytest-cov
-    - pytest-flakes
+
