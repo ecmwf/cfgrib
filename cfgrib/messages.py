@@ -44,9 +44,9 @@ LOG = logging.getLogger(__name__)
 _MARKER = object()
 
 #
-# No explicit support for MULTI-FIELD at Message level, let ecCodes simulate normal messages.
+# No explicit support for MULTI-FIELD at Message level.
 #
-bindings.codes_grib_multi_support_on()
+# bindings.codes_grib_multi_support_on()
 
 
 @attr.attrs()
