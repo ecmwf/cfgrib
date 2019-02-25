@@ -18,7 +18,7 @@ Features with development status **Beta**:
 - conda-forge package on all supported platforms,
 - PyPI package with no install time build (binds via *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
-- allows larger-than-memory and distributed processing via *dask*.
+- allows larger-than-memory and distributed processing via *dask*,
 - supports translating coordinates to different data models and naming conventions.
 
 Work in progress:
