@@ -7,7 +7,7 @@ dependencies:
   - click
   - coveralls
   - dask
-  - eccodes
+  - eccodes=2.9.0
   - future
   - nomkl
   - numpy
@@ -18,5 +18,5 @@ dependencies:
   - scipy
   - typing
   - toolz
-  - xarray
+  - xarray=0.11.0
 

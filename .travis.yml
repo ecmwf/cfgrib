@@ -8,10 +8,9 @@ matrix:
   - env: ENV=py36-qc
   - env: ENV=py27
   - env: ENV=docs
-  - env: ENV=py35-old
-  - env: ENV=py35-without-xarray
+  - env: ENV=py36-old
+  - env: ENV=py36-without-xarray
   - env: ENV=py37
-  - env: ENV=py35
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
