@@ -14,10 +14,12 @@ Features with development status **Beta**:
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
-- works on most *Linux* distributions, *MacOS* and *Windows*, the *ecCodes* C-library is the only system dependency,
-- PyPI package with no install time build (binds with *CFFI* ABI mode),
+- works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
+- conda-forge package on all supported platforms,
+- PyPI package with no install time build (binds via *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
-- allows larger-than-memory and distributed processing via *dask*.
+- allows larger-than-memory and distributed processing via *dask*,
+- supports translating coordinates to different data models and naming conventions.
 
 Work in progress:
 
@@ -29,10 +31,6 @@ Work in progress:
 - **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
-- **Alpha** support translating coordinates to different data models and naming conventions,
-  `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
-- The *conda-forge* package is in progress,
-  `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
 
 Limitations:
 
@@ -45,15 +43,20 @@ Limitations:
 Installation
 ============
 
-The package is installed from PyPI with::
+The easiest way to install *cfgrib* and all its binary dependencies is via `Conda <https://conda.io/>`_::
+
+    $ conda install -f conda-forge cfgrib
+
+alternatively, if you install the binary dependencies yourself, you can install the
+Python package from *PyPI* with::
 
     $ pip install cfgrib
 
 
-System dependencies
+Binary dependencies
 -------------------
 
-The Python module depends on the ECMWF *ecCodes* library
+The Python module depends on the ECMWF *ecCodes* binary library
 that must be installed on the system and accessible as a shared library.
 Some Linux distributions ship a binary version that may be installed with the standard package manager.
 On Ubuntu 18.04 use the command::
@@ -72,12 +75,10 @@ As an alternative you may install the official source distribution
 by following the instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
-Note that *ecCodes* support for the Windows operating system is experimental.
-
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
-    Found: ecCodes v2.7.0.
+    Found: ecCodes v2.12.0.
     Your system is ready.
 
 
@@ -177,14 +178,6 @@ to the GRIB file name.
 Index files are an **experimental** and completely optional feature, feel free to
 remove them and try again in case of problems. Index files saving can be disable passing
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
-
-
-Lower level APIs
-----------------
-
-Lower level APIs are not stable and should not be considered public yet.
-In particular the internal Python 3 *ecCodes* bindings are not compatible with
-the standard *ecCodes* python module.
 
 
 Advanced usage
@@ -614,7 +607,7 @@ Attributes:
 Advanced write usage
 ====================
 
-**Please note that write support is Pre-Alpha and highly experimental.**
+**Please note that write support is Alpha.**
 
 Only ``xarray.Dataset``'s in *canonical* form,
 that is, with the coordinates names matching exactly the *cfgrib* coordinates,
