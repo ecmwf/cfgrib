@@ -446,7 +446,6 @@ def codes_get_string_array(handle, key, size, length=None):
     return [ffi.string(values[i]) for i in range(size_p[0])]
 
 
-
 def codes_get_long(handle, key):
     # type: (cffi.FFI.CData, bytes) -> int
     value = ffi.new('long *')
