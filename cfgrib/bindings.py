@@ -276,18 +276,6 @@ def codes_index_get(indexid, key, ktype=bytes):
     return result
 
 
-def codes_index_get_autotype(indexid, key):
-    # type: (cffi.FFI.CData, bytes) -> list
-    try:
-        return codes_index_get_long(indexid, key)
-    except EcCodesError:
-        pass
-    try:
-        return codes_index_get_double(indexid, key)
-    except EcCodesError:
-        return codes_index_get_string(indexid, key)
-
-
 def codes_index_select_long(indexid, key, value):
     # type: (cffi.FFI.CData, bytes, int) -> None
     """
@@ -458,24 +446,6 @@ def codes_get_string_array(handle, key, size, length=None):
     return [ffi.string(values[i]) for i in range(size_p[0])]
 
 
-def codes_get_bytes(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
-    """
-    Get unsigned char element from a key.
-    It may or may not fail in case there are more than one key in a message.
-    Outputs the last element.
-
-    :param bytes key: the keyword to select the value of
-    :param bool strict: flag to select if the method should fail in case of
-        more than one key in single message
-
-    :rtype: int
-    """
-    values = codes_get_bytes_array(handle, key)
-    if len(values) == 0:
-        raise ValueError('No value for key %r' % key)
-    return values[-1]
-
 
 def codes_get_long(handle, key):
     # type: (cffi.FFI.CData, bytes) -> int
@@ -555,8 +525,6 @@ def codes_get(handle, key, key_type=None, length=None, log=LOG):
         return codes_get_double(handle, key)
     elif key_type == CODES_TYPE_STRING:
         return codes_get_string(handle, key, length=length)
-    elif key_type == CODES_TYPE_BYTES:
-        return codes_get_bytes(handle, key)
     else:
         log.warning("Unknown GRIB key type: %r", key_type)
 
