@@ -2,13 +2,13 @@
 Changelog for cfgrib
 ====================
 
-0.9.6 (unreleased)
+0.9.6 (2019-02-26)
 ------------------
 
-- Added *conda-forge* package.
-  See: `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
 - Add support for *Windows* by installing *ecCodes* via *conda*.
   See: `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_.
+- Added *conda-forge* package.
+  See: `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_.
 
 
 0.9.5.7 (2019-02-24)
