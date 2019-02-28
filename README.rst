@@ -707,6 +707,7 @@ Project resources
 ============= =========================================================
 Development   https://github.com/ecmwf/cfgrib
 Download      https://pypi.org/project/cfgrib
+User support  https://stackoverflow.com/search?q=cfgrib
 Code quality  .. image:: https://api.travis-ci.org/ecmwf/cfgrib.svg?branch=master
                 :target: https://travis-ci.org/ecmwf/cfgrib/branches
                 :alt: Build Status on Travis CI
