@@ -45,7 +45,7 @@ Installation
 
 The easiest way to install *cfgrib* and all its binary dependencies is via `Conda <https://conda.io/>`_::
 
-    $ conda install -f conda-forge cfgrib
+    $ conda install -c conda-forge cfgrib
 
 alternatively, if you install the binary dependencies yourself, you can install the
 Python package from *PyPI* with::
