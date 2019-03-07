@@ -2,10 +2,10 @@
 Changelog for cfgrib
 ====================
 
-0.9.6.1 (unreleased)
---------------------
+0.9.6.post1 (2019-03-07)
+------------------------
 
-- Nothing changed yet.
+- Fix an important typo in the README. See: `#64 <https://github.com/ecmwf/cfgrib/issues/64>`_.
 
 
 0.9.6 (2019-02-26)
