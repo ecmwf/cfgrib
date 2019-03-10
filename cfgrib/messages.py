@@ -18,7 +18,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, isinstance, str, type
+from builtins import int, isinstance, str, type
 
 # Python 2 compatibility bit not in python-future
 try:
@@ -100,8 +100,6 @@ class Message(collections.MutableMapping):
                 raise KeyError(item)
             else:
                 return default
-        if values and isinstance(values[0], bytes):
-            values = [v for v in values]
         if len(values) == 1:
             return values[0]
         return values
@@ -120,7 +118,7 @@ class Message(collections.MutableMapping):
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[str, None, None]
         if namespace is not None:
-            bnamespace = namespace  # type: T.Optional[bytes]
+            bnamespace = namespace  # type: T.Optional[str]
         else:
             bnamespace = None
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
