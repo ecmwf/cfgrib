@@ -18,7 +18,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import list, object, set, str
+from builtins import float, int, list, object, set, str
 
 import collections
 import datetime
