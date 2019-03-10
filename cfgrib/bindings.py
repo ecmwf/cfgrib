@@ -18,7 +18,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, float, int, isinstance
+from builtins import float, int, isinstance, str
 from future.utils import raise_from
 
 import functools
@@ -96,6 +96,12 @@ CODES_TYPE_SECTION = lib.GRIB_TYPE_SECTION
 CODES_TYPE_LABEL = lib.GRIB_TYPE_LABEL
 CODES_TYPE_MISSING = lib.GRIB_TYPE_MISSING
 
+KEYTYPES = {
+    1: int,
+    2: float,
+    3: str,
+}
+
 CODES_KEYS_ITERATOR_ALL_KEYS = 0
 CODES_KEYS_ITERATOR_SKIP_READ_ONLY = (1 << 0)
 CODES_KEYS_ITERATOR_SKIP_OPTIONAL = (1 << 1)
@@ -116,13 +122,32 @@ def grib_get_error_message(code):
     return ffi.string(message).decode(ENC)
 
 
-class EcCodesError(Exception):
+class GribInternalError(Exception):
     def __init__(self, code, message=None, *args):
         self.code = code
         self.eccode_message = grib_get_error_message(code)
         if message is None:
             message = '%s (%s).' % (self.eccode_message, code)
-        super(EcCodesError, self).__init__(message, code, *args)
+        super(GribInternalError, self).__init__(message, code, *args)
+
+
+class KeyValueNotFoundError(GribInternalError):
+    """Key/value not found."""
+
+
+class ReadOnlyError(GribInternalError):
+    """Value is read only."""
+
+
+class FileNotFoundError(GribInternalError):
+    """File not found."""
+
+
+ERROR_MAP = {
+    -18: ReadOnlyError,
+    -10: KeyValueNotFoundError,
+    -7: FileNotFoundError,
+}
 
 
 def check_last(func):
@@ -133,7 +158,10 @@ def check_last(func):
         args += (code,)
         retval = func(*args)
         if code[0] != lib.GRIB_SUCCESS:
-            raise EcCodesError(code[0])
+            if code[0] in ERROR_MAP:
+                raise ERROR_MAP[code[0]](code[0])
+            else:
+                raise GribInternalError(code[0])
         return retval
 
     return wrapper
@@ -145,7 +173,10 @@ def check_return(func):
     def wrapper(*args):
         code = func(*args)
         if code != lib.GRIB_SUCCESS:
-            raise EcCodesError(code)
+            if code in ERROR_MAP:
+                raise ERROR_MAP[code](code)
+            else:
+                raise GribInternalError(code)
 
     return wrapper
 
@@ -153,7 +184,7 @@ def check_return(func):
 #
 # CFFI reimplementation of gribapi.py functions with codes names
 #
-def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB, context=None):
+def codes_grib_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB, context=None):
     if context is None:
         context = ffi.NULL
     try:
@@ -162,28 +193,28 @@ def codes_handle_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB, context
             raise EOFError("End of file: %r" % fileobj)
         else:
             return retval
-    except EcCodesError as ex:
+    except GribInternalError as ex:
         if ex.code == lib.GRIB_END_OF_FILE:
             raise EOFError("End of file: %r" % fileobj)
         raise
 
 
-def codes_handle_clone(handle):
+def codes_clone(handle):
     # type: (cffi.FFI.CData) -> cffi.FFI.CData
     cloned_handle = lib.codes_handle_clone(handle)
     if cloned_handle is ffi.NULL:
-        raise EcCodesError(lib.GRIB_NULL_POINTER)
+        raise GribInternalError(lib.GRIB_NULL_POINTER)
     return cloned_handle
 
 
-codes_handle_delete = lib.codes_handle_delete
+codes_release = lib.codes_handle_delete
 
 
 _codes_get_size = check_return(lib.codes_get_size)
 
 
 def codes_get_size(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
+    # type: (cffi.FFI.CData, str) -> int
     """
     Get the number of coded value from a key.
     If several keys of the same name are present, the total sum is returned.
@@ -193,15 +224,15 @@ def codes_get_size(handle, key):
     :rtype: int
     """
     size = ffi.new('size_t *')
-    _codes_get_size(handle, key, size)
+    _codes_get_size(handle, key.encode(ENC), size)
     return size[0]
 
 
 _codes_get_length = check_return(lib.codes_get_length)
 
 
-def codes_get_length(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
+def codes_get_string_length(handle, key):
+    # type: (cffi.FFI.CData, str) -> int
     """
     Get the length of the string representation of the key.
     If several keys of the same name are present, the maximum length is returned.
@@ -211,7 +242,7 @@ def codes_get_length(handle, key):
     :rtype: int
     """
     size = ffi.new('size_t *')
-    _codes_get_length(handle, key, size)
+    _codes_get_length(handle, key.encode(ENC), size)
     return size[0]
 
 
@@ -219,7 +250,7 @@ _codes_get_bytes = check_return(lib.codes_get_bytes)
 
 
 def codes_get_bytes_array(handle, key, size):
-    # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
+    # type: (cffi.FFI.CData, str, int) -> T.List[int]
     """
     Get unsigned chars array values from a key.
 
@@ -229,7 +260,7 @@ def codes_get_bytes_array(handle, key, size):
     """
     values = ffi.new('unsigned char[]', size)
     size_p = ffi.new('size_t *', size)
-    _codes_get_bytes(handle, key, values, size_p)
+    _codes_get_bytes(handle, key.encode(ENC), values, size_p)
     return list(values)
 
 
@@ -237,7 +268,7 @@ _codes_get_long_array = check_return(lib.codes_get_long_array)
 
 
 def codes_get_long_array(handle, key, size):
-    # type: (cffi.FFI.CData, bytes, int) -> T.List[int]
+    # type: (cffi.FFI.CData, str, int) -> T.List[int]
     """
     Get long array values from a key.
 
@@ -247,7 +278,7 @@ def codes_get_long_array(handle, key, size):
     """
     values = ffi.new('long[]', size)
     size_p = ffi.new('size_t *', size)
-    _codes_get_long_array(handle, key, values, size_p)
+    _codes_get_long_array(handle, key.encode(ENC), values, size_p)
     return list(values)
 
 
@@ -255,7 +286,7 @@ _codes_get_double_array = check_return(lib.codes_get_double_array)
 
 
 def codes_get_double_array(handle, key, size):
-    # type: (cffi.FFI.CData, bytes, int) -> T.List[float]
+    # type: (cffi.FFI.CData, str, int) -> T.List[float]
     """
     Get double array values from a key.
 
@@ -265,7 +296,7 @@ def codes_get_double_array(handle, key, size):
     """
     values = ffi.new('double[]', size)
     size_p = ffi.new('size_t *', size)
-    _codes_get_double_array(handle, key, values, size_p)
+    _codes_get_double_array(handle, key.encode(ENC), values, size_p)
     return list(values)
 
 
@@ -282,32 +313,32 @@ def codes_get_string_array(handle, key, size, length=None):
     :rtype: T.List[bytes]
     """
     if length is None:
-        length = codes_get_length(handle, key)
+        length = codes_get_string_length(handle, key)
     values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
     values = ffi.new('char*[]', values_keepalive)
     size_p = ffi.new('size_t *', size)
-    _codes_get_string_array(handle, key, values, size_p)
-    return [ffi.string(values[i]) for i in range(size_p[0])]
+    _codes_get_string_array(handle, key.encode(ENC), values, size_p)
+    return [ffi.string(values[i]).decode(ENC) for i in range(size_p[0])]
 
 
 def codes_get_long(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
+    # type: (cffi.FFI.CData, str) -> int
     value = ffi.new('long *')
     _codes_get_long = check_return(lib.codes_get_long)
-    _codes_get_long(handle, key, value)
+    _codes_get_long(handle, key.encode(ENC), value)
     return value[0]
 
 
 def codes_get_double(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
+    # type: (cffi.FFI.CData, str) -> int
     value = ffi.new('double *')
     _codes_get_long = check_return(lib.codes_get_double)
-    _codes_get_long(handle, key, value)
+    _codes_get_long(handle, key.encode(ENC), value)
     return value[0]
 
 
 def codes_get_string(handle, key, length=None):
-    # type: (cffi.FFI.CData, bytes, int) -> bytes
+    # type: (cffi.FFI.CData, str, int) -> str
     """
     Get string element from a key.
     It may or may not fail in case there are more than one key in a message.
@@ -320,36 +351,36 @@ def codes_get_string(handle, key, length=None):
     :rtype: bytes
     """
     if length is None:
-        length = codes_get_length(handle, key)
+        length = codes_get_string_length(handle, key)
     values = ffi.new('char[]', length)
     length_p = ffi.new('size_t *', length)
     _codes_get_string = check_return(lib.codes_get_string)
-    _codes_get_string(handle, key, values, length_p)
-    return ffi.string(values, length_p[0])
+    _codes_get_string(handle, key.encode(ENC), values, length_p)
+    return ffi.string(values, length_p[0]).decode(ENC)
 
 
 _codes_get_native_type = check_return(lib.codes_get_native_type)
 
 
 def codes_get_native_type(handle, key):
-    # type: (cffi.FFI.CData, bytes) -> int
+    # type: (cffi.FFI.CData, str) -> int
     grib_type = ffi.new('int *')
-    _codes_get_native_type(handle, key, grib_type)
-    return grib_type[0]
+    _codes_get_native_type(handle, key.encode(ENC), grib_type)
+    return KEYTYPES.get(grib_type[0], grib_type[0])
 
 
 def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, int, int, int, logging.Logger) -> T.Any
+    # type: (cffi.FFI.CData, str, int, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
     if size is None:
         size = codes_get_size(handle, key)
 
-    if key_type == CODES_TYPE_LONG:
+    if key_type == int:
         return codes_get_long_array(handle, key, size)
-    elif key_type == CODES_TYPE_DOUBLE:
+    elif key_type == float:
         return codes_get_double_array(handle, key, size)
-    elif key_type == CODES_TYPE_STRING:
+    elif key_type == str:
         return codes_get_string_array(handle, key, size, length=length)
     elif key_type == CODES_TYPE_BYTES:
         return codes_get_bytes_array(handle, key, size)
@@ -358,27 +389,29 @@ def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG
 
 
 def codes_get(handle, key, key_type=None, length=None, log=LOG):
-    # type: (cffi.FFI.CData, bytes, int, int, logging.Logger) -> T.Any
+    # type: (cffi.FFI.CData, str, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
 
-    if key_type == CODES_TYPE_LONG:
+    if key_type == int:
         return codes_get_long(handle, key)
-    elif key_type == CODES_TYPE_DOUBLE:
+    elif key_type == float:
         return codes_get_double(handle, key)
-    elif key_type == CODES_TYPE_STRING:
+    elif key_type == str:
         return codes_get_string(handle, key, length=length)
     else:
         log.warning("Unknown GRIB key type: %r", key_type)
 
 
 def codes_keys_iterator_new(handle, flags=CODES_KEYS_ITERATOR_ALL_KEYS, namespace=None):
-    # type: (cffi.FFI.CData, int, bytes) -> cffi.FFI.CData
+    # type: (cffi.FFI.CData, int, str) -> cffi.FFI.CData
     if namespace is None:
-        namespace = ffi.NULL
+        bnamespace = ffi.NULL
+    else:
+        bnamespace = namespace.encode(ENC)
 
     codes_keys_iterator_new = lib.codes_keys_iterator_new
-    return codes_keys_iterator_new(handle, flags, namespace)
+    return codes_keys_iterator_new(handle, flags, bnamespace)
 
 
 def codes_keys_iterator_next(iterator_id):
@@ -387,7 +420,7 @@ def codes_keys_iterator_next(iterator_id):
 
 def codes_keys_iterator_get_name(iterator):
     ret = lib.codes_keys_iterator_get_name(iterator)
-    return ffi.string(ret)
+    return ffi.string(ret).decode(ENC)
 
 
 def codes_keys_iterator_delete(iterator_id):
@@ -423,14 +456,14 @@ def portable_handle_new_from_samples(samplename, product_kind):
         sample_path = os.path.join(samples_folder, samplename + b'.tmpl')
         try:
             with open(sample_path) as file:
-                handle = codes_handle_new_from_file(file, product_kind)
+                handle = codes_grib_new_from_file(file, product_kind)
         except Exception:
             pass
     return handle
 
 
 def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
-    # type: (bytes, int) -> cffi.FFI.CData
+    # type: (str, int) -> cffi.FFI.CData
 
     # work around an ecCodes bug on Windows, hopefully this will go away soon
     handle = portable_handle_new_from_samples(samplename, product_kind)
@@ -439,9 +472,9 @@ def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
     # end of work-around
 
     if product_kind == CODES_PRODUCT_GRIB:
-        handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename)
+        handle = lib.codes_grib_handle_new_from_samples(ffi.NULL, samplename.encode(ENC))
     elif product_kind == CODES_PRODUCT_BUFR:
-        handle = lib.codes_bufr_handle_new_from_samples(ffi.NULL, samplename)
+        handle = lib.codes_bufr_handle_new_from_samples(ffi.NULL, samplename.encode(ENC))
     else:
         raise NotImplementedError("product kind not supported: %r" % product_kind)
     if handle == ffi.NULL:
@@ -450,22 +483,22 @@ def codes_new_from_samples(samplename, product_kind=CODES_PRODUCT_GRIB):
 
 
 def codes_set_long(handle, key, value):
-    # type: (cffi.FFI.CData, bytes, int) -> None
+    # type: (cffi.FFI.CData, str, int) -> None
     codes_set_long = check_return(lib.codes_set_long)
-    codes_set_long(handle, key, value)
+    codes_set_long(handle, key.encode(ENC), value)
 
 
 def codes_set_double(handle, key, value):
-    # type: (cffi.FFI.CData, bytes, float) -> None
+    # type: (cffi.FFI.CData, str, float) -> None
     codes_set_double = check_return(lib.codes_set_double)
-    codes_set_double(handle, key, value)
+    codes_set_double(handle, key.encode(ENC), value)
 
 
 def codes_set_string(handle, key, value):
-    # type: (cffi.FFI.CData, bytes, bytes) -> None
+    # type: (cffi.FFI.CData, str, str) -> None
     size = ffi.new('size_t *', len(value))
     codes_set_string = check_return(lib.codes_set_string)
-    codes_set_string(handle, key, value, size)
+    codes_set_string(handle, key.encode(ENC), value.encode(ENC), size)
 
 
 def codes_set(handle, key, value):
@@ -474,30 +507,30 @@ def codes_set(handle, key, value):
         codes_set_long(handle, key, value)
     elif isinstance(value, float):
         codes_set_double(handle, key, value)
-    elif isinstance(value, bytes):
+    elif isinstance(value, str):
         codes_set_string(handle, key, value)
     else:
         raise TypeError("Unsupported type %r" % type(value))
 
 
 def codes_set_double_array(handle, key, values):
-    # type: (cffi.FFI.CData, bytes, T.List[float]) -> None
+    # type: (cffi.FFI.CData, str, T.List[float]) -> None
     size = len(values)
     c_values = ffi.new("double []", values)
     codes_set_double_array = check_return(lib.codes_set_double_array)
-    codes_set_double_array(handle, key, c_values, size)
+    codes_set_double_array(handle, key.encode(ENC), c_values, size)
 
 
 def codes_set_long_array(handle, key, values):
-    # type: (cffi.FFI.CData, bytes, T.List[int]) -> None
+    # type: (cffi.FFI.CData, str, T.List[int]) -> None
     size = len(values)
     c_values = ffi.new("long []", values)
     codes_set_long_array = check_return(lib.codes_set_long_array)
-    codes_set_long_array(handle, key, c_values, size)
+    codes_set_long_array(handle, key.encode(ENC), c_values, size)
 
 
 def codes_set_array(handle, key, values):
-    # type: (cffi.FFI.CData, bytes, T.List[T.Any]) -> None
+    # type: (cffi.FFI.CData, str, T.List[T.Any]) -> None
     if len(values) > 0:
         if isinstance(values[0], float):
             codes_set_double_array(handle, key, values)

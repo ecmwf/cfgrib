@@ -31,9 +31,9 @@ def cfgrib_cli():
 
 @cfgrib_cli.command('selfcheck')
 def selfcheck():
-    from . import bindings
+    from .messages import eccodes_version
 
-    print("Found: ecCodes v%s." % bindings.codes_get_api_version())
+    print("Found: ecCodes v%s." % eccodes_version)
     print("Your system is ready.")
 
 

@@ -31,7 +31,6 @@ import attr
 import numpy as np
 
 from . import __version__
-from . import bindings
 from . import cfmessage
 from . import messages
 
@@ -235,7 +234,7 @@ class OnDiskArray(object):
             for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', bindings.CODES_TYPE_DOUBLE)
+                values = message.message_get('values', float)
                 array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -257,7 +256,7 @@ class OnDiskArray(object):
                     continue
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', bindings.CODES_TYPE_DOUBLE)
+                values = message.message_get('values', float)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = array_field[(Ellipsis,) + item[-self.geo_ndim:]]
@@ -484,7 +483,7 @@ def build_dataset_components(
     attributes_namespace = {
         'cfgrib_version': __version__,
         'cfgrib_open_kwargs': json.dumps(encoding),
-        'eccodes_version': bindings.codes_get_api_version(),
+        'eccodes_version': messages.eccodes_version,
         'timestamp': timestamp or datetime.datetime.now().isoformat().partition('.')[0]
     }
     history_in = '{timestamp} GRIB to CDM+CF via ' \
