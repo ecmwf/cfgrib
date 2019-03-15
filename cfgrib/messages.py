@@ -196,26 +196,6 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
-def make_message_schema(message, schema_keys, log=LOG):
-    schema = collections.OrderedDict()
-    for key in schema_keys:
-        bkey = key.encode(message.encoding)
-        try:
-            key_type = bindings.codes_get_native_type(message.codes_id, bkey)
-        except bindings.EcCodesError as ex:
-            if ex.code != bindings.lib.GRIB_NOT_FOUND:  # pragma: no cover
-                log.exception("key %r failed", key)
-            schema[key] = ()
-            continue
-        size = bindings.codes_get_size(message.codes_id, bkey)
-        if key_type == bindings.CODES_TYPE_STRING:
-            length = bindings.codes_get_length(message.codes_id, bkey)
-            schema[key] = (key_type, size, length)
-        else:
-            schema[key] = (key_type, size)
-    return schema
-
-
 @attr.attrs()
 class FileStream(collections.Iterable):
     """Iterator-like access to a filestream of Messages."""
@@ -279,20 +259,12 @@ class FileIndex(collections.Mapping):
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
-        # FIXME: using `Message.message_get` with an explicit message schema was a significant
-        #   optimization at some point, due to less calls to the slow CFFI ABI interface.
-        #   This doesn't appear to be reproducible at the moment so the optimisation is
-        #   disabled and we may choose to remove `make_message_schema` altogether.
-        schema = make_message_schema(filestream.first(), index_keys)
         offsets = collections.OrderedDict()
         count_offsets = {}  # type: T.Dict[int, int]
         for message in filestream:
             header_values = []
-            for key, args in schema.items():
+            for key in index_keys:
                 try:
-                    # if args and not key == 'time':
-                    #     value = message.message_get(key, *args)
-                    # else:
                     value = message[key]
                 except:
                     value = 'undef'
