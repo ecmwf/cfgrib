@@ -112,18 +112,6 @@ def test_ComputedKeysMessage_write():
     res['centre'] = 1
 
 
-def test_make_message_schema():
-    with open(TEST_DATA) as file:
-        message = messages.Message.from_file(file)
-
-    res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
-
-    assert res['paramId'] == (int, 1)
-    assert res['shortName'] == (str, 1, 256)
-    assert res['values'] == (float, 7320)
-    assert res['non-existent'] == ()
-
-
 def test_compat_create_exclusive(tmpdir):
     test_file = tmpdir.join('file.grib.idx')
 

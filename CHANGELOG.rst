@@ -2,6 +2,20 @@
 Changelog for cfgrib
 ====================
 
+0.9.6.2 (unreleased)
+--------------------
+
+- Nothing changed yet.
+
+
+0.9.6.1 (2019-03-17)
+--------------------
+
+- Fixed (for real) MULTI-FIELD messages,
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_.
+- Added a protocol version to the index file. Old *.idx files must be removed.
+
+
 0.9.6.post1 (2019-03-07)
 ------------------------
 
