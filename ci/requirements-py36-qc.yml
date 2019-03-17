@@ -9,7 +9,6 @@ dependencies:
   - dask
   - eccodes
   - future
-  - nomkl
   - numpy
   - pytest
   - pytest-cov
