@@ -35,11 +35,13 @@ def test_grib_get_error_message(code, message):
 
 
 def test_check_last():
-    codes_index_new_from_file = bindings.check_last(bindings.lib.codes_index_new_from_file)
-    codes_index_new_from_file(bindings.ffi.NULL, TEST_DATA_B, b'')
+    codes_handle_new_from_file = bindings.check_last(bindings.lib.codes_handle_new_from_file)
+    with open(TEST_DATA) as file:
+        codes_handle_new_from_file(bindings.ffi.NULL, file, bindings.CODES_PRODUCT_GRIB)
 
     with pytest.raises(bindings.EcCodesError):
-        codes_index_new_from_file(bindings.ffi.NULL, b'', b'')
+        with open(__file__) as file:
+            codes_handle_new_from_file(bindings.ffi.NULL, file, bindings.CODES_PRODUCT_GRIB)
 
 
 def test_check_return():
@@ -110,36 +112,6 @@ def test_codes_get_errors():
     assert err.value.code == bindings.lib.GRIB_BUFFER_TOO_SMALL
 
 
-def test_codes_index_new_from_file():
-    res = bindings.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
-
-    assert isinstance(res, bindings.ffi.CData)
-    assert "'codes_index *'" in repr(res)
-
-
-def test_codes_index_get_size():
-    grib_index = bindings.codes_index_new_from_file(TEST_DATA_B, [b'gridType'])
-
-    res = bindings.codes_index_get_size(grib_index, b'gridType')
-
-    assert res == 1
-
-
-@pytest.mark.parametrize('key, ktype, expected_value', [
-    (b'numberOfDataPoints', int, 7320),
-    (b'latitudeOfFirstGridPointInDegrees', float, 90.0),
-    (b'gridType', bytes, b'regular_ll'),
-])
-def test_codes_index_get(key, ktype, expected_value):
-    grib_index = bindings.codes_index_new_from_file(TEST_DATA_B, [key])
-
-    res = bindings.codes_index_get(grib_index, key, ktype=ktype)
-
-    assert len(res) == 1
-    assert isinstance(res[0], ktype)
-    assert res[0] == expected_value
-
-
 @pytest.mark.parametrize('key, expected_value', [
     (b'numberOfDataPoints', [7320]),
     (b'latitudeOfFirstGridPointInDegrees', [90.0]),
@@ -165,32 +137,14 @@ def test_codes_get_array_errors():
     assert err.value.code == bindings.lib.GRIB_NOT_IMPLEMENTED
 
 
-@pytest.mark.parametrize('key, value', [
-    (b'numberOfDataPoints', 7320),
-    (b'gridType', b'regular_ll'),
-])
-def test_codes_index_select(key, value):
-    grib_index = bindings.codes_index_new_from_file(TEST_DATA_B, [key])
-
-    bindings.codes_index_select(grib_index, key, value)
-    grib_handle = bindings.codes_new_from_index(grib_index)
-
-    result = bindings.codes_get(grib_handle, key)
-
-    assert result == value
-
-
 def test_codes_get_length():
-    grib_index = bindings.codes_index_new_from_file(TEST_DATA_B, [b'paramId'])
-    bindings.codes_index_select(grib_index, b'paramId', 130)
-    grib_handle = bindings.codes_new_from_index(grib_index)
+    grib = bindings.codes_handle_new_from_file(open(TEST_DATA))
 
-    result = []
-    result.append(bindings.codes_get_length(grib_handle, b'numberOfForecastsInEnsemble'))
-    result.append(bindings.codes_get_length(grib_handle, b'marsParam'))
+    res = bindings.codes_get_length(grib, b'numberOfForecastsInEnsemble')
+    assert res == 1025
 
-    assert result[0] == 1025
-    assert result[1] == 8
+    res = bindings.codes_get_length(grib, b'marsParam')
+    assert res == 8
 
 
 def test_codes_keys_iterator():
