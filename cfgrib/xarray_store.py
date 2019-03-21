@@ -54,7 +54,7 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
     try:
         datasets.append(open_dataset(path, backend_kwargs=backend_kwargs, **kwargs))
     except DatasetBuildError as ex:
-        fbks.extend(ex.args[1])
+        fbks.extend(ex.args[2])
     # NOTE: the recursive call needs to stay out of the exception handler to avoid showing
     #   to the user a confusing error message due to exception chaining
     for fbk in fbks:

@@ -7,7 +7,9 @@ include LICENSE
 include Makefile
 include tox.ini
 include tests/sample-data/era5-levels-members.grib
+include *.yml
 recursive-include ci *.in
+recursive-include ci *.ps1
 recursive-include ci *.txt
 recursive-include ci *.yml
 recursive-include docs *.gitkeep

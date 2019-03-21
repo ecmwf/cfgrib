@@ -1,11 +1,11 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+from builtins import str
 
 import os.path
 
 import pytest
 
-from cfgrib import bindings
 from cfgrib import messages
 
 
@@ -39,7 +39,7 @@ def test_Message_read():
 
 
 def test_Message_write(tmpdir):
-    res = messages.Message.from_sample_name('regular_ll_pl_grib2', errors='strict')
+    res = messages.Message.from_sample_name('regular_ll_pl_grib2')
     assert res['gridType'] == 'regular_ll'
 
     res.message_set('Ni', 20)
@@ -54,6 +54,19 @@ def test_Message_write(tmpdir):
     res['pl'] = [2., 3.]
     assert res['pl'] == [2., 3.]
 
+    # warn on errors
+    res['centreDescription'] = 'DUMMY'
+    assert res['centreDescription'] != 'DUMMY'
+    res['edition'] = -1
+    assert res['edition'] != -1
+
+    # ignore errors
+    res.errors = 'ignore'
+    res['centreDescription'] = 'DUMMY'
+    assert res['centreDescription'] != 'DUMMY'
+
+    # raise errors
+    res.errors = 'raise'
     with pytest.raises(KeyError):
         res['centreDescription'] = 'DUMMY'
 
@@ -97,18 +110,6 @@ def test_ComputedKeysMessage_write():
     assert res['ref_time'] == '201801010000'
 
     res['centre'] = 1
-
-
-def test_make_message_schema():
-    with open(TEST_DATA) as file:
-        message = messages.Message.from_file(file)
-
-    res = messages.make_message_schema(message, ['paramId', 'shortName', 'values', 'non-existent'])
-
-    assert res['paramId'] == (bindings.CODES_TYPE_LONG, 1)
-    assert res['shortName'] == (bindings.CODES_TYPE_STRING, 1, 256)
-    assert res['values'] == (bindings.CODES_TYPE_DOUBLE, 7320)
-    assert res['non-existent'] == ()
 
 
 def test_compat_create_exclusive(tmpdir):
@@ -220,3 +221,11 @@ def test_FileStream():
     res = messages.FileStream(str(__file__))
     with pytest.raises(EOFError):
         res.first()
+
+    res = messages.FileStream(str(__file__), errors='ignore')
+    with pytest.raises(EOFError):
+        res.first()
+
+    # res = messages.FileStream(str(__file__), errors='raise')
+    # with pytest.raises(bindings.EcCodesError):
+    #     res.first()

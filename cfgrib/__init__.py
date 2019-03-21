@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__version__ = '0.9.6.dev0'
+__version__ = '0.9.6.2.dev0'
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage

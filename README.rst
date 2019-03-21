@@ -14,10 +14,12 @@ Features with development status **Beta**:
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
-- works on most *Linux* distributions and *MacOS*, the *ecCodes* C-library is the only system dependency,
-- PyPI package with no install time build (binds with *CFFI* ABI mode),
+- works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
+- conda-forge package on all supported platforms,
+- PyPI package with no install time build (binds via *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
-- allows larger-than-memory and distributed processing via *dask*.
+- allows larger-than-memory and distributed processing via *dask*,
+- supports translating coordinates to different data models and naming conventions.
 
 Work in progress:
 
@@ -28,19 +30,11 @@ Work in progress:
   see `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
 - **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
   see the *Advanced write usage* section below and
-  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_,
-- **Alpha** support translating coordinates to different data models and naming conventions,
-  `#24 <https://github.com/ecmwf/cfgrib/issues/24>`_.
+  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 
 Limitations:
 
-- no *conda* package, for now,
-  see `#5 <https://github.com/ecmwf/cfgrib/issues/5>`_,
-- *PyPI* binary packages do not include *ecCodes*,
-  see `#22 <https://github.com/ecmwf/cfgrib/issues/22>`_,
 - incomplete documentation, for now,
-- no Windows support,
-  see `#7 <https://github.com/ecmwf/cfgrib/issues/7>`_,
 - relies on *ecCodes* for the CF attributes of the data variables,
 - relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
   see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.
@@ -49,15 +43,20 @@ Limitations:
 Installation
 ============
 
-The package is installed from PyPI with::
+The easiest way to install *cfgrib* and all its binary dependencies is via `Conda <https://conda.io/>`_::
+
+    $ conda install -c conda-forge cfgrib
+
+alternatively, if you install the binary dependencies yourself, you can install the
+Python package from *PyPI* with::
 
     $ pip install cfgrib
 
 
-System dependencies
+Binary dependencies
 -------------------
 
-The Python module depends on the ECMWF *ecCodes* library
+The Python module depends on the ECMWF *ecCodes* binary library
 that must be installed on the system and accessible as a shared library.
 Some Linux distributions ship a binary version that may be installed with the standard package manager.
 On Ubuntu 18.04 use the command::
@@ -76,12 +75,10 @@ As an alternative you may install the official source distribution
 by following the instructions at
 https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
-Note that *ecCodes* support for the Windows operating system is experimental.
-
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
-    Found: ecCodes v2.7.0.
+    Found: ecCodes v2.12.0.
     Your system is ready.
 
 
@@ -181,14 +178,6 @@ to the GRIB file name.
 Index files are an **experimental** and completely optional feature, feel free to
 remove them and try again in case of problems. Index files saving can be disable passing
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
-
-
-Lower level APIs
-----------------
-
-Lower level APIs are not stable and should not be considered public yet.
-In particular the internal Python 3 *ecCodes* bindings are not compatible with
-the standard *ecCodes* python module.
 
 
 Advanced usage
@@ -311,10 +300,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ...
 >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
@@ -334,10 +323,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ...
 
 
@@ -355,6 +344,56 @@ and it is not part of the stable API. In the future it may change or be removed 
 >>> from cfgrib import xarray_store
 >>> xarray_store.open_datasets('nam.t00z.awp21100.tm00.grib2', backend_kwargs={'errors': 'ignore'})
 [<xarray.Dataset>
+Dimensions:     (x: 93, y: 65)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    meanSea     int64 ...
+    latitude    (y, x) float64 ...
+    longitude   (y, x) float64 ...
+    valid_time  datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    prmsl       (y, x) float32 ...
+    mslet       (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:     (x: 93, y: 65)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    surface     int64 ...
+    latitude    (y, x) float64 ...
+    longitude   (y, x) float64 ...
+    valid_time  datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    gust        (y, x) float32 ...
+    sp          (y, x) float32 ...
+    orog        (y, x) float32 ...
+    tp          (y, x) float32 ...
+    acpcp       (y, x) float32 ...
+    csnow       (y, x) float32 ...
+    cicep       (y, x) float32 ...
+    cfrzr       (y, x) float32 ...
+    crain       (y, x) float32 ...
+    cape        (y, x) float32 ...
+    cin         (y, x) float32 ...
+    hpbl        (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
 Coordinates:
     time           datetime64[ns] ...
@@ -374,10 +413,51 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:            (x: 93, y: 65)
+Coordinates:
+    time               datetime64[ns] ...
+    step               timedelta64[ns] ...
+    heightAboveGround  int64 ...
+    latitude           (y, x) float64 ...
+    longitude          (y, x) float64 ...
+    valid_time         datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    t2m                (y, x) float32 ...
+    r2                 (y, x) float32 ...
+    u10                (y, x) float32 ...
+    v10                (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:     (x: 93, y: 65)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    level       int64 ...
+    latitude    (y, x) float64 ...
+    longitude   (y, x) float64 ...
+    valid_time  datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    pwat        (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -394,10 +474,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -415,10 +495,51 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:                 (heightAboveGroundLayer: 2, x: 93, y: 65)
+Coordinates:
+    time                    datetime64[ns] ...
+    step                    timedelta64[ns] ...
+  * heightAboveGroundLayer  (heightAboveGroundLayer) int64 1000 3000
+    latitude                (y, x) float64 ...
+    longitude               (y, x) float64 ...
+    valid_time              datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    hlcy                    (heightAboveGroundLayer, y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:     (x: 93, y: 65)
+Coordinates:
+    time        datetime64[ns] ...
+    step        timedelta64[ns] ...
+    tropopause  int64 ...
+    latitude    (y, x) float64 ...
+    longitude   (y, x) float64 ...
+    valid_time  datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    pres        (y, x) float32 ...
+    t           (y, x) float32 ...
+    u           (y, x) float32 ...
+    v           (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -437,10 +558,10 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
     history:                 ..., <xarray.Dataset>
 Dimensions:       (x: 93, y: 65)
 Coordinates:
@@ -457,17 +578,41 @@ Data variables:
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_centreDescription:  US National Weather Service - NCEP 
     GRIB_subCentre:          0
     Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP...
+    institution:             US National Weather Service - NCEP 
+    history:                 ..., <xarray.Dataset>
+Dimensions:                  (pressureFromGroundLayer: 5, x: 93, y: 65)
+Coordinates:
+    time                     datetime64[ns] ...
+    step                     timedelta64[ns] ...
+  * pressureFromGroundLayer  (pressureFromGroundLayer) int64 3000 6000 ... 15000
+    latitude                 (y, x) float64 ...
+    longitude                (y, x) float64 ...
+    valid_time               datetime64[ns] ...
+Dimensions without coordinates: x, y
+Data variables:
+    t                        (pressureFromGroundLayer, y, x) float32 ...
+    r                        (pressureFromGroundLayer, y, x) float32 ...
+    u                        (pressureFromGroundLayer, y, x) float32 ...
+    v                        (pressureFromGroundLayer, y, x) float32 ...
+    pli                      (y, x) float32 ...
+    4lftx                    (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP 
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP 
     history:                 ...]
 
 
 Advanced write usage
 ====================
 
-**Please note that write support is Pre-Alpha and highly experimental.**
+**Please note that write support is Alpha.**
 
 Only ``xarray.Dataset``'s in *canonical* form,
 that is, with the coordinates names matching exactly the *cfgrib* coordinates,
@@ -567,9 +712,13 @@ Project resources
 ============= =========================================================
 Development   https://github.com/ecmwf/cfgrib
 Download      https://pypi.org/project/cfgrib
+User support  https://stackoverflow.com/search?q=cfgrib
 Code quality  .. image:: https://api.travis-ci.org/ecmwf/cfgrib.svg?branch=master
                 :target: https://travis-ci.org/ecmwf/cfgrib/branches
                 :alt: Build Status on Travis CI
+              .. image:: https://ci.appveyor.com/api/projects/status/github/ecmwf/cfgrib?svg=true&passingText=passing&failingText=failing&pendingText=pending
+                :target: https://ci.appveyor.com/project/StephanSiemen/cfgrib
+                :alt: Build Status on Appveyor
               .. image:: https://coveralls.io/repos/ecmwf/cfgrib/badge.svg?branch=master&service=github
                 :target: https://coveralls.io/github/ecmwf/cfgrib
                 :alt: Coverage Status on Coveralls

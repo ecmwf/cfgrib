@@ -6,33 +6,33 @@
 #
 apipkg==1.5               # via execnet
 atomicwrites==1.3.0       # via pytest
-attrs==18.2.0
-cffi==1.11.5
+attrs==19.1.0
+cffi==1.12.2
 click==7.0
-coverage==4.5.2           # via pytest-cov
-dask[array]==1.1.1
+coverage==4.5.3           # via pytest-cov
+dask[array]==1.1.4
 execnet==1.5.0            # via pytest-cache
 future==0.17.1
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==5.0.0     # via pytest
-numpy==1.16.1
-pandas==0.24.0            # via xarray
+numpy==1.16.2
+pandas==0.24.2            # via xarray
 pep8==1.7.1               # via pytest-pep8
-pluggy==0.8.1             # via pytest
-py==1.7.0                 # via pytest
+pluggy==0.9.0             # via pytest
+py==1.8.0                 # via pytest
 pycparser==2.19           # via cffi
-pyflakes==2.1.0           # via pytest-flakes
+pyflakes==2.1.1           # via pytest-flakes
 pytest-cache==1.0         # via pytest-mccabe, pytest-pep8
 pytest-cov==2.6.1
 pytest-flakes==4.0.0
 pytest-mccabe==0.1
 pytest-pep8==1.0.6
-pytest-runner==4.2
-pytest==4.2.0
-python-dateutil==2.7.5    # via pandas
+pytest-runner==4.4
+pytest==4.3.1
+python-dateutil==2.8.0    # via pandas
 pytz==2018.9              # via pandas
 scipy==1.2.0
-six==1.12.0               # via more-itertools, pytest, python-dateutil
+six==1.12.0               # via pytest, python-dateutil
 toolz==0.9.0              # via dask
 typing==3.6.6
 xarray==0.11.3

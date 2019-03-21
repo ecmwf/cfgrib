@@ -33,131 +33,6 @@ typedef struct grib_context           codes_context;
 */
 typedef struct grib_keys_iterator     codes_keys_iterator;
 
-/*! \defgroup codes_index The indexing feature
-The codes_index is the structure giving indexed access to messages in a file.
- */
-/*! @{*/
-
-/*! index structure to access messages in a file.
- * \ingroup codes_index
- * \struct codes_index
-*/
-typedef struct grib_index             codes_index;
-
-/**
- *  Create a new index form a file. The file is indexed with the keys in argument.
- *
- * @param c           : context  (NULL for default context)
- * @param filename    : name of the file of messages to be indexed
- * @param keys        : comma separated list of keys for the index.
- *    The type of the key can be explicitly declared appending :l for long,
- *    (or alternatively :i)
- *    :d for double, :s for string to the key name. If the type is not
- *    declared explicitly, the native type is assumed.
- * @param err         :  0 if OK, integer value on error
- * @return            the newly created index
- */
-codes_index* codes_index_new_from_file(codes_context* c, char* filename,const char* keys,int *err);
-
-/**
- *  Get the number of distinct values of the key in argument contained in the index. The key must belong to the index.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key for which the number of values is computed
- * @param size        : number of distinct values of the key in the index
- * @return            0 if OK, integer value on error
- */
-int codes_index_get_size(codes_index* index,const char* key,size_t* size);
-
-/**
- *  Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as long or when the native type of the key is long.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key for which the values are returned
- * @param values      : array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
- * @param size        : size of the values array
- * @return            0 if OK, integer value on error
- */
-int codes_index_get_long(codes_index* index,const char* key,long* values,size_t *size);
-
-/**
- *  Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as double or when the native type of the key is double.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key for which the values are returned
- * @param values      : array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
- * @param size        : size of the values array
- * @return            0 if OK, integer value on error
- */
-int codes_index_get_double(codes_index* index,const char* key, double* values,size_t *size);
-
-/**
- *  Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as string or when the native type of the key is string.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key for which the values are returned
- * @param values      : array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
- * @param size        : size of the values array
- * @return            0 if OK, integer value on error
- */
-int codes_index_get_string(codes_index* index,const char* key,char** values,size_t *size);
-
-
-/**
- *  Select the message subset with key==value. The value is a long. The key must have been created with long type or have long as native type if the type was not explicitly defined in the index creation.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key to be selected
- * @param value       : value of the key to select
- * @return            0 if OK, integer value on error
- */
-int codes_index_select_long(codes_index* index,const char* key,long value);
-
-/**
- *  Select the message subset with key==value. The value is a double. The key must have been created with double type or have double as native type if the type was not explicitly defined in the index creation.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key to be selected
- * @param value       : value of the key to select
- * @return            0 if OK, integer value on error
- */
-int codes_index_select_double(codes_index* index,const char* key,double value);
-
-/**
- *  Select the message subset with key==value. The value is a string. The key must have been created with string type or have string as native type if the type was not explicitly defined in the index creation.
- *
- * @param index       : an index created from a file.
- *     The index must have been created with the key in argument.
- * @param key         : key to be selected
- * @param value       : value of the key to select
- * @return            0 if OK, integer value on error
- */
-int codes_index_select_string(codes_index* index,const char* key,char* value);
-
-/**
- *  Create a new handle from an index after having selected the key values.
- *  All the keys belonging to the index must be selected before calling this function. Successive calls to this function will return all the handles compatible with the constraints defined selecting the values of the index keys.
- * When no more handles are available from the index a NULL pointer is returned and the err variable is set to CODES_END_OF_INDEX.
- *
- * @param index       : an index created from a file.
- * @param err         :  0 if OK, integer value on error. CODES_END_OF_INDEX when no more handles are contained in the index.
- * @return            grib handle.
- */
-codes_handle* codes_handle_new_from_index(codes_index* index,int *err);
-
-/**
- *  Delete the index.
- *
- * @param index       : index to be deleted.
- */
-void codes_index_delete(codes_index* index);
-
 /**
 *  Create a handle from a file resource.
 *  The file is read until a message is found. The message is then copied.
@@ -437,6 +312,8 @@ void codes_grib_multi_support_on(codes_context* c);
 * @param c            : the context to be modified
 */
 void codes_grib_multi_support_off(codes_context* c);
+
+char* codes_samples_path(const codes_context *c);
 
 /**
 *  Get the API version
