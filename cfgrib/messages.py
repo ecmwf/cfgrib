@@ -18,7 +18,7 @@
 #
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import bytes, isinstance, str, type
+from builtins import int, isinstance, str, type
 
 # Python 2 compatibility bit not in python-future
 try:
@@ -37,8 +37,13 @@ import typing as T
 
 import attr
 
-from . import bindings
+# select external ecCodes bindings if available otherwise fall back to internal implementation.
+try:
+    import eccodes
+except ImportError:
+    from . import bindings as eccodes
 
+eccodes_version = eccodes.codes_get_api_version()
 
 LOG = logging.getLogger(__name__)
 _MARKER = object()
@@ -46,7 +51,7 @@ _MARKER = object()
 #
 # No explicit support for MULTI-FIELD at Message level.
 #
-bindings.codes_grib_multi_support_on()
+eccodes.codes_grib_multi_support_on()
 
 
 @attr.attrs()
@@ -60,73 +65,72 @@ class Message(collections.MutableMapping):
     )
 
     @classmethod
-    def from_file(cls, file, offset=None, product_kind=bindings.CODES_PRODUCT_GRIB, **kwargs):
-        # type: (T.IO[bytes], int, int, T.Any) -> Message
+    def from_file(cls, file, offset=None, **kwargs):
+        # type: (T.IO[bytes], int, T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
         if offset is not None:
             file.seek(offset)
-        codes_id = bindings.codes_handle_new_from_file(file, product_kind)
+        codes_id = None
         # iterate over multi-fields in the message
-        for _ in range(field_in_message):
-            codes_id = bindings.codes_handle_new_from_file(file, product_kind)
+        for _ in range(field_in_message + 1):
+            codes_id = eccodes.codes_grib_new_from_file(file)
+        if codes_id is None:
+            raise EOFError("End of file: %r" % file)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
-    def from_sample_name(cls, sample_name, product_kind=bindings.CODES_PRODUCT_GRIB, **kwargs):
-        codes_id = bindings.codes_new_from_samples(sample_name.encode('ASCII'), product_kind)
+    def from_sample_name(cls, sample_name, product_kind=eccodes.CODES_PRODUCT_GRIB, **kwargs):
+        codes_id = eccodes.codes_new_from_samples(sample_name, product_kind)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
     def from_message(cls, message, **kwargs):
-        codes_id = bindings.codes_handle_clone(message.codes_id)
+        codes_id = eccodes.codes_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
 
     def __del__(self):
-        bindings.codes_handle_delete(self.codes_id)
+        eccodes.codes_release(self.codes_id)
 
-    def message_get(self, item, key_type=None, size=None, length=None, default=_MARKER):
-        # type: (str, int, int, int, T.Any) -> T.Any
+    def message_get(self, item, key_type=None, default=_MARKER):
+        # type: (str, type, T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
-        key = item.encode(self.encoding)
+        key = item
         try:
-            values = bindings.codes_get_array(self.codes_id, key, key_type, size, length)
-        except bindings.EcCodesError as ex:
-            if ex.code == bindings.lib.GRIB_NOT_FOUND:
-                if default is _MARKER:
-                    raise KeyError(item)
-                else:
-                    return default
-            else:  # pragma: no cover
-                raise
-        if values and isinstance(values[0], bytes):
-            values = [v.decode(self.encoding) for v in values]
+            values = eccodes.codes_get_array(self.codes_id, key, key_type)
+            if values is None:
+                values = ['unsupported_key_type']
+        except eccodes.KeyValueNotFoundError:
+            if default is _MARKER:
+                raise KeyError(item)
+            else:
+                return default
         if len(values) == 1:
             return values[0]
         return values
 
     def message_set(self, item, value):
         # type: (str, T.Any) -> None
-        key = item.encode(self.encoding)
+        key = item
         set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
         if set_array:
-            bindings.codes_set_array(self.codes_id, key, value)
+            eccodes.codes_set_array(self.codes_id, key, value)
         else:
             if isinstance(value, str):
-                value = value.encode(self.encoding)
-            bindings.codes_set(self.codes_id, key, value)
+                value = value
+            eccodes.codes_set(self.codes_id, key, value)
 
     def message_iterkeys(self, namespace=None):
         # type: (str) -> T.Generator[str, None, None]
         if namespace is not None:
-            bnamespace = namespace.encode(self.encoding)  # type: T.Optional[bytes]
+            bnamespace = namespace  # type: T.Optional[str]
         else:
             bnamespace = None
-        iterator = bindings.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
-        while bindings.codes_keys_iterator_next(iterator):
-            yield bindings.codes_keys_iterator_get_name(iterator).decode(self.encoding)
-        bindings.codes_keys_iterator_delete(iterator)
+        iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
+        while eccodes.codes_keys_iterator_next(iterator):
+            yield eccodes.codes_keys_iterator_get_name(iterator)
+        eccodes.codes_keys_iterator_delete(iterator)
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
@@ -136,13 +140,13 @@ class Message(collections.MutableMapping):
         # type: (str, T.Any) -> None
         try:
             return self.message_set(item, value)
-        except bindings.EcCodesError as ex:
+        except eccodes.GribInternalError as ex:
             if self.errors == 'ignore':
                 pass
             elif self.errors == 'raise':
                 raise KeyError("failed to set key %r to %r" % (item, value))
             else:
-                if ex.code == bindings.lib.GRIB_READ_ONLY:
+                if isinstance(ex, eccodes.ReadOnlyError):
                     # Very noisy error when trying to set computed keys
                     pass
                 else:
@@ -161,7 +165,7 @@ class Message(collections.MutableMapping):
         return sum(1 for _ in self)
 
     def write(self, file):
-        bindings.codes_write(self.codes_id, file)
+        eccodes.codes_write(self.codes_id, file)
 
 
 @attr.attrs()
@@ -271,7 +275,7 @@ class FileIndex(collections.Mapping):
                 if isinstance(value, list):
                     value = tuple(value)
                 header_values.append(value)
-            offset = message.message_get('offset', bindings.CODES_TYPE_LONG)
+            offset = message.message_get('offset', int)
             if offset in count_offsets:
                 count_offsets[offset] += 1
                 offset_field = (offset, count_offsets[offset])
