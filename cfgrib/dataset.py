@@ -464,8 +464,8 @@ def build_dataset_components(
         vars = collections.OrderedDict([(short_name, data_var)])
         vars.update(coord_vars)
         try:
-            dict_merge(dimensions, dims)
             dict_merge(variables, vars)
+            dict_merge(dimensions, dims)
         except ValueError:
             if errors == 'ignore':
                 pass
