@@ -461,10 +461,9 @@ def build_dataset_components(
             raise DatasetBuildError(error_message, key, fbks)
         if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
             short_name = var_name
-        vars = collections.OrderedDict([(short_name, data_var)])
-        vars.update(coord_vars)
         try:
-            dict_merge(variables, vars)
+            dict_merge(variables, coord_vars)
+            dict_merge(variables, {short_name: data_var})
             dict_merge(dimensions, dims)
         except ValueError:
             if errors == 'ignore':
