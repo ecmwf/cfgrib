@@ -17,15 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import int, isinstance, str, type
-
-# Python 2 compatibility bit not in python-future
-try:
-    FileExistsError
-except NameError:
-    FileExistsError = OSError
-
 import collections
 import contextlib
 import hashlib

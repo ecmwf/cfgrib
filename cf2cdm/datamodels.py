@@ -17,9 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-
 CDS = {
     # geography
     'latitude': {
