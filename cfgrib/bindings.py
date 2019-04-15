@@ -17,10 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import float, int, isinstance, str
-from future.utils import raise_from
-
 import functools
 import logging
 import pkgutil
@@ -44,7 +40,7 @@ class RaiseOnAttributeAccess(object):
         self.exc = exc
 
     def __getattr__(self, attr):
-        raise_from(RuntimeError(self.message), self.exc)
+        raise RuntimeError(self.message) from self.exc
 
 
 for libname in ['eccodes', 'libeccodes.so', 'libeccodes']:

@@ -2,10 +2,19 @@
 Changelog for cfgrib
 ====================
 
-0.9.6.2 (unreleased)
+0.9.7 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Drop support for Python 2, in line with *xarray* 0.12.0.
+  The 0.9.6.x series will be supported long term for Python 2 users.
+  See: `#69 <https://github.com/ecmwf/cfgrib/issues/69>`_.
+
+
+0.9.6.2 (2019-04-15)
+--------------------
+
+- Improve merging of variables into a dataset.
+  See: `#63 <https://github.com/ecmwf/cfgrib/issues/63>`_.
 
 
 0.9.6.1.post1 (2019-03-17)

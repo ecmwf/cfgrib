@@ -2,7 +2,7 @@
 PACKAGE := cfgrib
 IMAGE := $(PACKAGE)-image
 MODULE := $(PACKAGE)
-PYTHONS := python3.7 python3.6 python3.5 pypy3 python2.7 pypy
+PYTHONS := python3.7 python3.6 python3.5 pypy3
 PYTHON := python
 
 PYTESTFLAGS_TEST := -v --flakes --doctest-glob '*.rst' --cov=$(MODULE) --cov=cf2cdm --cov-report=html --cache-clear
@@ -41,7 +41,7 @@ $(PIP_FIND_LINKS):
 	$(MKDIR) $@
 
 local-wheelhouse-one:
-	$(PIP) install wheel
+	$(PIP) install cython wheel
 	$(PIP) wheel -r ci/requirements-tests.txt
 	$(PIP) wheel -r ci/requirements-docs.txt
 

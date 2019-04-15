@@ -13,7 +13,7 @@ Features with development status **Beta**:
 - enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
-- supports all modern versions of Python 3.7, 3.6, 3.5 and 2.7, plus PyPy and PyPy3,
+- supports all modern versions of Python 3.7, 3.6, 3.5 and PyPy3,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
 - conda-forge package on all supported platforms,
 - PyPI package with no install time build (binds via *CFFI* ABI mode),
@@ -95,9 +95,9 @@ Read-only *xarray* GRIB engine
 ------------------------------
 
 Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and
-need to have *xarray>=0.11.0* installed::
+need to have *xarray>=0.12.0* installed::
 
-    $ pip install xarray>=0.11.0
+    $ pip install xarray>=0.12.0
 
 In a Python interpreter try:
 
@@ -430,8 +430,6 @@ Dimensions without coordinates: x, y
 Data variables:
     t2m                (y, x) float32 ...
     r2                 (y, x) float32 ...
-    u10                (y, x) float32 ...
-    v10                (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
@@ -597,8 +595,6 @@ Data variables:
     r                        (pressureFromGroundLayer, y, x) float32 ...
     u                        (pressureFromGroundLayer, y, x) float32 ...
     v                        (pressureFromGroundLayer, y, x) float32 ...
-    pli                      (y, x) float32 ...
-    4lftx                    (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
