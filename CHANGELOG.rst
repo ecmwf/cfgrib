@@ -2,10 +2,11 @@
 Changelog for cfgrib
 ====================
 
-0.9.6.2 (unreleased)
+0.9.6.2 (2019-04-15)
 --------------------
 
-- Nothing changed yet.
+- Improve merging of variables into a dataset.
+  See: `#63 <https://github.com/ecmwf/cfgrib/issues/63>`_.
 
 
 0.9.6.1.post1 (2019-03-17)
