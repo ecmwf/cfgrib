@@ -8,7 +8,6 @@ matrix:
   - env: ENV=py36-qc
   - env: ENV=py27
   - env: ENV=docs
-  - env: ENV=py36-old
   - env: ENV=py36-without-xarray
   - env: ENV=py37
 
