@@ -454,7 +454,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
             with open(sample_path) as file:
                 handle = codes_grib_new_from_file(file, product_kind)
         except Exception:
-            pass
+            logging.exception("creating empty message from sample failed")
     return handle
 
 
