@@ -300,7 +300,7 @@ _codes_get_string_array = check_return(lib.codes_get_string_array)
 
 
 def codes_get_string_array(handle, key, size, length=None):
-    # type: (cffi.FFI.CData, bytes, int, int) -> T.List[bytes]
+    # type: (cffi.FFI.CData, str, int, int) -> T.List[bytes]
     """
     Get string array values from a key.
 
@@ -341,8 +341,7 @@ def codes_get_string(handle, key, length=None):
     Outputs the last element.
 
     :param bytes key: the keyword to select the value of
-    :param bool strict: flag to select if the method should fail in case of
-        more than one key in single message
+    :param int length: (optional) length of the string
 
     :rtype: bytes
     """
@@ -442,7 +441,7 @@ def codes_get_api_version():
 def portable_handle_new_from_samples(samplename, product_kind):
     #
     # re-implement codes_grib_handle_new_from_samples in a portable way.
-    # imports are here not to pollute the head of the file with (hopfully!) temporary stuff
+    # imports are here not to pollute the head of the file with (hopefully!) temporary stuff
     #
     import os.path
     import platform
