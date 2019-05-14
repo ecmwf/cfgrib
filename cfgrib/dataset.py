@@ -50,6 +50,8 @@ DATA_ATTRIBUTES_KEYS = [
     'missingValue',
     'numberOfPoints',
     'totalNumber',
+    'numberOfDirections',
+    'numberOfFrequencies',
     'typeOfLevel',
     'NV',
     'stepUnits',
@@ -147,8 +149,9 @@ ENSEMBLE_KEYS = ['number']
 VERTICAL_KEYS = ['level']
 DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
 REF_TIME_KEYS = ['time', 'step']
+SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 
-ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS
+ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS + SPECTRA_KEYS
 
 ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS)
 
@@ -418,6 +421,7 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
+    coords_map.extend(SPECTRA_KEYS)
     return coords_map
 
 
