@@ -2,6 +2,12 @@
 Changelog for cfgrib
 ====================
 
+0.9.7 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.9.7rc1 (2019-05-14)
 ---------------------
 
