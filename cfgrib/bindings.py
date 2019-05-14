@@ -29,8 +29,8 @@ LOG = logging.getLogger(__name__)
 
 ffi = cffi.FFI()
 ffi.cdef(
-    pkgutil.get_data(__name__, 'grib_api.h').decode('utf-8') +
-    pkgutil.get_data(__name__, 'eccodes.h').decode('utf-8')
+    pkgutil.get_data(__name__, 'grib_api.h').decode('utf-8')
+    + pkgutil.get_data(__name__, 'eccodes.h').decode('utf-8')
 )
 
 
@@ -74,7 +74,7 @@ CODES_PRODUCT_TAF = 5
 """ TAF product kind """
 
 # Constants for 'missing'
-GRIB_MISSING_DOUBLE = -1e+100
+GRIB_MISSING_DOUBLE = -1e100
 GRIB_MISSING_LONG = 2147483647
 
 CODES_MISSING_DOUBLE = GRIB_MISSING_DOUBLE
@@ -92,21 +92,17 @@ CODES_TYPE_SECTION = lib.GRIB_TYPE_SECTION
 CODES_TYPE_LABEL = lib.GRIB_TYPE_LABEL
 CODES_TYPE_MISSING = lib.GRIB_TYPE_MISSING
 
-KEYTYPES = {
-    1: int,
-    2: float,
-    3: str,
-}
+KEYTYPES = {1: int, 2: float, 3: str}
 
 CODES_KEYS_ITERATOR_ALL_KEYS = 0
-CODES_KEYS_ITERATOR_SKIP_READ_ONLY = (1 << 0)
-CODES_KEYS_ITERATOR_SKIP_OPTIONAL = (1 << 1)
-CODES_KEYS_ITERATOR_SKIP_EDITION_SPECIFIC = (1 << 2)
-CODES_KEYS_ITERATOR_SKIP_CODED = (1 << 3)
-CODES_KEYS_ITERATOR_SKIP_COMPUTED = (1 << 4)
-CODES_KEYS_ITERATOR_SKIP_DUPLICATES = (1 << 5)
-CODES_KEYS_ITERATOR_SKIP_FUNCTION = (1 << 6)
-CODES_KEYS_ITERATOR_DUMP_ONLY = (1 << 7)
+CODES_KEYS_ITERATOR_SKIP_READ_ONLY = 1 << 0
+CODES_KEYS_ITERATOR_SKIP_OPTIONAL = 1 << 1
+CODES_KEYS_ITERATOR_SKIP_EDITION_SPECIFIC = 1 << 2
+CODES_KEYS_ITERATOR_SKIP_CODED = 1 << 3
+CODES_KEYS_ITERATOR_SKIP_COMPUTED = 1 << 4
+CODES_KEYS_ITERATOR_SKIP_DUPLICATES = 1 << 5
+CODES_KEYS_ITERATOR_SKIP_FUNCTION = 1 << 6
+CODES_KEYS_ITERATOR_DUMP_ONLY = 1 << 7
 
 
 #
@@ -139,15 +135,10 @@ class FileNotFoundError(GribInternalError):
     """File not found."""
 
 
-ERROR_MAP = {
-    -18: ReadOnlyError,
-    -10: KeyValueNotFoundError,
-    -7: FileNotFoundError,
-}
+ERROR_MAP = {-18: ReadOnlyError, -10: KeyValueNotFoundError, -7: FileNotFoundError}
 
 
 def check_last(func):
-
     @functools.wraps(func)
     def wrapper(*args):
         code = ffi.new('int *')
@@ -164,7 +155,6 @@ def check_last(func):
 
 
 def check_return(func):
-
     @functools.wraps(func)
     def wrapper(*args):
         code = func(*args)
@@ -300,7 +290,7 @@ _codes_get_string_array = check_return(lib.codes_get_string_array)
 
 
 def codes_get_string_array(handle, key, size, length=None):
-    # type: (cffi.FFI.CData, bytes, int, int) -> T.List[bytes]
+    # type: (cffi.FFI.CData, str, int, int) -> T.List[bytes]
     """
     Get string array values from a key.
 
@@ -341,8 +331,7 @@ def codes_get_string(handle, key, length=None):
     Outputs the last element.
 
     :param bytes key: the keyword to select the value of
-    :param bool strict: flag to select if the method should fail in case of
-        more than one key in single message
+    :param int length: (optional) length of the string
 
     :rtype: bytes
     """
@@ -365,7 +354,7 @@ def codes_get_native_type(handle, key):
     return KEYTYPES.get(grib_type[0], grib_type[0])
 
 
-def codes_get_array(handle, key, key_type=None,  size=None, length=None, log=LOG):
+def codes_get_array(handle, key, key_type=None, size=None, length=None, log=LOG):
     # type: (cffi.FFI.CData, str, int, int, int, logging.Logger) -> T.Any
     if key_type is None:
         key_type = codes_get_native_type(handle, key)
@@ -442,10 +431,11 @@ def codes_get_api_version():
 def portable_handle_new_from_samples(samplename, product_kind):
     #
     # re-implement codes_grib_handle_new_from_samples in a portable way.
-    # imports are here not to pollute the head of the file with (hopfully!) temporary stuff
+    # imports are here not to pollute the head of the file with (hopefully!) temporary stuff
     #
     import os.path
     import platform
+
     handle = ffi.NULL
     if platform.platform().startswith('Windows'):
         samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL))
@@ -454,7 +444,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
             with open(sample_path) as file:
                 handle = codes_grib_new_from_file(file, product_kind)
         except Exception:
-            pass
+            logging.exception("creating empty message from sample failed")
     return handle
 
 

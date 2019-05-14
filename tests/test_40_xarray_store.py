@@ -1,9 +1,9 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path
 
 import pytest
+
 xr = pytest.importorskip('xarray')  # noqa
 
 from cfgrib import xarray_store
@@ -24,10 +24,9 @@ def test_open_dataset():
     var = res['t']
     assert var.attrs['GRIB_gridType'] == 'regular_ll'
     assert var.attrs['units'] == 'K'
-    assert var.dims == \
-        ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+    assert var.dims == ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
 
-    assert var.mean() > 0.
+    assert var.mean() > 0.0
 
     with pytest.raises(ValueError):
         xarray_store.open_dataset(TEST_DATA, engine='netcdf4')
@@ -61,7 +60,7 @@ def test_open_dataset_encode_cf_time():
     assert res['t'].attrs['GRIB_units'] == 'K'
     assert res['t'].dims == ('number', 'time', 'level', 'values')
 
-    assert res['t'].mean() > 0.
+    assert res['t'].mean() > 0.0
 
 
 def test_open_dataset_encode_cf_vertical():
@@ -71,7 +70,7 @@ def test_open_dataset_encode_cf_vertical():
     var = res['t']
     assert var.dims == ('number', 'dataDate', 'dataTime', 'isobaricInhPa', 'values')
 
-    assert var.mean() > 0.
+    assert var.mean() > 0.0
 
 
 def test_open_dataset_encode_cf_geography():
@@ -85,7 +84,7 @@ def test_open_dataset_encode_cf_geography():
     assert var.attrs['GRIB_units'] == 'K'
     assert var.dims == ('number', 'dataDate', 'dataTime', 'level', 'latitude', 'longitude')
 
-    assert var.mean() > 0.
+    assert var.mean() > 0.0
 
 
 def test_open_dataset_eccodes():
@@ -98,7 +97,7 @@ def test_open_dataset_eccodes():
     assert var.attrs['units'] == 'K'
     assert var.dims == ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
 
-    assert var.mean() > 0.
+    assert var.mean() > 0.0
 
 
 def test_open_datasets():

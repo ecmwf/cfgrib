@@ -46,13 +46,13 @@ eccodes.codes_grib_multi_support_on()
 
 
 @attr.attrs()
-class Message(collections.MutableMapping):
+class Message(collections.abc.MutableMapping):
     """Dictionary-line interface to access Message headers."""
+
     codes_id = attr.attrib()
     encoding = attr.attrib(default='ascii', type=str)
     errors = attr.attrib(
-        default='warn',
-        validator=attr.validators.in_(['ignore', 'warn', 'raise']),
+        default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
     )
 
     @classmethod
@@ -162,6 +162,7 @@ class Message(collections.MutableMapping):
 @attr.attrs()
 class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
+
     computed_keys = attr.attrib(
         default={},
         type=T.Dict[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message], T.Any]]],
@@ -192,13 +193,13 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs()
-class FileStream(collections.Iterable):
+class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
+
     path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(
-        default='warn',
-        validator=attr.validators.in_(['ignore', 'warn', 'raise']),
+        default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
     )
 
     def __iter__(self):
@@ -246,7 +247,7 @@ def compat_create_exclusive(path, *args, **kwargs):
 
 
 @attr.attrs()
-class FileIndex(collections.Mapping):
+class FileIndex(collections.abc.Mapping):
     allowed_protocol_version = '1'
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
@@ -286,7 +287,7 @@ class FileIndex(collections.Mapping):
 
     @classmethod
     def from_indexpath_or_filestream(
-            cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG,
+        cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG
     ):
         # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
 
@@ -312,9 +313,11 @@ class FileIndex(collections.Mapping):
             if index_mtime >= filestream_mtime:
                 self = cls.from_indexpath(indexpath)
                 allowed_protocol_version = self.allowed_protocol_version
-                if getattr(self, 'index_keys', None) == index_keys and \
-                        getattr(self, 'filestream', None) == filestream and \
-                        getattr(self, 'index_protocol_version', None) == allowed_protocol_version:
+                if (
+                    getattr(self, 'index_keys', None) == index_keys
+                    and getattr(self, 'filestream', None) == filestream
+                    and getattr(self, 'index_protocol_version', None) == allowed_protocol_version
+                ):
                     return self
                 else:
                     log.warning("Ignoring index file %r incompatible with GRIB file", indexpath)

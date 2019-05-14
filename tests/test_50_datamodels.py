@@ -1,9 +1,9 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path
 
 import pytest
+
 xr = pytest.importorskip('xarray')  # noqa
 
 from cf2cdm import cfcoords
@@ -22,7 +22,13 @@ def test_cds():
 
     assert set(res.dims) == {'time', 'lat', 'lon', 'plev', 'realization'}
     assert set(res.coords) == {
-        'forecast_reference_time', 'lat', 'leadtime', 'lon', 'plev', 'realization', 'time',
+        'forecast_reference_time',
+        'lat',
+        'leadtime',
+        'lon',
+        'plev',
+        'realization',
+        'time',
     }
 
     ds = xarray_store.open_dataset(TEST_DATA2)
@@ -31,7 +37,12 @@ def test_cds():
 
     assert set(res.dims) == {'x', 'y'}
     assert set(res.coords) == {
-        'forecast_reference_time', 'heightAboveGround', 'lat', 'leadtime', 'lon', 'time',
+        'forecast_reference_time',
+        'heightAboveGround',
+        'lat',
+        'leadtime',
+        'lon',
+        'time',
     }
 
 
@@ -42,7 +53,13 @@ def test_ecmwf():
 
     assert set(res.dims) == {'latitude', 'level', 'longitude', 'number', 'time'}
     assert set(res.coords) == {
-        'latitude', 'level', 'longitude', 'number', 'step', 'time', 'valid_time',
+        'latitude',
+        'level',
+        'longitude',
+        'number',
+        'step',
+        'time',
+        'valid_time',
     }
 
     ds = xarray_store.open_dataset(TEST_DATA2)
@@ -51,5 +68,10 @@ def test_ecmwf():
 
     assert set(res.dims) == {'x', 'y'}
     assert set(res.coords) == {
-        'heightAboveGround', 'latitude', 'longitude', 'step', 'time', 'valid_time',
+        'heightAboveGround',
+        'latitude',
+        'longitude',
+        'step',
+        'time',
+        'valid_time',
     }

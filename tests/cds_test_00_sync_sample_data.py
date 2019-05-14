@@ -1,4 +1,3 @@
-
 import pytest
 
 import cfgrib
@@ -21,7 +20,7 @@ TEST_FILES = {
             'format': 'grib',
         },
         193,
-    ],
+    ]
 }
 
 

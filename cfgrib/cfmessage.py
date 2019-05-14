@@ -31,8 +31,22 @@ LOG = logging.getLogger(__name__)
 
 # taken from eccodes stepUnits.table
 GRIB_STEP_UNITS_TO_SECONDS = [
-    60, 3600, 86400, None, None, None, None, None, None, None,
-    10800, 21600, 43200, 1, 900, 1800,
+    60,
+    3600,
+    86400,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    10800,
+    21600,
+    43200,
+    1,
+    900,
+    1800,
 ]
 DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 
@@ -62,7 +76,7 @@ def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch
 
 
 def to_grib_date_time(
-        message, time_ns, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH,
+    message, time_ns, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH
 ):
     # type: (T.MutableMapping, np.datetime64, str, str, datetime.datetime) -> None
     time_s = int(time_ns) * 1e-9
@@ -75,7 +89,7 @@ def to_grib_date_time(
 def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
     # type: (T.Mapping, str, str) -> float
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
-    return message[step_key] * to_seconds / 3600.
+    return message[step_key] * to_seconds / 3600.0
 
 
 def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_key='stepUnits'):

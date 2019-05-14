@@ -1,7 +1,7 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import pytest
+
 xr = pytest.importorskip('xarray')  # noqa
 
 from cf2cdm import cfunits

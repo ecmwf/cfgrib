@@ -3,11 +3,21 @@ Changelog for cfgrib
 ====================
 
 0.9.7 (unreleased)
---------------------
+------------------
+
+- Nothing changed yet.
+
+
+0.9.7rc1 (2019-05-14)
+---------------------
 
 - Drop support for Python 2, in line with *xarray* 0.12.0.
   The 0.9.6.x series will be supported long term for Python 2 users.
   See: `#69 <https://github.com/ecmwf/cfgrib/issues/69>`_.
+- Sync internal ecCodes bindings API to the one in eccodes-python.
+  See: `#81 <https://github.com/ecmwf/cfgrib/issues/81>`_.
+- Source code has been formatted with ``black -S -l 99``.
+- Added initial support for spectral coordinates.
 
 
 0.9.6.2 (2019-04-15)

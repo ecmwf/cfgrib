@@ -1,9 +1,9 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path
 
 import pytest
+
 xr = pytest.importorskip('xarray')  # noqa
 
 from cfgrib import xarray_store

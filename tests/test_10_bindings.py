@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import float, int, str
 
@@ -24,10 +23,13 @@ def test_RaiseOnAttributeAccess():
         res.non_existent_method()
 
 
-@pytest.mark.parametrize('code, message', [
-    (0, 'No error'),  # bindings.lib.GRIB_SUCCESS
-    (-43, 'End of index reached'),  # bindings.lib.GRIB_END_OF_INDEX
-])
+@pytest.mark.parametrize(
+    'code, message',
+    [
+        (0, 'No error'),  # bindings.lib.GRIB_SUCCESS
+        (-43, 'End of index reached'),  # bindings.lib.GRIB_END_OF_INDEX
+    ],
+)
 def test_grib_get_error_message(code, message):
     res = bindings.grib_get_error_message(code)
 
@@ -90,11 +92,14 @@ def test_codes_grib_new_from_file_errors(tmpdir):
         bindings.codes_grib_new_from_file(open(str(bad_grib)))
 
 
-@pytest.mark.parametrize('key, expected_type, expected_value', [
-    ('numberOfDataPoints', int, 7320),
-    ('latitudeOfFirstGridPointInDegrees', float, 90.0),
-    ('gridType', str, 'regular_ll'),
-])
+@pytest.mark.parametrize(
+    'key, expected_type, expected_value',
+    [
+        ('numberOfDataPoints', int, 7320),
+        ('latitudeOfFirstGridPointInDegrees', float, 90.0),
+        ('gridType', str, 'regular_ll'),
+    ],
+)
 def test_codes_get(key, expected_type, expected_value):
     grib = bindings.codes_grib_new_from_file(open(TEST_DATA))
 
@@ -112,11 +117,14 @@ def test_codes_get_errors():
     assert err.value.code == bindings.lib.GRIB_BUFFER_TOO_SMALL
 
 
-@pytest.mark.parametrize('key, expected_value', [
-    ('numberOfDataPoints', [7320]),
-    ('latitudeOfFirstGridPointInDegrees', [90.0]),
-    ('gridType', ['regular_ll']),
-])
+@pytest.mark.parametrize(
+    'key, expected_value',
+    [
+        ('numberOfDataPoints', [7320]),
+        ('latitudeOfFirstGridPointInDegrees', [90.0]),
+        ('gridType', ['regular_ll']),
+    ],
+)
 def test_codes_get_array(key, expected_value):
     grib = bindings.codes_grib_new_from_file(open(TEST_DATA))
 
@@ -192,7 +200,7 @@ def test_codes_set():
     message_id = bindings.codes_new_from_samples('regular_ll_sfc_grib2')
 
     bindings.codes_set(message_id, 'endStep', 2)
-    bindings.codes_set(message_id, 'longitudeOfFirstGridPointInDegrees', 1.)
+    bindings.codes_set(message_id, 'longitudeOfFirstGridPointInDegrees', 1.0)
     bindings.codes_set(message_id, 'gridType', 'regular_ll')
 
     with pytest.raises(TypeError):
@@ -202,7 +210,7 @@ def test_codes_set():
 def test_codes_set_array():
     message_id = bindings.codes_new_from_samples('regular_ll_sfc_grib2')
 
-    bindings.codes_set_array(message_id, 'values', [0.])
+    bindings.codes_set_array(message_id, 'values', [0.0])
     bindings.codes_set_array(message_id, 'values', [0])
 
     with pytest.raises(ValueError):

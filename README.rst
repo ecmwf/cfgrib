@@ -14,6 +14,7 @@ Features with development status **Beta**:
 - reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
   `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and PyPy3,
+- the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
 - conda-forge package on all supported platforms,
 - PyPI package with no install time build (binds via *CFFI* ABI mode),
