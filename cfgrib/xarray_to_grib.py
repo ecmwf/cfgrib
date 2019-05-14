@@ -42,8 +42,14 @@ TYPE_OF_LEVELS_PL = ['isobaricInhPa', 'isobaricInPa']
 TYPE_OF_LEVELS_ML = ['hybrid']
 ALL_TYPE_OF_LEVELS = TYPE_OF_LEVELS_SFC + TYPE_OF_LEVELS_PL + TYPE_OF_LEVELS_ML
 GRID_TYPES = [
-    'polar_stereographic', 'reduced_gg', 'reduced_ll', 'regular_gg', 'regular_ll', 'rotated_gg',
-    'rotated_ll', 'sh',
+    'polar_stereographic',
+    'reduced_gg',
+    'reduced_ll',
+    'regular_gg',
+    'regular_ll',
+    'rotated_gg',
+    'rotated_ll',
+    'sh',
 ]
 MESSAGE_DEFINITION_KEYS = [
     # for the GRIB 2 sample we must set this before setting 'totalNumber'
@@ -55,7 +61,7 @@ MESSAGE_DEFINITION_KEYS = [
 ]
 
 
-def regular_ll_params(values, min_value=-180., max_value=360.):
+def regular_ll_params(values, min_value=-180.0, max_value=360.0):
     # type: (T.Sequence, float, float) -> T.Tuple[float, float, int]
     start, stop, num = float(values[0]), float(values[-1]), len(values)
     if min(start, stop) < min_value or max(start, stop) > max_value:
@@ -72,22 +78,22 @@ def detect_regular_ll_grib_keys(lon, lat):
 
     lon_start, lon_stop, lon_num = regular_ll_params(lon)
     lon_scan_negatively = lon_stop < lon_start
-    lon_step = abs(lon_stop - lon_start) / (lon_num - 1.)
-    if lon_start < 0.:
-        lon_start += 360.
-    if lon_stop < 0.:
-        lon_stop += 360.
+    lon_step = abs(lon_stop - lon_start) / (lon_num - 1.0)
+    if lon_start < 0.0:
+        lon_start += 360.0
+    if lon_stop < 0.0:
+        lon_stop += 360.0
     grib_keys['longitudeOfFirstGridPointInDegrees'] = lon_start
     grib_keys['longitudeOfLastGridPointInDegrees'] = lon_stop
     grib_keys['Ni'] = lon_num
     grib_keys['iDirectionIncrementInDegrees'] = lon_step
     grib_keys['iScansNegatively'] = lon_scan_negatively
 
-    lat_start, lat_stop, lat_num = regular_ll_params(lat, min_value=-90., max_value=90.)
+    lat_start, lat_stop, lat_num = regular_ll_params(lat, min_value=-90.0, max_value=90.0)
     grib_keys['latitudeOfFirstGridPointInDegrees'] = lat_start
     grib_keys['latitudeOfLastGridPointInDegrees'] = lat_stop
     grib_keys['Nj'] = lat_num
-    grib_keys['jDirectionIncrementInDegrees'] = abs(lat_stop - lat_start) / (lat_num - 1.)
+    grib_keys['jDirectionIncrementInDegrees'] = abs(lat_stop - lat_start) / (lat_num - 1.0)
     grib_keys['jScansPositively'] = lat_stop > lat_start
     grib_keys['gridType'] = 'regular_ll'
 
@@ -195,7 +201,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
 
 
 def canonical_dataarray_to_grib(
-        data_var, file, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
+    data_var, file, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
 ):
     # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
     """

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path
@@ -23,18 +22,21 @@ def test_enforce_unique_attributes():
 
 
 def test_Variable():
-    res = dataset.Variable(dimensions=('lat'), data=np.array([0.]), attributes={})
+    res = dataset.Variable(dimensions=('lat'), data=np.array([0.0]), attributes={})
 
     assert res == res
     assert res != 1
 
 
-@pytest.mark.parametrize('item,shape,expected', [
-    (([1, 5],), (10,), ([1, 5],)),
-    ((np.array([1]),), (10,), ([1],)),
-    ((slice(0, 3, 2),), (10,), ([0, 2],)),
-    ((1,), (10,), ([1],)),
-])
+@pytest.mark.parametrize(
+    'item,shape,expected',
+    [
+        (([1, 5],), (10,), ([1, 5],)),
+        ((np.array([1]),), (10,), ([1],)),
+        ((slice(0, 3, 2),), (10,), ([0, 2],)),
+        ((1,), (10,), ([1],)),
+    ],
+)
 def test_expand_item(item, shape, expected):
     assert dataset.expand_item(item, shape) == expected
 
@@ -66,23 +68,27 @@ def test_build_data_var_components_no_encode():
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
     # equivalent to not np.isnan without importing numpy
-    assert data_var.data[:, :, :, :, :].mean() > 0.
+    assert data_var.data[:, :, :, :, :].mean() > 0.0
 
 
 def test_build_data_var_components_encode_cf_geography():
     stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index = stream.index(dataset.ALL_KEYS).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
-        index=index, encode_cf='geography',
+        index=index, encode_cf='geography'
     )
     assert dims == {
-        'number': 10, 'dataDate': 2, 'dataTime': 2,
-        'level': 2, 'latitude': 61, 'longitude': 120,
+        'number': 10,
+        'dataDate': 2,
+        'dataTime': 2,
+        'level': 2,
+        'latitude': 61,
+        'longitude': 120,
     }
     assert data_var.data.shape == (10, 2, 2, 2, 61, 120)
 
     # equivalent to not np.isnan without importing numpy
-    assert data_var.data[:, :, :, :, :, :].mean() > 0.
+    assert data_var.data[:, :, :, :, :, :].mean() > 0.0
 
 
 def test_Dataset():
@@ -91,8 +97,13 @@ def test_Dataset():
     assert 'institution' in res.attributes
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
-    assert tuple(res.dimensions.keys()) == \
-        ('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+    assert tuple(res.dimensions.keys()) == (
+        'number',
+        'time',
+        'isobaricInhPa',
+        'latitude',
+        'longitude',
+    )
     assert len(res.variables) == 9
 
     with pytest.warns(FutureWarning):
@@ -100,9 +111,7 @@ def test_Dataset():
 
 
 def test_Dataset_no_encode():
-    res = dataset.open_file(
-        TEST_DATA, encode_cf=()
-    )
+    res = dataset.open_file(TEST_DATA, encode_cf=())
     assert 'Conventions' in res.attributes
     assert 'institution' in res.attributes
     assert 'history' in res.attributes
@@ -119,19 +128,25 @@ def test_Dataset_encode_cf_time():
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:, :, :, :].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :].mean() > 0.0
 
 
 def test_Dataset_encode_cf_geography():
     res = dataset.open_file(TEST_DATA, encode_cf=('geography',))
     assert 'history' in res.attributes
     assert res.attributes['GRIB_edition'] == 1
-    assert tuple(res.dimensions.keys()) == \
-        ('number', 'dataDate', 'dataTime', 'level', 'latitude', 'longitude')
+    assert tuple(res.dimensions.keys()) == (
+        'number',
+        'dataDate',
+        'dataTime',
+        'level',
+        'latitude',
+        'longitude',
+    )
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:, :, :, :, :, :].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :, :, :].mean() > 0.0
 
 
 def test_Dataset_encode_cf_vertical():
@@ -143,7 +158,7 @@ def test_Dataset_encode_cf_vertical():
     assert len(res.variables) == 9
 
     # equivalent to not np.isnan without importing numpy
-    assert res.variables['t'].data[:, :, :, :, :].mean() > 0.
+    assert res.variables['t'].data[:, :, :, :, :].mean() > 0.0
 
 
 def test_Dataset_reguler_gg_surface():
@@ -159,6 +174,5 @@ def test_OnDiskArray():
 
     assert isinstance(res.data, dataset.OnDiskArray)
     assert np.allclose(
-        res.data[2:4:2, [0, 3], 0, 0, 0],
-        res.data.build_array()[2:4:2, [0, 3], 0, 0, 0],
+        res.data[2:4:2, [0, 3], 0, 0, 0], res.data.build_array()[2:4:2, [0, 3], 0, 0, 0]
     )

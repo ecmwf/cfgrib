@@ -1,10 +1,10 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 
 import numpy as np
 import pytest
+
 xr = pytest.importorskip('xarray')  # noqa
 
 from cf2cdm import cfcoords
@@ -12,8 +12,8 @@ from cf2cdm import cfcoords
 
 @pytest.fixture
 def da1():
-    latitude = [0.5, 0.]
-    longitude = [10., 10.5]
+    latitude = [0.5, 0.0]
+    longitude = [10.0, 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
     level = [950, 500]
     data = xr.DataArray(
@@ -21,17 +21,21 @@ def da1():
         coords=[
             ('lat', latitude, {'units': 'degrees_north'}),
             ('lon', longitude, {'units': 'degrees_east'}),
-            ('ref_time', np.array(time, dtype=np.datetime64),
-                {'standard_name': 'forecast_reference_time'}),
+            (
+                'ref_time',
+                np.array(time, dtype=np.datetime64),
+                {'standard_name': 'forecast_reference_time'},
+            ),
             ('level', np.array(level), {'units': 'hPa'}),
-        ])
+        ],
+    )
     return data
 
 
 @pytest.fixture
 def da2():
-    latitude = [0.5, 0.]
-    longitude = [10., 10.5]
+    latitude = [0.5, 0.0]
+    longitude = [10.0, 10.5]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00', '2017-12-02T00:00:00']
     level = [950, 500]
     data = xr.DataArray(
@@ -41,14 +45,15 @@ def da2():
             ('lon', longitude, {'units': 'degrees_east'}),
             ('time', np.array(time, dtype=np.datetime64)),
             ('level', np.array(level), {'units': 'hPa'}),
-        ])
+        ],
+    )
     return data
 
 
 @pytest.fixture
 def da3():
-    latitude = [0.5, 0.]
-    longitude = [10., 10.5]
+    latitude = [0.5, 0.0]
+    longitude = [10.0, 10.5]
     step = [0, 24, 48]
     time = ['2017-12-01T00:00:00', '2017-12-01T12:00:00']
     level = [950, 500]
@@ -58,10 +63,14 @@ def da3():
             ('lat', latitude, {'units': 'degrees_north'}),
             ('lon', longitude, {'units': 'degrees_east'}),
             ('step', np.array(step, dtype=np.timedelta64), {'standard_name': 'forecast_period'}),
-            ('ref_time', np.array(time, dtype=np.datetime64),
-                {'standard_name': 'forecast_reference_time'}),
+            (
+                'ref_time',
+                np.array(time, dtype=np.datetime64),
+                {'standard_name': 'forecast_reference_time'},
+            ),
             ('time', np.array(level), {'units': 'hPa'}),
-        ])
+        ],
+    )
 
     return data
 

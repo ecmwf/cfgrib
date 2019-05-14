@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import str
 
@@ -45,14 +44,14 @@ def test_Message_write(tmpdir):
     res.message_set('Ni', 20)
     assert res['Ni'] == 20
 
-    res['iDirectionIncrementInDegrees'] = 1.
-    assert res['iDirectionIncrementInDegrees'] == 1.
+    res['iDirectionIncrementInDegrees'] = 1.0
+    assert res['iDirectionIncrementInDegrees'] == 1.0
 
     res.message_set('gridType', 'reduced_gg')
     assert res['gridType'] == 'reduced_gg'
 
-    res['pl'] = [2., 3.]
-    assert res['pl'] == [2., 3.]
+    res['pl'] = [2.0, 3.0]
+    assert res['pl'] == [2.0, 3.0]
 
     # warn on errors
     res['centreDescription'] = 'DUMMY'
@@ -103,7 +102,7 @@ def test_ComputedKeysMessage_write():
         'centre': (lambda m: -1, lambda m, v: None),
     }
     res = messages.ComputedKeysMessage.from_sample_name(
-        'regular_ll_pl_grib2', computed_keys=computed_keys,
+        'regular_ll_pl_grib2', computed_keys=computed_keys
     )
     res['dataDate'] = 20180101
     res['dataTime'] = 0
@@ -157,23 +156,19 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
 
     # create index file
     res = messages.FileIndex.from_indexpath_or_filestream(
-        messages.FileStream(str(grib_file)),
-        ['paramId'],
+        messages.FileStream(str(grib_file)), ['paramId']
     )
     assert isinstance(res, messages.FileIndex)
 
     # read index file
     res = messages.FileIndex.from_indexpath_or_filestream(
-        messages.FileStream(str(grib_file)),
-        ['paramId'],
+        messages.FileStream(str(grib_file)), ['paramId']
     )
     assert isinstance(res, messages.FileIndex)
 
     # do not read nor create the index file
     res = messages.FileIndex.from_indexpath_or_filestream(
-        messages.FileStream(str(grib_file)),
-        ['paramId'],
-        indexpath='',
+        messages.FileStream(str(grib_file)), ['paramId'], indexpath=''
     )
     assert isinstance(res, messages.FileIndex)
 
@@ -191,17 +186,15 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
         grib_file.write_binary(file.read())
 
     res = messages.FileIndex.from_indexpath_or_filestream(
-        messages.FileStream(str(grib_file)),
-        ['paramId'],
+        messages.FileStream(str(grib_file)), ['paramId']
     )
     assert isinstance(res, messages.FileIndex)
 
 
 def test_FileIndex_errors():
     class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {
-            'error_key': lambda m: 1 / 0,
-        }
+        computed_keys = {'error_key': lambda m: 1 / 0}
+
     stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
     res = messages.FileIndex.from_filestream(stream, ['paramId', 'error_key'])
     assert res['paramId'] == [129, 130]

@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import int
 
@@ -13,10 +12,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 
 
 def test_from_grib_date_time():
-    message = {
-        'dataDate': 20160706,
-        'dataTime': 1944,
-    }
+    message = {'dataDate': 20160706, 'dataTime': 1944}
     result = cfmessage.from_grib_date_time(message)
 
     assert result == 1467834240
@@ -33,10 +29,7 @@ def test_to_grib_date_time():
 
 
 def test_from_grib_step():
-    message = {
-        'endStep': 1,
-        'stepUnits': 1,
-    }
+    message = {'endStep': 1, 'stepUnits': 1}
     step_seconds = cfmessage.from_grib_step(message)
 
     assert step_seconds == 1
