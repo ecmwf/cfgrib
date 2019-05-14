@@ -46,7 +46,7 @@ eccodes.codes_grib_multi_support_on()
 
 
 @attr.attrs()
-class Message(collections.MutableMapping):
+class Message(collections.abc.MutableMapping):
     """Dictionary-line interface to access Message headers."""
 
     codes_id = attr.attrib()
@@ -193,7 +193,7 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs()
-class FileStream(collections.Iterable):
+class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
 
     path = attr.attrib(type=str)
@@ -247,7 +247,7 @@ def compat_create_exclusive(path, *args, **kwargs):
 
 
 @attr.attrs()
-class FileIndex(collections.Mapping):
+class FileIndex(collections.abc.Mapping):
     allowed_protocol_version = '1'
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
