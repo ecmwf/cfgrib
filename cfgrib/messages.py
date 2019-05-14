@@ -28,10 +28,10 @@ import typing as T
 
 import attr
 
-# select external ecCodes bindings if available otherwise fall back to internal implementation.
-try:
+# select between using the external ecCodes bindings or the internal implementation
+if os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS'):
     import eccodes
-except ImportError:
+else:
     from . import bindings as eccodes
 
 eccodes_version = eccodes.codes_get_api_version()
