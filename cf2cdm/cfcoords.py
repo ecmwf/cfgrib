@@ -55,8 +55,13 @@ def translate_direction(data, out_name, stored_direction):
 
 
 def coord_translator(
-        default_out_name, default_units, default_direction, is_cf_type, cf_type, data,
-        coord_model=COORD_MODEL
+    default_out_name,
+    default_units,
+    default_direction,
+    is_cf_type,
+    cf_type,
+    data,
+    coord_model=COORD_MODEL,
 ):
     # type: (str, str, str, T.Callable, str, xr.DataArray, dict) -> xr.DataArray
     out_name = coord_model.get(cf_type, {}).get('out_name', default_out_name)
@@ -91,7 +96,7 @@ def is_latitude(coord):
 
 
 COORD_TRANSLATORS['latitude'] = functools.partial(
-    coord_translator, 'latitude', 'degrees_north', 'decreasing', is_latitude,
+    coord_translator, 'latitude', 'degrees_north', 'decreasing', is_latitude
 )
 
 
@@ -104,7 +109,7 @@ def is_longitude(coord):
 
 
 COORD_TRANSLATORS['longitude'] = functools.partial(
-    coord_translator, 'longitude', 'degrees_east', 'increasing', is_longitude,
+    coord_translator, 'longitude', 'degrees_east', 'increasing', is_longitude
 )
 
 
@@ -117,7 +122,7 @@ TIME_CF_UNITS = 'seconds since 1970-01-01T00:00:00+00:00'
 
 
 COORD_TRANSLATORS['time'] = functools.partial(
-    coord_translator, 'time', TIME_CF_UNITS, 'increasing', is_time,
+    coord_translator, 'time', TIME_CF_UNITS, 'increasing', is_time
 )
 
 
@@ -126,9 +131,7 @@ def is_step(coord):
     return coord.attrs.get('standard_name') == 'forecast_period'
 
 
-COORD_TRANSLATORS['step'] = functools.partial(
-    coord_translator, 'step', 'h', 'increasing', is_step,
-)
+COORD_TRANSLATORS['step'] = functools.partial(coord_translator, 'step', 'h', 'increasing', is_step)
 
 
 def is_valid_time(coord):
@@ -141,7 +144,7 @@ def is_valid_time(coord):
 
 
 COORD_TRANSLATORS['valid_time'] = functools.partial(
-    coord_translator, 'valid_time', TIME_CF_UNITS, 'increasing', is_valid_time,
+    coord_translator, 'valid_time', TIME_CF_UNITS, 'increasing', is_valid_time
 )
 
 
@@ -151,7 +154,7 @@ def is_depth(coord):
 
 
 COORD_TRANSLATORS['depthBelowLand'] = functools.partial(
-    coord_translator, 'depthBelowLand', 'm', 'decreasing', is_depth,
+    coord_translator, 'depthBelowLand', 'm', 'decreasing', is_depth
 )
 
 
@@ -161,7 +164,7 @@ def is_isobaric(coord):
 
 
 COORD_TRANSLATORS['isobaricInhPa'] = functools.partial(
-    coord_translator, 'isobaricInhPa', 'hPa', 'decreasing', is_isobaric,
+    coord_translator, 'isobaricInhPa', 'hPa', 'decreasing', is_isobaric
 )
 
 
@@ -171,12 +174,12 @@ def is_number(coord):
 
 
 COORD_TRANSLATORS['number'] = functools.partial(
-    coord_translator, 'number', '1', 'increasing', is_number,
+    coord_translator, 'number', '1', 'increasing', is_number
 )
 
 
 def translate_coords(
-        data, coord_model=COORD_MODEL, errors='warn', coord_translators=COORD_TRANSLATORS
+    data, coord_model=COORD_MODEL, errors='warn', coord_translators=COORD_TRANSLATORS
 ):
     # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
@@ -233,8 +236,13 @@ def ensure_valid_time(data):
         if step and step in data.dims and data.coords[step].size == data.coords[valid_time].size:
             return data.swap_dims({step: valid_time})
         # also convert is valid_time can index all times and steps
-        if step and time and step in data.dims and time in data.dims and \
-                data.coords[step].size * data.coords[time].size == data.coords[valid_time].size:
+        if (
+            step
+            and time
+            and step in data.dims
+            and time in data.dims
+            and data.coords[step].size * data.coords[time].size == data.coords[valid_time].size
+        ):
             data = data.stack(tmp_coord=(time, step))
             data = data.swap_dims({'tmp_coord': valid_time}).drop('tmp_coord').dropna(valid_time)
     return data
