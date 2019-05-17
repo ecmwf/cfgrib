@@ -22,7 +22,6 @@ import datetime
 import json
 import logging
 import typing as T
-import warnings
 
 import attr
 import numpy as np
@@ -587,8 +586,5 @@ class Dataset(object):
 
 def open_file(path, grib_errors='warn', **kwargs):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    if 'mode' in kwargs:
-        warnings.warn("the `mode` keyword argument is ignored and deprecated", FutureWarning)
-        kwargs.pop('mode')
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return Dataset(*build_dataset_components(stream, **kwargs))
