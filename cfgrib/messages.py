@@ -252,6 +252,7 @@ class FileIndex(collections.abc.Mapping):
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False, type=T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[int]]])
+    filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
@@ -365,7 +366,13 @@ class FileIndex(collections.abc.Mapping):
                     break
             else:
                 offsets.append((header_values, offsets_values))
-        return type(self)(filestream=self.filestream, index_keys=self.index_keys, offsets=offsets)
+        index = type(self)(
+            filestream=self.filestream,
+            index_keys=self.index_keys,
+            offsets=offsets,
+            filter_by_keys=query,
+        )
+        return index
 
     def first(self):
         with open(self.filestream.path) as file:

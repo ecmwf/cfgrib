@@ -508,18 +508,15 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-    stream,
-    indexpath='{path}.{short_hash}.idx',
-    filter_by_keys={},
+    index,
     errors='warn',
     encode_cf=('parameter', 'time', 'geography', 'vertical'),
     timestamp=None,
     log=LOG,
 ):
-    filter_by_keys = dict(filter_by_keys)
-    index = stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
+    filter_by_keys = index.filter_by_keys
     for param_id in index['paramId']:
         var_index = index.subindex(paramId=param_id)
         first = var_index.first()
@@ -555,7 +552,11 @@ def build_dataset_components(
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
-    encoding = {'source': stream.path, 'filter_by_keys': filter_by_keys, 'encode_cf': encode_cf}
+    encoding = {
+        'source': index.filestream.path,
+        'filter_by_keys': filter_by_keys,
+        'encode_cf': encode_cf,
+    }
     attributes['Conventions'] = 'CF-1.7'
     attributes['institution'] = attributes['GRIB_centreDescription']
     attributes_namespace = {
@@ -584,7 +585,17 @@ class Dataset(object):
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
 
-def open_file(path, grib_errors='warn', **kwargs):
-    """Open a GRIB file as a ``cfgrib.Dataset``."""
+def open_fileindex(
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}
+):
+    filter_by_keys = dict(filter_by_keys)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    return Dataset(*build_dataset_components(stream, **kwargs))
+    return stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
+
+
+def open_file(
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}, **kwargs
+):
+    """Open a GRIB file as a ``cfgrib.Dataset``."""
+    index = open_fileindex(path, grib_errors, indexpath, filter_by_keys)
+    return Dataset(*build_dataset_components(index, **kwargs))
