@@ -104,9 +104,6 @@ def test_Dataset():
     )
     assert len(res.variables) == 9
 
-    with pytest.warns(FutureWarning):
-        dataset.open_file(TEST_DATA, mode='rw')
-
 
 def test_Dataset_no_encode():
     res = dataset.open_file(TEST_DATA, encode_cf=())
