@@ -23,7 +23,7 @@ import warnings
 
 import xarray as xr
 
-from . import DatasetBuildError
+from . import DatasetBuildError, open_fileindex
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +39,26 @@ def open_dataset(path, **kwargs):
     return xr.backends.api.open_dataset(path, **kwargs)
 
 
-def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
-    # type: (str, T.Dict[str, T.Any], bool, T.Any) -> T.List[xr.Dataset]
-    """
-    Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
-    """
-    if not no_warn:
-        warnings.warn("open_datasets is an experimental API, DO NOT RELY ON IT!", FutureWarning)
+def merge_datasets(datasets, **kwargs):
+    merged = []
+    for ds in datasets:
+        ds.attrs.pop('history', None)
+        for i, o in enumerate(merged):
+            if all(o.attrs[k] == ds.attrs[k] for k in o.attrs):
+                try:
+                    o = xr.merge([o, ds], **kwargs)
+                    o.attrs.update(ds.attrs)
+                    merged[i] = o
+                    break
+                except Exception:
+                    pass
+        else:
+            merged.append(ds)
+    return merged
 
+
+def raw_open_datasets(path, backend_kwargs={}, **kwargs):
+    # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     fbks = []
     datasets = []
     try:
@@ -58,5 +70,41 @@ def open_datasets(path, backend_kwargs={}, no_warn=False, **kwargs):
     for fbk in fbks:
         bks = backend_kwargs.copy()
         bks['filter_by_keys'] = fbk
-        datasets.extend(open_datasets(path, backend_kwargs=bks, no_warn=True, **kwargs))
+        datasets.extend(raw_open_datasets(path, backend_kwargs=bks, **kwargs))
     return datasets
+
+
+def open_variable_datasets(path, backend_kwargs={}, **kwargs):
+    index = open_fileindex(path, filter_by_keys=backend_kwargs.get('filter_by_keys', {}))
+    datasets = []
+    for param_id in sorted(index['paramId']):
+        bk = backend_kwargs.copy()
+        bk['filter_by_keys'] = backend_kwargs.get('filter_by_keys', {}).copy()
+        bk['filter_by_keys']['paramId'] = param_id
+        datasets.extend(raw_open_datasets(path, bk, **kwargs))
+    return datasets
+
+
+def open_datasets(path, no_warn=False, backend_kwargs={}, **kwargs):
+    """
+    Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
+    """
+    if no_warn:
+        warnings.warn("open_datasets is now public, no_warn will be removed", FutureWarning)
+
+    squeeze = backend_kwargs.get('squeeze', True)
+    backend_kwargs['squeeze'] = False
+    datasets = open_variable_datasets(path, backend_kwargs=backend_kwargs, **kwargs)
+
+    type_of_level_datasets = {}
+    for ds in datasets:
+        assert len(ds.data_vars) == 1
+        for _, da in ds.data_vars.items():
+            type_of_level = da.attrs.get('GRIB_typeOfLevel', 'undef')
+            type_of_level_datasets.setdefault(type_of_level, []).append(ds)
+
+    merged = []
+    for type_of_level in sorted(type_of_level_datasets):
+        for ds in merge_datasets(type_of_level_datasets[type_of_level], join='exact'):
+            merged.append(ds.squeeze() if squeeze else ds)
+    return merged

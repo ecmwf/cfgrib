@@ -102,4 +102,4 @@ def test_open_datasets():
     res = xarray_store.open_datasets(TEST_DATASETS)
 
     assert len(res) > 1
-    assert res[0].attrs['GRIB_edition'] == 1
+    assert res[0].attrs['GRIB_centre'] == 'ecmf'
