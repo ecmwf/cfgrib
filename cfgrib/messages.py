@@ -196,7 +196,7 @@ class ComputedKeysMessage(Message):
 class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
 
-    path = attr.attrib(type=str)
+    path = attr.attrib(type=str, converter=os.path.abspath)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(
         default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
