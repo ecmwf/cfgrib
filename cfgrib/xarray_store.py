@@ -93,6 +93,7 @@ def open_datasets(path, no_warn=False, backend_kwargs={}, **kwargs):
         warnings.warn("open_datasets is now public, no_warn will be removed", FutureWarning)
 
     squeeze = backend_kwargs.get('squeeze', True)
+    backend_kwargs = backend_kwargs.copy()
     backend_kwargs['squeeze'] = False
     datasets = open_variable_datasets(path, backend_kwargs=backend_kwargs, **kwargs)
 
