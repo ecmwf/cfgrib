@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.7 (unreleased)
+0.9.7 (2019-05-27)
 ------------------
 
 - Much improved ``cfgrib.open_datasets`` heuristics now reads many more
