@@ -28,10 +28,10 @@ import typing as T
 
 import attr
 
-# select external ecCodes bindings if available otherwise fall back to internal implementation.
-try:
+# select between using the external ecCodes bindings or the internal implementation
+if os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS'):
     import eccodes
-except ImportError:
+else:
     from . import bindings as eccodes
 
 eccodes_version = eccodes.codes_get_api_version()
@@ -196,7 +196,7 @@ class ComputedKeysMessage(Message):
 class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
 
-    path = attr.attrib(type=str)
+    path = attr.attrib(type=str, converter=os.path.abspath)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(
         default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
@@ -252,6 +252,7 @@ class FileIndex(collections.abc.Mapping):
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False, type=T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[int]]])
+    filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
@@ -365,7 +366,13 @@ class FileIndex(collections.abc.Mapping):
                     break
             else:
                 offsets.append((header_values, offsets_values))
-        return type(self)(filestream=self.filestream, index_keys=self.index_keys, offsets=offsets)
+        index = type(self)(
+            filestream=self.filestream,
+            index_keys=self.index_keys,
+            offsets=offsets,
+            filter_by_keys=query,
+        )
+        return index
 
     def first(self):
         with open(self.filestream.path) as file:

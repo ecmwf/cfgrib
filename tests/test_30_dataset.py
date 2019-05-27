@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os.path
 
 import pytest
@@ -105,9 +103,6 @@ def test_Dataset():
         'longitude',
     )
     assert len(res.variables) == 9
-
-    with pytest.warns(FutureWarning):
-        dataset.open_file(TEST_DATA, mode='rw')
 
 
 def test_Dataset_no_encode():

@@ -21,17 +21,17 @@ import typing as T  # noqa
 
 
 PRESSURE_CONVERSION_RULES = {
-    ('Pa', 'pascal', 'pascals'): 1.,
-    ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.,
-    ('decibar', 'dbar'): 10000.,
-    ('bar', 'bars'): 100000.,
-    ('atmosphere', 'atmospheres', 'atm'): 101325.,
+    ('Pa', 'pascal', 'pascals'): 1.0,
+    ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.0,
+    ('decibar', 'dbar'): 10000.0,
+    ('bar', 'bars'): 100000.0,
+    ('atmosphere', 'atmospheres', 'atm'): 101325.0,
 }  # type: T.Dict[T.Tuple, float]
 
 LENGTH_CONVERSION_RULES = {
-    ('m', 'meter', 'meters'): 1.,
+    ('m', 'meter', 'meters'): 1.0,
     ('cm', 'centimeter', 'centimeters'): 0.01,
-    ('km', 'kilometer', 'kilometers'): 1000.,
+    ('km', 'kilometer', 'kilometers'): 1000.0,
 }
 
 
@@ -41,7 +41,7 @@ class ConversionError(Exception):
 
 def simple_conversion_factor(source_units, target_units, rules):
     # type: (str, str, T.Dict[T.Tuple, float]) -> float
-    conversion_factor = 1.
+    conversion_factor = 1.0
     seen = 0
     for pressure_units, factor in rules.items():
         if source_units in pressure_units:

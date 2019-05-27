@@ -2,10 +2,23 @@
 Changelog for cfgrib
 ====================
 
-0.9.7 (unreleased)
-------------------
+0.9.7.1 (unreleased)
+--------------------
 
 - Nothing changed yet.
+
+
+0.9.7 (2019-05-27)
+------------------
+
+- Much improved ``cfgrib.open_datasets`` heuristics now reads many more
+  heterogeneous GRIB files. The function is now a supported API.
+  See: `#63 <https://github.com/ecmwf/cfgrib/issues/63>`_,
+  `#66 <https://github.com/ecmwf/cfgrib/issues/66>`_,
+  `#73 <https://github.com/ecmwf/cfgrib/issues/73>`_ and
+  `#75 <https://github.com/ecmwf/cfgrib/issues/75>`_.
+- Fix conda dependencies on Python 2 only package,
+  See: `#78 <https://github.com/ecmwf/cfgrib/issues/78>`_.
 
 
 0.9.7rc1 (2019-05-14)

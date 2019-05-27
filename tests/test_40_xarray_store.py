@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os.path
 
 import pytest
@@ -104,4 +102,4 @@ def test_open_datasets():
     res = xarray_store.open_datasets(TEST_DATASETS)
 
     assert len(res) > 1
-    assert res[0].attrs['GRIB_edition'] == 1
+    assert res[0].attrs['GRIB_centre'] == 'ecmf'

@@ -22,7 +22,6 @@ import datetime
 import json
 import logging
 import typing as T
-import warnings
 
 import attr
 import numpy as np
@@ -425,7 +424,9 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     return coords_map
 
 
-def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn'):
+def build_variable_components(
+    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True
+):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
@@ -453,12 +454,12 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG, e
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
         data = np.array(sorted(values, reverse=attributes.get('stored_direction') == 'decreasing'))
         dimensions = (coord_name,)
-        if len(values) == 1:
+        if squeeze and len(values) == 1:
             data = data[0]
             dimensions = ()
         coord_vars[coord_name] = Variable(dimensions=dimensions, data=data, attributes=attributes)
 
-    header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
+    header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
@@ -509,18 +510,16 @@ def dict_merge(master, update):
 
 
 def build_dataset_components(
-    stream,
-    indexpath='{path}.{short_hash}.idx',
-    filter_by_keys={},
+    index,
     errors='warn',
     encode_cf=('parameter', 'time', 'geography', 'vertical'),
     timestamp=None,
+    squeeze=True,
     log=LOG,
 ):
-    filter_by_keys = dict(filter_by_keys)
-    index = stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
+    filter_by_keys = index.filter_by_keys
     for param_id in index['paramId']:
         var_index = index.subindex(paramId=param_id)
         first = var_index.first()
@@ -528,7 +527,7 @@ def build_dataset_components(
         var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
-                var_index, encode_cf, filter_by_keys, errors=errors
+                var_index, encode_cf, filter_by_keys, errors=errors, squeeze=squeeze
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -556,7 +555,11 @@ def build_dataset_components(
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
-    encoding = {'source': stream.path, 'filter_by_keys': filter_by_keys, 'encode_cf': encode_cf}
+    encoding = {
+        'source': index.filestream.path,
+        'filter_by_keys': filter_by_keys,
+        'encode_cf': encode_cf,
+    }
     attributes['Conventions'] = 'CF-1.7'
     attributes['institution'] = attributes['GRIB_centreDescription']
     attributes_namespace = {
@@ -585,10 +588,17 @@ class Dataset(object):
     encoding = attr.attrib(type=T.Dict[str, T.Any])
 
 
-def open_file(path, grib_errors='warn', **kwargs):
-    """Open a GRIB file as a ``cfgrib.Dataset``."""
-    if 'mode' in kwargs:
-        warnings.warn("the `mode` keyword argument is ignored and deprecated", FutureWarning)
-        kwargs.pop('mode')
+def open_fileindex(
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}
+):
+    filter_by_keys = dict(filter_by_keys)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    return Dataset(*build_dataset_components(stream, **kwargs))
+    return stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
+
+
+def open_file(
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}, **kwargs
+):
+    """Open a GRIB file as a ``cfgrib.Dataset``."""
+    index = open_fileindex(path, grib_errors, indexpath, filter_by_keys)
+    return Dataset(*build_dataset_components(index, **kwargs))
