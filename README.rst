@@ -11,8 +11,7 @@ Low level access and decoding is performed via the
 Features with development status **Beta**:
 
 - enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
-- reads most GRIB 1 and 2 files, for limitations see the *Advanced usage* section below and
-  `#13 <https://github.com/ecmwf/cfgrib/issues/13>`_,
+- reads most GRIB 1 and 2 files including heterogeneous ones with ``cfgrib.open_datasets``,
 - supports all modern versions of Python 3.7, 3.6, 3.5 and PyPy3,
 - the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
@@ -20,22 +19,20 @@ Features with development status **Beta**:
 - PyPI package with no install time build (binds via *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
 - allows larger-than-memory and distributed processing via *dask*,
-- supports translating coordinates to different data models and naming conventions.
+- supports translating coordinates to different data models and naming conventions,
+- supports writing the index of a GRIB file to disk, to save a full-file scan on open.
 
 Work in progress:
 
 - **Alpha** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
   with a optional conversion to a specific coordinates data model,
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
-- **Alpha** supports writing the index of a GRIB file to disk, to save a full-file scan on open,
-  see `#33 <https://github.com/ecmwf/cfgrib/issues/33>`_.
 - **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
   see the *Advanced write usage* section below and
   `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
 
 Limitations:
 
-- incomplete documentation, for now,
 - relies on *ecCodes* for the CF attributes of the data variables,
 - relies on *ecCodes* for anything related to coordinate systems / ``gridType``,
   see `#28 <https://github.com/ecmwf/cfgrib/issues/28>`_.
@@ -136,54 +133,6 @@ The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
 * allow distributed processing with `dask.distributed <http://distributed.dask.org>`_.
 
 
-Dataset / Variable API
-----------------------
-
-The use of *xarray* is not mandatory and you can access the content of a GRIB file as
-an hypercube with the high level API in a Python interpreter:
-
-.. code-block: python
-
->>> import cfgrib
->>> ds = cfgrib.open_file('era5-levels-members.grib')
->>> ds.attributes['GRIB_edition']
-1
->>> sorted(ds.dimensions.items())
-[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
->>> sorted(ds.variables)
-['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
->>> var = ds.variables['t']
->>> var.dimensions
-('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
->>> var.data[:, :, :, :, :].mean()
-262.92133
->>> ds = cfgrib.open_file('era5-levels-members.grib')
->>> ds.attributes['GRIB_edition']
-1
->>> sorted(ds.dimensions.items())
-[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
->>> sorted(ds.variables)
-['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
->>> var = ds.variables['t']
->>> var.dimensions
-('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
->>> var.data[:, :, :, :, :].mean()
-262.92133
-
-
-GRIB index file
----------------
-
-By default *cfgrib* saves the index of the GRIB file to disk appending ``.idx``
-to the GRIB file name.
-Index files are an **experimental** and completely optional feature, feel free to
-remove them and try again in case of problems. Index files saving can be disable passing
-adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
-
-
-Advanced usage
-==============
-
 Translate to a custom data model
 --------------------------------
 
@@ -257,7 +206,7 @@ Attributes:
 Filter heterogeneous GRIB files
 -------------------------------
 
-``cfgrib.open_file`` and ``xr.open_dataset`` can open a GRIB file only if all the messages
+``xr.open_dataset`` can open a GRIB file only if all the messages
 with the same ``shortName`` can be represented as a single hypercube.
 For example, a variable ``t`` cannot have both ``isobaricInhPa`` and ``hybrid`` ``typeOfLevel``'s,
 as this would result in multiple hypercubes for the same variable.
@@ -342,16 +291,13 @@ Attributes:
 Automatic filtering
 -------------------
 
-*cfgrib* also provides an **experimental function** that automate the selection of
-appropriate ``filter_by_keys`` and returns a list of all valid ``xarray.Dataset``'s
-in the GRIB file (add ``backend_kwargs={'errors': 'ignore'}`` for extra robustness).
-The ``open_datasets`` is intended for interactive exploration of a file
-and it is not part of the stable API. In the future it may change or be removed altogether.
+*cfgrib* also provides a function that automate the selection of appropriate ``filter_by_keys``
+and returns a list of all valid ``xarray.Dataset``'s in the GRIB file.
 
 .. code-block: python
 
->>> from cfgrib import xarray_store
->>> xarray_store.open_datasets('nam.t00z.awp21100.tm00.grib2', backend_kwargs={'errors': 'ignore'})
+>>> import cfgrib
+>>> cfgrib.open_datasets('nam.t00z.awp21100.tm00.grib2')
 [<xarray.Dataset>
 Dimensions:     (x: 93, y: 65)
 Coordinates:
@@ -693,8 +639,12 @@ Attributes:
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP ]
 
-Advanced write usage
-====================
+
+Advanced usage
+==============
+
+Write support
+=============
 
 **Please note that write support is Alpha.**
 Only ``xarray.Dataset``'s in *canonical* form,
@@ -787,6 +737,49 @@ Attributes:
     Conventions:             CF-1.7
     institution:             Consensus
     history:                 ...
+
+Dataset / Variable API
+----------------------
+
+The use of *xarray* is not mandatory and you can access the content of a GRIB file as
+an hypercube with the high level API in a Python interpreter:
+
+.. code-block: python
+
+>>> ds = cfgrib.open_file('era5-levels-members.grib')
+>>> ds.attributes['GRIB_edition']
+1
+>>> sorted(ds.dimensions.items())
+[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+>>> sorted(ds.variables)
+['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+>>> var = ds.variables['t']
+>>> var.dimensions
+('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+>>> var.data[:, :, :, :, :].mean()
+262.92133
+>>> ds = cfgrib.open_file('era5-levels-members.grib')
+>>> ds.attributes['GRIB_edition']
+1
+>>> sorted(ds.dimensions.items())
+[('isobaricInhPa', 2), ('latitude', 61), ('longitude', 120), ('number', 10), ('time', 4)]
+>>> sorted(ds.variables)
+['isobaricInhPa', 'latitude', 'longitude', 'number', 'step', 't', 'time', 'valid_time', 'z']
+>>> var = ds.variables['t']
+>>> var.dimensions
+('number', 'time', 'isobaricInhPa', 'latitude', 'longitude')
+>>> var.data[:, :, :, :, :].mean()
+262.92133
+
+
+GRIB index file
+---------------
+
+By default *cfgrib* saves the index of the GRIB file to disk appending ``.idx``
+to the GRIB file name.
+Index files are an **experimental** and completely optional feature, feel free to
+remove them and try again in case of problems. Index files saving can be disable passing
+adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
 Project resources
