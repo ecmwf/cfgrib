@@ -424,7 +424,9 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
     return coords_map
 
 
-def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn'):
+def build_variable_components(
+    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True
+):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
@@ -452,12 +454,12 @@ def build_variable_components(index, encode_cf=(), filter_by_keys={}, log=LOG, e
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
         data = np.array(sorted(values, reverse=attributes.get('stored_direction') == 'decreasing'))
         dimensions = (coord_name,)
-        if len(values) == 1:
+        if squeeze and len(values) == 1:
             data = data[0]
             dimensions = ()
         coord_vars[coord_name] = Variable(dimensions=dimensions, data=data, attributes=attributes)
 
-    header_dimensions = tuple(d for d, c in coord_vars.items() if c.data.size > 1)
+    header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
@@ -512,6 +514,7 @@ def build_dataset_components(
     errors='warn',
     encode_cf=('parameter', 'time', 'geography', 'vertical'),
     timestamp=None,
+    squeeze=True,
     log=LOG,
 ):
     dimensions = collections.OrderedDict()
@@ -524,7 +527,7 @@ def build_dataset_components(
         var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
-                var_index, encode_cf, filter_by_keys, errors=errors
+                var_index, encode_cf, filter_by_keys, errors=errors, squeeze=squeeze
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
