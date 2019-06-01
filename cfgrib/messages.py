@@ -42,7 +42,7 @@ _MARKER = object()
 #
 # No explicit support for MULTI-FIELD at Message level.
 #
-eccodes.codes_grib_multi_support_on()
+# eccodes.codes_grib_multi_support_on()
 
 
 @attr.attrs()
