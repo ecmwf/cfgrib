@@ -185,6 +185,9 @@ def codes_grib_new_from_file(fileobj, product_kind=CODES_PRODUCT_GRIB, context=N
         raise
 
 
+codes_new_from_file = codes_grib_new_from_file
+
+
 def codes_clone(handle):
     # type: (cffi.FFI.CData) -> cffi.FFI.CData
     cloned_handle = lib.codes_handle_clone(handle)
