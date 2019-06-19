@@ -442,7 +442,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
     handle = ffi.NULL
     if platform.platform().startswith('Windows'):
         samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL))
-        sample_path = os.path.join(samples_folder, samplename + b'.tmpl')
+        sample_path = os.path.join(samples_folder, samplename + '.tmpl')
         try:
             with open(sample_path) as file:
                 handle = codes_grib_new_from_file(file, product_kind)
