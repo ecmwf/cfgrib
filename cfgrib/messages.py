@@ -27,6 +27,7 @@ import pickle
 import typing as T
 
 import attr
+import numpy as np
 
 # select between using the external ecCodes bindings or the internal implementation
 if os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS'):
@@ -56,8 +57,8 @@ class Message(collections.abc.MutableMapping):
     )
 
     @classmethod
-    def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], int, T.Any) -> Message
+    def from_file(cls, file, offset=None, product_kind=eccodes.CODES_PRODUCT_ANY, **kwargs):
+        # type: (T.IO[bytes], int, int, T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -66,7 +67,7 @@ class Message(collections.abc.MutableMapping):
         codes_id = None
         # iterate over multi-fields in the message
         for _ in range(field_in_message + 1):
-            codes_id = eccodes.codes_grib_new_from_file(file)
+            codes_id = eccodes.codes_new_from_file(file, product_kind=product_kind)
         if codes_id is None:
             raise EOFError("End of file: %r" % file)
         return cls(codes_id=codes_id, **kwargs)
@@ -87,9 +88,8 @@ class Message(collections.abc.MutableMapping):
     def message_get(self, item, key_type=None, default=_MARKER):
         # type: (str, type, T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
-        key = item
         try:
-            values = eccodes.codes_get_array(self.codes_id, key, key_type)
+            values = eccodes.codes_get_array(self.codes_id, item, key_type)
             if values is None:
                 values = ['unsupported_key_type']
         except eccodes.KeyValueNotFoundError:
@@ -98,30 +98,32 @@ class Message(collections.abc.MutableMapping):
             else:
                 return default
         if len(values) == 1:
+            if isinstance(values, np.ndarray):
+                values = values.tolist()
             return values[0]
         return values
 
     def message_set(self, item, value):
         # type: (str, T.Any) -> None
-        key = item
         set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
         if set_array:
-            eccodes.codes_set_array(self.codes_id, key, value)
+            eccodes.codes_set_array(self.codes_id, item, value)
         else:
-            if isinstance(value, str):
-                value = value
-            eccodes.codes_set(self.codes_id, key, value)
+            eccodes.codes_set(self.codes_id, item, value)
 
-    def message_iterkeys(self, namespace=None):
+    def message_grib_keys(self, namespace=None):
         # type: (str) -> T.Generator[str, None, None]
-        if namespace is not None:
-            bnamespace = namespace  # type: T.Optional[str]
-        else:
-            bnamespace = None
-        iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=bnamespace)
+        iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=namespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator)
         eccodes.codes_keys_iterator_delete(iterator)
+
+    def message_bufr_keys(self):
+        # type: () -> T.Generator[str, None, None]
+        iterator = eccodes.codes_bufr_keys_iterator_new(self.codes_id)
+        while eccodes.codes_bufr_keys_iterator_next(iterator):
+            yield eccodes.codes_bufr_keys_iterator_get_name(iterator)
+        eccodes.codes_bufr_keys_iterator_delete(iterator)
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
@@ -148,7 +150,7 @@ class Message(collections.abc.MutableMapping):
 
     def __iter__(self):
         # type: () -> T.Generator[str, None, None]
-        for key in self.message_iterkeys():
+        for key in self.message_grib_keys():
             yield key
 
     def __len__(self):
@@ -196,23 +198,24 @@ class ComputedKeysMessage(Message):
 class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
 
-    path = attr.attrib(type=str, converter=os.path.abspath)
+    path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(
         default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
     )
+    product_kind = attr.attrib(default=eccodes.CODES_PRODUCT_ANY)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, 'rb') as file:
-            valid_grib_message_found = False
+            valid_message_found = False
             while True:
                 try:
                     yield self.message_from_file(file, errors=self.errors)
-                    valid_grib_message_found = True
+                    valid_message_found = True
                 except EOFError:
-                    if not valid_grib_message_found:
-                        raise EOFError("No valid GRIB message found in file: %r" % self.path)
+                    if not valid_message_found:
+                        raise EOFError("No valid message found in file: %r" % self.path)
                     break
                 except Exception:
                     if self.errors == 'ignore':
@@ -223,7 +226,7 @@ class FileStream(collections.abc.Iterable):
                         LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        return self.message_class.from_file(file=file, offset=offset, **kwargs)
+        return self.message_class.from_file(file, offset, self.product_kind, **kwargs)
 
     def first(self):
         # type: () -> Message
@@ -265,7 +268,7 @@ class FileIndex(collections.abc.Mapping):
                     value = message[key]
                 except:
                     value = 'undef'
-                if isinstance(value, list):
+                if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)
                 header_values.append(value)
             offset = message.message_get('offset', int)

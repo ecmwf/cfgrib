@@ -313,9 +313,9 @@ class OnDiskArray(object):
         with open(self.stream.path) as file:
             for header_indexes, offset in self.offsets.items():
                 try:
-                    array_field_indexes = []
-                    for it, ix in zip(header_item, header_indexes):
-                        array_field_indexes.append(it.index(ix))
+                    array_field_indexes = [
+                        it.index(ix) for it, ix in zip(header_item, header_indexes)
+                    ]
                 except ValueError:
                     continue
                 # NOTE: fill a single field as found in the message
