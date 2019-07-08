@@ -76,7 +76,9 @@ def raw_open_datasets(path, backend_kwargs={}, **kwargs):
 
 def open_variable_datasets(path, backend_kwargs={}, **kwargs):
     fileindex_kwargs = {
-        key: backend_kwargs[key] for key in ['filter_by_keys', 'indexpath', 'grib_errors']
+        key: backend_kwargs[key]
+        for key in ['filter_by_keys', 'indexpath', 'grib_errors']
+        if key in backend_kwargs
     }
     index = open_fileindex(path, **fileindex_kwargs)
     datasets = []
