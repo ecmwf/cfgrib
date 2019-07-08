@@ -7,6 +7,8 @@ Changelog for cfgrib
 
 - Fix a bytes-in-the-place-of-str bug when attempting to write a GRIB on Windows.
   See: `#91 <https://github.com/ecmwf/cfgrib/issues/91>`_.
+- Honor setting `indexpath` in `open_datasets`,
+  See: `#93 <https://github.com/ecmwf/cfgrib/issues/93>`_.
 
 
 0.9.7 (2019-05-27)

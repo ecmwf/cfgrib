@@ -75,7 +75,10 @@ def raw_open_datasets(path, backend_kwargs={}, **kwargs):
 
 
 def open_variable_datasets(path, backend_kwargs={}, **kwargs):
-    index = open_fileindex(path, filter_by_keys=backend_kwargs.get('filter_by_keys', {}))
+    fileindex_kwargs = {
+        key: backend_kwargs[key] for key in ['filter_by_keys', 'indexpath', 'grib_errors']
+    }
+    index = open_fileindex(path, **fileindex_kwargs)
     datasets = []
     for param_id in sorted(index['paramId']):
         bk = backend_kwargs.copy()
