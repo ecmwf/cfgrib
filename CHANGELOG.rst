@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.1 (unreleased)
+0.9.7.1 (2019-07-08)
 --------------------
 
 - Fix a bytes-in-the-place-of-str bug when attempting to write a GRIB on Windows.
