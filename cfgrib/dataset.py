@@ -291,8 +291,8 @@ class OnDiskArray(object):
     dtype = np.dtype('float32')
 
     def build_array(self):
-        """Helper method used to test __getitem__"""
         # type: () -> np.ndarray
+        """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype='float32')
         with open(self.stream.path) as file:
             for header_indexes, offset in self.offsets.items():
