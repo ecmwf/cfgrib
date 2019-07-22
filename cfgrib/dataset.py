@@ -589,16 +589,15 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx'
 ):
-    filter_by_keys = dict(filter_by_keys)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    return stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
+    return stream.index(ALL_KEYS, indexpath=indexpath)
 
 
 def open_file(
     path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}, **kwargs
 ):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath, filter_by_keys)
-    return Dataset(*build_dataset_components(index, **kwargs))
+    filtered_index = open_fileindex(path, grib_errors, indexpath).subindex(filter_by_keys)
+    return Dataset(*build_dataset_components(filtered_index, **kwargs))
