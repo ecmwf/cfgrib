@@ -425,10 +425,11 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
 
 
 def build_variable_components(
-    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True
+    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True, read_keys=[]
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
+    data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     coords_map = encode_cf_first(data_var_attrs, encode_cf)
 
@@ -516,6 +517,7 @@ def build_dataset_components(
     timestamp=None,
     squeeze=True,
     log=LOG,
+    read_keys=[],
 ):
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
@@ -527,7 +529,12 @@ def build_dataset_components(
         var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
-                var_index, encode_cf, filter_by_keys, errors=errors, squeeze=squeeze
+                var_index,
+                encode_cf,
+                filter_by_keys,
+                errors=errors,
+                squeeze=squeeze,
+                read_keys=read_keys,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -606,4 +613,4 @@ def open_file(
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     index_keys = sorted(ALL_KEYS + read_keys)
     index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
-    return Dataset(*build_dataset_components(index, **kwargs))
+    return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
