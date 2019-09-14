@@ -1,0 +1,11 @@
+name: ECM
+channels:
+  - defaults
+dependencies:
+  - attrs
+  - cffi
+  - click
+  - dask
+  - pytest
+  - xarray
+
