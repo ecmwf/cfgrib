@@ -1,12 +1,14 @@
 name: ECM
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - attrs
   - cffi
   - click
   - dask
-  - pytest
+  - eccodes=2.13.1
   - netcdf4
+  - pytest
   - xarray
 

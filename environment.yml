@@ -1,5 +1,6 @@
 name: ECM
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - atomicwrites=1.3.0=py37_1
@@ -18,23 +19,26 @@ dependencies:
   - dask=2.3.0=py_0
   - dask-core=2.3.0=py_0
   - distributed=2.3.2=py_1
+  - eccodes=2.13.1=h67ca99b_1
   - freetype=2.9.1=hb4e5f40_0
   - fsspec=0.4.0=py_0
   - hdf4=4.2.13=h39711bb_2
-  - hdf5=1.10.4=hfa1e0ec_0
+  - hdf5=1.10.5=nompi_h0cbb7df_1103
   - heapdict=1.0.0=py37_2
   - importlib_metadata=0.19=py37_0
   - intel-openmp=2019.4=233
+  - jasper=1.900.1=h1f36771_4
   - jinja2=2.10.1=py37_0
-  - jpeg=9b=he5867d9_2
+  - jpeg=9c=h1de35cc_1001
   - krb5=1.16.1=hddcf347_7
+  - libaec=1.0.4=h0a44026_0
   - libcurl=7.65.3=h051b688_0
   - libcxx=4.0.1=hcfea43d_1
   - libcxxabi=4.0.1=hcfea43d_1
   - libedit=3.1.20181209=hb402a30_0
   - libffi=3.2.1=h475c297_4
   - libgfortran=3.0.1=h93005f0_2
-  - libnetcdf=4.6.1=hd5207e6_2
+  - libnetcdf=4.6.2=h1a02027_1003
   - libpng=1.6.37=ha441bb4_0
   - libssh2=1.8.2=ha12b0ac_0
   - libtiff=4.0.10=hcb84e12_2
@@ -47,7 +51,7 @@ dependencies:
   - more-itertools=7.2.0=py37_0
   - msgpack-python=0.6.1=py37h04f5b5a_1
   - ncurses=6.1=h0a44026_1
-  - netcdf4=1.4.2=py37h13743db_0
+  - netcdf4=1.5.1.2=py37h876e625_1
   - numpy=1.16.5=py37hacdab7b_0
   - numpy-base=1.16.5=py37h6575580_0
   - olefile=0.46=py37_0
