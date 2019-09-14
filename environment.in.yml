@@ -10,5 +10,4 @@ dependencies:
   - eccodes=2.13.1
   - netcdf4
   - pytest
-  - xarray
-
+  - xarray=0.12.1
