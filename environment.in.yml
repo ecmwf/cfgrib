@@ -7,5 +7,6 @@ dependencies:
   - click
   - dask
   - pytest
+  - netcdf4
   - xarray
 
