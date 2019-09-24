@@ -2,10 +2,21 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.2 (unreleased)
+0.9.7.3 (unreleased)
 --------------------
 
 - Nothing changed yet.
+
+
+0.9.7.2 (2019-09-24)
+--------------------
+
+- Add support to read additional keys from the GRIB files via `read_keys`, they
+  appear in the variable `attrs` and you can `filter_by_keys` on them.
+  This is a general solution for all issues where users know the name of the additional keys
+  they are interested in.
+  See: `#89 <https://github.com/ecmwf/cfgrib/issues/89>`_ and
+  `#101 <https://github.com/ecmwf/cfgrib/issues/101>`_.
 
 
 0.9.7.1 (2019-07-08)

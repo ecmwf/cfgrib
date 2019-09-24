@@ -291,8 +291,8 @@ class OnDiskArray(object):
     dtype = np.dtype('float32')
 
     def build_array(self):
-        """Helper method used to test __getitem__"""
         # type: () -> np.ndarray
+        """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype='float32')
         with open(self.stream.path) as file:
             for header_indexes, offset in self.offsets.items():
@@ -425,10 +425,11 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
 
 
 def build_variable_components(
-    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True
+    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True, read_keys=[]
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
+    data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     coords_map = encode_cf_first(data_var_attrs, encode_cf)
 
@@ -516,6 +517,7 @@ def build_dataset_components(
     timestamp=None,
     squeeze=True,
     log=LOG,
+    read_keys=[],
 ):
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
@@ -527,7 +529,12 @@ def build_dataset_components(
         var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
-                var_index, encode_cf, filter_by_keys, errors=errors, squeeze=squeeze
+                var_index,
+                encode_cf,
+                filter_by_keys,
+                errors=errors,
+                squeeze=squeeze,
+                read_keys=read_keys,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -589,16 +596,21 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}
+    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', index_keys=ALL_KEYS
 ):
-    filter_by_keys = dict(filter_by_keys)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    return stream.index(ALL_KEYS, indexpath=indexpath).subindex(filter_by_keys)
+    return stream.index(index_keys, indexpath=indexpath)
 
 
 def open_file(
-    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', filter_by_keys={}, **kwargs
+    path,
+    grib_errors='warn',
+    indexpath='{path}.{short_hash}.idx',
+    filter_by_keys={},
+    read_keys=[],
+    **kwargs
 ):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath, filter_by_keys)
-    return Dataset(*build_dataset_components(index, **kwargs))
+    index_keys = sorted(ALL_KEYS + read_keys)
+    index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
+    return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))

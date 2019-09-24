@@ -1,0 +1,16 @@
+name: ECM
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - attrs
+  - black
+  - cffi
+  - check-manifest
+  - click
+  - dask
+  - eccodes=2.13.1
+  - netcdf4
+  - pip
+  - pytest
+  - xarray=0.12.1
