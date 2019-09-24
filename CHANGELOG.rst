@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.2 (unreleased)
+0.9.7.2 (2019-09-24)
 --------------------
 
 - Add support to read additional keys from the GRIB files via `read_keys`, they
