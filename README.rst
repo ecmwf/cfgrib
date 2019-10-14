@@ -134,10 +134,13 @@ The *cfgrib* ``engine`` supports all read-only features of *xarray* like:
 * work with larger-than-memory datasets with `dask <https://dask.org/>`_,
 * allow distributed processing with `dask.distributed <http://distributed.dask.org>`_.
 
+Read arbitrary GRIB keys
+------------------------
+
 By default *cfgrib* reads a limited set of ecCodes recognised *keys* from the GRIB files
-and exposes them as `Dataset` or `DataArray` attributes with the `GRIB_` prefix.
+and exposes them as ``Dataset`` or ``DataArray`` attributes with the ``GRIB_`` prefix.
 It is possible to have *cfgrib* read additional keys to the attributes by adding the
-`read_keys` dictionary key to the `backend_kwargs` with values the list of desired GRIB keys:
+``read_keys`` dictionary key to the ``backend_kwargs`` with values the list of desired GRIB keys:
 
 .. code-block: python
 
