@@ -80,24 +80,24 @@ def test_match_values():
     assert res == ['callable']
 
 
-def test_translate_direction(da1):
-    res = cfcoords.translate_direction(da1, 'lat', 'increasing')
+def test_translate_coord_direction(da1):
+    res = cfcoords.translate_coord_direction(da1, 'lat', 'increasing')
     assert res.lat.values[-1] > res.lat.values[0]
 
-    res = cfcoords.translate_direction(da1, 'lat', 'decreasing')
+    res = cfcoords.translate_coord_direction(da1, 'lat', 'decreasing')
     assert res.lat.values[-1] < res.lat.values[0]
 
-    res = cfcoords.translate_direction(da1, 'lon', 'decreasing')
+    res = cfcoords.translate_coord_direction(da1, 'lon', 'decreasing')
     assert res.lon.values[-1] < res.lon.values[0]
 
-    res = cfcoords.translate_direction(da1, 'lon', 'increasing')
+    res = cfcoords.translate_coord_direction(da1, 'lon', 'increasing')
     assert res.lon.values[-1] > res.lon.values[0]
 
-    res = cfcoords.translate_direction(da1.isel(lon=0), 'lon', 'increasing')
+    res = cfcoords.translate_coord_direction(da1.isel(lon=0), 'lon', 'increasing')
     assert len(res.lon.shape) == 0
 
     with pytest.raises(ValueError):
-        cfcoords.translate_direction(da1, 'lat', 'wrong')
+        cfcoords.translate_coord_direction(da1, 'lat', 'wrong')
 
 
 def test_coord_translator(da1):

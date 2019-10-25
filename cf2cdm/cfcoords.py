@@ -41,16 +41,16 @@ def match_values(match_value_func, mapping):
     return matched_names
 
 
-def translate_direction(data, out_name, stored_direction):
+def translate_coord_direction(data, coord_name, stored_direction='increasing'):
     if stored_direction not in ('increasing', 'decreasing'):
         raise ValueError("unknown stored_direction %r" % stored_direction)
-    if len(data.coords[out_name].shape) == 0:
+    if len(data.coords[coord_name].shape) == 0:
         return data
-    values = data.coords[out_name].values
-    if values[-1] > values[0] and stored_direction == 'decreasing':
-        data = data.isel({out_name: slice(None, None, -1)})
-    elif values[-1] < values[0] and stored_direction == 'increasing':
-        data = data.isel({out_name: slice(None, None, -1)})
+    values = data.coords[coord_name].values
+    if values[0] < values[-1] and stored_direction == 'decreasing':
+        data = data.isel({coord_name: slice(None, None, -1)})
+    elif values[0] > values[-1] and stored_direction == 'increasing':
+        data = data.isel({coord_name: slice(None, None, -1)})
     return data
 
 
@@ -83,7 +83,7 @@ def coord_translator(
         data.coords[out_name].attrs.update(coord.attrs)
         data.coords[out_name].attrs['units'] = units
     if out_name in data.dims:
-        data = translate_direction(data, out_name, stored_direction)
+        data = translate_coord_direction(data, out_name, stored_direction)
     return data
 
 
@@ -241,6 +241,7 @@ def ensure_valid_time(data):
             and time
             and step in data.dims
             and time in data.dims
+            and data.coords[step].size * data.coords[time].size == data.coords[valid_time].size
             and data.coords[step].size * data.coords[time].size == data.coords[valid_time].size
         ):
             data = data.stack(tmp_coord=(time, step))
