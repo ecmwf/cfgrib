@@ -428,7 +428,14 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time'), time_dims=(
 
 
 def build_variable_components(
-    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True, read_keys=[], time_dims=('time', 'step')
+    index,
+    encode_cf=(),
+    filter_by_keys={},
+    log=LOG,
+    errors='warn',
+    squeeze=True,
+    read_keys=[],
+    time_dims=('time', 'step'),
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
