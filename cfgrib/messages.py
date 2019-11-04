@@ -261,6 +261,7 @@ class FileIndex(collections.abc.Mapping):
     def from_filestream(cls, filestream, index_keys):
         offsets = collections.OrderedDict()
         count_offsets = {}  # type: T.Dict[int, int]
+        header_values_cache = {}
         for message in filestream:
             header_values = []
             for key in index_keys:
@@ -270,6 +271,10 @@ class FileIndex(collections.abc.Mapping):
                     value = 'undef'
                 if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)
+                # NOTE: the following ensures that values of the same type that evaluate equal
+                #   are exactly the same object. The optimisation is especially useful for strings and
+                #   it also reduces the on-disk size of the index in a backward compatible way.
+                value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
             offset = message.message_get('offset', int)
             if offset in count_offsets:

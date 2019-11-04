@@ -2,17 +2,27 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.3 (unreleased)
+0.9.7.4 (unreleased)
 --------------------
 
 - Nothing changed yet.
 
 
+0.9.7.3 (2019-11-04)
+--------------------
+
+- Add support for selecting the time coordinates to use as dimensions via ``time_dims``.
+  Forecasts products may be represented as ``('time', 'step')`` (the default),
+  ``('time', 'valid_time')`` or ``('valid_time', 'step')``.
+  See: `#97 <https://github.com/ecmwf/cfgrib/issues/97>`_.
+- Reduce the in-memory footprint of the ``FieldIndex`` and the size of ``.idx`` files.
+
+
 0.9.7.2 (2019-09-24)
 --------------------
 
-- Add support to read additional keys from the GRIB files via `read_keys`, they
-  appear in the variable `attrs` and you can `filter_by_keys` on them.
+- Add support to read additional keys from the GRIB files via ``read_keys``, they
+  appear in the variable ``attrs`` and you can ``filter_by_keys`` on them.
   This is a general solution for all issues where users know the name of the additional keys
   they are interested in.
   See: `#89 <https://github.com/ecmwf/cfgrib/issues/89>`_ and
@@ -24,7 +34,7 @@ Changelog for cfgrib
 
 - Fix a bytes-in-the-place-of-str bug when attempting to write a GRIB on Windows.
   See: `#91 <https://github.com/ecmwf/cfgrib/issues/91>`_.
-- Honor setting `indexpath` in `open_datasets`,
+- Honor setting ``indexpath`` in ``open_datasets``,
   See: `#93 <https://github.com/ecmwf/cfgrib/issues/93>`_.
 
 

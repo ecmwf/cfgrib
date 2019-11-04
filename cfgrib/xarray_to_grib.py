@@ -166,10 +166,10 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
 def expand_dims(data_var):
     coords_names = []
     for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS:
-        if coord_name in set(data_var.coords):
+        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1:
+            data_var = data_var.expand_dims(coord_name)
+        if coord_name in data_var.dims:
             coords_names.append(coord_name)
-            if coord_name not in data_var.dims:
-                data_var = data_var.expand_dims(coord_name)
     return coords_names, data_var
 
 

@@ -19,6 +19,7 @@
 #
 
 import datetime
+import functools
 import logging
 import typing as T  # noqa
 
@@ -131,6 +132,10 @@ def build_valid_time(time, step):
 COMPUTED_KEYS = {
     'time': (from_grib_date_time, to_grib_date_time),
     'step': (from_grib_step, to_grib_step),
+    'valid_time': (
+        functools.partial(from_grib_date_time, date_key='validityDate', time_key='validityTime'),
+        functools.partial(to_grib_date_time, date_key='validityDate', time_key='validityTime'),
+    ),
 }
 
 
