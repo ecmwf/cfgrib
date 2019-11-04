@@ -441,7 +441,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
 
     handle = ffi.NULL
     if platform.platform().startswith('Windows'):
-        samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL))
+        samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL)).decode('utf-8')
         sample_path = os.path.join(samples_folder, samplename + '.tmpl')
         try:
             with open(sample_path) as file:
