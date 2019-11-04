@@ -147,10 +147,10 @@ GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 ENSEMBLE_KEYS = ['number']
 VERTICAL_KEYS = ['level']
 DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
-REF_TIME_KEYS = ['time', 'step']
+ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time']
 SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 
-ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + REF_TIME_KEYS + SPECTRA_KEYS
+ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
 
 ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS)
 
@@ -403,7 +403,7 @@ def build_geography_coordinates(
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
+def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time'), time_dims=('time', 'step')):
     coords_map = ENSEMBLE_KEYS[:]
     param_id = data_var_attrs.get('GRIB_paramId', 'undef')
     data_var_attrs['long_name'] = 'original GRIB paramId: %s' % param_id
@@ -416,7 +416,10 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
         if 'GRIB_units' in data_var_attrs:
             data_var_attrs['units'] = data_var_attrs['GRIB_units']
     if 'time' in encode_cf:
-        coords_map.extend(REF_TIME_KEYS)
+        if set(time_dims).issubset(ALL_REF_TIME_KEYS):
+            coords_map.extend(time_dims)
+        else:
+            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_HEADER_DIMS))
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
@@ -425,13 +428,13 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time')):
 
 
 def build_variable_components(
-    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True, read_keys=[]
+    index, encode_cf=(), filter_by_keys={}, log=LOG, errors='warn', squeeze=True, read_keys=[], time_dims=('time', 'step')
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
     data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    coords_map = encode_cf_first(data_var_attrs, encode_cf)
+    coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
     coord_name_key_map = {}
     coord_vars = collections.OrderedDict()
@@ -484,7 +487,7 @@ def build_variable_components(
         geo_ndim=len(geo_dims),
     )
 
-    if 'time' in coord_vars and 'time' in encode_cf:
+    if 'time' in coord_vars and 'valid_time' not in coord_vars and 'time' in encode_cf:
         # add the 'valid_time' secondary coordinate
         step_data = coord_vars['step'].data if 'step' in coord_vars else np.array(0.0)
         dims, time_data = cfmessage.build_valid_time(coord_vars['time'].data, step_data)
@@ -518,6 +521,7 @@ def build_dataset_components(
     squeeze=True,
     log=LOG,
     read_keys=[],
+    time_dims=('time', 'step'),
 ):
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
@@ -535,6 +539,7 @@ def build_dataset_components(
                 errors=errors,
                 squeeze=squeeze,
                 read_keys=read_keys,
+                time_dims=time_dims,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
