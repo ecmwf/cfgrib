@@ -271,8 +271,8 @@ class FileIndex(collections.abc.Mapping):
                     value = 'undef'
                 if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)
-                # NOTE: the following ensures that values of the same type that evaluate equal
-                #   are exactly the same object. The optimisation is especially useful for strings and
+                # NOTE: the following ensures that values of the same type that evaluate equal are
+                #   exactly the same object. The optimisation is especially useful for strings and
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
