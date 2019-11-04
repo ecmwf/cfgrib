@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.3 (unreleased)
+0.9.7.3 (2019-11-04)
 --------------------
 
 - Add support for selecting the time coordinates to use as dimensions via ``time_dims``.
