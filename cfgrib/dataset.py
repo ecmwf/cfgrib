@@ -535,9 +535,6 @@ def build_dataset_components(
     filter_by_keys = index.filter_by_keys
     for param_id in index['paramId']:
         var_index = index.subindex(paramId=param_id)
-        first = var_index.first()
-        short_name = first['shortName']
-        var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
                 var_index,
@@ -560,6 +557,8 @@ def build_dataset_components(
                 fbks.append(fbk)
                 error_message += "\n    filter_by_keys=%r" % fbk
             raise DatasetBuildError(error_message, key, fbks)
+        short_name = data_var.attributes.get('GRIB_shortName', 'paramId_%d' % param_id)
+        var_name = data_var.attributes.get('GRIB_cfVarName', 'unknown')
         if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
             short_name = var_name
         try:
@@ -580,7 +579,8 @@ def build_dataset_components(
         'encode_cf': encode_cf,
     }
     attributes['Conventions'] = 'CF-1.7'
-    attributes['institution'] = attributes['GRIB_centreDescription']
+    if 'GRIB_centreDescription' in attributes:
+        attributes['institution'] = attributes['GRIB_centreDescription']
     attributes_namespace = {
         'cfgrib_version': __version__,
         'cfgrib_open_kwargs': json.dumps(encoding),
