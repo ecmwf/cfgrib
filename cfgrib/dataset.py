@@ -520,11 +520,29 @@ def dict_merge(master, update):
             )
 
 
+def build_dataset_attributes(index, filter_by_keys, encoding):
+    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
+    attributes['Conventions'] = 'CF-1.7'
+    if 'GRIB_centreDescription' in attributes:
+        attributes['institution'] = attributes['GRIB_centreDescription']
+    attributes_namespace = {
+        'cfgrib_version': __version__,
+        'cfgrib_open_kwargs': json.dumps(encoding),
+        'eccodes_version': messages.eccodes_version,
+        'timestamp': datetime.datetime.now().isoformat().partition('.')[0],
+    }
+    history_in = (
+        '{timestamp} GRIB to CDM+CF via '
+        'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
+    )
+    attributes['history'] = history_in.format(**attributes_namespace)
+    return attributes
+
+
 def build_dataset_components(
     index,
     errors='warn',
     encode_cf=('parameter', 'time', 'geography', 'vertical'),
-    timestamp=None,
     squeeze=True,
     log=LOG,
     read_keys=[],
@@ -572,26 +590,12 @@ def build_dataset_components(
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
-    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     encoding = {
         'source': index.filestream.path,
         'filter_by_keys': filter_by_keys,
         'encode_cf': encode_cf,
     }
-    attributes['Conventions'] = 'CF-1.7'
-    if 'GRIB_centreDescription' in attributes:
-        attributes['institution'] = attributes['GRIB_centreDescription']
-    attributes_namespace = {
-        'cfgrib_version': __version__,
-        'cfgrib_open_kwargs': json.dumps(encoding),
-        'eccodes_version': messages.eccodes_version,
-        'timestamp': timestamp or datetime.datetime.now().isoformat().partition('.')[0],
-    }
-    history_in = (
-        '{timestamp} GRIB to CDM+CF via '
-        'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
-    )
-    attributes['history'] = history_in.format(**attributes_namespace)
+    attributes = build_dataset_attributes(index, filter_by_keys, encoding)
     return dimensions, variables, attributes, encoding
 
 
