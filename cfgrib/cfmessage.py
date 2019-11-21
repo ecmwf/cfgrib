@@ -104,6 +104,14 @@ def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_ke
     message[step_unit_key] = step_unit
 
 
+def from_grib_month(message, verifying_month_key='verifyingMonth', epoch=DEFAULT_EPOCH):
+    date = message[verifying_month_key]
+    year = date // 100
+    month = date % 100
+    data_datetime = datetime.datetime(year, month, 1, 0, 0)
+    return int((data_datetime - epoch).total_seconds())
+
+
 def build_valid_time(time, step):
     # type: (np.ndarray, np.ndarray) -> T.Tuple[T.Tuple[str, ...], np.ndarray]
     """
@@ -136,6 +144,7 @@ COMPUTED_KEYS = {
         functools.partial(from_grib_date_time, date_key='validityDate', time_key='validityTime'),
         functools.partial(to_grib_date_time, date_key='validityDate', time_key='validityTime'),
     ),
+    'verifying_time': (from_grib_month, None),
 }
 
 
