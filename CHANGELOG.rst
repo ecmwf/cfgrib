@@ -5,7 +5,9 @@ Changelog for cfgrib
 0.9.7.4 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Add more options to ``time_dims`` forecasts products may be represented as
+  ``('time', 'verifying_time')`` or ``('time', 'forecastMonth')``.
+  See: `#97 <https://github.com/ecmwf/cfgrib/issues/97>`_.
 
 
 0.9.7.3 (2019-11-04)
