@@ -147,7 +147,7 @@ GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 ENSEMBLE_KEYS = ['number']
 VERTICAL_KEYS = ['level']
 DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
-ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time']
+ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time', 'verifying_time', 'forecastMonth']
 SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
@@ -222,6 +222,12 @@ COORD_ATTRS = {
         'long_name': 'initial time of forecast',
     },
     'valid_time': {
+        'units': 'seconds since 1970-01-01T00:00:00',
+        'calendar': 'proleptic_gregorian',
+        'standard_name': 'time',
+        'long_name': 'time',
+    },
+    'verifying_time': {
         'units': 'seconds since 1970-01-01T00:00:00',
         'calendar': 'proleptic_gregorian',
         'standard_name': 'time',
@@ -419,7 +425,7 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time'), time_dims=(
         if set(time_dims).issubset(ALL_REF_TIME_KEYS):
             coords_map.extend(time_dims)
         else:
-            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_HEADER_DIMS))
+            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_REF_TIME_KEYS))
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
@@ -494,10 +500,9 @@ def build_variable_components(
         geo_ndim=len(geo_dims),
     )
 
-    if 'time' in coord_vars and 'valid_time' not in coord_vars and 'time' in encode_cf:
+    if 'time' in coord_vars and 'step' in coord_vars:
         # add the 'valid_time' secondary coordinate
-        step_data = coord_vars['step'].data if 'step' in coord_vars else np.array(0.0)
-        dims, time_data = cfmessage.build_valid_time(coord_vars['time'].data, step_data)
+        dims, time_data = cfmessage.build_valid_time(coord_vars['time'].data, coord_vars['step'].data)
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
@@ -520,11 +525,29 @@ def dict_merge(master, update):
             )
 
 
+def build_dataset_attributes(index, filter_by_keys, encoding):
+    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
+    attributes['Conventions'] = 'CF-1.7'
+    if 'GRIB_centreDescription' in attributes:
+        attributes['institution'] = attributes['GRIB_centreDescription']
+    attributes_namespace = {
+        'cfgrib_version': __version__,
+        'cfgrib_open_kwargs': json.dumps(encoding),
+        'eccodes_version': messages.eccodes_version,
+        'timestamp': datetime.datetime.now().isoformat().partition('.')[0],
+    }
+    history_in = (
+        '{timestamp} GRIB to CDM+CF via '
+        'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
+    )
+    attributes['history'] = history_in.format(**attributes_namespace)
+    return attributes
+
+
 def build_dataset_components(
     index,
     errors='warn',
     encode_cf=('parameter', 'time', 'geography', 'vertical'),
-    timestamp=None,
     squeeze=True,
     log=LOG,
     read_keys=[],
@@ -535,9 +558,6 @@ def build_dataset_components(
     filter_by_keys = index.filter_by_keys
     for param_id in index['paramId']:
         var_index = index.subindex(paramId=param_id)
-        first = var_index.first()
-        short_name = first['shortName']
-        var_name = first['cfVarName']
         try:
             dims, data_var, coord_vars = build_variable_components(
                 var_index,
@@ -560,6 +580,8 @@ def build_dataset_components(
                 fbks.append(fbk)
                 error_message += "\n    filter_by_keys=%r" % fbk
             raise DatasetBuildError(error_message, key, fbks)
+        short_name = data_var.attributes.get('GRIB_shortName', 'paramId_%d' % param_id)
+        var_name = data_var.attributes.get('GRIB_cfVarName', 'unknown')
         if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
             short_name = var_name
         try:
@@ -573,25 +595,12 @@ def build_dataset_components(
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
-    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     encoding = {
         'source': index.filestream.path,
         'filter_by_keys': filter_by_keys,
         'encode_cf': encode_cf,
     }
-    attributes['Conventions'] = 'CF-1.7'
-    attributes['institution'] = attributes['GRIB_centreDescription']
-    attributes_namespace = {
-        'cfgrib_version': __version__,
-        'cfgrib_open_kwargs': json.dumps(encoding),
-        'eccodes_version': messages.eccodes_version,
-        'timestamp': timestamp or datetime.datetime.now().isoformat().partition('.')[0],
-    }
-    history_in = (
-        '{timestamp} GRIB to CDM+CF via '
-        'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
-    )
-    attributes['history'] = history_in.format(**attributes_namespace)
+    attributes = build_dataset_attributes(index, filter_by_keys, encoding)
     return dimensions, variables, attributes, encoding
 
 
