@@ -425,7 +425,7 @@ def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time'), time_dims=(
         if set(time_dims).issubset(ALL_REF_TIME_KEYS):
             coords_map.extend(time_dims)
         else:
-            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_HEADER_DIMS))
+            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_REF_TIME_KEYS))
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
