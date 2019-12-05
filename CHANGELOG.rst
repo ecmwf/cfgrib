@@ -2,10 +2,10 @@
 Changelog for cfgrib
 ====================
 
-0.9.7.6 (unreleased)
+0.9.7.6 (2019-12-05)
 --------------------
 
-- Nothing changed yet.
+- Fix the README.
 
 
 0.9.7.5 (2019-12-05)
