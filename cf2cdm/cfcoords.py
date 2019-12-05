@@ -20,6 +20,7 @@
 import collections
 import functools
 import logging
+import warnings
 import typing as T  # noqa
 
 import xarray as xr  # noqa
@@ -192,17 +193,6 @@ def translate_coords(
                 raise RuntimeError("error while translating coordinate: %r" % cf_name)
             else:
                 LOG.warning("error while translating coordinate: %r", cf_name)
-    config = coord_model.get('config', {})
-    if config.get('preferred_time_dimension', 'time') == 'valid_time':
-        try:
-            data = ensure_valid_time(data)
-        except Exception:
-            if errors == 'ignore':
-                pass
-            elif errors == 'raise':
-                raise RuntimeError("error while ensuring valid_time coordinate")
-            else:
-                LOG.exception("error while ensuring valid_time coordinate")
     return data
 
 
@@ -229,6 +219,7 @@ def ensure_valid_time_present(data, valid_time_name='valid_time'):
 
 def ensure_valid_time(data):
     # type: (xr.Dataset) -> xr.Dataset
+    warnings.warn("ensure_valid_time is deprecated use time_dims instead", DeprecationWarning)
     valid_time, time, step = ensure_valid_time_present(data)
     if valid_time not in data.dims:
         if time and time in data.dims and data.coords[time].size == data.coords[valid_time].size:

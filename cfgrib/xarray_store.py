@@ -104,7 +104,6 @@ def open_datasets(path, no_warn=False, backend_kwargs={}, **kwargs):
 
     type_of_level_datasets = {}
     for ds in datasets:
-        assert len(ds.data_vars) == 1
         for _, da in ds.data_vars.items():
             type_of_level = da.attrs.get('GRIB_typeOfLevel', 'undef')
             type_of_level_datasets.setdefault(type_of_level, []).append(ds)

@@ -310,9 +310,6 @@ class OnDiskArray(object):
         return array
 
     def __getitem__(self, item):
-        assert isinstance(item, tuple), "Item type must be tuple not %r" % type(item)
-        assert len(item) == len(self.shape), "Item len must be %r not %r" % (self.shape, len(item))
-
         header_item = expand_item(item[: -self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype='float32')
@@ -502,7 +499,10 @@ def build_variable_components(
 
     if 'time' in coord_vars and 'step' in coord_vars:
         # add the 'valid_time' secondary coordinate
-        dims, time_data = cfmessage.build_valid_time(coord_vars['time'].data, coord_vars['step'].data)
+        dims, time_data = cfmessage.build_valid_time(
+            coord_vars['time'].data,
+            coord_vars['step'].data,
+        )
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 

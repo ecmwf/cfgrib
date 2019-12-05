@@ -18,7 +18,7 @@ def test_cds():
 
     res = cfcoords.translate_coords(ds, coord_model=datamodels.CDS)
 
-    assert set(res.dims) == {'time', 'lat', 'lon', 'plev', 'realization'}
+    assert set(res.dims) == {'forecast_reference_time', 'lat', 'lon', 'plev', 'realization'}
     assert set(res.coords) == {
         'forecast_reference_time',
         'lat',
