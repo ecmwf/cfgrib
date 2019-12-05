@@ -30,7 +30,6 @@ CDS = {
     'time': {'out_name': 'forecast_reference_time', 'stored_direction': 'increasing'},
     'valid_time': {'out_name': 'time', 'stored_direction': 'increasing'},
     'step': {'out_name': 'leadtime', 'stored_direction': 'increasing'},
-    'config': {'preferred_time_dimension': 'valid_time'},
 }
 
 

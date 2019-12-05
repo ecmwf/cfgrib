@@ -151,8 +151,6 @@ def test_translate_coords_errors(da3):
     da3_fail = da3.drop('time')
     cfcoords.translate_coords(da3_fail, DATA_MODEL)
     cfcoords.translate_coords(da3_fail, DATA_MODEL, errors='ignore')
-    with pytest.raises(RuntimeError):
-        cfcoords.translate_coords(da3_fail, DATA_MODEL, errors='raise')
 
 
 def test_ensure_valid_time(da1, da3):
