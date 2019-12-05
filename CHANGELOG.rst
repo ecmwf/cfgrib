@@ -5,7 +5,8 @@ Changelog for cfgrib
 0.9.7.5 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Deprecate ``ensure_valid_time`` and the config option ``preferred_time_dimension`` that
+  are now better handled via ``time_dims``.
 
 
 0.9.7.4 (2019-11-22)
