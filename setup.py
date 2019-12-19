@@ -52,7 +52,7 @@ setuptools.setup(
         'pytest-runner',
     ],
     install_requires=[
-        'attrs',
+        'attrs>=19.2',
         'cffi',
         'click',
         'numpy',

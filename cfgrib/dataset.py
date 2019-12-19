@@ -258,7 +258,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
     return attributes
 
 
-@attr.attrs(cmp=False)
+@attr.attrs(eq=False)
 class Variable(object):
     dimensions = attr.attrib(type=T.Tuple[str, ...])
     data = attr.attrib(type=np.ndarray)
