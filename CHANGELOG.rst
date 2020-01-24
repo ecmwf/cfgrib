@@ -5,7 +5,7 @@ Changelog for cfgrib
 0.9.7.7 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Add support for `forecastMonth` in `cf2cdm.translate_coords`.
 
 
 0.9.7.6 (2019-12-05)
