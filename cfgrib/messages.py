@@ -29,11 +29,14 @@ import typing as T
 import attr
 import numpy as np
 
-# select between using the external ecCodes bindings or the internal implementation
-if os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS'):
-    import eccodes
-else:
-    from . import bindings as eccodes
+try:
+    # select between using the external ecCodes bindings or the internal implementation
+    if int(os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS', '0')):
+        import eccodes
+    else:
+        from . import bindings as eccodes
+except RuntimeError:
+    import pyeccodes.compat as eccodes
 
 eccodes_version = eccodes.codes_get_api_version()
 

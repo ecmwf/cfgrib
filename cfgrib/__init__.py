@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.9.7.8.dev0'
+__version__ = '0.9.8.0.dev0'
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage
