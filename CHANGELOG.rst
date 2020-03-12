@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.0 (unreleased)
+0.9.8.0 (2020-03-12)
 --------------------
 
 - Add support of experimental pyeccodes low-level driver by @b8raoult.
