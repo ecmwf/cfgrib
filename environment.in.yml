@@ -9,8 +9,8 @@ dependencies:
   - check-manifest
   - click
   - dask
-  - eccodes=2.13.1
+  - eccodes=2.15.0
   - netcdf4
   - pip
   - pytest
-  - xarray=0.12.1
+  - xarray=0.14.1
