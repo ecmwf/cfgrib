@@ -444,7 +444,7 @@ def portable_handle_new_from_samples(samplename, product_kind):
         samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL)).decode('utf-8')
         sample_path = os.path.join(samples_folder, samplename + '.tmpl')
         try:
-            with open(sample_path) as file:
+            with open(sample_path, 'rb') as file:
                 handle = codes_grib_new_from_file(file, product_kind)
         except Exception:
             logging.exception("creating empty message from sample failed")
