@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.1 (unreleased)
+0.9.8.1 (2020-03-13)
 --------------------
 
 - Always open GRIB files in binary mode, by @b8raoult
