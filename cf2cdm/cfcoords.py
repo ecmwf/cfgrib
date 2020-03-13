@@ -179,6 +179,17 @@ COORD_TRANSLATORS['number'] = functools.partial(
 )
 
 
+# CF-Conventions have no concept of leadtime expressed in months
+def is_forecast_month(coord):
+    # type: (xr.Coordinate) -> bool
+    return coord.attrs.get('long_name') == 'months since forecast_reference_time'
+
+
+COORD_TRANSLATORS['forecastMonth'] = functools.partial(
+    coord_translator, 'forecastMonth', '1', 'increasing', is_forecast_month
+)
+
+
 def translate_coords(
     data, coord_model=COORD_MODEL, errors='warn', coord_translators=COORD_TRANSLATORS
 ):

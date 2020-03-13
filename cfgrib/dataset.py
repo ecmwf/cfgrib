@@ -233,6 +233,10 @@ COORD_ATTRS = {
         'standard_name': 'time',
         'long_name': 'time',
     },
+    'forecastMonth': {
+        'units': '1',
+        'long_name': 'months since forecast_reference_time',
+    },
 }
 
 
