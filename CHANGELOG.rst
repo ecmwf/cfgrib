@@ -5,13 +5,13 @@ Changelog for cfgrib
 0.9.8.1 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Always open GRIB files in binary mode, by @b8raoult
 
 
 0.9.8.0 (2020-03-12)
 --------------------
 
-- Add support of experimental pyeccodes low-level driver by @b8raoult.
+- Add support of experimental pyeccodes low-level driver by @b8raoult
 
 
 0.9.7.7 (2020-01-24)
