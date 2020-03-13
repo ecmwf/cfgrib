@@ -179,7 +179,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
         raise ValueError("template_path and sample_name should not be both set")
 
     if template_path:
-        with open(template_path) as file:
+        with open(template_path, 'rb') as file:
             template_message = cfgrib.CfMessage.from_file(file)
     else:
         if sample_name is None:

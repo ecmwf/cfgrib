@@ -386,6 +386,6 @@ class FileIndex(collections.abc.Mapping):
         return index
 
     def first(self):
-        with open(self.filestream.path) as file:
+        with open(self.filestream.path, 'rb') as file:
             first_offset = self.offsets[0][1][0]
             return self.filestream.message_from_file(file, offset=first_offset)
