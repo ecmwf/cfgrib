@@ -300,7 +300,7 @@ class OnDiskArray(object):
         # type: () -> np.ndarray
         """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype='float32')
-        with open(self.stream.path) as file:
+        with open(self.stream.path, 'rb') as file:
             for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
@@ -313,7 +313,7 @@ class OnDiskArray(object):
         header_item = expand_item(item[: -self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype='float32')
-        with open(self.stream.path) as file:
+        with open(self.stream.path, 'rb') as file:
             for header_indexes, offset in self.offsets.items():
                 try:
                     array_field_indexes = [
