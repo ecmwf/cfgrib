@@ -3,14 +3,18 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - attrs
+  - attrs>=19.2
   - black
   - cffi
   - check-manifest
   - click
   - dask
-  - eccodes=2.15.0
+  - eccodes>=2.15.0
   - netcdf4
   - pip
   - pytest
-  - xarray=0.14.1
+  - pytest-cov
+  - pytest-flakes
+  - scipy
+  - sphinx
+  - xarray>=0.12.0
