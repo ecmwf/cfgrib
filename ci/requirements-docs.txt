@@ -5,32 +5,35 @@
 #    pip-compile --output-file ci/requirements-docs.txt setup.py ci/requirements-docs.in
 #
 alabaster==0.7.12         # via sphinx
-attrs==19.1.0
-babel==2.6.0              # via sphinx
-certifi==2019.3.9         # via requests
-cffi==1.12.2
+attrs==19.3.0
+babel==2.8.0              # via sphinx
+certifi==2020.4.5.1       # via requests
+cffi==1.14.0
 chardet==3.0.4            # via requests
-click==7.0
-docutils==0.14            # via sphinx
-future==0.17.1
-idna==2.8                 # via requests
-imagesize==1.1.0          # via sphinx
-jinja2==2.10.1            # via sphinx
+click==7.1.2
+docutils==0.16            # via sphinx
+idna==2.9                 # via requests
+imagesize==1.2.0          # via sphinx
+jinja2==2.11.2            # via sphinx
 markupsafe==1.1.1         # via jinja2
-numpy==1.16.2
-packaging==19.0           # via sphinx
-pandas==0.24.2            # via xarray
-pycparser==2.19           # via cffi
-pygments==2.3.1           # via sphinx
-pyparsing==2.3.1          # via packaging
-pytest-runner==4.4
-python-dateutil==2.8.0    # via pandas
-pytz==2018.9              # via babel, pandas
-requests==2.21.0          # via sphinx
-six==1.12.0               # via packaging, python-dateutil, sphinx
-snowballstemmer==1.2.1    # via sphinx
-sphinx==1.8.5
-sphinxcontrib-websupport==1.1.0  # via sphinx
-typing==3.6.6
-urllib3==1.24.2           # via requests
-xarray==0.11.3
+numpy==1.18.4
+packaging==20.3           # via sphinx
+pandas==1.0.3             # via xarray
+pycparser==2.20           # via cffi
+pygments==2.6.1           # via sphinx
+pyparsing==2.4.7          # via packaging
+pytest-runner==5.2
+python-dateutil==2.8.1    # via pandas
+pytz==2020.1              # via babel, pandas
+requests==2.23.0          # via sphinx
+six==1.14.0               # via packaging, python-dateutil
+snowballstemmer==2.0.0    # via sphinx
+sphinx==3.0.3
+sphinxcontrib-applehelp==1.0.2  # via sphinx
+sphinxcontrib-devhelp==1.0.2  # via sphinx
+sphinxcontrib-htmlhelp==1.0.3  # via sphinx
+sphinxcontrib-jsmath==1.0.1  # via sphinx
+sphinxcontrib-qthelp==1.0.3  # via sphinx
+sphinxcontrib-serializinghtml==1.1.4  # via sphinx
+urllib3==1.25.9           # via requests
+xarray==0.15.1
