@@ -233,10 +233,7 @@ COORD_ATTRS = {
         'standard_name': 'time',
         'long_name': 'time',
     },
-    'forecastMonth': {
-        'units': '1',
-        'long_name': 'months since forecast_reference_time',
-    },
+    'forecastMonth': {'units': '1', 'long_name': 'months since forecast_reference_time',},
 }
 
 
@@ -504,8 +501,7 @@ def build_variable_components(
     if 'time' in coord_vars and 'step' in coord_vars:
         # add the 'valid_time' secondary coordinate
         dims, time_data = cfmessage.build_valid_time(
-            coord_vars['time'].data,
-            coord_vars['step'].data,
+            coord_vars['time'].data, coord_vars['step'].data,
         )
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
