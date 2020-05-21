@@ -293,6 +293,13 @@ int codes_set_double_array(codes_handle* h, const char* key, const double* vals,
 int codes_set_long_array(codes_handle* h, const char* key, const long* vals, size_t length);
 
 /**
+*  Get the static default context
+*
+* @return            the default context, NULL it the context is not available
+*/
+codes_context* codes_context_get_default(void);
+
+/**
 *  Frees the cached definition files of the context
 *
 * @param c           : the context to be deleted
@@ -312,6 +319,14 @@ void codes_grib_multi_support_on(codes_context* c);
 * @param c            : the context to be modified
 */
 void codes_grib_multi_support_off(codes_context* c);
+
+/**
+*  Reset file handle in multiple GRIB field support mode
+*
+* @param c            : the context to be modified
+* @param f            : the file pointer
+*/
+void codes_grib_multi_support_reset_file(codes_context* c, FILE* f);
 
 char* codes_samples_path(const codes_context* c);
 
