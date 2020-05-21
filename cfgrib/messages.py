@@ -60,8 +60,8 @@ class Message(collections.abc.MutableMapping):
     )
 
     @classmethod
-    def from_file(cls, file, offset=None, product_kind=eccodes.CODES_PRODUCT_ANY, **kwargs):
-        # type: (T.IO[bytes], int, int, T.Any) -> Message
+    def from_file(cls, file, offset=None, **kwargs):
+        # type: (T.IO[bytes], int, T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -70,14 +70,14 @@ class Message(collections.abc.MutableMapping):
         codes_id = None
         # iterate over multi-fields in the message
         for _ in range(field_in_message + 1):
-            codes_id = eccodes.codes_new_from_file(file, product_kind=product_kind)
+            codes_id = eccodes.codes_grib_new_from_file(file)
         if codes_id is None:
             raise EOFError("End of file: %r" % file)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
-    def from_sample_name(cls, sample_name, product_kind=eccodes.CODES_PRODUCT_GRIB, **kwargs):
-        codes_id = eccodes.codes_new_from_samples(sample_name, product_kind)
+    def from_sample_name(cls, sample_name, **kwargs):
+        codes_id = eccodes.codes_new_from_samples(sample_name)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
@@ -206,7 +206,6 @@ class FileStream(collections.abc.Iterable):
     errors = attr.attrib(
         default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
     )
-    product_kind = attr.attrib(default=eccodes.CODES_PRODUCT_ANY)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
@@ -229,7 +228,7 @@ class FileStream(collections.abc.Iterable):
                         LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        return self.message_class.from_file(file, offset, self.product_kind, **kwargs)
+        return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self):
         # type: () -> Message
