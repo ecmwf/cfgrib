@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2018 ECMWF.
+ * (C) Copyright 2005- ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,19 +19,19 @@
     \ingroup codes_handle
     \struct codes_handle
 */
-typedef struct grib_handle            codes_handle;
+typedef struct grib_handle codes_handle;
 
 /*! Codes context,  structure containing the memory methods, the parsers and the formats.
     \ingroup codes_context
     \struct codes_context
 */
-typedef struct grib_context           codes_context;
+typedef struct grib_context codes_context;
 
 /*! Codes keys iterator. Iterator over keys.
     \ingroup keys_iterator
     \struct codes_keys_iterator
 */
-typedef struct grib_keys_iterator     codes_keys_iterator;
+typedef struct grib_keys_iterator codes_keys_iterator;
 
 /**
 *  Create a handle from a file resource.
@@ -45,7 +45,7 @@ typedef struct grib_keys_iterator     codes_keys_iterator;
 * @param error       : error code set if the returned handle is NULL and the end of file is not reached
 * @return            the new handle, NULL if the resource is invalid or a problem is encountered
 */
-grib_handle* codes_handle_new_from_file(grib_context* c, FILE* f, ProductKind product, int* error);
+codes_handle* codes_handle_new_from_file(codes_context* c, FILE* f, ProductKind product, int* error);
 
 /**
 *  Write a coded message to a file.
@@ -55,7 +55,7 @@ grib_handle* codes_handle_new_from_file(grib_context* c, FILE* f, ProductKind pr
 * @param mode        : mode
 * @return            0 if OK, integer value on error
 */
-int codes_write_message(codes_handle* h,const char* file,const char* mode);
+int codes_write_message(const codes_handle* h, const char* file, const char* mode);
 
 /**
  *  Create a handle from a GRIB message contained in the samples directory.
@@ -65,7 +65,7 @@ int codes_write_message(codes_handle* h,const char* file,const char* mode);
  * @param sample_name : the name of the sample file (without the .tmpl extension)
  * @return            the new handle, NULL if the resource is invalid or a problem is encountered
  */
-codes_handle* codes_grib_handle_new_from_samples (codes_context* c, const char* sample_name);
+codes_handle* codes_grib_handle_new_from_samples(codes_context* c, const char* sample_name);
 
 /**
  *  Create a handle from a BUFR message contained in a samples directory.
@@ -75,7 +75,7 @@ codes_handle* codes_grib_handle_new_from_samples (codes_context* c, const char* 
  * @param sample_name : the name of the sample file (without the .tmpl extension)
  * @return            the new handle, NULL if the resource is invalid or a problem is encountered
  */
-codes_handle* codes_bufr_handle_new_from_samples (codes_context* c, const char* sample_name);
+codes_handle* codes_bufr_handle_new_from_samples(codes_context* c, const char* sample_name);
 
 
 /**
@@ -85,7 +85,7 @@ codes_handle* codes_bufr_handle_new_from_samples (codes_context* c, const char* 
 * @param h           : The handle to be cloned
 * @return            the new handle, NULL if the message is invalid or a problem is encountered
 */
-codes_handle* codes_handle_clone(codes_handle* h)                 ;
+codes_handle* codes_handle_clone(const codes_handle* h);
 
 /**
 *  Frees a handle, also frees the message if it is not a user message
@@ -105,7 +105,7 @@ int codes_handle_delete(codes_handle* h);
 * @param message_length : On exit, the message size in number of bytes
 * @return            0 if OK, integer value on error
 */
-int codes_get_message(codes_handle* h ,const void** message, size_t *message_length  );
+int codes_get_message(const codes_handle* h, const void** message, size_t* message_length);
 
 /**
 * Get latitude/longitude and data values.
@@ -118,7 +118,7 @@ int codes_get_message(codes_handle* h ,const void** message, size_t *message_len
 * @param values      : returned array of data values
 * @return            0 if OK, integer value on error
 */
-int codes_grib_get_data(codes_handle *h, double *lats, double *lons, double *values);
+int codes_grib_get_data(const codes_handle* h, double* lats, double* lons, double* values);
 
 /**
 *  Get the number of coded value from a key, if several keys of the same name are present, the total sum is returned
@@ -128,7 +128,7 @@ int codes_grib_get_data(codes_handle *h, double *lats, double *lons, double *val
 * @param size        : the address of a size_t where the size will be set
 * @return            0 if OK, integer value on error
 */
-int codes_get_size(codes_handle* h, const char* key,size_t *size);
+int codes_get_size(const codes_handle* h, const char* key, size_t* size);
 
 /**
 *  Get the length of the string representation of the key, if several keys of the same name are present, the maximum length is returned
@@ -138,7 +138,7 @@ int codes_get_size(codes_handle* h, const char* key,size_t *size);
 * @param length        : the address of a size_t where the length will be set
 * @return            0 if OK, integer value on error
 */
-int codes_get_length(codes_handle* h, const char* key,size_t *length);
+int codes_get_length(const codes_handle* h, const char* key, size_t* length);
 
 /**
 *  Get a long value from a key, if several keys of the same name are present, the last one is returned
@@ -149,7 +149,7 @@ int codes_get_length(codes_handle* h, const char* key,size_t *length);
 * @param value       : the address of a long where the data will be retrieved
 * @return            0 if OK, integer value on error
 */
-int codes_get_long(codes_handle* h, const char* key, long*   value  );
+int codes_get_long(const codes_handle* h, const char* key, long* value);
 
 /**
 *  Get a double value from a key, if several keys of the same name are present, the last one is returned
@@ -160,7 +160,7 @@ int codes_get_long(codes_handle* h, const char* key, long*   value  );
 * @param value       : the address of a double where the data will be retrieved
 * @return            0 if OK, integer value on error
 */
-int codes_get_double(codes_handle* h, const char* key, double* value                             );
+int codes_get_double(const codes_handle* h, const char* key, double* value);
 
 /**
 *  Get a string value from a key, if several keys of the same name are present, the last one is returned
@@ -172,7 +172,7 @@ int codes_get_double(codes_handle* h, const char* key, double* value            
 * @param length    : the address of a size_t that contains allocated length of the string on input, and that contains the actual length of the string on output
 * @return          0 if OK, integer value on error
 */
-int codes_get_string(codes_handle* h, const char* key, char* mesg, size_t *length  );
+int codes_get_string(const codes_handle* h, const char* key, char* mesg, size_t* length);
 
 /**
 *  Get string array values from a key. If several keys of the same name are present, the last one is returned
@@ -184,7 +184,7 @@ int codes_get_string(codes_handle* h, const char* key, char* mesg, size_t *lengt
 * @param length  : the address of a size_t that contains allocated length of the array on input, and that contains the actual length of the array on output
 * @return        0 if OK, integer value on error
 */
-int codes_get_string_array(codes_handle* h, const char* key, char** vals, size_t *length);
+int codes_get_string_array(const codes_handle* h, const char* key, char** vals, size_t* length);
 
 /**
 *  Get raw bytes values from a key. If several keys of the same name are present, the last one is returned
@@ -196,7 +196,7 @@ int codes_get_string_array(codes_handle* h, const char* key, char** vals, size_t
 * @param length      : the address of a size_t that contains allocated length of the byte array on input, and that contains the actual length of the byte array on output
 * @return            0 if OK, integer value on error
 */
-int codes_get_bytes(codes_handle* h, const char* key, unsigned char* bytes, size_t *length);
+int codes_get_bytes(const codes_handle* h, const char* key, unsigned char* bytes, size_t* length);
 
 /**
 *  Get double array values from a key. If several keys of the same name are present, the last one is returned
@@ -208,7 +208,7 @@ int codes_get_bytes(codes_handle* h, const char* key, unsigned char* bytes, size
 * @param length   : the address of a size_t that contains allocated length of the double array on input, and that contains the actual length of the double array on output
 * @return         0 if OK, integer value on error
 */
-int codes_get_double_array(codes_handle* h, const char* key, double* vals, size_t *length);
+int codes_get_double_array(const codes_handle* h, const char* key, double* vals, size_t* length);
 
 /**
 *  Get long array values from a key. If several keys of the same name are present, the last one is returned
@@ -220,7 +220,7 @@ int codes_get_double_array(codes_handle* h, const char* key, double* vals, size_
 * @param length      : the address of a size_t that contains allocated length of the long array on input, and that contains the actual length of the long array on output
 * @return            0 if OK, integer value on error
 */
-int codes_get_long_array(codes_handle* h, const char* key, long* vals, size_t *length);
+int codes_get_long_array(const codes_handle* h, const char* key, long* vals, size_t* length);
 
 /**
 *  Set a long value from a key. If several keys of the same name are present, the last one is set
@@ -254,7 +254,7 @@ int codes_set_double(codes_handle* h, const char* key, double val);
 * @param length      : the address of a size_t that contains the length of the string on input, and that contains the actual packed length of the string on output
 * @return            0 if OK, integer value on error
 */
-int codes_set_string(codes_handle* h, const char*  key , const char* mesg, size_t *length);
+int codes_set_string(codes_handle* h, const char* key, const char* mesg, size_t* length);
 
 /**
 *  Set a bytes array from a key. If several keys of the same name are present, the last one is set
@@ -266,7 +266,7 @@ int codes_set_string(codes_handle* h, const char*  key , const char* mesg, size_
 * @param length      : the address of a size_t that contains the length of the byte array on input, and that contains the actual packed length of the byte array  on output
 * @return            0 if OK, integer value on error
 */
-int codes_set_bytes(codes_handle* h, const char*  key, const unsigned char* bytes, size_t *length);
+int codes_set_bytes(codes_handle* h, const char* key, const unsigned char* bytes, size_t* length);
 
 /**
 *  Set a double array from a key. If several keys of the same name are present, the last one is set
@@ -313,12 +313,12 @@ void codes_grib_multi_support_on(codes_context* c);
 */
 void codes_grib_multi_support_off(codes_context* c);
 
-char* codes_samples_path(const codes_context *c);
+char* codes_samples_path(const codes_context* c);
 
 /**
 *  Get the API version
 *
-*  @return        API version
+*  @return API version
 */
 long codes_get_api_version(void);
 
@@ -336,25 +336,25 @@ attributes or by the namespace they belong to.
 *  @return              keys iterator ready to iterate through keys according to filter_flags
 *                       and namespace
 */
-codes_keys_iterator* codes_keys_iterator_new(codes_handle* h,unsigned long filter_flags, const char* name_space);
+codes_keys_iterator* codes_keys_iterator_new(codes_handle* h, unsigned long filter_flags, const char* name_space);
 
 /*! Step to the next item from the keys iterator.
 *  @param kiter         : valid codes_keys_iterator
 *  @return              1 if next iterator exists, 0 if no more elements to iterate on
 */
-int codes_keys_iterator_next(codes_keys_iterator *kiter);
+int codes_keys_iterator_next(codes_keys_iterator* kiter);
 
 
 /*! get the key name from the keys iterator
 *  @param kiter         : valid codes_keys_iterator
 *  @return              key name
 */
-const char* codes_keys_iterator_get_name(codes_keys_iterator *kiter);
+const char* codes_keys_iterator_get_name(const codes_keys_iterator* kiter);
 
 /*! Delete the keys iterator.
 *  @param kiter         : valid codes_keys_iterator
 *  @return              0 if OK, integer value on error
 */
-int codes_keys_iterator_delete( codes_keys_iterator* kiter);
-int codes_get_native_type(codes_handle* h, const char* name,int* type);
+int codes_keys_iterator_delete(codes_keys_iterator* kiter);
+int codes_get_native_type(const codes_handle* h, const char* name, int* type);
 
