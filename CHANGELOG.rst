@@ -5,7 +5,8 @@ Changelog for cfgrib
 0.9.8.3 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- `lambert_azimuthal_equal_area` grids are now returned as 2D arrays.
+  See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_,
 
 
 0.9.8.2 (2020-05-22)
