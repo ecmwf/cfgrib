@@ -24,8 +24,6 @@ Features with development status **Beta**:
 
 Work in progress:
 
-- **Alpha** limited support for MULTI-FIELD messages, e.g. u-v components,
-  see `#76 <https://github.com/ecmwf/cfgrib/issues/76>`_.
 - **Alpha** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
   with a optional conversion to a specific coordinates data model,
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
