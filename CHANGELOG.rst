@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.2 (unreleased)
+0.9.8.2 (2020-05-22)
 --------------------
 
 - Add support for MULTI-FIELD messages used in some GRIB products to store
