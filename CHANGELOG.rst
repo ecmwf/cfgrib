@@ -5,7 +5,13 @@ Changelog for cfgrib
 0.9.8.2 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Add support for MULTI-FIELD messages used in some GRIB products to store
+  `u` and `v` components of wind (e.g. GFS, NAM, etc). This has been the single
+  most reported bug in *cfgrib* with two failed attempts at fixing it already.
+  Let's see if the third time's a charm. Please test!
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_,
+    `#76 <https://github.com/ecmwf/cfgrib/issues/76>`_ and
+    `#111 <https://github.com/ecmwf/cfgrib/issues/111>`_.
 
 
 0.9.8.1 (2020-03-13)

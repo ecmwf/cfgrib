@@ -51,7 +51,13 @@ eccodes.codes_grib_multi_support_off()
 
 @contextlib.contextmanager
 def multi_enabled(file):
+    """Context manager that enables MULTI-FIELD support in ecCodes from a clean state"""
     eccodes.codes_grib_multi_support_on()
+    #
+    # Explicitly reset the multi_support global state that gets confused by random access
+    #
+    # @alexamici: I'm note sure this is thread-safe. See :#141
+    #
     context = eccodes.lib.codes_context_get_default()
     eccodes.lib.codes_grib_multi_support_reset_file(context, file)
     try:
