@@ -335,14 +335,15 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_DIMENSION_COORDS = ['regular_ll', 'regular_gg']
-GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+GRID_TYPES_DIMENSION_COORDS = {'regular_ll', 'regular_gg'}
+GRID_TYPES_2D_NON_DIMENSION_COORDS = {
     'rotated_ll',
     'rotated_gg',
     'lambert',
+    'lambert_azimuthal_equal_area',
     'albers',
     'polar_stereographic',
-]
+}
 
 
 def build_geography_coordinates(
