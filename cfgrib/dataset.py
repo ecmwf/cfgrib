@@ -239,10 +239,7 @@ COORD_ATTRS = {
         'standard_name': 'time',
         'long_name': 'time',
     },
-    'forecastMonth': {
-        'units': '1',
-        'long_name': 'months since forecast_reference_time',
-    },
+    'forecastMonth': {'units': '1', 'long_name': 'months since forecast_reference_time'},
 }
 
 
@@ -344,14 +341,15 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_DIMENSION_COORDS = ['regular_ll', 'regular_gg']
-GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+GRID_TYPES_DIMENSION_COORDS = {'regular_ll', 'regular_gg'}
+GRID_TYPES_2D_NON_DIMENSION_COORDS = {
     'rotated_ll',
     'rotated_gg',
     'lambert',
+    'lambert_azimuthal_equal_area',
     'albers',
     'polar_stereographic',
-]
+}
 
 
 def build_geography_coordinates(
@@ -510,8 +508,7 @@ def build_variable_components(
     if 'time' in coord_vars and 'step' in coord_vars:
         # add the 'valid_time' secondary coordinate
         dims, time_data = cfmessage.build_valid_time(
-            coord_vars['time'].data,
-            coord_vars['step'].data,
+            coord_vars['time'].data, coord_vars['step'].data,
         )
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)

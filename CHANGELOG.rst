@@ -2,10 +2,35 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.0 (unreleased)
+0.9.8.3 (unreleased)
 --------------------
 
-- Add support of experimental pyeccodes low-level driver by @b8raoult.
+- ``lambert_azimuthal_equal_area` grids are now returned as 2D arrays.
+  See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_,
+
+
+0.9.8.2 (2020-05-22)
+--------------------
+
+- Add support for MULTI-FIELD messages used in some GRIB products to store
+  ``u`` and ``v`` components of wind (e.g. GFS, NAM, etc). This has been the single
+  most reported bug in *cfgrib* with two failed attempts at fixing it already.
+  Let's see if the third time's a charm. Please test!
+  See: `#45 <https://github.com/ecmwf/cfgrib/issues/45>`_,
+  `#76 <https://github.com/ecmwf/cfgrib/issues/76>`_ and
+  `#111 <https://github.com/ecmwf/cfgrib/issues/111>`_.
+
+
+0.9.8.1 (2020-03-13)
+--------------------
+
+- Always open GRIB files in binary mode, by @b8raoult
+
+
+0.9.8.0 (2020-03-12)
+--------------------
+
+- Add support of experimental pyeccodes low-level driver by @b8raoult
 
 
 0.9.7.7 (2020-01-24)
