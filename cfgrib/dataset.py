@@ -147,7 +147,7 @@ GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 ENSEMBLE_KEYS = ['number']
 VERTICAL_KEYS = ['level']
 DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
-ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time', 'verifying_time', 'forecastMonth']
+ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time', 'verifying_time', 'forecastMonth', 'indexing_time']
 SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
@@ -220,6 +220,12 @@ COORD_ATTRS = {
         'calendar': 'proleptic_gregorian',
         'standard_name': 'forecast_reference_time',
         'long_name': 'initial time of forecast',
+    },
+    'indexing_time': {
+        'units': 'seconds since 1970-01-01T00:00:00',
+        'calendar': 'proleptic_gregorian',
+        'standard_name': 'time',
+        'long_name': 'time',
     },
     'valid_time': {
         'units': 'seconds since 1970-01-01T00:00:00',
