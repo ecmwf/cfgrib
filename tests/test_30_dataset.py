@@ -9,7 +9,7 @@ from cfgrib import dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
-TEST_DATA2 = os.path.join(SAMPLE_DATA_FOLDER, 'forecast_monthly_uko.grib')
+TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, 'forecast_monthly_ukmo.grib')
 
 
 
@@ -93,7 +93,7 @@ def test_build_data_var_components_encode_cf_geography():
 
 def test_build_dataset_components_time_dims():
     index_keys = sorted(dataset.ALL_KEYS)
-    index = dataset.open_fileindex(TEST_DATA2, 'warn', '{path}.{short_hash}.idx', index_keys).subindex(paramId=167)
+    index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys).subindex(paramId=167)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
         'latitude': 6,
@@ -104,7 +104,7 @@ def test_build_dataset_components_time_dims():
     }
 
     index_keys = sorted(dataset.ALL_KEYS)
-    index = dataset.open_fileindex(TEST_DATA2, 'warn', '{path}.{short_hash}.idx', index_keys)
+    index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[], time_dims=('indexing_time', 'verifying_time'))[0]
     assert dims == {
         'number': 28,
@@ -115,7 +115,7 @@ def test_build_dataset_components_time_dims():
     }
 
     index_keys = sorted(dataset.ALL_KEYS)
-    index = dataset.open_fileindex(TEST_DATA2, 'warn', '{path}.{short_hash}.idx', index_keys)
+    index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[], time_dims=('indexing_time', 'step'))[0]
     assert dims == {
         'number': 28,
