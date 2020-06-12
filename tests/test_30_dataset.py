@@ -12,7 +12,6 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, 'forecast_monthly_ukmo.grib')
 
 
-
 def test_enforce_unique_attributes():
     assert dataset.enforce_unique_attributes({'key': [1]}, ['key'])
     assert not dataset.enforce_unique_attributes({'key': ['undef']}, ['key'])
@@ -93,7 +92,7 @@ def test_build_data_var_components_encode_cf_geography():
 
 def test_build_dataset_components_time_dims():
     index_keys = sorted(dataset.ALL_KEYS)
-    index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys).subindex(paramId=167)
+    index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
         'latitude': 6,
@@ -105,7 +104,9 @@ def test_build_dataset_components_time_dims():
 
     index_keys = sorted(dataset.ALL_KEYS)
     index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys)
-    dims = dataset.build_dataset_components(index, read_keys=[], time_dims=('indexing_time', 'verifying_time'))[0]
+    dims, *_ = dataset.build_dataset_components(
+        index, read_keys=[], time_dims=('indexing_time', 'verifying_time')
+    )
     assert dims == {
         'number': 28,
         'indexing_time': 2,
@@ -116,7 +117,9 @@ def test_build_dataset_components_time_dims():
 
     index_keys = sorted(dataset.ALL_KEYS)
     index = dataset.open_fileindex(TEST_DATA_UKMO, 'warn', '{path}.{short_hash}.idx', index_keys)
-    dims = dataset.build_dataset_components(index, read_keys=[], time_dims=('indexing_time', 'step'))[0]
+    dims, *_ = dataset.build_dataset_components(
+        index, read_keys=[], time_dims=('indexing_time', 'step')
+    )
     assert dims == {
         'number': 28,
         'indexing_time': 2,
@@ -124,7 +127,6 @@ def test_build_dataset_components_time_dims():
         'latitude': 6,
         'longitude': 11
     }
-
 
 
 def test_Dataset():
