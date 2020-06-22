@@ -44,9 +44,28 @@ LOG = logging.getLogger(__name__)
 _MARKER = object()
 
 #
-# No explicit support for MULTI-FIELD at Message level.
+# MULTI-FIELD support is very tricky. Random access via the index needs multi support to be off.
 #
-# eccodes.codes_grib_multi_support_on()
+eccodes.codes_grib_multi_support_off()
+
+
+@contextlib.contextmanager
+def multi_enabled(file):
+    """Context manager that enables MULTI-FIELD support in ecCodes from a clean state"""
+    eccodes.codes_grib_multi_support_on()
+    #
+    # Explicitly reset the multi_support global state that gets confused by random access
+    #
+    # @alexamici: I'm note sure this is thread-safe. See :#141
+    #
+    context = eccodes.lib.codes_context_get_default()
+    eccodes.lib.codes_grib_multi_support_reset_file(context, file)
+    try:
+        yield
+    except Exception:
+        eccodes.codes_grib_multi_support_off()
+        raise
+    eccodes.codes_grib_multi_support_off()
 
 
 @attr.attrs()
@@ -60,24 +79,29 @@ class Message(collections.abc.MutableMapping):
     )
 
     @classmethod
-    def from_file(cls, file, offset=None, product_kind=eccodes.CODES_PRODUCT_ANY, **kwargs):
-        # type: (T.IO[bytes], int, int, T.Any) -> Message
+    def from_file(cls, file, offset=None, **kwargs):
+        # type: (T.IO[bytes], int, T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
         if offset is not None:
             file.seek(offset)
         codes_id = None
-        # iterate over multi-fields in the message
-        for _ in range(field_in_message + 1):
-            codes_id = eccodes.codes_new_from_file(file, product_kind=product_kind)
+        if field_in_message == 0:
+            codes_id = eccodes.codes_grib_new_from_file(file)
+        else:
+            # MULTI-FIELD is enabled only when accessing additional fields
+            with multi_enabled(file):
+                for _ in range(field_in_message + 1):
+                    codes_id = eccodes.codes_grib_new_from_file(file)
+
         if codes_id is None:
             raise EOFError("End of file: %r" % file)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
-    def from_sample_name(cls, sample_name, product_kind=eccodes.CODES_PRODUCT_GRIB, **kwargs):
-        codes_id = eccodes.codes_new_from_samples(sample_name, product_kind)
+    def from_sample_name(cls, sample_name, **kwargs):
+        codes_id = eccodes.codes_new_from_samples(sample_name)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
@@ -206,30 +230,31 @@ class FileStream(collections.abc.Iterable):
     errors = attr.attrib(
         default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
     )
-    product_kind = attr.attrib(default=eccodes.CODES_PRODUCT_ANY)
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
         with open(self.path, 'rb') as file:
-            valid_message_found = False
-            while True:
-                try:
-                    yield self.message_from_file(file, errors=self.errors)
-                    valid_message_found = True
-                except EOFError:
-                    if not valid_message_found:
-                        raise EOFError("No valid message found in file: %r" % self.path)
-                    break
-                except Exception:
-                    if self.errors == 'ignore':
-                        pass
-                    elif self.errors == 'raise':
-                        raise
-                    else:
-                        LOG.exception("skipping corrupted Message")
+            # enable MULTI-FIELD support on sequential reads (like when building the index)
+            with multi_enabled(file):
+                valid_message_found = False
+                while True:
+                    try:
+                        yield self.message_from_file(file, errors=self.errors)
+                        valid_message_found = True
+                    except EOFError:
+                        if not valid_message_found:
+                            raise EOFError("No valid message found in file: %r" % self.path)
+                        break
+                    except Exception:
+                        if self.errors == 'ignore':
+                            pass
+                        elif self.errors == 'raise':
+                            raise
+                        else:
+                            LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        return self.message_class.from_file(file, offset, self.product_kind, **kwargs)
+        return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self):
         # type: () -> Message

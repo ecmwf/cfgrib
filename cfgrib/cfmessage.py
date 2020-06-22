@@ -145,6 +145,10 @@ COMPUTED_KEYS = {
         functools.partial(to_grib_date_time, date_key='validityDate', time_key='validityTime'),
     ),
     'verifying_time': (from_grib_month, None),
+    'indexing_time': (
+        functools.partial(from_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
+        functools.partial(to_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
+    ),
 }
 
 
