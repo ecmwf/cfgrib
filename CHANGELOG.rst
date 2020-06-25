@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.3 (unreleased)
+0.9.8.3 (2020-06-25)
 --------------------
 
 - Added support for ``indexingDate``, ``indexingTime`` time coordinates.
