@@ -101,7 +101,7 @@ class Message(collections.abc.MutableMapping):
 
     @classmethod
     def from_sample_name(cls, sample_name, **kwargs):
-        codes_id = eccodes.codes_new_from_samples(sample_name)
+        codes_id = eccodes.codes_new_from_samples(sample_name, eccodes.CODES_PRODUCT_GRIB)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
