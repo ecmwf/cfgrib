@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2020 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ class Message(collections.abc.MutableMapping):
 
     @classmethod
     def from_sample_name(cls, sample_name, **kwargs):
-        codes_id = eccodes.codes_new_from_samples(sample_name)
+        codes_id = eccodes.codes_new_from_samples(sample_name, eccodes.CODES_PRODUCT_GRIB)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod

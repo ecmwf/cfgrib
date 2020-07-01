@@ -2,10 +2,17 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.3 (unreleased)
+0.9.8.4 (unreleased)
 --------------------
 
-- ``lambert_azimuthal_equal_area` grids are now returned as 2D arrays.
+- Nothing changed yet.
+
+
+0.9.8.3 (2020-06-25)
+--------------------
+
+- Added support for ``indexingDate``, ``indexingTime`` time coordinates.
+- ``lambert_azimuthal_equal_area`` grids are now returned as 2D arrays.
   See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_,
 
 
