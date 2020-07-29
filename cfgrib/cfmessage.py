@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2020 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -145,6 +145,10 @@ COMPUTED_KEYS = {
         functools.partial(to_grib_date_time, date_key='validityDate', time_key='validityTime'),
     ),
     'verifying_time': (from_grib_month, None),
+    'indexing_time': (
+        functools.partial(from_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
+        functools.partial(to_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
+    ),
 }
 
 

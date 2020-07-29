@@ -147,7 +147,14 @@ GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 ENSEMBLE_KEYS = ['number']
 VERTICAL_KEYS = ['level']
 DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
-ALL_REF_TIME_KEYS = ['time', 'step', 'valid_time', 'verifying_time', 'forecastMonth']
+ALL_REF_TIME_KEYS = [
+    'time',
+    'step',
+    'valid_time',
+    'verifying_time',
+    'forecastMonth',
+    'indexing_time'
+]
 SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
@@ -221,6 +228,12 @@ COORD_ATTRS = {
         'standard_name': 'forecast_reference_time',
         'long_name': 'initial time of forecast',
     },
+    'indexing_time': {
+        'units': 'seconds since 1970-01-01T00:00:00',
+        'calendar': 'proleptic_gregorian',
+        'standard_name': 'forecast_reference_time',
+        'long_name': 'nominal initial time of forecast',
+    },
     'valid_time': {
         'units': 'seconds since 1970-01-01T00:00:00',
         'calendar': 'proleptic_gregorian',
@@ -233,10 +246,7 @@ COORD_ATTRS = {
         'standard_name': 'time',
         'long_name': 'time',
     },
-    'forecastMonth': {
-        'units': '1',
-        'long_name': 'months since forecast_reference_time',
-    },
+    'forecastMonth': {'units': '1', 'long_name': 'months since forecast_reference_time'},
 }
 
 
@@ -338,14 +348,15 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_DIMENSION_COORDS = ['regular_ll', 'regular_gg']
-GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+GRID_TYPES_DIMENSION_COORDS = {'regular_ll', 'regular_gg'}
+GRID_TYPES_2D_NON_DIMENSION_COORDS = {
     'rotated_ll',
     'rotated_gg',
     'lambert',
+    'lambert_azimuthal_equal_area',
     'albers',
     'polar_stereographic',
-]
+}
 
 
 def build_geography_coordinates(
@@ -504,8 +515,7 @@ def build_variable_components(
     if 'time' in coord_vars and 'step' in coord_vars:
         # add the 'valid_time' secondary coordinate
         dims, time_data = cfmessage.build_valid_time(
-            coord_vars['time'].data,
-            coord_vars['step'].data,
+            coord_vars['time'].data, coord_vars['step'].data,
         )
         attrs = COORD_ATTRS['valid_time']
         coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)

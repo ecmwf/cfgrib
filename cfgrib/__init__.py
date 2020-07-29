@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2020 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = '0.9.8.0.dev0'
+__version__ = '0.9.8.4.dev0'
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage
