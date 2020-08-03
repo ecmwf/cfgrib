@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.4 (unreleased)
+0.9.8.4 (2020-08-03)
 --------------------
 
 - Use `ecmwflibs` if present to find the *ecCodes* installation.
