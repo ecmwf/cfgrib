@@ -42,6 +42,7 @@ class RaiseOnAttributeAccess(object):
     def __getattr__(self, attr):
         raise RuntimeError(self.message) from self.exc
 
+
 LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
 
 try:
