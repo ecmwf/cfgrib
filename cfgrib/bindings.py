@@ -42,8 +42,15 @@ class RaiseOnAttributeAccess(object):
     def __getattr__(self, attr):
         raise RuntimeError(self.message) from self.exc
 
+LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
 
-for libname in ['eccodes', 'libeccodes.so', 'libeccodes']:
+try:
+    import ecmwflibs
+    LIBNAMES.insert(0, ecmwflibs.find("eccodes"))
+except Exception:
+    pass
+
+for libname in LIBNAMES:
     try:
         lib = ffi.dlopen(libname)
         LOG.info("ecCodes library found using name '%s'.", libname)
