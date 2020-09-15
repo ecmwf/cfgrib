@@ -34,15 +34,6 @@ ffi.cdef(
 )
 
 
-class RaiseOnAttributeAccess(object):
-    def __init__(self, exc, message):
-        self.message = message
-        self.exc = exc
-
-    def __getattr__(self, attr):
-        raise RuntimeError(self.message) from self.exc
-
-
 LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
 
 try:
@@ -57,9 +48,7 @@ for libname in LIBNAMES:
         LOG.debug("ecCodes library found using name '%s'.", libname)
         break
     except OSError as exc:
-        # lazy exception
-        lib = RaiseOnAttributeAccess(exc, 'ecCodes library not found on the system.')
-        LOG.debug("ecCodes library not found using name '%s'.", libname)
+        raise RuntimeError(f"ecCodes library not found using {LIBNAMES}")
 
 
 # default encoding for ecCodes strings
