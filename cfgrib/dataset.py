@@ -466,7 +466,7 @@ def build_variable_components(
     for coord_key in coords_map:
         values = index[coord_key]
         if len(values) == 1 and values[0] == 'undef':
-            log.info("missing from GRIB stream: %r" % coord_key)
+            log.debug("missing from GRIB stream: %r" % coord_key)
             continue
         coord_name = coord_key
         if (

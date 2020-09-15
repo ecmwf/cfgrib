@@ -137,7 +137,7 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
     if grib_keys['gridType'] in GRID_TYPES:
         geography = grib_keys['gridType']
     else:
-        LOGGER.info("unknown 'gridType': %r. Using GRIB2 template", grib_keys['gridType'])
+        LOGGER.warning("unknown 'gridType': %r. Using GRIB2 template", grib_keys['gridType'])
         return 'GRIB2'
 
     if grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_PL:
@@ -147,7 +147,7 @@ def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_g
     elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_ML:
         vertical = 'ml'
     else:
-        LOGGER.info("unknown 'typeOfLevel': %r. Using GRIB2 template", grib_keys['typeOfLevel'])
+        LOGGER.warning("unknown 'typeOfLevel': %r. Using GRIB2 template", grib_keys['typeOfLevel'])
         return 'GRIB2'
 
     sample_name = sample_name_template.format(**locals())
