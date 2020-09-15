@@ -47,7 +47,7 @@ for libname in LIBNAMES:
         lib = ffi.dlopen(libname)
         LOG.debug("ecCodes library found using name '%s'.", libname)
         break
-    except OSError as exc:
+    except OSError:
         raise RuntimeError(f"ecCodes library not found using {LIBNAMES}")
 
 

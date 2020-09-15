@@ -10,16 +10,6 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')
 TEST_DATA_B = TEST_DATA.encode('ASCII')
 
 
-def test_RaiseOnAttributeAccess():
-    try:
-        1 / 0
-    except ZeroDivisionError as ex:
-        res = bindings.RaiseOnAttributeAccess(ex, 'Infinity!')
-
-    with pytest.raises(RuntimeError):
-        res.non_existent_method()
-
-
 @pytest.mark.parametrize(
     'code, message',
     [
