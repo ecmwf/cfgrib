@@ -35,8 +35,13 @@ try:
         import eccodes
     else:
         from . import bindings as eccodes
-except RuntimeError:
-    import pyeccodes.compat as eccodes
+except RuntimeError as exc:
+    # hide the pyeccodes import error from the majority of the users
+    # that have problems with the ecCodes bindings
+    try:
+        import pyeccodes.compat as eccodes
+    except ImportError:
+        raise exc
 
 eccodes_version = eccodes.codes_get_api_version()
 

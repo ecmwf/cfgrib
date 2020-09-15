@@ -2,10 +2,16 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.4 (unreleased)
+0.9.8.5 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Simpler and clearer messages in the event of errors.
+
+
+0.9.8.4 (2020-08-03)
+--------------------
+
+- Use `ecmwflibs` if present to find the *ecCodes* installation.
 
 
 0.9.8.3 (2020-06-25)
@@ -13,7 +19,7 @@ Changelog for cfgrib
 
 - Added support for ``indexingDate``, ``indexingTime`` time coordinates.
 - ``lambert_azimuthal_equal_area`` grids are now returned as 2D arrays.
-  See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_,
+  See: `#119 <https://github.com/ecmwf/cfgrib/issues/119>`_.
 
 
 0.9.8.2 (2020-05-22)
