@@ -54,12 +54,12 @@ except Exception:
 for libname in LIBNAMES:
     try:
         lib = ffi.dlopen(libname)
-        LOG.info("ecCodes library found using name '%s'.", libname)
+        LOG.debug("ecCodes library found using name '%s'.", libname)
         break
     except OSError as exc:
         # lazy exception
         lib = RaiseOnAttributeAccess(exc, 'ecCodes library not found on the system.')
-        LOG.info("ecCodes library not found using name '%s'.", libname)
+        LOG.debug("ecCodes library not found using name '%s'.", libname)
 
 
 # default encoding for ecCodes strings
