@@ -42,6 +42,11 @@ try:
 except Exception:
     pass
 
+if os.environ.get("ECCODES_DIR"):
+    eccdir = os.environ["ECCODES_DIR"]
+    LIBNAMES.insert(0, os.path.join(eccdir, "lib/libeccodes.so"))
+    LIBNAMES.insert(0, os.path.join(eccdir, "lib64/libeccodes.so"))
+
 for libname in LIBNAMES:
     try:
         lib = ffi.dlopen(libname)
