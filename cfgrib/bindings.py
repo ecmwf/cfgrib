@@ -17,6 +17,7 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
+import os
 import functools
 import logging
 import pkgutil
