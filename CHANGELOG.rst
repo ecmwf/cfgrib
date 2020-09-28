@@ -6,6 +6,9 @@ Changelog for cfgrib
 --------------------
 
 - Simpler and clearer messages in the event of errors.
+- Use `ECCODES_DIR` environment variable if present. Ported from *eccodes-python*
+  by xavierabellan. See: `#162 <https://github.com/ecmwf/cfgrib/issues/162>`_.
+
 
 
 0.9.8.4 (2020-08-03)
