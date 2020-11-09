@@ -546,6 +546,11 @@ def codes_grib_multi_support_off(context=None):
     lib.codes_grib_multi_support_off(context)
 
 
+def codes_grib_multi_support_reset_file(file):
+    context = lib.codes_context_get_default()
+    return lib.codes_grib_multi_support_reset_file(context, file)
+
+
 def codes_write(handle, outfile):
     # type: (cffi.FFI.CData, T.BinaryIO) -> None
     """
