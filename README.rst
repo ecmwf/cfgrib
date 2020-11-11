@@ -12,7 +12,7 @@ Features with development status **Beta**:
 
 - enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
 - reads most GRIB 1 and 2 files including heterogeneous ones with ``cfgrib.open_datasets``,
-- supports all modern versions of Python 3.7, 3.6, 3.5 and PyPy3,
+- supports all modern versions of Python 3.9, 3.8, 3.7, 3.6 and PyPy3,
 - the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
 - conda-forge package on all supported platforms,
@@ -76,7 +76,7 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
-    Found: ecCodes v2.12.0.
+    Found: ecCodes v2.19.0.
     Your system is ready.
 
 
