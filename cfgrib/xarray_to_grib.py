@@ -246,7 +246,7 @@ def canonical_dataarray_to_grib(
 
 
 def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, grib_keys={}, **kwargs):
-    # type: (xr.Dataset, str, str, bool, T.Dict[str, T.Any] T.Any) -> None
+    # type: (xr.Dataset, str, str, bool, T.Dict[str, T.Any], T.Any) -> None
     """
     Write a ``xr.Dataset`` in *canonical* form to a GRIB file.
     """
