@@ -53,7 +53,7 @@ for libname in LIBNAMES:
         lib = ffi.dlopen(libname)
         LOG.debug("ecCodes library found using name '%s'.", libname)
         break
-    except OSError as exc:
+    except OSError:
         raise RuntimeError(f"ecCodes library not found using {LIBNAMES}")
 
 
@@ -544,6 +544,11 @@ def codes_grib_multi_support_off(context=None):
     if context is None:
         context = ffi.NULL
     lib.codes_grib_multi_support_off(context)
+
+
+def codes_grib_multi_support_reset_file(file):
+    context = lib.codes_context_get_default()
+    return lib.codes_grib_multi_support_reset_file(context, file)
 
 
 def codes_write(handle, outfile):

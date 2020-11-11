@@ -12,7 +12,7 @@ Features with development status **Beta**:
 
 - enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
 - reads most GRIB 1 and 2 files including heterogeneous ones with ``cfgrib.open_datasets``,
-- supports all modern versions of Python 3.7, 3.6, 3.5 and PyPy3,
+- supports all modern versions of Python 3.9, 3.8, 3.7, 3.6 and PyPy3,
 - the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
 - conda-forge package on all supported platforms,
@@ -76,7 +76,7 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
-    Found: ecCodes v2.12.0.
+    Found: ecCodes v2.19.0.
     Your system is ready.
 
 
@@ -200,7 +200,7 @@ To translate to the Common Data Model of the Climate Data Store use:
 Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, plev: 2, realization: 10)
 Coordinates:
   * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
-  * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
+  * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01...
     leadtime                 timedelta64[ns] ...
   * plev                     (plev) float64 8.5e+04 5e+04
   * lat                      (lat) float64 -90.0 -87.0 -84.0 ... 84.0 87.0 90.0

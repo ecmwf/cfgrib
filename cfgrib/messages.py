@@ -63,8 +63,7 @@ def multi_enabled(file):
     #
     # @alexamici: I'm note sure this is thread-safe. See :#141
     #
-    context = eccodes.lib.codes_context_get_default()
-    eccodes.lib.codes_grib_multi_support_reset_file(context, file)
+    eccodes.codes_grib_multi_support_reset_file(file)
     try:
         yield
     except Exception:
