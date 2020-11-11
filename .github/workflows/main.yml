@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: main
 
 on: [push]
 
@@ -8,7 +8,8 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, pypy3]
+        python-eccodes: [0, 1]
 
     steps:
     - uses: actions/checkout@v2
@@ -30,4 +31,4 @@ jobs:
     - name: Test with pytest
       run: |
         $CONDA/bin/conda install pytest
-        $CONDA/bin/pytest -v --doctest-glob="*.rst" .
+        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.python-eccodes }} $CONDA/bin/pytest -v --doctest-glob="*.rst" .
