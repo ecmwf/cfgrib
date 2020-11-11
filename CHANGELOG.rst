@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.5 (unreleased)
+0.9.8.5 (2020-11-11)
 --------------------
 
 - Simpler and clearer messages in the event of errors.
