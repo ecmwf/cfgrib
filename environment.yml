@@ -50,8 +50,6 @@ dependencies:
   - libcxx=11.0.0
   - libedit=3.1.20191231
   - libffi=3.3
-  - libgfortran=4.0.0
-  - libgfortran4=7.5.0
   - liblapack=3.8.0
   - libnetcdf=4.7.4
   - libopenblas=0.3.10
