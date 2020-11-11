@@ -1,7 +1,6 @@
 name: environmet
 
 on:
-  push:
   schedule:
     - cron:  '0 9 * * 1'
 
