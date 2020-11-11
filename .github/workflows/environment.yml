@@ -1,0 +1,29 @@
+name: environmet
+
+on:
+  push:
+  schedule:
+    - cron:  '0 9 * * 1'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install package and dependencies
+      run: |
+        $CONDA/bin/conda env update --file environment.in.yml --name base
+        $CONDA/bin/python -m pip install -e .
+        $CONDA/bin/conda env export --name base --no-build > environment-linux.yml
+    - name: Archive environment-linux.yml
+      uses: actions/upload-artifact@v2
+      with:
+        name: environment-linux.yml
+        path: environment-linux.yml

@@ -3,7 +3,7 @@ name: main
 on: [push]
 
 jobs:
-  build-linux:
+  linux:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
@@ -22,7 +22,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install package and dependencies
       run: |
-        $CONDA/bin/conda env update --file environment.yml --name base
+        $CONDA/bin/conda env update --file environment-linux.yml --name base
         $CONDA/bin/python -m pip install -e .
     - name: Lint with flake8
       run: |
