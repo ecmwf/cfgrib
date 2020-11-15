@@ -10,12 +10,14 @@ jobs:
       matrix:
         os: [ubuntu]
         python: [3.6, 3.7, 3.8, 3.9]
-        eccodes:
+        eccodes: [0]
         include:
           - os: macos
             python: 3.8
+            eccodes: 0
           - os: windows
             python: 3.7
+            eccodes: 0
           - os: ubuntu
             python: 3.9
             eccodes: 1
