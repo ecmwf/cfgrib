@@ -52,7 +52,7 @@ GRIB_STEP_UNITS_TO_SECONDS = [
 DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 
 
-def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH):
+def from_grib_date_time(message, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH):
     # type: (T.Mapping, str, str, datetime.datetime) -> int
     """
     Return the number of seconds since the ``epoch`` from the values of the ``message`` keys,
@@ -77,23 +77,23 @@ def from_grib_date_time(message, date_key='dataDate', time_key='dataTime', epoch
 
 
 def to_grib_date_time(
-    message, time_ns, date_key='dataDate', time_key='dataTime', epoch=DEFAULT_EPOCH
+    message, time_ns, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH
 ):
     # type: (T.MutableMapping, np.datetime64, str, str, datetime.datetime) -> None
     time_s = int(time_ns) * 1e-9
     time = epoch + datetime.timedelta(seconds=time_s)
     datetime_iso = str(time)
-    message[date_key] = int(datetime_iso[:10].replace('-', ''))
-    message[time_key] = int(datetime_iso[11:16].replace(':', ''))
+    message[date_key] = int(datetime_iso[:10].replace("-", ""))
+    message[time_key] = int(datetime_iso[11:16].replace(":", ""))
 
 
-def from_grib_step(message, step_key='endStep', step_unit_key='stepUnits'):
+def from_grib_step(message, step_key="endStep", step_unit_key="stepUnits"):
     # type: (T.Mapping, str, str) -> float
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
     return message[step_key] * to_seconds / 3600.0
 
 
-def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_key='stepUnits'):
+def to_grib_step(message, step_ns, step_unit=1, step_key="endStep", step_unit_key="stepUnits"):
     # type: (T.MutableMapping, int, int, str, str) -> None
     # step_seconds = np.timedelta64(step, 's').astype(int)
     step_s = int(step_ns) * 1e-9
@@ -104,7 +104,7 @@ def to_grib_step(message, step_ns, step_unit=1, step_key='endStep', step_unit_ke
     message[step_unit_key] = step_unit
 
 
-def from_grib_month(message, verifying_month_key='verifyingMonth', epoch=DEFAULT_EPOCH):
+def from_grib_month(message, verifying_month_key="verifyingMonth", epoch=DEFAULT_EPOCH):
     date = message[verifying_month_key]
     year = date // 100
     month = date % 100
@@ -127,27 +127,27 @@ def build_valid_time(time, step):
         dims = ()  # type: T.Tuple[str, ...]
     elif len(time.shape) > 0 and len(step.shape) == 0:
         data = time + step_s
-        dims = ('time',)
+        dims = ("time",)
     elif len(time.shape) == 0 and len(step.shape) > 0:
         data = time + step_s
-        dims = ('step',)
+        dims = ("step",)
     else:
         data = time[:, None] + step_s[None, :]
-        dims = ('time', 'step')
+        dims = ("time", "step")
     return dims, data
 
 
 COMPUTED_KEYS = {
-    'time': (from_grib_date_time, to_grib_date_time),
-    'step': (from_grib_step, to_grib_step),
-    'valid_time': (
-        functools.partial(from_grib_date_time, date_key='validityDate', time_key='validityTime'),
-        functools.partial(to_grib_date_time, date_key='validityDate', time_key='validityTime'),
+    "time": (from_grib_date_time, to_grib_date_time),
+    "step": (from_grib_step, to_grib_step),
+    "valid_time": (
+        functools.partial(from_grib_date_time, date_key="validityDate", time_key="validityTime"),
+        functools.partial(to_grib_date_time, date_key="validityDate", time_key="validityTime"),
     ),
-    'verifying_time': (from_grib_month, None),
-    'indexing_time': (
-        functools.partial(from_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
-        functools.partial(to_grib_date_time, date_key='indexingDate', time_key='indexingTime'),
+    "verifying_time": (from_grib_month, None),
+    "indexing_time": (
+        functools.partial(from_grib_date_time, date_key="indexingDate", time_key="indexingTime"),
+        functools.partial(to_grib_date_time, date_key="indexingDate", time_key="indexingTime"),
     ),
 }
 
