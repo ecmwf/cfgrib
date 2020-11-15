@@ -113,7 +113,7 @@ def test_build_dataset_components_time_dims():
         'indexing_time': 2,
         'verifying_time': 4,
         'latitude': 6,
-        'longitude': 11
+        'longitude': 11,
     }
 
     index_keys = sorted(dataset.ALL_KEYS)
@@ -121,13 +121,7 @@ def test_build_dataset_components_time_dims():
     dims, *_ = dataset.build_dataset_components(
         index, read_keys=[], time_dims=('indexing_time', 'step')
     )
-    assert dims == {
-        'number': 28,
-        'indexing_time': 2,
-        'step': 20,
-        'latitude': 6,
-        'longitude': 11
-    }
+    assert dims == {'number': 28, 'indexing_time': 2, 'step': 20, 'latitude': 6, 'longitude': 11}
 
 
 def test_Dataset():

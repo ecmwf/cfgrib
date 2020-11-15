@@ -153,7 +153,7 @@ ALL_REF_TIME_KEYS = [
     'valid_time',
     'verifying_time',
     'forecastMonth',
-    'indexing_time'
+    'indexing_time',
 ]
 SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
 

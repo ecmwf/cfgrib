@@ -39,6 +39,7 @@ LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
 
 try:
     import ecmwflibs
+
     LIBNAMES.insert(0, ecmwflibs.find("eccodes"))
 except Exception:
     pass
