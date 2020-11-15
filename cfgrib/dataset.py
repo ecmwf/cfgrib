@@ -26,9 +26,7 @@ import typing as T
 import attr
 import numpy as np
 
-from . import __version__
-from . import cfmessage
-from . import messages
+from . import __version__, cfmessage, messages
 
 LOG = logging.getLogger(__name__)
 

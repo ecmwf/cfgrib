@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import pkg_resources
-
-import sys
 import os
+import sys
+
+import pkg_resources
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()

@@ -4,8 +4,7 @@ import pytest
 
 xr = pytest.importorskip('xarray')  # noqa
 
-from cf2cdm import cfcoords
-from cf2cdm import datamodels
+from cf2cdm import cfcoords, datamodels
 from cfgrib import xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')

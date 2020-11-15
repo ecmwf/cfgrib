@@ -4,9 +4,7 @@ import pytest
 
 xr = pytest.importorskip('xarray')  # noqa
 
-from cfgrib import xarray_store
-from cfgrib import xarray_to_grib
-
+from cfgrib import xarray_store, xarray_to_grib
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 

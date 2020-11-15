@@ -1,10 +1,8 @@
+import cdscommon
 import pytest
 
 import cfgrib
 import cfgrib.xarray_store
-
-import cdscommon
-
 
 TEST_FILES = {
     'era5-single-levels-reanalysis': [

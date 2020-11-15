@@ -20,13 +20,12 @@
 import collections
 import functools
 import logging
-import warnings
 import typing as T  # noqa
+import warnings
 
 import xarray as xr  # noqa
 
 from . import cfunits
-
 
 COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
 COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]

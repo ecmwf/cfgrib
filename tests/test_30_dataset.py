@@ -1,11 +1,9 @@
 import os.path
 
-import pytest
 import numpy as np
+import pytest
 
-from cfgrib import cfmessage
-from cfgrib import messages
-from cfgrib import dataset
+from cfgrib import cfmessage, dataset, messages
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'sample-data')
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, 'era5-levels-members.grib')

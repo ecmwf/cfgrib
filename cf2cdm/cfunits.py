@@ -19,7 +19,6 @@
 
 import typing as T  # noqa
 
-
 PRESSURE_CONVERSION_RULES = {
     ('Pa', 'pascal', 'pascals'): 1.0,
     ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.0,

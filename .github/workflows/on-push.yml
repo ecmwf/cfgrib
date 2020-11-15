@@ -66,8 +66,8 @@ jobs:
     - name: Check code style with black
       run: |
         $CONDA/bin/conda install black
-        $CONDA/bin/black --check . || true
+        $CONDA/bin/black --check -S --line-length 99 .
     - name: Check code style with isort
       run: |
         $CONDA/bin/conda install isort
-        $CONDA/bin/isort --check . || true
+        $CONDA/bin/isort .

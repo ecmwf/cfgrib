@@ -17,9 +17,9 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import os
 import functools
 import logging
+import os
 import pkgutil
 import typing as T  # noqa
 

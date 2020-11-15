@@ -1,9 +1,7 @@
+import cdscommon
 import pytest
 
 import cfgrib
-
-import cdscommon
-
 
 TEST_FILES = {
     'era5-levels-members': [
