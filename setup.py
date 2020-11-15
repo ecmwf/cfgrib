@@ -30,7 +30,7 @@ def read(path):
 #   https://packaging.python.org/guides/single-sourcing-package-version/
 def parse_version_from(path):
     version_file = read(path)
-    version_match = re.search(r"^__version__ = '(.*)'", version_file, re.M)
+    version_match = re.search(r'^__version__ = "(.*)"', version_file, re.M)
     if version_match is None or len(version_match.groups()) > 1:
         raise ValueError("couldn't parse version")
     return version_match.group(1)
