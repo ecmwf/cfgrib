@@ -9,7 +9,7 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu]
-        python: [3.6, 3.7, 3.8, 3.9]
+        python: [3.6, 3.7, 3.8]
         eccodes: [0]
         include:
           - os: macos
@@ -19,7 +19,7 @@ jobs:
             python: 3.7
             eccodes: 0
           - os: ubuntu
-            python: 3.9
+            python: 3.8
             eccodes: 1
 
     steps:
