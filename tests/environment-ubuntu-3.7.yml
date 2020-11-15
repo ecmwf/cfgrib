@@ -1,4 +1,4 @@
-name: ubuntu-3.9
+name: ubuntu-3.7
 channels:
   - defaults
   - conda-forge
