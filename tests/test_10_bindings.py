@@ -10,11 +10,7 @@ TEST_DATA_B = TEST_DATA.encode('ASCII')
 
 
 @pytest.mark.parametrize(
-    'code, message',
-    [
-        (0, 'No error'),
-        (-43, 'End of index reached'),
-    ],
+    'code, message', [(0, 'No error'), (-43, 'End of index reached'),],
 )
 def test_grib_get_error_message(code, message):
     res = bindings.grib_get_error_message(code)
