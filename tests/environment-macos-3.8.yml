@@ -54,7 +54,7 @@ dependencies:
   - olefile=0.46
   - openssl=1.1.1h
   - packaging=20.4
-  - pandas=1.1.3
+  - pandas=1.0.5
   - partd=1.1.0
   - pillow=8.0.1
   - pip=20.2.4
