@@ -54,6 +54,7 @@ setuptools.setup(
     extras_require={'xarray': ['xarray>=0.12.0']},
     tests_require=[
         'dask[array]',
+        'eccodes',
         'pytest',
         'pytest-cov',
         'pytest-flakes',
