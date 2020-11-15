@@ -1,28 +1,40 @@
-name: environmet
+name: weekly
 
 on:
   schedule:
     - cron:  '0 9 * * 1'
+  workflow_dispatch:
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  environment:
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       max-parallel: 5
+      matrix:
+        os: [ubuntu]
+        python: [3.6, 3.7, 3.8, 3.9]
+        include:
+          - os: macos
+            python: 3.8
+          - os: windows
+            python: 3.7
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+    - uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.9
-    - name: Install package and dependencies
+        auto-update-conda: true
+        python-version: ${{ matrix.python }}
+        activate-environment: ${{ matrix.os }}-${{ matrix.python }}
+        environment-file: environment.in.yml
+    - name: Export concrete dependencies
+      shell: bash -l {0}
       run: |
-        $CONDA/bin/conda env update --file environment.in.yml --name base
-        $CONDA/bin/python -m pip install -e .
-        $CONDA/bin/conda env export --name base --no-build > environment-linux.yml
-    - name: Archive environment-linux.yml
+        conda update --all
+        conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
+        git diff
+    - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}.yml
       uses: actions/upload-artifact@v2
       with:
-        name: environment-linux.yml
-        path: environment-linux.yml
+        name: environment-${{ matrix.os }}-${{ matrix.python }}.yml
+        path: tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml

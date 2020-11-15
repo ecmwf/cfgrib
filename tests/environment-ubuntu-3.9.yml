@@ -1,0 +1,21 @@
+name: CFGRIB
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - attrs>=19.2
+  - black
+  - cffi
+  - check-manifest
+  - click
+  - dask
+  - eccodes>=2.15.0
+  - netcdf4
+  - pip
+  - pytest
+  - pytest-cov
+  - pytest-flakes
+  - python-eccodes
+  - scipy
+  - sphinx
+  - xarray>=0.12.0
