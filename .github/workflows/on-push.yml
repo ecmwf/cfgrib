@@ -52,6 +52,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install sphinx
+        python -m pip install --no-deps -e .
         python setup.py build_sphinx
 
   code-quality:
