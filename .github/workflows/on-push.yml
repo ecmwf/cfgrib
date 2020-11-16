@@ -43,10 +43,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: 3.8
+        activate-environment: ubuntu-3.8
+        environment-file: tests/environment-ubuntu-3.8.yml
     - name: Build documentation with Sphinx
+      shell: bash -l {0}
       run: |
-        $CONDA/bin/conda install sphinx
-        $CONDA/bin/python setup.py build_sphinx
+        conda install sphinx
+        python setup.py build_sphinx
 
   code-quality:
     runs-on: ubuntu-latest
