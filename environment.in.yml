@@ -9,5 +9,4 @@ dependencies:
   - netcdf4
   - pandas=1.0.5
   - python-eccodes
-  - scipy
   - xarray>=0.12.0
