@@ -19,7 +19,7 @@ jobs:
           - os: macos
             python: 3.8
           - os: windows
-            python: 3.7
+            python: 3.8
           - os: ubuntu
             python: 3.8
             extras: -minimal

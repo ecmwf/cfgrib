@@ -6,6 +6,7 @@ dependencies:
   - cffi
   - click
   - dask
+  - eccodes=>2.19.0
   - netcdf4
   - pandas=1.0.5
   - python-eccodes

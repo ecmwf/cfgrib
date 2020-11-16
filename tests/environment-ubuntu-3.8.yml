@@ -19,7 +19,7 @@ dependencies:
   - dask=2.30.0
   - dask-core=2.30.0
   - distributed=2.30.1
-  - eccodes=2.18.0
+  - eccodes=2.19.1
   - freetype=2.10.4
   - fsspec=0.8.3
   - hdf4=4.2.13
