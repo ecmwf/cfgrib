@@ -9,9 +9,9 @@ on:
 jobs:
   environment:
     runs-on: ${{ matrix.os }}-latest
-    fail-fast: false
     strategy:
       max-parallel: 5
+      fail-fast: false
       matrix:
         os: [ubuntu]
         python: [3.6, 3.7, 3.8]
