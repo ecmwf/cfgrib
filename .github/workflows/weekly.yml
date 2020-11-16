@@ -1,7 +1,6 @@
 name: weekly
 
 on:
-  push:
   schedule:
     - cron:  '0 9 * * 1'
   workflow_dispatch:
@@ -9,11 +8,12 @@ on:
 jobs:
   environment:
     runs-on: ${{ matrix.os }}-latest
+    fail-fast: false
     strategy:
       max-parallel: 5
       matrix:
         os: [ubuntu]
-        python: [3.6, 3.7, 3.8, 3.9]
+        python: [3.6, 3.7, 3.8]
         extras: ['']
         include:
           - os: macos
