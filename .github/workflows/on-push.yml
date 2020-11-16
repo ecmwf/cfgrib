@@ -29,15 +29,10 @@ jobs:
         python-version: ${{ matrix.python }}
         activate-environment: ${{ matrix.os }}-${{ matrix.python }}
         environment-file: tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
-    - name: Install package
-      shell: bash -l {0}
-      run: |
-        python -m pip install -e .
     - name: Test with pytest
       shell: bash -l {0}
       run: |
-        conda install pytest pytest-cov
-        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes }} pytest -v --doctest-glob="*.rst" --cov=. --cov-report=xml --cov-branch .
+        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes }} $CONDA/bin/python setup.py test -v --doctest-glob="*.rst" --cov=. --cov-report=xml --cov-branch .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
