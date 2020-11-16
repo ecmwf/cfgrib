@@ -31,7 +31,6 @@ jobs:
     - name: Export concrete dependencies
       shell: bash -l {0}
       run: |
-        conda update --all
         conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
         git diff
     - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}.yml
