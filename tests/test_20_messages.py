@@ -127,7 +127,7 @@ def test_compat_create_exclusive(tmpdir):
 
     with pytest.raises(OSError):
         with messages.compat_create_exclusive(str(test_file)) as file:
-            file.write(b"Hi!")
+            pass
 
 
 def test_FileIndex():
@@ -220,7 +220,3 @@ def test_FileStream():
     res = messages.FileStream(str(__file__), errors="ignore")
     with pytest.raises(EOFError):
         res.first()
-
-    # res = messages.FileStream(str(__file__), errors='raise')
-    # with pytest.raises(bindings.EcCodesError):
-    #     res.first()

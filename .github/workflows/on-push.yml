@@ -10,6 +10,7 @@ jobs:
       matrix:
         os: [ubuntu]
         python: [3.6, 3.7, 3.8]
+        extras: ['']
         eccodes: [0]
         include:
           - os: macos
@@ -18,6 +19,9 @@ jobs:
           - os: ubuntu
             python: 3.8
             eccodes: 1
+          - os: ubuntu
+            python: 3.8
+            extras: -minimal
 # python-eccodes and cffi both fail
 #          - os: windows
 #            python: 3.7
@@ -28,8 +32,8 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: ${{ matrix.python }}
-        activate-environment: ${{ matrix.os }}-${{ matrix.python }}
-        environment-file: tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
+        activate-environment: ${{ matrix.os }}-${{ matrix.python }}${{ extras }}
+        environment-file: tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ extras }}.yml
     - name: Test with pytest
       shell: bash -l {0}
       run: |
