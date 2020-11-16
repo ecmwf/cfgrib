@@ -45,6 +45,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build documentation with Sphinx
       run: |
+        $CONDA/bin/conda install sphinx
         $CONDA/bin/python setup.py build_sphinx
 
   code-quality:
