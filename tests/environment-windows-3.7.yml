@@ -24,7 +24,6 @@ dependencies:
   - hdf4=4.2.13
   - hdf5=1.10.6
   - heapdict=1.0.1
-  - icc_rt=2019.0.0
   - intel-openmp=2020.2
   - jinja2=2.11.2
   - jpeg=9d
