@@ -15,14 +15,12 @@ jobs:
         include:
           - os: macos
             python: 3.8
-            eccodes: 0
           - os: ubuntu
             python: 3.8
             eccodes: 1
           - os: ubuntu
             python: 3.8
             extras: -minimal
-            eccodes: 0
 # python-eccodes and cffi both fail
 #          - os: windows
 #            python: 3.7
@@ -40,7 +38,7 @@ jobs:
       run: |
         conda install pytest pytest-cov
         python -m pip install --no-deps -e .
-        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || '0' }} pytest -v --doctest-glob="*.rst" --cov=. --cov-report=xml --cov-branch .
+        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml --cov-branch .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
@@ -60,6 +58,11 @@ jobs:
         conda install sphinx
         python -m pip install --no-deps -e .
         python setup.py build_sphinx
+    - name: Test README with pytest
+      shell: bash -l {0}
+      run: |
+        conda install pytest pytest-cov
+        pytest -v --cov=. --cov-report=xml --cov-branch README.rst
 
   code-quality:
     runs-on: ubuntu-latest
