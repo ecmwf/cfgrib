@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 ffi = cffi.FFI()
 CDEF_H = pkgutil.get_data(__name__, "grib_api.h") + pkgutil.get_data(__name__, "eccodes.h")
 # on Windows the decoded string has '\r' characters not present in the original file
-ffi.cdef(CDEF_H.decode("utf-8").replace('\r', '\n'))
+ffi.cdef(CDEF_H.decode("utf-8").replace("\r", "\n"))
 
 
 LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
