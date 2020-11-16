@@ -51,7 +51,7 @@ jobs:
       with:
         python-version: 3.8
         activate-environment: ubuntu-3.8
-        environment-file: tests/environment-ubuntu-3.8-minimal.yml
+        environment-file: tests/environment-ubuntu-3.8.yml
     - name: Build documentation with Sphinx
       shell: bash -l {0}
       run: |
