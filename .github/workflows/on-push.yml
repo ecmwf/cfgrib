@@ -15,12 +15,13 @@ jobs:
           - os: macos
             python: 3.8
             eccodes: 0
-          - os: windows
-            python: 3.7
-            eccodes: 1
           - os: ubuntu
             python: 3.8
             eccodes: 1
+# python-eccodes and cffi both fail
+#          - os: windows
+#            python: 3.7
+#            eccodes: 1
 
     steps:
     - uses: actions/checkout@v2
