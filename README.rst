@@ -160,7 +160,7 @@ Details like names and units of the coordinates are particularly important becau
 translate CF compliant coordinates, like the one provided by *cfgrib*, to a user-defined
 custom data model with set ``out_name``, ``units`` and ``stored_direction``.
 
-For example to translate a *cfgrib* styled `xr.Dataset` to the classic *ECMWF* coordinate
+For example to translate a *cfgrib* styled ``xr.Dataset`` to the classic *ECMWF* coordinate
 naming conventions you can:
 
 .. code-block: python

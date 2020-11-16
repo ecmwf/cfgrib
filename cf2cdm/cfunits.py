@@ -19,19 +19,18 @@
 
 import typing as T  # noqa
 
-
 PRESSURE_CONVERSION_RULES = {
-    ('Pa', 'pascal', 'pascals'): 1.0,
-    ('hPa', 'hectopascal', 'hectopascals', 'hpascal', 'millibar', 'millibars', 'mbar'): 100.0,
-    ('decibar', 'dbar'): 10000.0,
-    ('bar', 'bars'): 100000.0,
-    ('atmosphere', 'atmospheres', 'atm'): 101325.0,
+    ("Pa", "pascal", "pascals"): 1.0,
+    ("hPa", "hectopascal", "hectopascals", "hpascal", "millibar", "millibars", "mbar"): 100.0,
+    ("decibar", "dbar"): 10000.0,
+    ("bar", "bars"): 100000.0,
+    ("atmosphere", "atmospheres", "atm"): 101325.0,
 }  # type: T.Dict[T.Tuple, float]
 
 LENGTH_CONVERSION_RULES = {
-    ('m', 'meter', 'meters'): 1.0,
-    ('cm', 'centimeter', 'centimeters'): 0.01,
-    ('km', 'kilometer', 'kilometers'): 1000.0,
+    ("m", "meter", "meters"): 1.0,
+    ("cm", "centimeter", "centimeters"): 0.01,
+    ("km", "kilometer", "kilometers"): 1000.0,
 }
 
 

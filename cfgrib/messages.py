@@ -31,7 +31,7 @@ import numpy as np
 
 try:
     # select between using the external ecCodes bindings or the internal implementation
-    if int(os.environ.get('CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS', '0')):
+    if int(os.environ.get("CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS", "0")):
         import eccodes
     else:
         from . import bindings as eccodes
@@ -77,9 +77,9 @@ class Message(collections.abc.MutableMapping):
     """Dictionary-line interface to access Message headers."""
 
     codes_id = attr.attrib()
-    encoding = attr.attrib(default='ascii', type=str)
+    encoding = attr.attrib(default="ascii", type=str)
     errors = attr.attrib(
-        default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
+        default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
     @classmethod
@@ -122,7 +122,7 @@ class Message(collections.abc.MutableMapping):
         try:
             values = eccodes.codes_get_array(self.codes_id, item, key_type)
             if values is None:
-                values = ['unsupported_key_type']
+                values = ["unsupported_key_type"]
         except eccodes.KeyValueNotFoundError:
             if default is _MARKER:
                 raise KeyError(item)
@@ -165,9 +165,9 @@ class Message(collections.abc.MutableMapping):
         try:
             return self.message_set(item, value)
         except eccodes.GribInternalError as ex:
-            if self.errors == 'ignore':
+            if self.errors == "ignore":
                 pass
-            elif self.errors == 'raise':
+            elif self.errors == "raise":
                 raise KeyError("failed to set key %r to %r" % (item, value))
             else:
                 if isinstance(ex, eccodes.ReadOnlyError):
@@ -232,12 +232,12 @@ class FileStream(collections.abc.Iterable):
     path = attr.attrib(type=str)
     message_class = attr.attrib(default=Message, type=Message, repr=False)
     errors = attr.attrib(
-        default='warn', validator=attr.validators.in_(['ignore', 'warn', 'raise'])
+        default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
     def __iter__(self):
         # type: () -> T.Generator[Message, None, None]
-        with open(self.path, 'rb') as file:
+        with open(self.path, "rb") as file:
             # enable MULTI-FIELD support on sequential reads (like when building the index)
             with multi_enabled(file):
                 valid_message_found = False
@@ -250,9 +250,9 @@ class FileStream(collections.abc.Iterable):
                             raise EOFError("No valid message found in file: %r" % self.path)
                         break
                     except Exception:
-                        if self.errors == 'ignore':
+                        if self.errors == "ignore":
                             pass
-                        elif self.errors == 'raise':
+                        elif self.errors == "raise":
                             raise
                         else:
                             LOG.exception("skipping corrupted Message")
@@ -264,7 +264,7 @@ class FileStream(collections.abc.Iterable):
         # type: () -> Message
         return next(iter(self))
 
-    def index(self, index_keys, indexpath='{path}.{short_hash}.idx'):
+    def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.List[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
@@ -272,7 +272,7 @@ class FileStream(collections.abc.Iterable):
 @contextlib.contextmanager
 def compat_create_exclusive(path, *args, **kwargs):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-    with io.open(fd, mode='wb', *args, **kwargs) as file:
+    with io.open(fd, mode="wb", *args, **kwargs) as file:
         try:
             yield file
         except Exception:
@@ -283,7 +283,7 @@ def compat_create_exclusive(path, *args, **kwargs):
 
 @attr.attrs()
 class FileIndex(collections.abc.Mapping):
-    allowed_protocol_version = '1'
+    allowed_protocol_version = "1"
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
     offsets = attr.attrib(repr=False, type=T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[int]]])
@@ -300,7 +300,7 @@ class FileIndex(collections.abc.Mapping):
                 try:
                     value = message[key]
                 except:
-                    value = 'undef'
+                    value = "undef"
                 if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)
                 # NOTE: the following ensures that values of the same type that evaluate equal are
@@ -308,7 +308,7 @@ class FileIndex(collections.abc.Mapping):
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
-            offset = message.message_get('offset', int)
+            offset = message.message_get("offset", int)
             if offset in count_offsets:
                 count_offsets[offset] += 1
                 offset_field = (offset, count_offsets[offset])
@@ -323,12 +323,12 @@ class FileIndex(collections.abc.Mapping):
 
     @classmethod
     def from_indexpath(cls, indexpath):
-        with io.open(indexpath, 'rb') as file:
+        with io.open(indexpath, "rb") as file:
             return pickle.load(file)
 
     @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath='{path}.{short_hash}.idx', log=LOG
+        cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", log=LOG
     ):
         # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
 
@@ -336,7 +336,7 @@ class FileIndex(collections.abc.Mapping):
         if not indexpath:
             return cls.from_filestream(filestream, index_keys)
 
-        hash = hashlib.md5(repr(index_keys).encode('utf-8')).hexdigest()
+        hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
@@ -355,9 +355,9 @@ class FileIndex(collections.abc.Mapping):
                 self = cls.from_indexpath(indexpath)
                 allowed_protocol_version = self.allowed_protocol_version
                 if (
-                    getattr(self, 'index_keys', None) == index_keys
-                    and getattr(self, 'filestream', None) == filestream
-                    and getattr(self, 'index_protocol_version', None) == allowed_protocol_version
+                    getattr(self, "index_keys", None) == index_keys
+                    and getattr(self, "filestream", None) == filestream
+                    and getattr(self, "index_protocol_version", None) == allowed_protocol_version
                 ):
                     return self
                 else:
@@ -377,7 +377,7 @@ class FileIndex(collections.abc.Mapping):
 
     @property
     def header_values(self):
-        if not hasattr(self, '_header_values'):
+        if not hasattr(self, "_header_values"):
             self._header_values = {}
             for header_values, _ in self.offsets:
                 for i, value in enumerate(header_values):
@@ -415,6 +415,6 @@ class FileIndex(collections.abc.Mapping):
         return index
 
     def first(self):
-        with open(self.filestream.path, 'rb') as file:
+        with open(self.filestream.path, "rb") as file:
             first_offset = self.offsets[0][1][0]
             return self.filestream.message_from_file(file, offset=first_offset)

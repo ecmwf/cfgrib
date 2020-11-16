@@ -5,8 +5,5 @@ dependencies:
   - attrs>=19.2
   - cffi
   - click
-  - dask
-  - netcdf4
-  - pandas=1.0.5
-  - python-eccodes
-  - xarray>=0.12.0
+  - eccodes
+  - numpy

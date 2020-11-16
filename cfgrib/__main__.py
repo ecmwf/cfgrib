@@ -29,7 +29,7 @@ def cfgrib_cli():
     pass
 
 
-@cfgrib_cli.command('selfcheck')
+@cfgrib_cli.command("selfcheck")
 def selfcheck():
     from .messages import eccodes_version
 
@@ -37,28 +37,29 @@ def selfcheck():
     print("Your system is ready.")
 
 
-@cfgrib_cli.command('to_netcdf')
-@click.argument('inpaths', nargs=-1)
-@click.option('--outpath', '-o', default=None)
-@click.option('--cdm', '-c', default=None)
-@click.option('--engine', '-e', default='cfgrib')
+@cfgrib_cli.command("to_netcdf")
+@click.argument("inpaths", nargs=-1)
+@click.option("--outpath", "-o", default=None)
+@click.option("--cdm", "-c", default=None)
+@click.option("--engine", "-e", default="cfgrib")
 def to_netcdf(inpaths, outpath, cdm, engine):
-    import cf2cdm
     import xarray as xr
+
+    import cf2cdm
 
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
         return
 
     if not outpath:
-        outpath = os.path.splitext(inpaths[0])[0] + '.nc'
+        outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
-    ds = xr.open_mfdataset(inpaths, engine=engine, combine='by_coords')
+    ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")
     if cdm:
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
     ds.to_netcdf(outpath)
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     cfgrib_cli()

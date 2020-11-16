@@ -34,30 +34,30 @@ LOGGER = logging.getLogger(__name__)
 
 
 DEFAULT_GRIB_KEYS = {
-    'centre': 255,  # missing value, see: http://apps.ecmwf.int/codes/grib/format/grib1/centre/0/
-    'typeOfLevel': 'surface',
+    "centre": 255,  # missing value, see: http://apps.ecmwf.int/codes/grib/format/grib1/centre/0/
+    "typeOfLevel": "surface",
 }
-TYPE_OF_LEVELS_SFC = ['surface', 'meanSea', 'cloudBase', 'cloudTop']
-TYPE_OF_LEVELS_PL = ['isobaricInhPa', 'isobaricInPa']
-TYPE_OF_LEVELS_ML = ['hybrid']
+TYPE_OF_LEVELS_SFC = ["surface", "meanSea", "cloudBase", "cloudTop"]
+TYPE_OF_LEVELS_PL = ["isobaricInhPa", "isobaricInPa"]
+TYPE_OF_LEVELS_ML = ["hybrid"]
 ALL_TYPE_OF_LEVELS = TYPE_OF_LEVELS_SFC + TYPE_OF_LEVELS_PL + TYPE_OF_LEVELS_ML
 GRID_TYPES = [
-    'polar_stereographic',
-    'reduced_gg',
-    'reduced_ll',
-    'regular_gg',
-    'regular_ll',
-    'rotated_gg',
-    'rotated_ll',
-    'sh',
+    "polar_stereographic",
+    "reduced_gg",
+    "reduced_ll",
+    "regular_gg",
+    "regular_ll",
+    "rotated_gg",
+    "rotated_ll",
+    "sh",
 ]
 MESSAGE_DEFINITION_KEYS = [
     # for the GRIB 2 sample we must set this before setting 'totalNumber'
-    'productDefinitionTemplateNumber',
+    "productDefinitionTemplateNumber",
     # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
     #   unless `units` is set before some other unknown key, this happens at random and only in
     #   Python 3.5, so it must be linked to dict key stability.
-    'units',
+    "units",
 ]
 
 
@@ -83,19 +83,19 @@ def detect_regular_ll_grib_keys(lon, lat):
         lon_start += 360.0
     if lon_stop < 0.0:
         lon_stop += 360.0
-    grib_keys['longitudeOfFirstGridPointInDegrees'] = lon_start
-    grib_keys['longitudeOfLastGridPointInDegrees'] = lon_stop
-    grib_keys['Ni'] = lon_num
-    grib_keys['iDirectionIncrementInDegrees'] = lon_step
-    grib_keys['iScansNegatively'] = lon_scan_negatively
+    grib_keys["longitudeOfFirstGridPointInDegrees"] = lon_start
+    grib_keys["longitudeOfLastGridPointInDegrees"] = lon_stop
+    grib_keys["Ni"] = lon_num
+    grib_keys["iDirectionIncrementInDegrees"] = lon_step
+    grib_keys["iScansNegatively"] = lon_scan_negatively
 
     lat_start, lat_stop, lat_num = regular_ll_params(lat, min_value=-90.0, max_value=90.0)
-    grib_keys['latitudeOfFirstGridPointInDegrees'] = lat_start
-    grib_keys['latitudeOfLastGridPointInDegrees'] = lat_stop
-    grib_keys['Nj'] = lat_num
-    grib_keys['jDirectionIncrementInDegrees'] = abs(lat_stop - lat_start) / (lat_num - 1.0)
-    grib_keys['jScansPositively'] = lat_stop > lat_start
-    grib_keys['gridType'] = 'regular_ll'
+    grib_keys["latitudeOfFirstGridPointInDegrees"] = lat_start
+    grib_keys["latitudeOfLastGridPointInDegrees"] = lat_stop
+    grib_keys["Nj"] = lat_num
+    grib_keys["jDirectionIncrementInDegrees"] = abs(lat_stop - lat_start) / (lat_num - 1.0)
+    grib_keys["jScansPositively"] = lat_stop > lat_start
+    grib_keys["gridType"] = "regular_ll"
 
     return grib_keys
 
@@ -106,10 +106,10 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
     suggested_grib_keys = default_grib_keys.copy()
 
     for key, value in data_var.attrs.items():
-        if key[:5] == 'GRIB_':
+        if key[:5] == "GRIB_":
             suggested_grib_keys[key[5:]] = value
 
-    if 'latitude' in data_var.dims and 'longitude' in data_var.dims:
+    if "latitude" in data_var.dims and "longitude" in data_var.dims:
         try:
             regular_ll_keys = detect_regular_ll_grib_keys(data_var.longitude, data_var.latitude)
             detected_grib_keys.update(regular_ll_keys)
@@ -118,37 +118,37 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
 
     for tol in ALL_TYPE_OF_LEVELS:
         if tol in data_var.dims or tol in data_var.coords:
-            detected_grib_keys['typeOfLevel'] = tol
+            detected_grib_keys["typeOfLevel"] = tol
 
-    if 'number' in data_var.dims or 'number' in data_var.coords and grib_keys.get('edition') != 1:
+    if "number" in data_var.dims or "number" in data_var.coords and grib_keys.get("edition") != 1:
         # cannot set 'number' key without setting a productDefinitionTemplateNumber in GRIB2
-        detected_grib_keys['productDefinitionTemplateNumber'] = 1
+        detected_grib_keys["productDefinitionTemplateNumber"] = 1
 
-    if 'values' in data_var.dims:
-        detected_grib_keys['numberOfPoints'] = data_var.shape[data_var.dims.index('values')]
+    if "values" in data_var.dims:
+        detected_grib_keys["numberOfPoints"] = data_var.shape[data_var.dims.index("values")]
 
     return detected_grib_keys, suggested_grib_keys
 
 
-def detect_sample_name(grib_keys, sample_name_template='{geography}_{vertical}_grib{edition}'):
+def detect_sample_name(grib_keys, sample_name_template="{geography}_{vertical}_grib{edition}"):
     # type: (T.Mapping, str) -> str
-    edition = grib_keys.get('edition', 2)
+    edition = grib_keys.get("edition", 2)
 
-    if grib_keys['gridType'] in GRID_TYPES:
-        geography = grib_keys['gridType']
+    if grib_keys["gridType"] in GRID_TYPES:
+        geography = grib_keys["gridType"]
     else:
-        LOGGER.warning("unknown 'gridType': %r. Using GRIB2 template", grib_keys['gridType'])
-        return 'GRIB2'
+        LOGGER.warning("unknown 'gridType': %r. Using GRIB2 template", grib_keys["gridType"])
+        return "GRIB2"
 
-    if grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_PL:
-        vertical = 'pl'
-    elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_SFC:
-        vertical = 'sfc'
-    elif grib_keys['typeOfLevel'] in TYPE_OF_LEVELS_ML:
-        vertical = 'ml'
+    if grib_keys["typeOfLevel"] in TYPE_OF_LEVELS_PL:
+        vertical = "pl"
+    elif grib_keys["typeOfLevel"] in TYPE_OF_LEVELS_SFC:
+        vertical = "sfc"
+    elif grib_keys["typeOfLevel"] in TYPE_OF_LEVELS_ML:
+        vertical = "ml"
     else:
-        LOGGER.warning("unknown 'typeOfLevel': %r. Using GRIB2 template", grib_keys['typeOfLevel'])
-        return 'GRIB2'
+        LOGGER.warning("unknown 'typeOfLevel': %r. Using GRIB2 template", grib_keys["typeOfLevel"])
+        return "GRIB2"
 
     sample_name = sample_name_template.format(**locals())
     return sample_name
@@ -179,7 +179,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
         raise ValueError("template_path and sample_name should not be both set")
 
     if template_path:
-        with open(template_path, 'rb') as file:
+        with open(template_path, "rb") as file:
             template_message = cfgrib.CfMessage.from_file(file)
     else:
         if sample_name is None:
@@ -211,7 +211,7 @@ def canonical_dataarray_to_grib(
     detected_keys, suggested_keys = detect_grib_keys(data_var, default_grib_keys, grib_keys)
     merged_grib_keys = merge_grib_keys(grib_keys, detected_keys, suggested_keys)
 
-    if 'gridType' not in merged_grib_keys:
+    if "gridType" not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
 
     template_message = make_template_message(merged_grib_keys, **kwargs)
@@ -230,22 +230,22 @@ def canonical_dataarray_to_grib(
         if invalid_field_values.all():
             continue
 
-        missing_value = merged_grib_keys.get('missingValue', 9999)
+        missing_value = merged_grib_keys.get("missingValue", 9999)
         field_values[invalid_field_values] = missing_value
 
         message = cfgrib.CfMessage.from_message(template_message)
         for coord_name, coord_value in zip(coords_names, items):
             if coord_name in ALL_TYPE_OF_LEVELS:
-                coord_name = 'level'
+                coord_name = "level"
             message[coord_name] = coord_value
 
         # OPTIMIZE: convert to list because Message.message_set doesn't support np.ndarray
-        message['values'] = field_values.tolist()
+        message["values"] = field_values.tolist()
 
         message.write(file)
 
 
-def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, grib_keys={}, **kwargs):
+def canonical_dataset_to_grib(dataset, path, mode="wb", no_warn=False, grib_keys={}, **kwargs):
     # type: (xr.Dataset, str, str, bool, T.Dict[str, T.Any], T.Any) -> None
     """
     Write a ``xr.Dataset`` in *canonical* form to a GRIB file.
@@ -257,7 +257,7 @@ def canonical_dataset_to_grib(dataset, path, mode='wb', no_warn=False, grib_keys
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)
 
-    real_grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == 'GRIB_'}
+    real_grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == "GRIB_"}
     real_grib_keys.update(grib_keys)
 
     with open(path, mode=mode) as file:

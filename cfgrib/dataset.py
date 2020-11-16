@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2019 European Centre for Medium-Range Weather Forecasts (ECMWF).
+# Copyright 2017-2020 European Centre for Medium-Range Weather Forecasts (ECMWF).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,9 +26,7 @@ import typing as T
 import attr
 import numpy as np
 
-from . import __version__
-from . import cfmessage
-from . import messages
+from . import __version__, cfmessage, messages
 
 LOG = logging.getLogger(__name__)
 
@@ -36,126 +34,126 @@ LOG = logging.getLogger(__name__)
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-GLOBAL_ATTRIBUTES_KEYS = ['edition', 'centre', 'centreDescription', 'subCentre']
+GLOBAL_ATTRIBUTES_KEYS = ["edition", "centre", "centreDescription", "subCentre"]
 
 DATA_ATTRIBUTES_KEYS = [
-    'paramId',
-    'shortName',
-    'units',
-    'name',
-    'cfName',
-    'cfVarName',
-    'dataType',
-    'missingValue',
-    'numberOfPoints',
-    'totalNumber',
-    'numberOfDirections',
-    'numberOfFrequencies',
-    'typeOfLevel',
-    'NV',
-    'stepUnits',
-    'stepType',
-    'gridType',
-    'gridDefinitionDescription',
+    "paramId",
+    "shortName",
+    "units",
+    "name",
+    "cfName",
+    "cfVarName",
+    "dataType",
+    "missingValue",
+    "numberOfPoints",
+    "totalNumber",
+    "numberOfDirections",
+    "numberOfFrequencies",
+    "typeOfLevel",
+    "NV",
+    "stepUnits",
+    "stepType",
+    "gridType",
+    "gridDefinitionDescription",
 ]
 
 GRID_TYPE_MAP = {
-    'regular_ll': [
-        'Nx',
-        'iDirectionIncrementInDegrees',
-        'iScansNegatively',
-        'longitudeOfFirstGridPointInDegrees',
-        'longitudeOfLastGridPointInDegrees',
-        'Ny',
-        'jDirectionIncrementInDegrees',
-        'jPointsAreConsecutive',
-        'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees',
-        'latitudeOfLastGridPointInDegrees',
+    "regular_ll": [
+        "Nx",
+        "iDirectionIncrementInDegrees",
+        "iScansNegatively",
+        "longitudeOfFirstGridPointInDegrees",
+        "longitudeOfLastGridPointInDegrees",
+        "Ny",
+        "jDirectionIncrementInDegrees",
+        "jPointsAreConsecutive",
+        "jScansPositively",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfLastGridPointInDegrees",
     ],
-    'rotated_ll': [
-        'Nx',
-        'Ny',
-        'angleOfRotationInDegrees',
-        'iDirectionIncrementInDegrees',
-        'iScansNegatively',
-        'jDirectionIncrementInDegrees',
-        'jPointsAreConsecutive',
-        'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees',
-        'latitudeOfLastGridPointInDegrees',
-        'latitudeOfSouthernPoleInDegrees',
-        'longitudeOfFirstGridPointInDegrees',
-        'longitudeOfLastGridPointInDegrees',
-        'longitudeOfSouthernPoleInDegrees',
+    "rotated_ll": [
+        "Nx",
+        "Ny",
+        "angleOfRotationInDegrees",
+        "iDirectionIncrementInDegrees",
+        "iScansNegatively",
+        "jDirectionIncrementInDegrees",
+        "jPointsAreConsecutive",
+        "jScansPositively",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfLastGridPointInDegrees",
+        "latitudeOfSouthernPoleInDegrees",
+        "longitudeOfFirstGridPointInDegrees",
+        "longitudeOfLastGridPointInDegrees",
+        "longitudeOfSouthernPoleInDegrees",
     ],
-    'reduced_ll': [
-        'Ny',
-        'jDirectionIncrementInDegrees',
-        'jPointsAreConsecutive',
-        'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees',
-        'latitudeOfLastGridPointInDegrees',
+    "reduced_ll": [
+        "Ny",
+        "jDirectionIncrementInDegrees",
+        "jPointsAreConsecutive",
+        "jScansPositively",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfLastGridPointInDegrees",
     ],
-    'regular_gg': [
-        'Nx',
-        'iDirectionIncrementInDegrees',
-        'iScansNegatively',
-        'longitudeOfFirstGridPointInDegrees',
-        'longitudeOfLastGridPointInDegrees',
-        'N',
-        'Ny',
+    "regular_gg": [
+        "Nx",
+        "iDirectionIncrementInDegrees",
+        "iScansNegatively",
+        "longitudeOfFirstGridPointInDegrees",
+        "longitudeOfLastGridPointInDegrees",
+        "N",
+        "Ny",
     ],
-    'rotated_gg': [
-        'Nx',
-        'Ny',
-        'angleOfRotationInDegrees',
-        'iDirectionIncrementInDegrees',
-        'iScansNegatively',
-        'jPointsAreConsecutive',
-        'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees',
-        'latitudeOfLastGridPointInDegrees',
-        'latitudeOfSouthernPoleInDegrees',
-        'longitudeOfFirstGridPointInDegrees',
-        'longitudeOfLastGridPointInDegrees',
-        'longitudeOfSouthernPoleInDegrees',
-        'N',
+    "rotated_gg": [
+        "Nx",
+        "Ny",
+        "angleOfRotationInDegrees",
+        "iDirectionIncrementInDegrees",
+        "iScansNegatively",
+        "jPointsAreConsecutive",
+        "jScansPositively",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfLastGridPointInDegrees",
+        "latitudeOfSouthernPoleInDegrees",
+        "longitudeOfFirstGridPointInDegrees",
+        "longitudeOfLastGridPointInDegrees",
+        "longitudeOfSouthernPoleInDegrees",
+        "N",
     ],
-    'lambert': [
-        'LaDInDegrees',
-        'LoVInDegrees',
-        'iScansNegatively',
-        'jPointsAreConsecutive',
-        'jScansPositively',
-        'latitudeOfFirstGridPointInDegrees',
-        'latitudeOfSouthernPoleInDegrees',
-        'longitudeOfFirstGridPointInDegrees',
-        'longitudeOfSouthernPoleInDegrees',
-        'DyInMetres',
-        'DxInMetres',
-        'Latin2InDegrees',
-        'Latin1InDegrees',
-        'Ny',
-        'Nx',
+    "lambert": [
+        "LaDInDegrees",
+        "LoVInDegrees",
+        "iScansNegatively",
+        "jPointsAreConsecutive",
+        "jScansPositively",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfSouthernPoleInDegrees",
+        "longitudeOfFirstGridPointInDegrees",
+        "longitudeOfSouthernPoleInDegrees",
+        "DyInMetres",
+        "DxInMetres",
+        "Latin2InDegrees",
+        "Latin1InDegrees",
+        "Ny",
+        "Nx",
     ],
-    'reduced_gg': ['N', 'pl'],
-    'sh': ['M', 'K', 'J'],
+    "reduced_gg": ["N", "pl"],
+    "sh": ["M", "K", "J"],
 }
 GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
-ENSEMBLE_KEYS = ['number']
-VERTICAL_KEYS = ['level']
-DATA_TIME_KEYS = ['dataDate', 'dataTime', 'endStep']
+ENSEMBLE_KEYS = ["number"]
+VERTICAL_KEYS = ["level"]
+DATA_TIME_KEYS = ["dataDate", "dataTime", "endStep"]
 ALL_REF_TIME_KEYS = [
-    'time',
-    'step',
-    'valid_time',
-    'verifying_time',
-    'forecastMonth',
-    'indexing_time'
+    "time",
+    "step",
+    "valid_time",
+    "verifying_time",
+    "forecastMonth",
+    "indexing_time",
 ]
-SPECTRA_KEYS = ['directionNumber', 'frequencyNumber']
+SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
 
@@ -163,90 +161,90 @@ ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS
 
 COORD_ATTRS = {
     # geography
-    'latitude': {'units': 'degrees_north', 'standard_name': 'latitude', 'long_name': 'latitude'},
-    'longitude': {'units': 'degrees_east', 'standard_name': 'longitude', 'long_name': 'longitude'},
+    "latitude": {"units": "degrees_north", "standard_name": "latitude", "long_name": "latitude"},
+    "longitude": {"units": "degrees_east", "standard_name": "longitude", "long_name": "longitude"},
     # vertical
-    'depthBelowLand': {
-        'units': 'm',
-        'positive': 'down',
-        'long_name': 'soil depth',
-        'standard_name': 'depth',
+    "depthBelowLand": {
+        "units": "m",
+        "positive": "down",
+        "long_name": "soil depth",
+        "standard_name": "depth",
     },
-    'depthBelowLandLayer': {
-        'units': 'm',
-        'positive': 'down',
-        'long_name': 'soil depth',
-        'standard_name': 'depth',
+    "depthBelowLandLayer": {
+        "units": "m",
+        "positive": "down",
+        "long_name": "soil depth",
+        "standard_name": "depth",
     },
-    'hybrid': {
-        'units': '1',
-        'positive': 'down',
-        'long_name': 'hybrid level',
-        'standard_name': 'atmosphere_hybrid_sigma_pressure_coordinate',
+    "hybrid": {
+        "units": "1",
+        "positive": "down",
+        "long_name": "hybrid level",
+        "standard_name": "atmosphere_hybrid_sigma_pressure_coordinate",
     },
-    'heightAboveGround': {
-        'units': 'm',
-        'positive': 'up',
-        'long_name': 'height above the surface',
-        'standard_name': 'height',
+    "heightAboveGround": {
+        "units": "m",
+        "positive": "up",
+        "long_name": "height above the surface",
+        "standard_name": "height",
     },
-    'isobaricInhPa': {
-        'units': 'hPa',
-        'positive': 'down',
-        'stored_direction': 'decreasing',
-        'standard_name': 'air_pressure',
-        'long_name': 'pressure',
+    "isobaricInhPa": {
+        "units": "hPa",
+        "positive": "down",
+        "stored_direction": "decreasing",
+        "standard_name": "air_pressure",
+        "long_name": "pressure",
     },
-    'isobaricInPa': {
-        'units': 'Pa',
-        'positive': 'down',
-        'stored_direction': 'decreasing',
-        'standard_name': 'air_pressure',
-        'long_name': 'pressure',
+    "isobaricInPa": {
+        "units": "Pa",
+        "positive": "down",
+        "stored_direction": "decreasing",
+        "standard_name": "air_pressure",
+        "long_name": "pressure",
     },
-    'isobaricLayer': {
-        'units': 'Pa',
-        'positive': 'down',
-        'standard_name': 'air_pressure',
-        'long_name': 'pressure',
+    "isobaricLayer": {
+        "units": "Pa",
+        "positive": "down",
+        "standard_name": "air_pressure",
+        "long_name": "pressure",
     },
     # ensemble
-    'number': {
-        'units': '1',
-        'standard_name': 'realization',
-        'long_name': 'ensemble member numerical id',
+    "number": {
+        "units": "1",
+        "standard_name": "realization",
+        "long_name": "ensemble member numerical id",
     },
     # time
-    'step': {
-        'units': 'hours',
-        'standard_name': 'forecast_period',
-        'long_name': 'time since forecast_reference_time',
+    "step": {
+        "units": "hours",
+        "standard_name": "forecast_period",
+        "long_name": "time since forecast_reference_time",
     },
-    'time': {
-        'units': 'seconds since 1970-01-01T00:00:00',
-        'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time',
-        'long_name': 'initial time of forecast',
+    "time": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "forecast_reference_time",
+        "long_name": "initial time of forecast",
     },
-    'indexing_time': {
-        'units': 'seconds since 1970-01-01T00:00:00',
-        'calendar': 'proleptic_gregorian',
-        'standard_name': 'forecast_reference_time',
-        'long_name': 'nominal initial time of forecast',
+    "indexing_time": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "forecast_reference_time",
+        "long_name": "nominal initial time of forecast",
     },
-    'valid_time': {
-        'units': 'seconds since 1970-01-01T00:00:00',
-        'calendar': 'proleptic_gregorian',
-        'standard_name': 'time',
-        'long_name': 'time',
+    "valid_time": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "time",
+        "long_name": "time",
     },
-    'verifying_time': {
-        'units': 'seconds since 1970-01-01T00:00:00',
-        'calendar': 'proleptic_gregorian',
-        'standard_name': 'time',
-        'long_name': 'time',
+    "verifying_time": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "time",
+        "long_name": "time",
     },
-    'forecastMonth': {'units': '1', 'long_name': 'months since forecast_reference_time'},
+    "forecastMonth": {"units": "1", "long_name": "months since forecast_reference_time"},
 }
 
 
@@ -267,8 +265,8 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
                 fbk.update(filter_by_keys)
                 fbks.append(fbk)
             raise DatasetBuildError("multiple values for key %r" % key, key, fbks)
-        if values and values[0] not in ('undef', 'unknown'):
-            attributes['GRIB_' + key] = values[0]
+        if values and values[0] not in ("undef", "unknown"):
+            attributes["GRIB_" + key] = values[0]
     return attributes
 
 
@@ -308,17 +306,17 @@ class OnDiskArray(object):
     offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
     missing_value = attr.attrib()
     geo_ndim = attr.attrib(default=1, repr=False)
-    dtype = np.dtype('float32')
+    dtype = np.dtype("float32")
 
     def build_array(self):
         # type: () -> np.ndarray
         """Helper method used to test __getitem__"""
-        array = np.full(self.shape, fill_value=np.nan, dtype='float32')
-        with open(self.stream.path, 'rb') as file:
+        array = np.full(self.shape, fill_value=np.nan, dtype="float32")
+        with open(self.stream.path, "rb") as file:
             for header_indexes, offset in self.offsets.items():
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', float)
+                values = message.message_get("values", float)
                 array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -326,8 +324,8 @@ class OnDiskArray(object):
     def __getitem__(self, item):
         header_item = expand_item(item[: -self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim :]
-        array_field = np.full(array_field_shape, fill_value=np.nan, dtype='float32')
-        with open(self.stream.path, 'rb') as file:
+        array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
+        with open(self.stream.path, "rb") as file:
             for header_indexes, offset in self.offsets.items():
                 try:
                     array_field_indexes = [
@@ -337,7 +335,7 @@ class OnDiskArray(object):
                     continue
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get('values', float)
+                values = message.message_get("values", float)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = array_field[(Ellipsis,) + item[-self.geo_ndim :]]
@@ -348,14 +346,14 @@ class OnDiskArray(object):
         return array
 
 
-GRID_TYPES_DIMENSION_COORDS = {'regular_ll', 'regular_gg'}
+GRID_TYPES_DIMENSION_COORDS = {"regular_ll", "regular_gg"}
 GRID_TYPES_2D_NON_DIMENSION_COORDS = {
-    'rotated_ll',
-    'rotated_gg',
-    'lambert',
-    'lambert_azimuthal_equal_area',
-    'albers',
-    'polar_stereographic',
+    "rotated_ll",
+    "rotated_gg",
+    "lambert",
+    "lambert_azimuthal_equal_area",
+    "albers",
+    "polar_stereographic",
 }
 
 
@@ -368,72 +366,72 @@ def build_geography_coordinates(
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
     geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
-    grid_type = index.getone('gridType')
-    if 'geography' in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
-        geo_dims = ('latitude', 'longitude')  # type: T.Tuple[str, ...]
-        geo_shape = (index.getone('Ny'), index.getone('Nx'))  # type: T.Tuple[int, ...]
-        latitudes = np.array(first['distinctLatitudes'])
-        geo_coord_vars['latitude'] = Variable(
-            dimensions=('latitude',), data=latitudes, attributes=COORD_ATTRS['latitude'].copy()
+    grid_type = index.getone("gridType")
+    if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
+        geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
+        geo_shape = (index.getone("Ny"), index.getone("Nx"))  # type: T.Tuple[int, ...]
+        latitudes = np.array(first["distinctLatitudes"])
+        geo_coord_vars["latitude"] = Variable(
+            dimensions=("latitude",), data=latitudes, attributes=COORD_ATTRS["latitude"].copy()
         )
         if latitudes[0] > latitudes[-1]:
-            geo_coord_vars['latitude'].attributes['stored_direction'] = 'decreasing'
-        geo_coord_vars['longitude'] = Variable(
-            dimensions=('longitude',),
-            data=np.array(first['distinctLongitudes']),
-            attributes=COORD_ATTRS['longitude'],
+            geo_coord_vars["latitude"].attributes["stored_direction"] = "decreasing"
+        geo_coord_vars["longitude"] = Variable(
+            dimensions=("longitude",),
+            data=np.array(first["distinctLongitudes"]),
+            attributes=COORD_ATTRS["longitude"],
         )
-    elif 'geography' in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
-        geo_dims = ('y', 'x')
-        geo_shape = (index.getone('Ny'), index.getone('Nx'))
+    elif "geography" in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
+        geo_dims = ("y", "x")
+        geo_shape = (index.getone("Ny"), index.getone("Nx"))
         try:
-            geo_coord_vars['latitude'] = Variable(
-                dimensions=('y', 'x'),
-                data=np.array(first['latitudes']).reshape(geo_shape),
-                attributes=COORD_ATTRS['latitude'],
+            geo_coord_vars["latitude"] = Variable(
+                dimensions=("y", "x"),
+                data=np.array(first["latitudes"]).reshape(geo_shape),
+                attributes=COORD_ATTRS["latitude"],
             )
-            geo_coord_vars['longitude'] = Variable(
-                dimensions=('y', 'x'),
-                data=np.array(first['longitudes']).reshape(geo_shape),
-                attributes=COORD_ATTRS['longitude'],
+            geo_coord_vars["longitude"] = Variable(
+                dimensions=("y", "x"),
+                data=np.array(first["longitudes"]).reshape(geo_shape),
+                attributes=COORD_ATTRS["longitude"],
             )
         except KeyError:  # pragma: no cover
-            if errors != 'ignore':
-                log.warning('ecCodes provides no latitudes/longitudes for gridType=%r', grid_type)
+            if errors != "ignore":
+                log.warning("ecCodes provides no latitudes/longitudes for gridType=%r", grid_type)
     else:
-        geo_dims = ('values',)
-        geo_shape = (index.getone('numberOfPoints'),)
+        geo_dims = ("values",)
+        geo_shape = (index.getone("numberOfPoints"),)
         # add secondary coordinates if ecCodes provides them
         try:
-            latitude = first['latitudes']
-            geo_coord_vars['latitude'] = Variable(
-                dimensions=('values',), data=np.array(latitude), attributes=COORD_ATTRS['latitude']
+            latitude = first["latitudes"]
+            geo_coord_vars["latitude"] = Variable(
+                dimensions=("values",), data=np.array(latitude), attributes=COORD_ATTRS["latitude"]
             )
-            longitude = first['longitudes']
-            geo_coord_vars['longitude'] = Variable(
-                dimensions=('values',),
+            longitude = first["longitudes"]
+            geo_coord_vars["longitude"] = Variable(
+                dimensions=("values",),
                 data=np.array(longitude),
-                attributes=COORD_ATTRS['longitude'],
+                attributes=COORD_ATTRS["longitude"],
             )
         except KeyError:  # pragma: no cover
-            if errors != 'ignore':
-                log.warning('ecCodes provides no latitudes/longitudes for gridType=%r', grid_type)
+            if errors != "ignore":
+                log.warning("ecCodes provides no latitudes/longitudes for gridType=%r", grid_type)
     return geo_dims, geo_shape, geo_coord_vars
 
 
-def encode_cf_first(data_var_attrs, encode_cf=('parameter', 'time'), time_dims=('time', 'step')):
+def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=("time", "step")):
     coords_map = ENSEMBLE_KEYS[:]
-    param_id = data_var_attrs.get('GRIB_paramId', 'undef')
-    data_var_attrs['long_name'] = 'original GRIB paramId: %s' % param_id
-    data_var_attrs['units'] = '1'
-    if 'parameter' in encode_cf:
-        if 'GRIB_cfName' in data_var_attrs:
-            data_var_attrs['standard_name'] = data_var_attrs['GRIB_cfName']
-        if 'GRIB_name' in data_var_attrs:
-            data_var_attrs['long_name'] = data_var_attrs['GRIB_name']
-        if 'GRIB_units' in data_var_attrs:
-            data_var_attrs['units'] = data_var_attrs['GRIB_units']
-    if 'time' in encode_cf:
+    param_id = data_var_attrs.get("GRIB_paramId", "undef")
+    data_var_attrs["long_name"] = "original GRIB paramId: %s" % param_id
+    data_var_attrs["units"] = "1"
+    if "parameter" in encode_cf:
+        if "GRIB_cfName" in data_var_attrs:
+            data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
+        if "GRIB_name" in data_var_attrs:
+            data_var_attrs["long_name"] = data_var_attrs["GRIB_name"]
+        if "GRIB_units" in data_var_attrs:
+            data_var_attrs["units"] = data_var_attrs["GRIB_units"]
+    if "time" in encode_cf:
         if set(time_dims).issubset(ALL_REF_TIME_KEYS):
             coords_map.extend(time_dims)
         else:
@@ -450,13 +448,13 @@ def build_variable_components(
     encode_cf=(),
     filter_by_keys={},
     log=LOG,
-    errors='warn',
+    errors="warn",
     squeeze=True,
     read_keys=[],
-    time_dims=('time', 'step'),
+    time_dims=("time", "step"),
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
-    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone('gridType'), []))
+    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
     data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
@@ -465,23 +463,23 @@ def build_variable_components(
     coord_vars = collections.OrderedDict()
     for coord_key in coords_map:
         values = index[coord_key]
-        if len(values) == 1 and values[0] == 'undef':
+        if len(values) == 1 and values[0] == "undef":
             log.debug("missing from GRIB stream: %r" % coord_key)
             continue
         coord_name = coord_key
         if (
-            'vertical' in encode_cf
-            and coord_key == 'level'
-            and 'GRIB_typeOfLevel' in data_var_attrs
+            "vertical" in encode_cf
+            and coord_key == "level"
+            and "GRIB_typeOfLevel" in data_var_attrs
         ):
-            coord_name = data_var_attrs['GRIB_typeOfLevel']
+            coord_name = data_var_attrs["GRIB_typeOfLevel"]
             coord_name_key_map[coord_name] = coord_key
         attributes = {
-            'long_name': 'original GRIB coordinate for key: %s(%s)' % (coord_key, coord_name),
-            'units': '1',
+            "long_name": "original GRIB coordinate for key: %s(%s)" % (coord_key, coord_name),
+            "units": "1",
         }
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
-        data = np.array(sorted(values, reverse=attributes.get('stored_direction') == 'decreasing'))
+        data = np.array(sorted(values, reverse=attributes.get("stored_direction") == "decreasing"))
         dimensions = (coord_name,)
         if squeeze and len(values) == 1:
             data = data[0]
@@ -503,7 +501,7 @@ def build_variable_components(
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
             header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
         offsets[tuple(header_indexes)] = offset
-    missing_value = data_var_attrs.get('missingValue', 9999)
+    missing_value = data_var_attrs.get("missingValue", 9999)
     data = OnDiskArray(
         stream=index.filestream,
         shape=shape,
@@ -512,15 +510,15 @@ def build_variable_components(
         geo_ndim=len(geo_dims),
     )
 
-    if 'time' in coord_vars and 'step' in coord_vars:
+    if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         dims, time_data = cfmessage.build_valid_time(
-            coord_vars['time'].data, coord_vars['step'].data,
+            coord_vars["time"].data, coord_vars["step"].data,
         )
-        attrs = COORD_ATTRS['valid_time']
-        coord_vars['valid_time'] = Variable(dimensions=dims, data=time_data, attributes=attrs)
+        attrs = COORD_ATTRS["valid_time"]
+        coord_vars["valid_time"] = Variable(dimensions=dims, data=time_data, attributes=attrs)
 
-    data_var_attrs['coordinates'] = ' '.join(coord_vars.keys())
+    data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
     return dims, data_var, coord_vars
@@ -541,36 +539,36 @@ def dict_merge(master, update):
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
-    attributes['Conventions'] = 'CF-1.7'
-    if 'GRIB_centreDescription' in attributes:
-        attributes['institution'] = attributes['GRIB_centreDescription']
+    attributes["Conventions"] = "CF-1.7"
+    if "GRIB_centreDescription" in attributes:
+        attributes["institution"] = attributes["GRIB_centreDescription"]
     attributes_namespace = {
-        'cfgrib_version': __version__,
-        'cfgrib_open_kwargs': json.dumps(encoding),
-        'eccodes_version': messages.eccodes_version,
-        'timestamp': datetime.datetime.now().isoformat().partition('.')[0],
+        "cfgrib_version": __version__,
+        "cfgrib_open_kwargs": json.dumps(encoding),
+        "eccodes_version": messages.eccodes_version,
+        "timestamp": datetime.datetime.now().isoformat().partition(".")[0],
     }
     history_in = (
-        '{timestamp} GRIB to CDM+CF via '
-        'cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}'
+        "{timestamp} GRIB to CDM+CF via "
+        "cfgrib-{cfgrib_version}/ecCodes-{eccodes_version} with {cfgrib_open_kwargs}"
     )
-    attributes['history'] = history_in.format(**attributes_namespace)
+    attributes["history"] = history_in.format(**attributes_namespace)
     return attributes
 
 
 def build_dataset_components(
     index,
-    errors='warn',
-    encode_cf=('parameter', 'time', 'geography', 'vertical'),
+    errors="warn",
+    encode_cf=("parameter", "time", "geography", "vertical"),
     squeeze=True,
     log=LOG,
     read_keys=[],
-    time_dims=('time', 'step'),
+    time_dims=("time", "step"),
 ):
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     filter_by_keys = index.filter_by_keys
-    for param_id in index['paramId']:
+    for param_id in index["paramId"]:
         var_index = index.subindex(paramId=param_id)
         try:
             dims, data_var, coord_vars = build_variable_components(
@@ -594,25 +592,25 @@ def build_dataset_components(
                 fbks.append(fbk)
                 error_message += "\n    filter_by_keys=%r" % fbk
             raise DatasetBuildError(error_message, key, fbks)
-        short_name = data_var.attributes.get('GRIB_shortName', 'paramId_%d' % param_id)
-        var_name = data_var.attributes.get('GRIB_cfVarName', 'unknown')
-        if 'parameter' in encode_cf and var_name not in ('undef', 'unknown'):
+        short_name = data_var.attributes.get("GRIB_shortName", "paramId_%d" % param_id)
+        var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
+        if "parameter" in encode_cf and var_name not in ("undef", "unknown"):
             short_name = var_name
         try:
             dict_merge(variables, coord_vars)
             dict_merge(variables, {short_name: data_var})
             dict_merge(dimensions, dims)
         except ValueError:
-            if errors == 'ignore':
+            if errors == "ignore":
                 pass
-            elif errors == 'raise':
+            elif errors == "raise":
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     encoding = {
-        'source': index.filestream.path,
-        'filter_by_keys': filter_by_keys,
-        'encode_cf': encode_cf,
+        "source": index.filestream.path,
+        "filter_by_keys": filter_by_keys,
+        "encode_cf": encode_cf,
     }
     attributes = build_dataset_attributes(index, filter_by_keys, encoding)
     return dimensions, variables, attributes, encoding
@@ -631,7 +629,7 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path, grib_errors='warn', indexpath='{path}.{short_hash}.idx', index_keys=ALL_KEYS
+    path, grib_errors="warn", indexpath="{path}.{short_hash}.idx", index_keys=ALL_KEYS
 ):
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return stream.index(index_keys, indexpath=indexpath)
@@ -639,8 +637,8 @@ def open_fileindex(
 
 def open_file(
     path,
-    grib_errors='warn',
-    indexpath='{path}.{short_hash}.idx',
+    grib_errors="warn",
+    indexpath="{path}.{short_hash}.idx",
     filter_by_keys={},
     read_keys=[],
     **kwargs

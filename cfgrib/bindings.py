@@ -17,9 +17,9 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import os
 import functools
 import logging
+import os
 import pkgutil
 import typing as T  # noqa
 
@@ -27,18 +27,17 @@ import cffi
 
 LOG = logging.getLogger(__name__)
 
-
 ffi = cffi.FFI()
-ffi.cdef(
-    pkgutil.get_data(__name__, 'grib_api.h').decode('utf-8')
-    + pkgutil.get_data(__name__, 'eccodes.h').decode('utf-8')
-)
+CDEF_H = pkgutil.get_data(__name__, "grib_api.h") + pkgutil.get_data(__name__, "eccodes.h")
+# on Windows the decoded string has '\r' characters not present in the original file
+ffi.cdef(CDEF_H.decode("utf-8").replace("\r", "\n"))
 
 
 LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
 
 try:
     import ecmwflibs
+
     LIBNAMES.insert(0, ecmwflibs.find("eccodes"))
 except Exception:
     pass
@@ -58,7 +57,7 @@ for libname in LIBNAMES:
 
 
 # default encoding for ecCodes strings
-ENC = 'ascii'
+ENC = "ascii"
 
 #
 # from gribapi.py
@@ -122,7 +121,7 @@ class GribInternalError(Exception):
         self.code = code
         self.eccode_message = grib_get_error_message(code)
         if message is None:
-            message = '%s (%s).' % (self.eccode_message, code)
+            message = "%s (%s)." % (self.eccode_message, code)
         super(GribInternalError, self).__init__(message, code, *args)
 
 
@@ -144,7 +143,7 @@ ERROR_MAP = {-18: ReadOnlyError, -10: KeyValueNotFoundError, -7: FileNotFoundErr
 def check_last(func):
     @functools.wraps(func)
     def wrapper(*args):
-        code = ffi.new('int *')
+        code = ffi.new("int *")
         args += (code,)
         retval = func(*args)
         if code[0] != lib.GRIB_SUCCESS:
@@ -215,7 +214,7 @@ def codes_get_size(handle, key):
 
     :rtype: int
     """
-    size = ffi.new('size_t *')
+    size = ffi.new("size_t *")
     _codes_get_size(handle, key.encode(ENC), size)
     return size[0]
 
@@ -233,7 +232,7 @@ def codes_get_string_length(handle, key):
 
     :rtype: int
     """
-    size = ffi.new('size_t *')
+    size = ffi.new("size_t *")
     _codes_get_length(handle, key.encode(ENC), size)
     return size[0]
 
@@ -250,8 +249,8 @@ def codes_get_bytes_array(handle, key, size):
 
     :rtype: List(int)
     """
-    values = ffi.new('unsigned char[]', size)
-    size_p = ffi.new('size_t *', size)
+    values = ffi.new("unsigned char[]", size)
+    size_p = ffi.new("size_t *", size)
     _codes_get_bytes(handle, key.encode(ENC), values, size_p)
     return list(values)
 
@@ -268,8 +267,8 @@ def codes_get_long_array(handle, key, size):
 
     :rtype: List(int)
     """
-    values = ffi.new('long[]', size)
-    size_p = ffi.new('size_t *', size)
+    values = ffi.new("long[]", size)
+    size_p = ffi.new("size_t *", size)
     _codes_get_long_array(handle, key.encode(ENC), values, size_p)
     return list(values)
 
@@ -286,8 +285,8 @@ def codes_get_double_array(handle, key, size):
 
     :rtype: T.List(float)
     """
-    values = ffi.new('double[]', size)
-    size_p = ffi.new('size_t *', size)
+    values = ffi.new("double[]", size)
+    size_p = ffi.new("size_t *", size)
     _codes_get_double_array(handle, key.encode(ENC), values, size_p)
     return list(values)
 
@@ -306,16 +305,16 @@ def codes_get_string_array(handle, key, size, length=None):
     """
     if length is None:
         length = codes_get_string_length(handle, key)
-    values_keepalive = [ffi.new('char[]', length) for _ in range(size)]
-    values = ffi.new('char*[]', values_keepalive)
-    size_p = ffi.new('size_t *', size)
+    values_keepalive = [ffi.new("char[]", length) for _ in range(size)]
+    values = ffi.new("char*[]", values_keepalive)
+    size_p = ffi.new("size_t *", size)
     _codes_get_string_array(handle, key.encode(ENC), values, size_p)
     return [ffi.string(values[i]).decode(ENC) for i in range(size_p[0])]
 
 
 def codes_get_long(handle, key):
     # type: (cffi.FFI.CData, str) -> int
-    value = ffi.new('long *')
+    value = ffi.new("long *")
     _codes_get_long = check_return(lib.codes_get_long)
     _codes_get_long(handle, key.encode(ENC), value)
     return value[0]
@@ -323,7 +322,7 @@ def codes_get_long(handle, key):
 
 def codes_get_double(handle, key):
     # type: (cffi.FFI.CData, str) -> int
-    value = ffi.new('double *')
+    value = ffi.new("double *")
     _codes_get_long = check_return(lib.codes_get_double)
     _codes_get_long(handle, key.encode(ENC), value)
     return value[0]
@@ -343,8 +342,8 @@ def codes_get_string(handle, key, length=None):
     """
     if length is None:
         length = codes_get_string_length(handle, key)
-    values = ffi.new('char[]', length)
-    length_p = ffi.new('size_t *', length)
+    values = ffi.new("char[]", length)
+    length_p = ffi.new("size_t *", length)
     _codes_get_string = check_return(lib.codes_get_string)
     _codes_get_string(handle, key.encode(ENC), values, length_p)
     return ffi.string(values, length_p[0]).decode(ENC)
@@ -355,7 +354,7 @@ _codes_get_native_type = check_return(lib.codes_get_native_type)
 
 def codes_get_native_type(handle, key):
     # type: (cffi.FFI.CData, str) -> int
-    grib_type = ffi.new('int *')
+    grib_type = ffi.new("int *")
     _codes_get_native_type(handle, key.encode(ENC), grib_type)
     return KEYTYPES.get(grib_type[0], grib_type[0])
 
@@ -443,11 +442,11 @@ def portable_handle_new_from_samples(samplename, product_kind):
     import platform
 
     handle = ffi.NULL
-    if platform.platform().startswith('Windows'):
-        samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL)).decode('utf-8')
-        sample_path = os.path.join(samples_folder, samplename + '.tmpl')
+    if platform.platform().startswith("Windows"):
+        samples_folder = ffi.string(lib.codes_samples_path(ffi.NULL)).decode("utf-8")
+        sample_path = os.path.join(samples_folder, samplename + ".tmpl")
         try:
-            with open(sample_path, 'rb') as file:
+            with open(sample_path, "rb") as file:
                 handle = codes_grib_new_from_file(file, product_kind)
         except Exception:
             logging.exception("creating empty message from sample failed")
@@ -488,7 +487,7 @@ def codes_set_double(handle, key, value):
 
 def codes_set_string(handle, key, value):
     # type: (cffi.FFI.CData, str, str) -> None
-    size = ffi.new('size_t *', len(value))
+    size = ffi.new("size_t *", len(value))
     codes_set_string = check_return(lib.codes_set_string)
     codes_set_string(handle, key.encode(ENC), value.encode(ENC), size)
 
@@ -559,8 +558,8 @@ def codes_write(handle, outfile):
     :param str path: (optional) the path to the GRIB file;
         defaults to the one of the open index.
     """
-    mess = ffi.new('const void **')
-    mess_len = ffi.new('size_t*')
+    mess = ffi.new("const void **")
+    mess_len = ffi.new("size_t*")
     codes_get_message = check_return(lib.codes_get_message)
     codes_get_message(handle, mess, mess_len)
     message = ffi.buffer(mess[0], size=mess_len[0])
