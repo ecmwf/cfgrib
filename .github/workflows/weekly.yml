@@ -19,6 +19,9 @@ jobs:
             python: 3.8
           - os: windows
             python: 3.7
+          - os: ubuntu
+            python: 3.8
+            extras: -minimal
 
     steps:
     - uses: actions/checkout@v2
@@ -26,15 +29,15 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python }}
-        activate-environment: ${{ matrix.os }}-${{ matrix.python }}
-        environment-file: environment.in.yml
+        activate-environment: ${{ matrix.os }}-${{ matrix.python }}${{ extras }}
+        environment-file: environment${{ extras }}.in.yml
     - name: Export concrete dependencies
       shell: bash -l {0}
       run: |
-        conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
+        conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ extras }}.yml
         git diff
-    - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}.yml
+    - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}${{ extras }}.yml
       uses: actions/upload-artifact@v2
       with:
-        name: environment-${{ matrix.os }}-${{ matrix.python }}.yml
-        path: tests/environment-${{ matrix.os }}-${{ matrix.python }}.yml
+        name: environment-${{ matrix.os }}-${{ matrix.python }}${{ extras }}.yml
+        path: tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ extras }}.yml
