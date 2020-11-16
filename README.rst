@@ -804,15 +804,9 @@ Project resources
 Development   https://github.com/ecmwf/cfgrib
 Download      https://pypi.org/project/cfgrib
 User support  https://stackoverflow.com/search?q=cfgrib
-Code quality  .. image:: https://api.travis-ci.org/ecmwf/cfgrib.svg?branch=master
-                :target: https://travis-ci.org/ecmwf/cfgrib/branches
-                :alt: Build Status on Travis CI
-              .. image:: https://ci.appveyor.com/api/projects/status/github/ecmwf/cfgrib?svg=true&passingText=passing&failingText=failing&pendingText=pending
-                :target: https://ci.appveyor.com/project/StephanSiemen/cfgrib
-                :alt: Build Status on Appveyor
-              .. image:: https://coveralls.io/repos/ecmwf/cfgrib/badge.svg?branch=master&service=github
-                :target: https://coveralls.io/github/ecmwf/cfgrib
-                :alt: Coverage Status on Coveralls
+Code quality  .. image:: https://codecov.io/gh/ecmwf/cfgrib/branch/master/graph/badge.svg
+                :target: https://codecov.io/gh/ecmwf/cfgrib
+                :alt: Coverage status on Codecov
 ============= =========================================================
 
 
