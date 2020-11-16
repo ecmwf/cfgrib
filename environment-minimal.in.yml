@@ -1,0 +1,9 @@
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - attrs>=19.2
+  - cffi
+  - click
+  - eccodes
+  - numpy
