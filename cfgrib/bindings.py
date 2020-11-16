@@ -27,10 +27,10 @@ import cffi
 
 LOG = logging.getLogger(__name__)
 
-CDEF = pkgutil.get_data(__name__, "grib_api.h") + pkgutil.get_data(__name__, "eccodes.h")
+CDEF_H = pkgutil.get_data(__name__, "grib_api.h") + pkgutil.get_data(__name__, "eccodes.h")
 
 ffi = cffi.FFI()
-ffi.cdef(CDEF.decode("utf-8").replace("\r", "\n"))
+ffi.cdef(CDEF_H.decode("utf-8"))
 
 
 LIBNAMES = ["eccodes", "libeccodes.so", "libeccodes"]
