@@ -23,7 +23,7 @@ jobs:
             extras: -minimal
 # python-eccodes and cffi both fail
 #          - os: windows
-#            python: 3.7
+#            python: 3.8
 #            eccodes: 1
 
     steps:
@@ -38,7 +38,7 @@ jobs:
       run: |
         conda install pytest pytest-cov
         pip install --no-deps -e .
-        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml --cov-branch .
+        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
@@ -62,7 +62,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
-        pytest -v --cov=. --cov-report=xml --cov-branch README.rst
+        pytest -v --cov=. --cov-report=xml README.rst
 
   code-quality:
     runs-on: ubuntu-latest
@@ -85,11 +85,11 @@ jobs:
     - name: Check code style with black
       run: |
         $CONDA/bin/conda install black
-        $CONDA/bin/black --line-length 99 --check .
+        $CONDA/bin/black --check .
     - name: Check code style with isort
       run: |
         $CONDA/bin/conda install isort
-        $CONDA/bin/isort .
+        $CONDA/bin/isort --check .
 
   deploy:
     runs-on: ubuntu-latest
