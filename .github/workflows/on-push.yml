@@ -37,7 +37,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
-        python -m pip install --no-deps -e .
+        pip install --no-deps -e .
         CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml --cov-branch .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
@@ -56,7 +56,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install sphinx
-        python -m pip install --no-deps -e .
+        pip install --no-deps -e .
         python setup.py build_sphinx
     - name: Test README with pytest
       shell: bash -l {0}
@@ -85,8 +85,22 @@ jobs:
     - name: Check code style with black
       run: |
         $CONDA/bin/conda install black
-        $CONDA/bin/black --check --line-length 99 .
+        $CONDA/bin/black --line-length 99 --check .
     - name: Check code style with isort
       run: |
         $CONDA/bin/conda install isort
         $CONDA/bin/isort .
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check MANIFEST.in
+      run: |
+        $CONDA/bin/conda install -c conda-forge check-manifest
+        $CONDA/bin/check-manifest .
+    - name: Build distributions
+      run: |
+        $CONDA/bin/conda install pip setuptools wheel
+        $CONDA/bin/python setup.py sdist bdist_wheel
