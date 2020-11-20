@@ -1,13 +1,13 @@
-include .dockerignore
 include *.grib
 include *.grib2
 include *.rst
+include *.yml
+include .dockerignore
 include Dockerfile
 include LICENSE
 include Makefile
 include tox.ini
-include tests/sample-data/era5-levels-members.grib
-include *.yml
+recursive-include cfgrib *.h
 recursive-include ci *.in
 recursive-include ci *.ps1
 recursive-include ci *.txt
@@ -15,7 +15,7 @@ recursive-include ci *.yml
 recursive-include docs *.gitkeep
 recursive-include docs *.py
 recursive-include docs *.rst
-recursive-include cfgrib *.h
 recursive-include tests *.grib
 recursive-include tests *.ipynb
 recursive-include tests *.py
+recursive-include tests *.yml

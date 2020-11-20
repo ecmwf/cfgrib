@@ -23,7 +23,7 @@ jobs:
             extras: -minimal
 # python-eccodes and cffi both fail
 #          - os: windows
-#            python: 3.7
+#            python: 3.8
 #            eccodes: 1
 
     steps:
@@ -37,8 +37,8 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
-        python -m pip install --no-deps -e .
-        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml --cov-branch .
+        pip install --no-deps -e .
+        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
@@ -56,13 +56,13 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install sphinx
-        python -m pip install --no-deps -e .
+        pip install --no-deps -e .
         python setup.py build_sphinx
     - name: Test README with pytest
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
-        pytest -v --cov=. --cov-report=xml --cov-branch README.rst
+        pytest -v --cov=. --cov-report=xml README.rst
 
   code-quality:
     runs-on: ubuntu-latest
@@ -85,8 +85,22 @@ jobs:
     - name: Check code style with black
       run: |
         $CONDA/bin/conda install black
-        $CONDA/bin/black --check --line-length 99 .
+        $CONDA/bin/black --check .
     - name: Check code style with isort
       run: |
         $CONDA/bin/conda install isort
-        $CONDA/bin/isort .
+        $CONDA/bin/isort --check .
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check MANIFEST.in
+      run: |
+        $CONDA/bin/conda install -c conda-forge check-manifest
+        $CONDA/bin/check-manifest .
+    - name: Build distributions
+      run: |
+        $CONDA/bin/conda install pip setuptools wheel
+        $CONDA/bin/python setup.py sdist bdist_wheel
