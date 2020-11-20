@@ -7,4 +7,4 @@ dependencies:
   - click
   - eccodes=>2.19.0
   - numpy
-  - python-eccodes
+  - python-eccodes>=2020.10.0
