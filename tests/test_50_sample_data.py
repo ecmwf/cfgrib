@@ -84,6 +84,7 @@ def test_canonical_dataset_to_grib(grib_name, tmpdir):
 
     res = xarray_store.open_dataset(grib_path)
 
-    xarray_to_grib.canonical_dataset_to_grib(res, out_path)
+    with pytest.warns(FutureWarning):
+        xarray_to_grib.canonical_dataset_to_grib(res, out_path)
     reread = xarray_store.open_dataset(out_path)
     assert res.equals(reread)

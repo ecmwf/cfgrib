@@ -7,7 +7,6 @@ norecursedirs = [
     "docs",
     ".tox",
 ]
-filterwarnings = ["ignore::FutureWarning"]
 
 [tool.coverage.run]
 branch = true

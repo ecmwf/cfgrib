@@ -21,7 +21,6 @@ import collections
 import functools
 import logging
 import typing as T  # noqa
-import warnings
 
 import xarray as xr  # noqa
 

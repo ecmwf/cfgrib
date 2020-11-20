@@ -19,7 +19,6 @@
 
 import logging
 import typing as T  # noqa
-import warnings
 
 import xarray as xr
 
@@ -90,13 +89,10 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
     return datasets
 
 
-def open_datasets(path, no_warn=False, backend_kwargs={}, **kwargs):
+def open_datasets(path, backend_kwargs={}, **kwargs):
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
-    if no_warn:
-        warnings.warn("open_datasets is now public, no_warn will be removed", FutureWarning)
-
     squeeze = backend_kwargs.get("squeeze", True)
     backend_kwargs = backend_kwargs.copy()
     backend_kwargs["squeeze"] = False
