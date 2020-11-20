@@ -151,23 +151,3 @@ def test_translate_coords_errors(da3):
     da3_fail = da3.drop("time")
     cfcoords.translate_coords(da3_fail, DATA_MODEL)
     cfcoords.translate_coords(da3_fail, DATA_MODEL, errors="ignore")
-
-
-def test_ensure_valid_time(da1, da3):
-    res1 = cfcoords.ensure_valid_time(da1.squeeze())
-    res2 = cfcoords.ensure_valid_time(res1)
-
-    assert "valid_time" in res1.coords
-    assert res2 is res1
-
-    res1 = cfcoords.ensure_valid_time(da3.isel(ref_time=0).squeeze())
-    res2 = cfcoords.ensure_valid_time(res1)
-
-    assert "valid_time" in res1.coords
-    assert res2 is res1
-
-    res1 = cfcoords.ensure_valid_time(da3.squeeze())
-    assert "valid_time" in res1.coords
-
-    with pytest.raises(ValueError):
-        cfcoords.ensure_valid_time(da3.mean(dim="ref_time").squeeze())
