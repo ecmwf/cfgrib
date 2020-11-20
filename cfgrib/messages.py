@@ -30,12 +30,8 @@ import attr
 import numpy as np
 
 try:
-    # select between using the external ecCodes bindings or the internal implementation
-    if int(os.environ.get("CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS", "0")):
-        import eccodes
-    else:
-        from . import bindings as eccodes
-except RuntimeError as exc:
+    import eccodes
+except ModuleNotFoundError as exc:
     # hide the pyeccodes import error from the majority of the users
     # that have problems with the ecCodes bindings
     try:
