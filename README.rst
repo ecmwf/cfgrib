@@ -53,7 +53,7 @@ Python package from *PyPI* with::
 Binary dependencies
 -------------------
 
-The Python module depends on the `*eccodes* python package <https://pypi.org/project/eccodes/>`_
+The Python module depends on the `eccodes python package <https://pypi.org/project/eccodes/>`_
 to access the ECMWF *ecCodes* binary library,
 when not using *conda* please follow the *System dependencies* section there.
 
