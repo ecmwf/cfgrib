@@ -127,7 +127,7 @@ def test_compat_create_exclusive(tmpdir):
 
     with pytest.raises(OSError):
         with messages.compat_create_exclusive(str(test_file)) as file:
-            pass
+            pass  # pragma: no cover
 
 
 def test_FileIndex():
