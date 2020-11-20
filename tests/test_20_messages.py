@@ -195,7 +195,7 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
 
 def test_FileIndex_errors():
     class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {"error_key": lambda m: 1 / 0}
+        computed_keys = {"error_key": lambda m: 1 / 0}  # pragma: no branch
 
     stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
     res = messages.FileIndex.from_filestream(stream, ["paramId", "error_key"])
