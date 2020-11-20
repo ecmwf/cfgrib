@@ -145,13 +145,6 @@ class Message(collections.abc.MutableMapping):
             yield eccodes.codes_keys_iterator_get_name(iterator)
         eccodes.codes_keys_iterator_delete(iterator)
 
-    def message_bufr_keys(self):
-        # type: () -> T.Generator[str, None, None]
-        iterator = eccodes.codes_bufr_keys_iterator_new(self.codes_id)
-        while eccodes.codes_bufr_keys_iterator_next(iterator):
-            yield eccodes.codes_bufr_keys_iterator_get_name(iterator)
-        eccodes.codes_bufr_keys_iterator_delete(iterator)
-
     def __getitem__(self, item):
         # type: (str) -> T.Any
         return self.message_get(item)
