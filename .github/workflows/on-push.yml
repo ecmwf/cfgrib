@@ -18,8 +18,8 @@ jobs:
             python: 3.8
             extras: -minimal
 # python-eccodes and cffi both fail
-          - os: windows
-            python: 3.8
+#          - os: windows
+#            python: 3.8
 
     steps:
     - uses: actions/checkout@v2
