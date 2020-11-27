@@ -60,7 +60,7 @@ EXTRA_DATA_ATTRIBUTES_KEYS = [
     "gridDefinitionDescription",
     "centre",
     "centreDescription",
-    "subCentre"
+    "subCentre",
 ]
 
 GRID_TYPE_MAP = {
@@ -454,7 +454,7 @@ def read_data_var_attrs(index, read_keys):
     attributes = {}
     for key in read_keys:
         try:
-            attributes[key] = first[key]
+            attributes["GRIB_" + key] = first[key]
         except:
             pass
     return attributes
@@ -555,8 +555,9 @@ def dict_merge(master, update):
             )
 
 
-def build_dataset_attributes(index, filter_by_keys, encoding):
+def build_dataset_attributes(index, filter_by_keys, encoding, global_attributes):
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
+    attributes.update(global_attributes)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
         attributes["institution"] = attributes["GRIB_centreDescription"]
@@ -574,6 +575,15 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
     return attributes
 
 
+def intersect_dict(global_attributes, attributes):
+    if global_attributes is None:
+        global_attributes = attributes
+    else:
+        global_attributes_items = global_attributes.items() & attributes.items()
+        global_attributes = dict(global_attributes_items)
+    return global_attributes
+
+
 def build_dataset_components(
     index,
     errors="warn",
@@ -586,6 +596,7 @@ def build_dataset_components(
     dimensions = collections.OrderedDict()
     variables = collections.OrderedDict()
     filter_by_keys = index.filter_by_keys
+    global_attributes = None
     for param_id in index["paramId"]:
         var_index = index.subindex(paramId=param_id)
         try:
@@ -625,20 +636,14 @@ def build_dataset_components(
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
+        global_attributes = intersect_dict(global_attributes, data_var.attributes)
+
     encoding = {
         "source": index.filestream.path,
         "filter_by_keys": filter_by_keys,
         "encode_cf": encode_cf,
     }
-    attributes = build_dataset_attributes(index, filter_by_keys, encoding)
-    # global_attrs = None
-    # for var in variables:
-    #     if global_attrs is None:
-    #         global_attrs = variables[var].attributes
-    #     else:
-    #         global_attrs_items = global_attrs.items() & variables[var].attributes.items()
-    #         global_attrs = dict(global_attrs_items)
-    # attributes.update(global_attrs)
+    attributes = build_dataset_attributes(index, filter_by_keys, encoding, global_attributes)
     return dimensions, variables, attributes, encoding
 
 
