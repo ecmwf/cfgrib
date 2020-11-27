@@ -34,27 +34,33 @@ LOG = logging.getLogger(__name__)
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-GLOBAL_ATTRIBUTES_KEYS = ["edition", "centre", "centreDescription", "subCentre"]
+GLOBAL_ATTRIBUTES_KEYS = ["edition"]
 
 DATA_ATTRIBUTES_KEYS = [
     "paramId",
+    "dataType",
+    "numberOfPoints",
+    "typeOfLevel",
+    "stepUnits",
+    "stepType",
+    "gridType",
+]
+
+EXTRA_DATA_ATTRIBUTES_KEYS = [
     "shortName",
     "units",
     "name",
     "cfName",
     "cfVarName",
-    "dataType",
     "missingValue",
-    "numberOfPoints",
     "totalNumber",
     "numberOfDirections",
     "numberOfFrequencies",
-    "typeOfLevel",
     "NV",
-    "stepUnits",
-    "stepType",
-    "gridType",
     "gridDefinitionDescription",
+    "centre",
+    "centreDescription",
+    "subCentre"
 ]
 
 GRID_TYPE_MAP = {
@@ -443,6 +449,17 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
+def read_data_var_attrs(index, read_keys):
+    first = index.first()
+    attributes = {}
+    for key in read_keys:
+        try:
+            attributes[key] = first[key]
+        except:
+            pass
+    return attributes
+
+
 def build_variable_components(
     index,
     encode_cf=(),
@@ -455,8 +472,9 @@ def build_variable_components(
 ):
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
-    data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
+    extra_attrs = read_data_var_attrs(index, read_keys)
+    data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
     coord_name_key_map = {}
@@ -613,6 +631,14 @@ def build_dataset_components(
         "encode_cf": encode_cf,
     }
     attributes = build_dataset_attributes(index, filter_by_keys, encoding)
+    # global_attrs = None
+    # for var in variables:
+    #     if global_attrs is None:
+    #         global_attrs = variables[var].attributes
+    #     else:
+    #         global_attrs_items = global_attrs.items() & variables[var].attributes.items()
+    #         global_attrs = dict(global_attrs_items)
+    # attributes.update(global_attrs)
     return dimensions, variables, attributes, encoding
 
 
@@ -644,6 +670,6 @@ def open_file(
     **kwargs
 ):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index_keys = sorted(ALL_KEYS + read_keys)
-    index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
+    read_keys = sorted(read_keys + EXTRA_DATA_ATTRIBUTES_KEYS)
+    index = open_fileindex(path, grib_errors, indexpath, ALL_KEYS).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
