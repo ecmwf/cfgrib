@@ -24,7 +24,7 @@ import logging
 import typing as T  # noqa
 
 import attr
-import numpy as np  # noqa
+import numpy as np  # type: ignore
 
 from . import messages
 

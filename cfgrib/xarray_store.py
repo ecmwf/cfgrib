@@ -20,7 +20,7 @@
 import logging
 import typing as T  # noqa
 
-import xarray as xr
+import xarray as xr  # type: ignore
 
 from . import DatasetBuildError, open_fileindex
 

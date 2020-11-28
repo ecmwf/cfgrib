@@ -27,15 +27,15 @@ import pickle
 import typing as T
 
 import attr
-import numpy as np
+import numpy as np  # type: ignore
 
 try:
-    import eccodes
+    import eccodes  # type: ignore
 except ModuleNotFoundError as exc:
     # hide the pyeccodes import error from the majority of the users
     # that have problems with the ecCodes bindings
     try:
-        import pyeccodes.compat as eccodes
+        import pyeccodes.compat as eccodes  # type: ignore
     except ImportError:
         raise exc
 

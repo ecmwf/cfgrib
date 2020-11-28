@@ -18,7 +18,7 @@ import io
 import os
 import re
 
-import setuptools
+import setuptools  # type: ignore
 
 
 def read(path):

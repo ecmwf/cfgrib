@@ -25,13 +25,13 @@ PRESSURE_CONVERSION_RULES = {
     ("decibar", "dbar"): 10000.0,
     ("bar", "bars"): 100000.0,
     ("atmosphere", "atmospheres", "atm"): 101325.0,
-}  # type: T.Dict[T.Tuple, float]
+}  # type: T.Dict[T.Tuple[str, ...], float]
 
 LENGTH_CONVERSION_RULES = {
     ("m", "meter", "meters"): 1.0,
     ("cm", "centimeter", "centimeters"): 0.01,
     ("km", "kilometer", "kilometers"): 1000.0,
-}
+}  # type: T.Dict[T.Tuple[str, ...], float]
 
 
 class ConversionError(Exception):

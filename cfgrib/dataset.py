@@ -24,7 +24,7 @@ import logging
 import typing as T
 
 import attr
-import numpy as np
+import numpy as np  # type: ignore
 
 from . import __version__, cfmessage, messages
 

@@ -20,23 +20,23 @@
 import collections
 import functools
 import logging
-import typing as T  # noqa
+import typing as T
 
-import xarray as xr  # noqa
+import xarray as xr
 
 from . import cfunits
 
-COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
+COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, str]]
 COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
 LOG = logging.getLogger(__name__)
 
 
 def match_values(match_value_func, mapping):
-    # type: (T.Callable[[T.Any], bool], T.Dict[str, T.Any]) -> T.List[str]
+    # type: (T.Callable[[T.Any], bool], T.Mapping[T.Hashable, T.Any]) -> T.List[str]
     matched_names = []
     for name, value in mapping.items():
         if match_value_func(value):
-            matched_names.append(name)
+            matched_names.append(str(name))
     return matched_names
 
 
@@ -75,7 +75,7 @@ def coord_translator(
     for name in data.coords:
         if name == out_name and name != match:
             raise ValueError("found non CF compliant coordinate with type %r." % cf_type)
-    data = data.rename({match: out_name})
+    data = data.rename(**{match: out_name})
     coord = data.coords[out_name]
     if "units" in coord.attrs:
         data.coords[out_name] = cfunits.convert_units(coord, units, coord.attrs["units"])
@@ -90,7 +90,7 @@ VALID_LAT_UNITS = ["degrees_north", "degree_north", "degree_N", "degrees_N", "de
 
 
 def is_latitude(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("units") in VALID_LAT_UNITS
 
 
@@ -103,7 +103,7 @@ VALID_LON_UNITS = ["degrees_east", "degree_east", "degree_E", "degrees_E", "degr
 
 
 def is_longitude(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("units") in VALID_LON_UNITS
 
 
@@ -113,7 +113,7 @@ COORD_TRANSLATORS["longitude"] = functools.partial(
 
 
 def is_time(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("standard_name") == "forecast_reference_time"
 
 
@@ -126,7 +126,7 @@ COORD_TRANSLATORS["time"] = functools.partial(
 
 
 def is_step(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("standard_name") == "forecast_period"
 
 
@@ -134,7 +134,7 @@ COORD_TRANSLATORS["step"] = functools.partial(coord_translator, "step", "h", "in
 
 
 def is_valid_time(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     if coord.attrs.get("standard_name") == "time":
         return True
     elif str(coord.dtype) == "datetime64[ns]" and "standard_name" not in coord.attrs:
@@ -148,7 +148,7 @@ COORD_TRANSLATORS["valid_time"] = functools.partial(
 
 
 def is_depth(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("standard_name") == "depth"
 
 
@@ -158,7 +158,7 @@ COORD_TRANSLATORS["depthBelowLand"] = functools.partial(
 
 
 def is_isobaric(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return cfunits.are_convertible(coord.attrs.get("units", ""), "Pa")
 
 
@@ -168,7 +168,7 @@ COORD_TRANSLATORS["isobaricInhPa"] = functools.partial(
 
 
 def is_number(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("standard_name") == "realization"
 
 
@@ -179,7 +179,7 @@ COORD_TRANSLATORS["number"] = functools.partial(
 
 # CF-Conventions have no concept of leadtime expressed in months
 def is_forecast_month(coord):
-    # type: (xr.Coordinate) -> bool
+    # type: (xr.IndexVariable) -> bool
     return coord.attrs.get("long_name") == "months since forecast_reference_time"
 
 

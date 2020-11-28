@@ -24,7 +24,7 @@ import logging
 import typing as T  # noqa
 import warnings
 
-import numpy as np
+import numpy as np  # type: ignore
 import xarray as xr
 
 import cfgrib
@@ -105,7 +105,8 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
-    for key, value in data_var.attrs.items():
+    for key_raw, value in data_var.attrs.items():
+        key = str(key_raw)
         if key[:5] == "GRIB_":
             suggested_grib_keys[key[5:]] = value
 
@@ -174,7 +175,7 @@ def expand_dims(data_var):
 
 
 def make_template_message(merged_grib_keys, template_path=None, sample_name=None):
-    # type: (T.Dict[str, T.Any], str, str) -> cfgrib.CfMessage
+    # type: (T.Dict[str, T.Any], str, str) -> cfgrib.Message
     if template_path and sample_name:
         raise ValueError("template_path and sample_name should not be both set")
 
@@ -203,7 +204,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
 def canonical_dataarray_to_grib(
     data_var, file, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
 ):
-    # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
+    # type: (xr.DataArray, T.IO[bytes], T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
     """
     Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
     """
@@ -257,7 +258,7 @@ def canonical_dataset_to_grib(dataset, path, mode="wb", no_warn=False, grib_keys
     xr.backends.api._validate_dataset_names(dataset)
     xr.backends.api._validate_attrs(dataset)
 
-    real_grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == "GRIB_"}
+    real_grib_keys = {str(k)[5:]: v for k, v in dataset.attrs.items() if str(k)[:5] == "GRIB_"}
     real_grib_keys.update(grib_keys)
 
     with open(path, mode=mode) as file:
