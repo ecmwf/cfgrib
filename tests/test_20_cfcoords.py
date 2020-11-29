@@ -1,6 +1,7 @@
 import sys
+import typing as T
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -74,7 +75,7 @@ def da3():
 
 
 def test_match_values():
-    mapping = {"callable": len, "int": 1}
+    mapping = {"callable": len, "int": 1}  # type: T.Dict[T.Hashable, T.Any]
     res = cfcoords.match_values(callable, mapping)
 
     assert res == ["callable"]

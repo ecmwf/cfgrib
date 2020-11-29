@@ -254,7 +254,7 @@ class DatasetBuildError(ValueError):
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (messages.FileIndex, T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (T.Mapping[str, T.Any], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
