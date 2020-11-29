@@ -18,6 +18,7 @@
 #
 
 import collections
+import collections.abc
 import contextlib
 import hashlib
 import io
