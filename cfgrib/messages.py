@@ -70,7 +70,7 @@ def multi_enabled(file):
 
 
 @attr.attrs(auto_attribs=True)
-class Message(collections.abc.MutableMapping):
+class Message(collections.abc.MutableMapping):  # type: ignore
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -222,7 +222,7 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(collections.abc.Iterable):
+class FileStream(collections.abc.Iterable):  # type: ignore
     """Iterator-like access to a filestream of Messages."""
 
     path: str
@@ -284,7 +284,7 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(collections.abc.Mapping):
+class FileIndex(collections.abc.Mapping):  # type: ignore
     filestream: FileStream
     index_keys: T.List[str]
     offsets: OffsetsType = attr.attrib(repr=False)
