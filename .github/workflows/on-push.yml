@@ -79,7 +79,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install mypy
-        mypy .
+        mypy --strict .
 
   code-style:
     runs-on: ubuntu-latest
