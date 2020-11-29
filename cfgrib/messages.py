@@ -53,6 +53,7 @@ eccodes.codes_grib_multi_support_off()
 
 @contextlib.contextmanager
 def multi_enabled(file):
+    # type: (T.IO[bytes]) -> T.Iterator[None]
     """Context manager that enables MULTI-FIELD support in ecCodes from a clean state"""
     eccodes.codes_grib_multi_support_on()
     #
@@ -69,19 +70,19 @@ def multi_enabled(file):
     eccodes.codes_grib_multi_support_off()
 
 
-@attr.attrs()
-class Message(collections.abc.MutableMapping):
+@attr.attrs(auto_attribs=True)
+class Message(collections.abc.MutableMapping[str, T.Any]):
     """Dictionary-line interface to access Message headers."""
 
-    codes_id = attr.attrib()
-    encoding = attr.attrib(default="ascii", type=str)
-    errors = attr.attrib(
+    codes_id: int
+    encoding: str = "ascii"
+    errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
     @classmethod
     def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], int, T.Any) -> Message
+        # type: (T.IO[bytes], T.Optional[int], T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -102,19 +103,22 @@ class Message(collections.abc.MutableMapping):
 
     @classmethod
     def from_sample_name(cls, sample_name, **kwargs):
+        # type: (T.Type[Message], str, T.Any) -> Message
         codes_id = eccodes.codes_new_from_samples(sample_name, eccodes.CODES_PRODUCT_GRIB)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
     def from_message(cls, message, **kwargs):
+        # type: (T.Type[Message], Message, T.Any) -> Message
         codes_id = eccodes.codes_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
 
     def __del__(self):
+        # type: () -> None
         eccodes.codes_release(self.codes_id)
 
     def message_get(self, item, key_type=None, default=_MARKER):
-        # type: (str, type, T.Any) -> T.Any
+        # type: (str, T.Optional[type], T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
         try:
             values = eccodes.codes_get_array(self.codes_id, item, key_type)
@@ -140,7 +144,7 @@ class Message(collections.abc.MutableMapping):
             eccodes.codes_set(self.codes_id, item, value)
 
     def message_grib_keys(self, namespace=None):
-        # type: (str) -> T.Generator[str, None, None]
+        # type: (T.Optional[str]) -> T.Generator[str, None, None]
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=namespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator)
@@ -167,6 +171,7 @@ class Message(collections.abc.MutableMapping):
                     LOG.warning("failed to set key %r to %r", item, value)
 
     def __delitem__(self, item):
+        # type: (str) -> None
         raise NotImplementedError
 
     def __iter__(self):
@@ -179,6 +184,7 @@ class Message(collections.abc.MutableMapping):
         return sum(1 for _ in self)
 
     def write(self, file):
+        # type: (T.IO[bytes]) -> None
         eccodes.codes_write(self.codes_id, file)
 
 
@@ -188,10 +194,11 @@ class ComputedKeysMessage(Message):
 
     computed_keys = attr.attrib(
         default={},
-        type=T.Dict[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message], T.Any]]],
+        type=T.Dict[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message, T.Any], None]]],
     )
 
     def __getitem__(self, item):
+        # type: (str) -> T.Any
         if item in self.computed_keys:
             getter, _ = self.computed_keys[item]
             return getter(self)
@@ -199,6 +206,7 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__getitem__(item)
 
     def __iter__(self):
+        # type: () -> T.Generator[str, None, None]
         seen = set()
         for key in super(ComputedKeysMessage, self).__iter__():
             yield key
@@ -208,6 +216,7 @@ class ComputedKeysMessage(Message):
                 yield key
 
     def __setitem__(self, item, value):
+        # type: (str, T.Any) -> T.Any
         if item in self.computed_keys:
             _, setter = self.computed_keys[item]
             return setter(self, value)
@@ -216,11 +225,11 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs()
-class FileStream(collections.abc.Iterable):
+class FileStream(collections.abc.Iterable[Message]):
     """Iterator-like access to a filestream of Messages."""
 
     path = attr.attrib(type=str)
-    message_class = attr.attrib(default=Message, type=Message, repr=False)
+    message_class = attr.attrib(default=Message, type=type(Message), repr=False)
     errors = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
