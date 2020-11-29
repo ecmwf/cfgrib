@@ -64,6 +64,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: 3.8
+        activate-environment: ubuntu-3.8
+        environment-file: tests/environment-ubuntu-3.8.yml
     - name: Lint with flake8
       run: |
         $CONDA/bin/conda install flake8
