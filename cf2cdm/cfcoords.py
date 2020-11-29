@@ -26,10 +26,11 @@ import xarray as xr
 
 from . import cfunits
 
-COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, str]]
-COORD_TRANSLATORS = (
-    collections.OrderedDict()
-)  # type: T.Dict[str, T.Callable[[str, xr.Dataset, T.Dict[str, T.Dict[str, str]]], xr.Dataset]]
+CoordModelType = T.Dict[str, T.Dict[str, str]]
+CoordTranslatorType = T.Callable[[str, xr.Dataset, CoordModelType], xr.Dataset]
+
+COORD_MODEL = {}  # type: CoordModelType
+COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, CoordTranslatorType]
 LOG = logging.getLogger(__name__)
 
 
@@ -65,7 +66,7 @@ def coord_translator(
     data,
     coord_model=COORD_MODEL,
 ):
-    # type: (str, str, str, T.Callable[[xr.IndexVariable], bool], str, xr.Dataset, T.Dict[str, T.Dict[str, str]]) -> xr.Dataset
+    # type: (str, str, str, T.Callable[[xr.IndexVariable], bool], str, xr.Dataset, CoordModelType) -> xr.Dataset
     out_name = coord_model.get(cf_type, {}).get("out_name", default_out_name)
     units = coord_model.get(cf_type, {}).get("units", default_units)
     stored_direction = coord_model.get(cf_type, {}).get("stored_direction", default_direction)
@@ -194,7 +195,7 @@ COORD_TRANSLATORS["forecastMonth"] = functools.partial(
 def translate_coords(
     data, coord_model=COORD_MODEL, errors="warn", coord_translators=COORD_TRANSLATORS
 ):
-    # type: (xr.Dataset, T.Dict[str, T.Dict[str, str]], str, T.Dict[str, T.Callable[[str, xr.Dataset, T.Dict[str, T.Dict[str, str]]], xr.Dataset]]) -> xr.Dataset
+    # type: (xr.Dataset, CoordModelType, str, T.Dict[str, CoordTranslatorType]) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
             data = translator(cf_name, data, coord_model)
