@@ -250,11 +250,12 @@ COORD_ATTRS = {
 
 class DatasetBuildError(ValueError):
     def __str__(self):
+        # type: () -> str
         return str(self.args[0])
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (messages.FileIndex, T.Sequence[str], dict) -> T.Dict[str, T.Any]
+    # type: (messages.FileIndex, T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
@@ -270,13 +271,14 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
     return attributes
 
 
-@attr.attrs(eq=False)
+@attr.attrs(auto_attribs=True, eq=False)
 class Variable(object):
-    dimensions = attr.attrib(type=T.Tuple[str, ...])
-    data = attr.attrib(type=np.ndarray)
-    attributes = attr.attrib(default={}, type=T.Dict[str, T.Any], repr=False)
+    dimensions: T.Tuple[str, ...]
+    data: np.ndarray
+    attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
 
     def __eq__(self, other):
+        # type: (T.Any) -> bool
         if other.__class__ is not self.__class__:
             return NotImplemented
         equal = (self.dimensions, self.attributes) == (other.dimensions, other.attributes)
@@ -284,12 +286,11 @@ class Variable(object):
 
 
 def expand_item(item, shape):
+    # type: (T.Tuple[T.Any, ...], T.Sequence[int]) -> T.Tuple[T.List[int], ...]
     expanded_item = []
     for i, size in zip(item, shape):
-        if isinstance(i, list):
-            expanded_item.append(i)
-        elif isinstance(i, np.ndarray):
-            expanded_item.append(i.tolist())
+        if isinstance(i, (list, np.ndarray)):
+            expanded_item.append([int(e) for e in i])
         elif isinstance(i, slice):
             expanded_item.append(list(range(i.start or 0, i.stop or size, i.step or 1)))
         elif isinstance(i, int):
@@ -299,13 +300,13 @@ def expand_item(item, shape):
     return tuple(expanded_item)
 
 
-@attr.attrs()
+@attr.attrs(auto_attribs=True)
 class OnDiskArray(object):
-    stream = attr.attrib()
-    shape = attr.attrib(type=T.Tuple[int, ...])
-    offsets = attr.attrib(repr=False, type=T.Dict[T.Tuple[T.Any, ...], T.List[int]])
-    missing_value = attr.attrib()
-    geo_ndim = attr.attrib(default=1, repr=False)
+    stream: messages.FileStream
+    shape: T.Tuple[int, ...]
+    offsets: T.Dict[T.Tuple[T.Any, ...], T.List[int]] = attr.attrib(repr=False)
+    missing_value: float
+    geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
 
     def build_array(self):
@@ -322,6 +323,7 @@ class OnDiskArray(object):
         return array
 
     def __getitem__(self, item):
+        # type: (T.Tuple[T.Any, ...]) -> np.ndarray
         header_item = expand_item(item[: -self.geo_ndim], self.shape)
         array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
