@@ -28,7 +28,7 @@ def da1():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da1")
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def da2():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da2")
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ def da3():
         ],
     )
 
-    return data
+    return data.to_dataset(name="da3")
 
 
 def test_match_values():
