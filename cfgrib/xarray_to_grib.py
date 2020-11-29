@@ -21,7 +21,7 @@
 
 import itertools
 import logging
-import typing as T  # noqa
+import typing as T
 import warnings
 
 import numpy as np  # type: ignore
