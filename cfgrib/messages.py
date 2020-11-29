@@ -71,7 +71,7 @@ def multi_enabled(file):
 
 
 @attr.attrs(auto_attribs=True)
-class Message(collections.abc.MutableMapping[str, T.Any]):
+class Message(collections.abc.MutableMapping):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -188,14 +188,16 @@ class Message(collections.abc.MutableMapping[str, T.Any]):
         eccodes.codes_write(self.codes_id, file)
 
 
+GetterType = T.Callable[[Message], T.Any]
+SetterType = T.Callable[[Message, T.Any], None]
+ComputedKeysType = T.Dict[str, T.Tuple[GetterType, SetterType]]
+
+
 @attr.attrs()
 class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
 
-    computed_keys = attr.attrib(
-        default={},
-        type=T.Dict[str, T.Tuple[T.Callable[[Message], T.Any], T.Callable[[Message, T.Any], None]]],
-    )
+    computed_keys: ComputedKeysType = attr.attrib(default={})
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
@@ -224,13 +226,13 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
-@attr.attrs()
-class FileStream(collections.abc.Iterable[Message]):
+@attr.attrs(auto_attribs=True)
+class FileStream(collections.abc.Iterable):
     """Iterator-like access to a filestream of Messages."""
 
-    path = attr.attrib(type=str)
-    message_class = attr.attrib(default=Message, type=type(Message), repr=False)
-    errors = attr.attrib(
+    path: str
+    message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
+    errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
@@ -257,6 +259,7 @@ class FileStream(collections.abc.Iterable[Message]):
                             LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
+        # type: (T.IO[bytes], T.Optional[int], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self):
@@ -269,9 +272,10 @@ class FileStream(collections.abc.Iterable[Message]):
 
 
 @contextlib.contextmanager
-def compat_create_exclusive(path, *args, **kwargs):
+def compat_create_exclusive(path):
+    # type: (str) -> T.Generator[T.IO[bytes], None, None]
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-    with io.open(fd, mode="wb", *args, **kwargs) as file:
+    with io.open(fd, mode="wb") as file:
         try:
             yield file
         except Exception:
@@ -280,19 +284,25 @@ def compat_create_exclusive(path, *args, **kwargs):
             raise
 
 
+OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
+
+
 @attr.attrs()
 class FileIndex(collections.abc.Mapping):
     allowed_protocol_version = "1"
     filestream = attr.attrib(type=FileStream)
     index_keys = attr.attrib(type=T.List[str])
-    offsets = attr.attrib(repr=False, type=T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[int]]])
+    offsets = attr.attrib(repr=False, type=OffsetsType)
     filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
-        offsets = collections.OrderedDict()
+        # type: (T.Type[FileIndex], FileStream, T.List[str]) -> FileIndex
+        offsets = (
+            collections.OrderedDict()
+        )  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
         count_offsets = {}  # type: T.Dict[int, int]
-        header_values_cache = {}
+        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
         for message in filestream:
             header_values = []
             for key in index_keys:
@@ -322,8 +332,12 @@ class FileIndex(collections.abc.Mapping):
 
     @classmethod
     def from_indexpath(cls, indexpath):
+        # type: (T.Type[FileIndex], str) -> FileIndex
         with io.open(indexpath, "rb") as file:
-            return pickle.load(file)
+            index = pickle.load(file)
+            if not isinstance(index, cls):
+                raise ValueError("on-disk index not of expected type {cls}")
+            return index
 
     @classmethod
     def from_indexpath_or_filestream(
@@ -369,9 +383,11 @@ class FileIndex(collections.abc.Mapping):
         return cls.from_filestream(filestream, index_keys)
 
     def __iter__(self):
+        # type: () -> T.Iterator[str]
         return iter(self.index_keys)
 
     def __len__(self):
+        # type: () -> int
         return len(self.index_keys)
 
     @property
