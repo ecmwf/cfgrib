@@ -623,16 +623,16 @@ def build_dataset_components(
     return dimensions, variables, attributes, encoding
 
 
-@attr.attrs()
+@attr.attrs(auto_attribs=True)
 class Dataset(object):
     """
     Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
     """
 
-    dimensions = attr.attrib(type=T.Dict[str, int])
-    variables = attr.attrib(type=T.Dict[str, Variable])
-    attributes = attr.attrib(type=T.Dict[str, T.Any])
-    encoding = attr.attrib(type=T.Dict[str, T.Any])
+    dimensions: T.Dict[str, int]
+    variables: T.Dict[str, Variable]
+    attributes: T.Dict[str, T.Any]
+    encoding: T.Dict[str, T.Any]
 
 
 def open_fileindex(

@@ -102,13 +102,13 @@ class Message(collections.abc.MutableMapping):  # type: ignore
 
     @classmethod
     def from_sample_name(cls, sample_name, **kwargs):
-        # type: (T.Type[Message], str, T.Any) -> Message
+        # type: (str, T.Any) -> Message
         codes_id = eccodes.codes_new_from_samples(sample_name, eccodes.CODES_PRODUCT_GRIB)
         return cls(codes_id=codes_id, **kwargs)
 
     @classmethod
     def from_message(cls, message, **kwargs):
-        # type: (T.Type[Message], Message, T.Any) -> Message
+        # type: (Message, T.Any) -> Message
         codes_id = eccodes.codes_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
 
@@ -189,11 +189,11 @@ SetterType = T.Callable[[Message, T.Any], None]
 ComputedKeysType = T.Dict[str, T.Tuple[GetterType, SetterType]]
 
 
-@attr.attrs()
+@attr.attrs(auto_attribs=True)
 class ComputedKeysMessage(Message):
     """Extension of Message class for adding computed keys."""
 
-    computed_keys: ComputedKeysType = attr.attrib(default={})
+    computed_keys: ComputedKeysType = {}
 
     def __getitem__(self, item):
         # type: (str) -> T.Any
@@ -293,7 +293,7 @@ class FileIndex(collections.abc.Mapping):  # type: ignore
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
-        # type: (T.Type[FileIndex], FileStream, T.Sequence[str]) -> FileIndex
+        # type: (FileStream, T.Sequence[str]) -> FileIndex
         offsets = (
             collections.OrderedDict()
         )  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
@@ -328,7 +328,7 @@ class FileIndex(collections.abc.Mapping):  # type: ignore
 
     @classmethod
     def from_indexpath(cls, indexpath):
-        # type: (T.Type[FileIndex], str) -> FileIndex
+        # type: (str) -> FileIndex
         with open(indexpath, "rb") as file:
             index = pickle.load(file)
             if not isinstance(index, cls):
