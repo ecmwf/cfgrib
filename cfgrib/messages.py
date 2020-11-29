@@ -112,8 +112,7 @@ class Message(collections.abc.MutableMapping):
         codes_id = eccodes.codes_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
 
-    def __del__(self):
-        # type: () -> None
+    def __del__(self) -> None:
         eccodes.codes_release(self.codes_id)
 
     def message_get(self, item, key_type=None, default=_MARKER):
@@ -173,13 +172,11 @@ class Message(collections.abc.MutableMapping):
         # type: (str) -> None
         raise NotImplementedError
 
-    def __iter__(self):
-        # type: () -> T.Generator[str, None, None]
+    def __iter__(self) -> T.Iterator[str]:
         for key in self.message_grib_keys():
             yield key
 
-    def __len__(self):
-        # type: () -> int
+    def __len__(self) -> int:
         return sum(1 for _ in self)
 
     def write(self, file):
@@ -206,8 +203,7 @@ class ComputedKeysMessage(Message):
         else:
             return super(ComputedKeysMessage, self).__getitem__(item)
 
-    def __iter__(self):
-        # type: () -> T.Generator[str, None, None]
+    def __iter__(self) -> T.Iterator[str]:
         seen = set()
         for key in super(ComputedKeysMessage, self).__iter__():
             yield key
@@ -235,8 +231,7 @@ class FileStream(collections.abc.Iterable):
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
-    def __iter__(self):
-        # type: () -> T.Generator[Message, None, None]
+    def __iter__(self) -> T.Iterator[Message]:
         with open(self.path, "rb") as file:
             # enable MULTI-FIELD support on sequential reads (like when building the index)
             with multi_enabled(file):
@@ -261,8 +256,7 @@ class FileStream(collections.abc.Iterable):
         # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
-    def first(self):
-        # type: () -> Message
+    def first(self)-> Message:
         for message in self:
             return message
         raise ValueError("index has no message")
@@ -385,17 +379,14 @@ class FileIndex(collections.abc.Mapping):
 
         return cls.from_filestream(filestream, index_keys)
 
-    def __iter__(self):
-        # type: () -> T.Iterator[str]
+    def __iter__(self) -> T.Iterator[str]:
         return iter(self.index_keys)
 
-    def __len__(self):
-        # type: () -> int
+    def __len__(self) -> int:
         return len(self.index_keys)
 
     @property
-    def header_values(self):
-        # type: () -> T.Dict[str, T.List[T.Any]]
+    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
         if not hasattr(self, "_header_values"):
             self._header_values = {}  # type: T.Dict[str, T.List[T.Any]]
             for header_values, _ in self.offsets:
@@ -435,8 +426,7 @@ class FileIndex(collections.abc.Mapping):
         )
         return index
 
-    def first(self):
-        # type: () -> Message
+    def first(self) -> Message:
         with open(self.filestream.path, "rb") as file:
             first_offset = self.offsets[0][1][0]
             return self.filestream.message_from_file(file, offset=first_offset)
