@@ -303,7 +303,9 @@ def expand_item(item, shape):
 class OnDiskArray(object):
     stream: messages.FileStream
     shape: T.Tuple[int, ...]
-    offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(repr=False)
+    offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(
+        repr=False
+    )
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
@@ -495,7 +497,9 @@ def build_variable_components(
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
 
-    offsets = collections.OrderedDict()  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+    offsets = (
+        collections.OrderedDict()
+    )  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions:

@@ -256,7 +256,7 @@ class FileStream(collections.abc.Iterable):
         # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
-    def first(self)-> Message:
+    def first(self) -> Message:
         for message in self:
             return message
         raise ValueError("index has no message")

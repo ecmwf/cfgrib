@@ -18,11 +18,11 @@
 #
 
 import logging
-import typing as T  # noqa
+import typing as T
 
-import xarray as xr  # type: ignore
+import xarray as xr
 
-from . import DatasetBuildError, open_fileindex
+from .dataset import DatasetBuildError, open_fileindex
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,11 +35,12 @@ def open_dataset(path, **kwargs):
     if "engine" in kwargs and kwargs["engine"] != "cfgrib":
         raise ValueError("only engine=='cfgrib' is supported")
     kwargs["engine"] = "cfgrib"
-    return xr.backends.api.open_dataset(path, **kwargs)
+    return xr.open_dataset(path, **kwargs)  # type: ignore
 
 
 def merge_datasets(datasets, **kwargs):
-    merged = []
+    # type: (T.Sequence[xr.Dataset], T.Any) -> T.List[xr.Dataset]
+    merged = []  # type: T.List[xr.Dataset]
     for ds in datasets:
         ds.attrs.pop("history", None)
         for i, o in enumerate(merged):
@@ -74,13 +75,14 @@ def raw_open_datasets(path, backend_kwargs={}, **kwargs):
 
 
 def open_variable_datasets(path, backend_kwargs={}, **kwargs):
+    # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     fileindex_kwargs = {
         key: backend_kwargs[key]
         for key in ["filter_by_keys", "indexpath", "grib_errors"]
         if key in backend_kwargs
     }
     index = open_fileindex(path, **fileindex_kwargs)
-    datasets = []
+    datasets = []  # type: T.List[xr.Dataset]
     for param_id in sorted(index["paramId"]):
         bk = backend_kwargs.copy()
         bk["filter_by_keys"] = backend_kwargs.get("filter_by_keys", {}).copy()
@@ -90,6 +92,7 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
 
 
 def open_datasets(path, backend_kwargs={}, **kwargs):
+    # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     """
     Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
     """
@@ -98,13 +101,13 @@ def open_datasets(path, backend_kwargs={}, **kwargs):
     backend_kwargs["squeeze"] = False
     datasets = open_variable_datasets(path, backend_kwargs=backend_kwargs, **kwargs)
 
-    type_of_level_datasets = {}
+    type_of_level_datasets = {}  # type: T.Dict[str, T.List[xr.Dataset]]
     for ds in datasets:
         for _, da in ds.data_vars.items():
             type_of_level = da.attrs.get("GRIB_typeOfLevel", "undef")
             type_of_level_datasets.setdefault(type_of_level, []).append(ds)
 
-    merged = []
+    merged = []  # type: T.List[xr.Dataset]
     for type_of_level in sorted(type_of_level_datasets):
         for ds in merge_datasets(type_of_level_datasets[type_of_level], join="exact"):
             merged.append(ds.squeeze() if squeeze else ds)
