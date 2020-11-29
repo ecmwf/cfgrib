@@ -27,7 +27,9 @@ import xarray as xr
 from . import cfunits
 
 COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, str]]
-COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
+COORD_TRANSLATORS = (
+    collections.OrderedDict()
+)  # type: T.Dict[str, T.Callable[[str, xr.Dataset, T.Dict[str, T.Dict[str, str]]], xr.Dataset]]
 LOG = logging.getLogger(__name__)
 
 
@@ -41,6 +43,7 @@ def match_values(match_value_func, mapping):
 
 
 def translate_coord_direction(data, coord_name, stored_direction="increasing"):
+    # type: (xr.Dataset, str, str) -> xr.Dataset
     if stored_direction not in ("increasing", "decreasing"):
         raise ValueError("unknown stored_direction %r" % stored_direction)
     if len(data.coords[coord_name].shape) == 0:
@@ -62,7 +65,7 @@ def coord_translator(
     data,
     coord_model=COORD_MODEL,
 ):
-    # type: (str, str, str, T.Callable, str, xr.DataArray, dict) -> xr.DataArray
+    # type: (str, str, str, T.Callable[[xr.IndexVariable], bool], str, xr.Dataset, T.Dict[str, T.Dict[str, str]]) -> xr.Dataset
     out_name = coord_model.get(cf_type, {}).get("out_name", default_out_name)
     units = coord_model.get(cf_type, {}).get("units", default_units)
     stored_direction = coord_model.get(cf_type, {}).get("stored_direction", default_direction)
@@ -75,7 +78,7 @@ def coord_translator(
     for name in data.coords:
         if name == out_name and name != match:
             raise ValueError("found non CF compliant coordinate with type %r." % cf_type)
-    data = data.rename(**{match: out_name})
+    data = data.rename({match: out_name})
     coord = data.coords[out_name]
     if "units" in coord.attrs:
         data.coords[out_name] = cfunits.convert_units(coord, units, coord.attrs["units"])
@@ -191,10 +194,10 @@ COORD_TRANSLATORS["forecastMonth"] = functools.partial(
 def translate_coords(
     data, coord_model=COORD_MODEL, errors="warn", coord_translators=COORD_TRANSLATORS
 ):
-    # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
+    # type: (xr.Dataset, T.Dict[str, T.Dict[str, str]], str, T.Dict[str, T.Callable[[str, xr.Dataset, T.Dict[str, T.Dict[str, str]]], xr.Dataset]]) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
-            data = translator(cf_name, data, coord_model=coord_model)
+            data = translator(cf_name, data, coord_model)
         except:
             if errors == "ignore":
                 pass

@@ -17,7 +17,7 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import typing as T  # noqa
+import typing as T
 
 PRESSURE_CONVERSION_RULES = {
     ("Pa", "pascal", "pascals"): 1.0,
@@ -39,7 +39,7 @@ class ConversionError(Exception):
 
 
 def simple_conversion_factor(source_units, target_units, rules):
-    # type: (str, str, T.Dict[T.Tuple, float]) -> float
+    # type: (str, str, T.Dict[T.Tuple[str, ...], float]) -> float
     conversion_factor = 1.0
     seen = 0
     for pressure_units, factor in rules.items():

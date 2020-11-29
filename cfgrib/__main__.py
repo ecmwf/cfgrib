@@ -56,7 +56,7 @@ def to_netcdf(inpaths, outpath, cdm, engine):
     if not outpath:
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
-    ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")
+    ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
     if cdm:
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
