@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import os
 import re
 
@@ -22,13 +21,15 @@ import setuptools  # type: ignore
 
 
 def read(path):
+    # type: (str) -> str
     file_path = os.path.join(os.path.dirname(__file__), *path.split("/"))
-    return io.open(file_path, encoding="utf-8").read()
+    return open(file_path).read()
 
 
 # single-sourcing the package version using method 1 of:
 #   https://packaging.python.org/guides/single-sourcing-package-version/
 def parse_version_from(path):
+    # type: (str) -> str
     version_file = read(path)
     version_match = re.search(r'^__version__ = "(.*)"', version_file, re.M)
     if version_match is None or len(version_match.groups()) > 1:

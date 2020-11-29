@@ -18,6 +18,7 @@
 #
 
 import os.path
+import typing as T
 
 import click
 
@@ -25,12 +26,12 @@ import click
 
 
 @click.group()
-def cfgrib_cli():
+def cfgrib_cli() -> None:
     pass
 
 
 @cfgrib_cli.command("selfcheck")
-def selfcheck():
+def selfcheck() -> None:
     from .messages import eccodes_version
 
     print("Found: ecCodes v%s." % eccodes_version)
@@ -43,6 +44,7 @@ def selfcheck():
 @click.option("--cdm", "-c", default=None)
 @click.option("--engine", "-e", default="cfgrib")
 def to_netcdf(inpaths, outpath, cdm, engine):
+    # type: (T.List[str], str, str, str) -> None
     import xarray as xr
 
     import cf2cdm
