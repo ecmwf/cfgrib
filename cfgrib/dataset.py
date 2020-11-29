@@ -422,6 +422,7 @@ def build_geography_coordinates(
 
 
 def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=("time", "step")):
+    # type: (T.MutableMapping[str, T.Any], T.Sequence[str], T.Sequence[str]) -> T.List[str]
     coords_map = ENSEMBLE_KEYS[:]
     param_id = data_var_attrs.get("GRIB_paramId", "undef")
     data_var_attrs["long_name"] = "original GRIB paramId: %s" % param_id
@@ -446,15 +447,15 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
 
 
 def build_variable_components(
-    index,
-    encode_cf=(),
-    filter_by_keys={},
-    log=LOG,
-    errors="warn",
-    squeeze=True,
-    read_keys=[],
-    time_dims=("time", "step"),
-):
+    index: messages.FileIndex,
+    encode_cf: T.Sequence[str] = (),
+    filter_by_keys: T.Dict[str, T.Any] = {},
+    log: logging.Logger = LOG,
+    errors: str = "warn",
+    squeeze: bool = True,
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
     data_var_attrs_keys.extend(read_keys)
@@ -482,7 +483,7 @@ def build_variable_components(
         }
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
         data = np.array(sorted(values, reverse=attributes.get("stored_direction") == "decreasing"))
-        dimensions = (coord_name,)
+        dimensions = (coord_name,)  # type: T.Tuple[str, ...]
         if squeeze and len(values) == 1:
             data = data[0]
             dimensions = ()
@@ -514,11 +515,11 @@ def build_variable_components(
 
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
-        dims, time_data = cfmessage.build_valid_time(
+        time_dims, time_data = cfmessage.build_valid_time(
             coord_vars["time"].data, coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
-        coord_vars["valid_time"] = Variable(dimensions=dims, data=time_data, attributes=attrs)
+        coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
@@ -527,6 +528,7 @@ def build_variable_components(
 
 
 def dict_merge(master, update):
+    # type: (T.Dict[str, T.Any], T.Dict[str, T.Any]) -> None
     for key, value in update.items():
         if key not in master:
             master[key] = value
@@ -540,6 +542,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
+    # type: (messages.FileIndex, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
@@ -559,16 +562,16 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
 
 
 def build_dataset_components(
-    index,
-    errors="warn",
-    encode_cf=("parameter", "time", "geography", "vertical"),
-    squeeze=True,
-    log=LOG,
-    read_keys=[],
-    time_dims=("time", "step"),
-):
-    dimensions = collections.OrderedDict()
-    variables = collections.OrderedDict()
+    index: messages.FileIndex,
+    errors: str = "warn",
+    encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
+    squeeze: bool = True,
+    log: logging.Logger = LOG,
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
+    dimensions = collections.OrderedDict()  # type: T.Dict[str, int]
+    variables = collections.OrderedDict()  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
     for param_id in index["paramId"]:
         var_index = index.subindex(paramId=param_id)
@@ -631,21 +634,25 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path, grib_errors="warn", indexpath="{path}.{short_hash}.idx", index_keys=ALL_KEYS
-):
+    path: str,
+    grib_errors: str = "warn",
+    indexpath: str = "{path}.{short_hash}.idx",
+    index_keys: T.Sequence[str] = ALL_KEYS,
+) -> messages.FileIndex:
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return stream.index(index_keys, indexpath=indexpath)
 
 
 def open_file(
-    path,
-    grib_errors="warn",
-    indexpath="{path}.{short_hash}.idx",
-    filter_by_keys={},
-    read_keys=[],
-    **kwargs
-):
+    path: str,
+    grib_errors: str = "warn",
+    indexpath: str = "{path}.{short_hash}.idx",
+    filter_by_keys: T.Dict[str, T.Any] = {},
+    read_keys: T.Iterable[str] = (),
+    **kwargs: T.Any
+) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
+    read_keys = list(read_keys)
     index_keys = sorted(ALL_KEYS + read_keys)
     index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))

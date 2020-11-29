@@ -268,7 +268,7 @@ class FileStream(collections.abc.Iterable):
         raise ValueError("index has no message")
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
-        # type: (T.List[str], str) -> FileIndex
+        # type: (T.Sequence[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
 
@@ -299,10 +299,11 @@ class FileIndex(collections.abc.Mapping):
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
-        # type: (T.Type[FileIndex], FileStream, T.List[str]) -> FileIndex
+        # type: (T.Type[FileIndex], FileStream, T.Sequence[str]) -> FileIndex
         offsets = (
             collections.OrderedDict()
         )  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+        index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
         for message in filestream:
@@ -346,7 +347,7 @@ class FileIndex(collections.abc.Mapping):
     def from_indexpath_or_filestream(
         cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", log=LOG
     ):
-        # type: (FileStream, T.List[str], str, logging.Logger) -> FileIndex
+        # type: (FileStream, T.Sequence[str], str, logging.Logger) -> FileIndex
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
