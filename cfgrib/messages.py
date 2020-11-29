@@ -288,6 +288,7 @@ def compat_create_exclusive(path):
 OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
 ALLOWED_PROTOCOL_VERSION = "1"
 
+
 @attr.attrs(auto_attribs=True)
 class FileIndex(collections.abc.Mapping):
     filestream: FileStream
