@@ -21,7 +21,6 @@ import collections
 import collections.abc
 import contextlib
 import hashlib
-import io
 import logging
 import os
 import pickle
@@ -82,7 +81,7 @@ class Message(collections.abc.MutableMapping):
 
     @classmethod
     def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Optional[int], T.Any) -> Message
+        # type: (T.IO[bytes], T.Union[int, T.Tuple[int ,int], None], T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -259,12 +258,14 @@ class FileStream(collections.abc.Iterable):
                             LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Optional[int], T.Any) -> Message
+        # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self):
         # type: () -> Message
-        return next(iter(self))
+        for message in self:
+            return message
+        raise ValueError("index has no message")
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.List[str], str) -> FileIndex
@@ -275,7 +276,7 @@ class FileStream(collections.abc.Iterable):
 def compat_create_exclusive(path):
     # type: (str) -> T.Generator[T.IO[bytes], None, None]
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-    with io.open(fd, mode="wb") as file:
+    with open(fd, mode="wb") as file:
         try:
             yield file
         except Exception:
@@ -285,15 +286,15 @@ def compat_create_exclusive(path):
 
 
 OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
+ALLOWED_PROTOCOL_VERSION = "1"
 
-
-@attr.attrs()
+@attr.attrs(auto_attribs=True)
 class FileIndex(collections.abc.Mapping):
-    allowed_protocol_version = "1"
-    filestream = attr.attrib(type=FileStream)
-    index_keys = attr.attrib(type=T.List[str])
-    offsets = attr.attrib(repr=False, type=OffsetsType)
-    filter_by_keys = attr.attrib(default={}, type=T.Dict[str, T.Any])
+    filestream: FileStream
+    index_keys: T.List[str]
+    offsets: OffsetsType = attr.attrib(repr=False)
+    filter_by_keys: T.Dict[str, T.Any] = {}
+    index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
@@ -327,16 +328,17 @@ class FileIndex(collections.abc.Mapping):
             offsets.setdefault(tuple(header_values), []).append(offset_field)
         self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
         # record the index protocol version in the instance so it is dumped with pickle
-        self.index_protocol_version = cls.allowed_protocol_version
         return self
 
     @classmethod
     def from_indexpath(cls, indexpath):
         # type: (T.Type[FileIndex], str) -> FileIndex
-        with io.open(indexpath, "rb") as file:
+        with open(indexpath, "rb") as file:
             index = pickle.load(file)
             if not isinstance(index, cls):
                 raise ValueError("on-disk index not of expected type {cls}")
+            if index.index_protocol_version != ALLOWED_PROTOCOL_VERSION:
+                raise ValueError("protocol versione to allowed {index.index_protocol_version}")
             return index
 
     @classmethod
@@ -366,11 +368,10 @@ class FileIndex(collections.abc.Mapping):
             filestream_mtime = os.path.getmtime(filestream.path)
             if index_mtime >= filestream_mtime:
                 self = cls.from_indexpath(indexpath)
-                allowed_protocol_version = self.allowed_protocol_version
                 if (
                     getattr(self, "index_keys", None) == index_keys
                     and getattr(self, "filestream", None) == filestream
-                    and getattr(self, "index_protocol_version", None) == allowed_protocol_version
+                    and getattr(self, "index_protocol_version", None) == ALLOWED_PROTOCOL_VERSION
                 ):
                     return self
                 else:
@@ -392,8 +393,9 @@ class FileIndex(collections.abc.Mapping):
 
     @property
     def header_values(self):
+        # type: () -> T.Dict[str, T.List[T.Any]]
         if not hasattr(self, "_header_values"):
-            self._header_values = {}
+            self._header_values = {}  # type: T.Dict[str, T.List[T.Any]]
             for header_values, _ in self.offsets:
                 for i, value in enumerate(header_values):
                     values = self._header_values.setdefault(self.index_keys[i], [])
@@ -402,16 +404,18 @@ class FileIndex(collections.abc.Mapping):
         return self._header_values
 
     def __getitem__(self, item):
-        # type: (str) -> list
+        # type: (str) -> T.List[T.Any]
         return self.header_values[item]
 
     def getone(self, item):
+        # type: (str) -> T.Any
         values = self[item]
         if len(values) != 1:
             raise ValueError("not one value for %r: %r" % (item, len(values)))
         return values[0]
 
     def subindex(self, filter_by_keys={}, **query):
+        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = []
@@ -430,6 +434,7 @@ class FileIndex(collections.abc.Mapping):
         return index
 
     def first(self):
+        # type: () -> Message
         with open(self.filestream.path, "rb") as file:
             first_offset = self.offsets[0][1][0]
             return self.filestream.message_from_file(file, offset=first_offset)
