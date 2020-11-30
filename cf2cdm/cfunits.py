@@ -19,19 +19,19 @@
 
 import typing as T
 
-PRESSURE_CONVERSION_RULES = {
+PRESSURE_CONVERSION_RULES: T.Dict[T.Tuple[str, ...], float] = {
     ("Pa", "pascal", "pascals"): 1.0,
     ("hPa", "hectopascal", "hectopascals", "hpascal", "millibar", "millibars", "mbar"): 100.0,
     ("decibar", "dbar"): 10000.0,
     ("bar", "bars"): 100000.0,
     ("atmosphere", "atmospheres", "atm"): 101325.0,
-}  # type: T.Dict[T.Tuple[str, ...], float]
+}
 
-LENGTH_CONVERSION_RULES = {
+LENGTH_CONVERSION_RULES: T.Dict[T.Tuple[str, ...], float] = {
     ("m", "meter", "meters"): 1.0,
     ("cm", "centimeter", "centimeters"): 0.01,
     ("km", "kilometer", "kilometers"): 1000.0,
-}  # type: T.Dict[T.Tuple[str, ...], float]
+}
 
 
 class ConversionError(Exception):
@@ -54,8 +54,7 @@ def simple_conversion_factor(source_units, target_units, rules):
     return conversion_factor
 
 
-def convert_units(data, target_units, source_units):
-    # type: (T.Any, str, str) -> T.Any
+def convert_units(data: T.Any, target_units: str, source_units: str) -> T.Any:
     if target_units == source_units:
         return data
     for rules in [PRESSURE_CONVERSION_RULES, LENGTH_CONVERSION_RULES]:
@@ -66,8 +65,7 @@ def convert_units(data, target_units, source_units):
     raise ConversionError("cannot convert from %r to %r." % (source_units, target_units))
 
 
-def are_convertible(source_units, target_units):
-    # type: (str, str) -> bool
+def are_convertible(source_units: str, target_units: str) -> bool:
     try:
         convert_units(1, source_units, target_units)
     except ConversionError:
