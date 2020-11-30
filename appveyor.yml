@@ -7,8 +7,6 @@ environment:
       PYTHON_ARCH: "64"
       CONDA_ENV: "py37"
 
-install: false
-build: false
-
-test_script:
-  - "echo Pass"
+install: true
+build: true
+test_script: true
