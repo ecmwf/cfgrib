@@ -7,6 +7,9 @@ environment:
       PYTHON_ARCH: "64"
       CONDA_ENV: "py37"
 
-install: true
+install:
+  # Install miniconda Python
+  - "powershell ./ci/install_python.ps1"
+
 build: true
 test_script: true
