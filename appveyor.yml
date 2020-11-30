@@ -7,5 +7,5 @@ environment:
       PYTHON_ARCH: "64"
       CONDA_ENV: "py37"
 
-test_script: true
+test_script:
   - "echo Pass"
