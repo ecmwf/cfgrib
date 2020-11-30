@@ -17,7 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import collections
 import functools
 import logging
 import typing as T
@@ -30,7 +29,7 @@ CoordModelType = T.Dict[str, T.Dict[str, str]]
 CoordTranslatorType = T.Callable[[str, xr.Dataset, CoordModelType], xr.Dataset]
 
 COORD_MODEL = {}  # type: CoordModelType
-COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, CoordTranslatorType]
+COORD_TRANSLATORS = {}  # type: T.Dict[str, CoordTranslatorType]
 LOG = logging.getLogger(__name__)
 
 

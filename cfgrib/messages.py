@@ -17,8 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import collections
-import collections.abc
 import contextlib
 import hashlib
 import logging
@@ -70,7 +68,7 @@ def multi_enabled(file):
 
 
 @attr.attrs(auto_attribs=True)
-class Message(collections.abc.MutableMapping):  # type: ignore
+class Message(T.MutableMapping[str, T.Any]):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -222,7 +220,7 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(collections.abc.Iterable):  # type: ignore
+class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
     """Iterator-like access to a filestream of Messages."""
 
     path: str
@@ -284,7 +282,7 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(collections.abc.Mapping):  # type: ignore
+class FileIndex(T.Mapping[str, T.List[T.Any]]):
     filestream: FileStream
     index_keys: T.List[str]
     offsets: OffsetsType = attr.attrib(repr=False)
@@ -294,9 +292,7 @@ class FileIndex(collections.abc.Mapping):  # type: ignore
     @classmethod
     def from_filestream(cls, filestream, index_keys):
         # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = (
-            collections.OrderedDict()
-        )  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]

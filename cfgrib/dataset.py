@@ -17,7 +17,6 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import collections
 import datetime
 import json
 import logging
@@ -255,7 +254,7 @@ class DatasetBuildError(ValueError):
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
     # type: (T.Mapping[str, T.Any], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
-    attributes = collections.OrderedDict()  # type: T.Dict[str, T.Any]
+    attributes = {}  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
         if len(values) > 1:
@@ -367,7 +366,7 @@ def build_geography_coordinates(
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
-    geo_coord_vars = collections.OrderedDict()  # type: T.Dict[str, Variable]
+    geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = index.getone("gridType")
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
@@ -463,7 +462,7 @@ def build_variable_components(
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
     coord_name_key_map = {}
-    coord_vars = collections.OrderedDict()
+    coord_vars = {}
     for coord_key in coords_map:
         values = index[coord_key]
         if len(values) == 1 and values[0] == "undef":
@@ -498,7 +497,7 @@ def build_variable_components(
     coord_vars.update(geo_coord_vars)
 
     offsets = (
-        collections.OrderedDict()
+        {}
     )  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
@@ -525,7 +524,7 @@ def build_variable_components(
 
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
-    dims = collections.OrderedDict((d, s) for d, s in zip(dimensions, data_var.data.shape))
+    dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
     return dims, data_var, coord_vars
 
 
@@ -572,8 +571,8 @@ def build_dataset_components(
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
-    dimensions = collections.OrderedDict()  # type: T.Dict[str, int]
-    variables = collections.OrderedDict()  # type: T.Dict[str, Variable]
+    dimensions = {}  # type: T.Dict[str, int]
+    variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
     for param_id in index["paramId"]:
         var_index = index.subindex(paramId=param_id)
