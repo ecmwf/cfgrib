@@ -137,7 +137,7 @@ class Message(T.MutableMapping[str, T.Any]):
         else:
             eccodes.codes_set(self.codes_id, item, value)
 
-    def message_grib_keys(self, namespace: T.Optional[str]=None) -> T.Iterator[str]:
+    def message_grib_keys(self, namespace: T.Optional[str] = None) -> T.Iterator[str]:
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=namespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator)
