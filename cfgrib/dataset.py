@@ -496,9 +496,7 @@ def build_variable_components(
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
 
-    offsets = (
-        {}
-    )  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+    offsets = {}  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions:
