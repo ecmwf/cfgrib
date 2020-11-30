@@ -11,5 +11,5 @@ install:
   # Install miniconda Python
   - "powershell ./ci/install_python.ps1"
 
-build: true
-test_script: true
+build: false
+test_script: false
