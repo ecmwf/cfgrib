@@ -49,8 +49,7 @@ eccodes.codes_grib_multi_support_off()
 
 
 @contextlib.contextmanager
-def multi_enabled(file):
-    # type: (T.IO[bytes]) -> T.Iterator[None]
+def multi_enabled(file: T.IO[bytes]) -> T.Iterator[None]:
     """Context manager that enables MULTI-FIELD support in ecCodes from a clean state"""
     eccodes.codes_grib_multi_support_on()
     #
@@ -131,27 +130,23 @@ class Message(T.MutableMapping[str, T.Any]):
             return values[0]
         return values
 
-    def message_set(self, item, value):
-        # type: (str, T.Any) -> None
+    def message_set(self, item: str, value: T.Any) -> None:
         set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
         if set_array:
             eccodes.codes_set_array(self.codes_id, item, value)
         else:
             eccodes.codes_set(self.codes_id, item, value)
 
-    def message_grib_keys(self, namespace=None):
-        # type: (T.Optional[str]) -> T.Generator[str, None, None]
+    def message_grib_keys(self, namespace: T.Optional[str]=None) -> T.Iterator[str]:
         iterator = eccodes.codes_keys_iterator_new(self.codes_id, namespace=namespace)
         while eccodes.codes_keys_iterator_next(iterator):
             yield eccodes.codes_keys_iterator_get_name(iterator)
         eccodes.codes_keys_iterator_delete(iterator)
 
-    def __getitem__(self, item):
-        # type: (str) -> T.Any
+    def __getitem__(self, item: str) -> T.Any:
         return self.message_get(item)
 
-    def __setitem__(self, item, value):
-        # type: (str, T.Any) -> None
+    def __setitem__(self, item: str, value: T.Any) -> None:
         try:
             return self.message_set(item, value)
         except eccodes.GribInternalError as ex:
@@ -166,8 +161,7 @@ class Message(T.MutableMapping[str, T.Any]):
                 else:
                     LOG.warning("failed to set key %r to %r", item, value)
 
-    def __delitem__(self, item):
-        # type: (str) -> None
+    def __delitem__(self, item: str) -> None:
         raise NotImplementedError
 
     def __iter__(self) -> T.Iterator[str]:
@@ -177,8 +171,7 @@ class Message(T.MutableMapping[str, T.Any]):
     def __len__(self) -> int:
         return sum(1 for _ in self)
 
-    def write(self, file):
-        # type: (T.IO[bytes]) -> None
+    def write(self, file: T.IO[bytes]) -> None:
         eccodes.codes_write(self.codes_id, file)
 
 
@@ -193,8 +186,7 @@ class ComputedKeysMessage(Message):
 
     computed_keys: ComputedKeysType = {}
 
-    def __getitem__(self, item):
-        # type: (str) -> T.Any
+    def __getitem__(self, item: str) -> T.Any:
         if item in self.computed_keys:
             getter, _ = self.computed_keys[item]
             return getter(self)
@@ -210,8 +202,7 @@ class ComputedKeysMessage(Message):
             if key not in seen:
                 yield key
 
-    def __setitem__(self, item, value):
-        # type: (str, T.Any) -> T.Any
+    def __setitem__(self, item: str, value: T.Any) -> None:
         if item in self.computed_keys:
             _, setter = self.computed_keys[item]
             return setter(self, value)
@@ -392,8 +383,7 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
                         values.append(value)
         return self._header_values
 
-    def __getitem__(self, item):
-        # type: (str) -> T.List[T.Any]
+    def __getitem__(self, item: str) -> T.List[T.Any]:
         return self.header_values[item]
 
     def getone(self, item):

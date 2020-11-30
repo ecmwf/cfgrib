@@ -29,7 +29,7 @@ CoordModelType = T.Dict[str, T.Dict[str, str]]
 CoordTranslatorType = T.Callable[[str, xr.Dataset, CoordModelType], xr.Dataset]
 
 COORD_MODEL: CoordModelType = {}
-COORD_TRANSLATORS:T.Dict[str, CoordTranslatorType] = {}
+COORD_TRANSLATORS: T.Dict[str, CoordTranslatorType] = {}
 LOG = logging.getLogger(__name__)
 
 
