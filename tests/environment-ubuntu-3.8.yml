@@ -9,9 +9,9 @@ dependencies:
   - bokeh=2.2.3
   - bzip2=1.0.8
   - ca-certificates=2020.10.14
-  - certifi=2020.6.20
+  - certifi=2020.11.8
   - cffi=1.14.3
-  - cftime=1.2.1
+  - cftime=1.3.0
   - click=7.1.2
   - cloudpickle=1.6.0
   - curl=7.71.1
@@ -83,7 +83,7 @@ dependencies:
   - tornado=6.0.4
   - typing_extensions=3.7.4.3
   - wheel=0.35.1
-  - xarray=0.16.1
+  - xarray=0.16.2
   - xz=5.2.5
   - yaml=0.2.5
   - zict=2.0.0
