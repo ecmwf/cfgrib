@@ -475,7 +475,8 @@ def build_variable_components(
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    extra_attrs = read_data_var_attrs(index, read_keys)
+    extra_keys = sorted(read_keys + EXTRA_DATA_ATTRIBUTES_KEYS)
+    extra_attrs = read_data_var_attrs(index, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
@@ -664,6 +665,5 @@ def open_file(
     **kwargs
 ):
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    read_keys = sorted(read_keys + EXTRA_DATA_ATTRIBUTES_KEYS)
     index = open_fileindex(path, grib_errors, indexpath, ALL_KEYS).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
