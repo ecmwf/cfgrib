@@ -1,6 +1,7 @@
 import sys
+import typing as T
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -27,7 +28,7 @@ def da1():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da1")
 
 
 @pytest.fixture
@@ -45,7 +46,7 @@ def da2():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da2")
 
 
 @pytest.fixture
@@ -70,11 +71,11 @@ def da3():
         ],
     )
 
-    return data
+    return data.to_dataset(name="da3")
 
 
 def test_match_values():
-    mapping = {"callable": len, "int": 1}
+    mapping = {"callable": len, "int": 1}  # type: T.Dict[T.Hashable, T.Any]
     res = cfcoords.match_values(callable, mapping)
 
     assert res == ["callable"]

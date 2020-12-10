@@ -1,6 +1,6 @@
 import os.path
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 from cfgrib import cfmessage, dataset, messages
@@ -19,7 +19,7 @@ def test_enforce_unique_attributes():
 
 
 def test_Variable():
-    res = dataset.Variable(dimensions=("lat"), data=np.array([0.0]), attributes={})
+    res = dataset.Variable(dimensions=("lat",), data=np.array([0.0]), attributes={})
 
     assert res == res
     assert res != 1
