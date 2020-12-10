@@ -33,12 +33,7 @@ LOG = logging.getLogger(__name__)
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-GLOBAL_ATTRIBUTES_KEYS = [
-    "edition",
-    "centre",
-    "centreDescription",
-    "subCentre",
-]
+GLOBAL_ATTRIBUTES_KEYS = ["edition", "centre", "centreDescription", "subCentre"]
 
 DATA_ATTRIBUTES_KEYS = [
     "paramId",
@@ -453,10 +448,10 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(index, read_keys):
+def read_data_var_attrs(index: messages.FileIndex, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     first = index.first()
     attributes = {}
-    for key in read_keys:
+    for key in extra_keys:
         try:
             attributes["GRIB_" + key] = first[key]
         except:
@@ -471,13 +466,13 @@ def build_variable_components(
     log: logging.Logger = LOG,
     errors: str = "warn",
     squeeze: bool = True,
-    read_keys: T.Sequence[str] = (),
+    read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    extra_keys = sorted(read_keys + EXTRA_DATA_ATTRIBUTES_KEYS)
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS)
     extra_attrs = read_data_var_attrs(index, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
@@ -587,7 +582,7 @@ def build_dataset_components(
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
     log: logging.Logger = LOG,
-    read_keys: T.Sequence[str] = (),
+    read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
