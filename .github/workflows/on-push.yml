@@ -57,6 +57,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
+        pip install --no-deps -e .
         pytest -v --cov=. --cov-report=xml README.rst
 
   code-quality:
