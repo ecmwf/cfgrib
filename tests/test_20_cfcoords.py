@@ -1,6 +1,7 @@
 import sys
+import typing as T
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -27,7 +28,7 @@ def da1():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da1")
 
 
 @pytest.fixture
@@ -45,7 +46,7 @@ def da2():
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
-    return data
+    return data.to_dataset(name="da2")
 
 
 @pytest.fixture
@@ -70,11 +71,11 @@ def da3():
         ],
     )
 
-    return data
+    return data.to_dataset(name="da3")
 
 
 def test_match_values():
-    mapping = {"callable": len, "int": 1}
+    mapping = {"callable": len, "int": 1}  # type: T.Dict[T.Hashable, T.Any]
     res = cfcoords.match_values(callable, mapping)
 
     assert res == ["callable"]
@@ -151,23 +152,3 @@ def test_translate_coords_errors(da3):
     da3_fail = da3.drop("time")
     cfcoords.translate_coords(da3_fail, DATA_MODEL)
     cfcoords.translate_coords(da3_fail, DATA_MODEL, errors="ignore")
-
-
-def test_ensure_valid_time(da1, da3):
-    res1 = cfcoords.ensure_valid_time(da1.squeeze())
-    res2 = cfcoords.ensure_valid_time(res1)
-
-    assert "valid_time" in res1.coords
-    assert res2 is res1
-
-    res1 = cfcoords.ensure_valid_time(da3.isel(ref_time=0).squeeze())
-    res2 = cfcoords.ensure_valid_time(res1)
-
-    assert "valid_time" in res1.coords
-    assert res2 is res1
-
-    res1 = cfcoords.ensure_valid_time(da3.squeeze())
-    assert "valid_time" in res1.coords
-
-    with pytest.raises(ValueError):
-        cfcoords.ensure_valid_time(da3.mean(dim="ref_time").squeeze())

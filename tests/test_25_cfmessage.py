@@ -1,6 +1,7 @@
 import os.path
+import typing as T
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 from cfgrib import cfmessage
@@ -17,7 +18,7 @@ def test_from_grib_date_time():
 
 
 def test_to_grib_date_time():
-    message = {}
+    message = {}  # type: T.Dict[str, T.Any]
     datetime_ns = int(np.datetime64("2001-10-11T01:01:00", "ns"))
 
     cfmessage.to_grib_date_time(message, datetime_ns)
@@ -34,8 +35,8 @@ def test_from_grib_step():
 
 
 def test_to_grib_step():
-    message = {}
-    step_ns = 60 * 60 * 1e9
+    message = {}  # type: T.Dict[str, T.Any]
+    step_ns = 3600 * 1_000_000_000
 
     cfmessage.to_grib_step(message, step_ns, step_unit=1)
 

@@ -17,31 +17,33 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
-import collections
 import functools
 import logging
-import typing as T  # noqa
-import warnings
+import typing as T
 
-import xarray as xr  # noqa
+import xarray as xr
 
 from . import cfunits
 
-COORD_MODEL = {}  # type: T.Dict[str, T.Dict[str, T.Any]]
-COORD_TRANSLATORS = collections.OrderedDict()  # type: T.Dict[str, T.Callable]
+CoordModelType = T.Dict[str, T.Dict[str, str]]
+CoordTranslatorType = T.Callable[[str, xr.Dataset, CoordModelType], xr.Dataset]
+
+COORD_MODEL: CoordModelType = {}
+COORD_TRANSLATORS: T.Dict[str, CoordTranslatorType] = {}
 LOG = logging.getLogger(__name__)
 
 
 def match_values(match_value_func, mapping):
-    # type: (T.Callable[[T.Any], bool], T.Dict[str, T.Any]) -> T.List[str]
+    # type: (T.Callable[[T.Any], bool], T.Mapping[T.Hashable, T.Any]) -> T.List[str]
     matched_names = []
     for name, value in mapping.items():
         if match_value_func(value):
-            matched_names.append(name)
+            matched_names.append(str(name))
     return matched_names
 
 
 def translate_coord_direction(data, coord_name, stored_direction="increasing"):
+    # type: (xr.Dataset, str, str) -> xr.Dataset
     if stored_direction not in ("increasing", "decreasing"):
         raise ValueError("unknown stored_direction %r" % stored_direction)
     if len(data.coords[coord_name].shape) == 0:
@@ -55,15 +57,14 @@ def translate_coord_direction(data, coord_name, stored_direction="increasing"):
 
 
 def coord_translator(
-    default_out_name,
-    default_units,
-    default_direction,
-    is_cf_type,
-    cf_type,
-    data,
-    coord_model=COORD_MODEL,
-):
-    # type: (str, str, str, T.Callable, str, xr.DataArray, dict) -> xr.DataArray
+    default_out_name: str,
+    default_units: str,
+    default_direction: str,
+    is_cf_type: T.Callable[[xr.IndexVariable], bool],
+    cf_type: str,
+    data: xr.Dataset,
+    coord_model: CoordModelType = COORD_MODEL,
+) -> xr.Dataset:
     out_name = coord_model.get(cf_type, {}).get("out_name", default_out_name)
     units = coord_model.get(cf_type, {}).get("units", default_units)
     stored_direction = coord_model.get(cf_type, {}).get("stored_direction", default_direction)
@@ -90,8 +91,7 @@ def coord_translator(
 VALID_LAT_UNITS = ["degrees_north", "degree_north", "degree_N", "degrees_N", "degreeN", "degreesN"]
 
 
-def is_latitude(coord):
-    # type: (xr.Coordinate) -> bool
+def is_latitude(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("units") in VALID_LAT_UNITS
 
 
@@ -103,8 +103,7 @@ COORD_TRANSLATORS["latitude"] = functools.partial(
 VALID_LON_UNITS = ["degrees_east", "degree_east", "degree_E", "degrees_E", "degreeE", "degreesE"]
 
 
-def is_longitude(coord):
-    # type: (xr.Coordinate) -> bool
+def is_longitude(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("units") in VALID_LON_UNITS
 
 
@@ -113,8 +112,7 @@ COORD_TRANSLATORS["longitude"] = functools.partial(
 )
 
 
-def is_time(coord):
-    # type: (xr.Coordinate) -> bool
+def is_time(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("standard_name") == "forecast_reference_time"
 
 
@@ -126,16 +124,14 @@ COORD_TRANSLATORS["time"] = functools.partial(
 )
 
 
-def is_step(coord):
-    # type: (xr.Coordinate) -> bool
+def is_step(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("standard_name") == "forecast_period"
 
 
 COORD_TRANSLATORS["step"] = functools.partial(coord_translator, "step", "h", "increasing", is_step)
 
 
-def is_valid_time(coord):
-    # type: (xr.Coordinate) -> bool
+def is_valid_time(coord: xr.IndexVariable) -> bool:
     if coord.attrs.get("standard_name") == "time":
         return True
     elif str(coord.dtype) == "datetime64[ns]" and "standard_name" not in coord.attrs:
@@ -148,8 +144,7 @@ COORD_TRANSLATORS["valid_time"] = functools.partial(
 )
 
 
-def is_depth(coord):
-    # type: (xr.Coordinate) -> bool
+def is_depth(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("standard_name") == "depth"
 
 
@@ -158,8 +153,7 @@ COORD_TRANSLATORS["depthBelowLand"] = functools.partial(
 )
 
 
-def is_isobaric(coord):
-    # type: (xr.Coordinate) -> bool
+def is_isobaric(coord: xr.IndexVariable) -> bool:
     return cfunits.are_convertible(coord.attrs.get("units", ""), "Pa")
 
 
@@ -168,8 +162,7 @@ COORD_TRANSLATORS["isobaricInhPa"] = functools.partial(
 )
 
 
-def is_number(coord):
-    # type: (xr.Coordinate) -> bool
+def is_number(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("standard_name") == "realization"
 
 
@@ -179,8 +172,7 @@ COORD_TRANSLATORS["number"] = functools.partial(
 
 
 # CF-Conventions have no concept of leadtime expressed in months
-def is_forecast_month(coord):
-    # type: (xr.Coordinate) -> bool
+def is_forecast_month(coord: xr.IndexVariable) -> bool:
     return coord.attrs.get("long_name") == "months since forecast_reference_time"
 
 
@@ -192,10 +184,10 @@ COORD_TRANSLATORS["forecastMonth"] = functools.partial(
 def translate_coords(
     data, coord_model=COORD_MODEL, errors="warn", coord_translators=COORD_TRANSLATORS
 ):
-    # type: (xr.Dataset, T.Dict, str, T.Dict) -> xr.Dataset
+    # type: (xr.Dataset, CoordModelType, str, T.Dict[str, CoordTranslatorType]) -> xr.Dataset
     for cf_name, translator in coord_translators.items():
         try:
-            data = translator(cf_name, data, coord_model=coord_model)
+            data = translator(cf_name, data, coord_model)
         except:
             if errors == "ignore":
                 pass
@@ -203,48 +195,4 @@ def translate_coords(
                 raise RuntimeError("error while translating coordinate: %r" % cf_name)
             else:
                 LOG.warning("error while translating coordinate: %r", cf_name)
-    return data
-
-
-def ensure_valid_time_present(data, valid_time_name="valid_time"):
-    # type: (xr.Dataset, str) -> T.Tuple[str, str, str]
-    valid_times = match_values(is_valid_time, data.coords)
-    times = match_values(is_time, data.coords)
-    steps = match_values(is_step, data.coords)
-    time = times[0] if times else ""
-    step = steps[0] if steps else ""
-    if not valid_times:
-        if not time:
-            raise ValueError("not enough information to ensure a 'valid_time'.")
-        valid_time = valid_time_name
-        if step:
-            data.coords[valid_time] = data.coords[time] + data.coords[step]
-        else:
-            data.coords[valid_time] = data.coords[time]
-        data.coords[valid_time].attrs["standard_name"] = "time"
-    else:
-        valid_time = valid_times[0]
-    return valid_time, time, step
-
-
-def ensure_valid_time(data):
-    # type: (xr.Dataset) -> xr.Dataset
-    warnings.warn("ensure_valid_time is deprecated use time_dims instead", DeprecationWarning)
-    valid_time, time, step = ensure_valid_time_present(data)
-    if valid_time not in data.dims:
-        if time and time in data.dims and data.coords[time].size == data.coords[valid_time].size:
-            return data.swap_dims({time: valid_time})
-        if step and step in data.dims and data.coords[step].size == data.coords[valid_time].size:
-            return data.swap_dims({step: valid_time})
-        # also convert is valid_time can index all times and steps
-        if (
-            step
-            and time
-            and step in data.dims
-            and time in data.dims
-            and data.coords[step].size * data.coords[time].size == data.coords[valid_time].size
-            and data.coords[step].size * data.coords[time].size == data.coords[valid_time].size
-        ):
-            data = data.stack(tmp_coord=(time, step))
-            data = data.swap_dims({"tmp_coord": valid_time}).drop("tmp_coord").dropna(valid_time)
     return data

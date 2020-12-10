@@ -21,14 +21,13 @@
 
 import itertools
 import logging
-import typing as T  # noqa
+import typing as T
 import warnings
 
-import numpy as np
+import numpy as np  # type: ignore
 import xarray as xr
 
-import cfgrib
-from cfgrib import dataset  # FIXME: write support needs internal functions
+from . import cfmessage, dataset, messages
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ MESSAGE_DEFINITION_KEYS = [
 
 
 def regular_ll_params(values, min_value=-180.0, max_value=360.0):
-    # type: (T.Sequence, float, float) -> T.Tuple[float, float, int]
+    # type: (T.Sequence[float], float, float) -> T.Tuple[float, float, int]
     start, stop, num = float(values[0]), float(values[-1]), len(values)
     if min(start, stop) < min_value or max(start, stop) > max_value:
         raise ValueError("Unsupported spatial grid: out of bounds (%r, %r)" % (start, stop))
@@ -101,11 +100,12 @@ def detect_regular_ll_grib_keys(lon, lat):
 
 
 def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
-    # type: (xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Tuple[dict, dict]
+    # type: (xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Tuple[T.Dict[str, T.Any], T.Dict[str, T.Any]]
     detected_grib_keys = {}
     suggested_grib_keys = default_grib_keys.copy()
 
-    for key, value in data_var.attrs.items():
+    for key_raw, value in data_var.attrs.items():
+        key = str(key_raw)
         if key[:5] == "GRIB_":
             suggested_grib_keys[key[5:]] = value
 
@@ -131,7 +131,7 @@ def detect_grib_keys(data_var, default_grib_keys, grib_keys={}):
 
 
 def detect_sample_name(grib_keys, sample_name_template="{geography}_{vertical}_grib{edition}"):
-    # type: (T.Mapping, str) -> str
+    # type: (T.Mapping[str, T.Any], str) -> str
     edition = grib_keys.get("edition", 2)
 
     if grib_keys["gridType"] in GRID_TYPES:
@@ -155,6 +155,7 @@ def detect_sample_name(grib_keys, sample_name_template="{geography}_{vertical}_g
 
 
 def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
+    # type: (T.Dict[str, T.Any], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     merged_grib_keys = {k: v for k, v in grib_keys.items()}
     dataset.dict_merge(merged_grib_keys, detected_grib_keys)
     for key, value in default_grib_keys.items():
@@ -163,8 +164,8 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
     return merged_grib_keys
 
 
-def expand_dims(data_var):
-    coords_names = []
+def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
+    coords_names = []  # type: T.List[str]
     for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS:
         if coord_name in data_var.coords and data_var.coords[coord_name].size == 1:
             data_var = data_var.expand_dims(coord_name)
@@ -174,17 +175,17 @@ def expand_dims(data_var):
 
 
 def make_template_message(merged_grib_keys, template_path=None, sample_name=None):
-    # type: (T.Dict[str, T.Any], str, str) -> cfgrib.CfMessage
+    # type: (T.Dict[str, T.Any], T.Optional[str], T.Optional[str]) -> messages.Message
     if template_path and sample_name:
         raise ValueError("template_path and sample_name should not be both set")
 
     if template_path:
         with open(template_path, "rb") as file:
-            template_message = cfgrib.CfMessage.from_file(file)
+            template_message = cfmessage.CfMessage.from_file(file)
     else:
         if sample_name is None:
             sample_name = detect_sample_name(merged_grib_keys)
-        template_message = cfgrib.CfMessage.from_sample_name(sample_name)
+        template_message = cfmessage.CfMessage.from_sample_name(sample_name)
 
     for key in MESSAGE_DEFINITION_KEYS:
         if key in list(merged_grib_keys):
@@ -203,7 +204,7 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
 def canonical_dataarray_to_grib(
     data_var, file, grib_keys={}, default_grib_keys=DEFAULT_GRIB_KEYS, **kwargs
 ):
-    # type: (T.IO[bytes], xr.DataArray, T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
+    # type: (xr.DataArray, T.IO[bytes], T.Dict[str, T.Any], T.Dict[str, T.Any], T.Any) -> None
     """
     Write a ``xr.DataArray`` in *canonical* form to a GRIB file.
     """
@@ -233,7 +234,7 @@ def canonical_dataarray_to_grib(
         missing_value = merged_grib_keys.get("missingValue", 9999)
         field_values[invalid_field_values] = missing_value
 
-        message = cfgrib.CfMessage.from_message(template_message)
+        message = cfmessage.CfMessage.from_message(template_message)
         for coord_name, coord_value in zip(coords_names, items):
             if coord_name in ALL_TYPE_OF_LEVELS:
                 coord_name = "level"
@@ -254,10 +255,10 @@ def canonical_dataset_to_grib(dataset, path, mode="wb", no_warn=False, grib_keys
         warnings.warn("GRIB write support is experimental, DO NOT RELY ON IT!", FutureWarning)
 
     # validate Dataset keys, DataArray names, and attr keys/values
-    xr.backends.api._validate_dataset_names(dataset)
-    xr.backends.api._validate_attrs(dataset)
+    xr.backends.api._validate_dataset_names(dataset)  # type: ignore
+    xr.backends.api._validate_attrs(dataset)  # type: ignore
 
-    real_grib_keys = {k[5:]: v for k, v in dataset.attrs.items() if k[:5] == "GRIB_"}
+    real_grib_keys = {str(k)[5:]: v for k, v in dataset.attrs.items() if str(k)[:5] == "GRIB_"}
     real_grib_keys.update(grib_keys)
 
     with open(path, mode=mode) as file:
@@ -265,5 +266,4 @@ def canonical_dataset_to_grib(dataset, path, mode="wb", no_warn=False, grib_keys
             canonical_dataarray_to_grib(data_var, file, grib_keys=real_grib_keys, **kwargs)
 
 
-def to_grib(*args, **kwargs):
-    return canonical_dataset_to_grib(*args, **kwargs)
+to_grib = canonical_dataset_to_grib

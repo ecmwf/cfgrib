@@ -14,21 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import os
 import re
 
-import setuptools
+import setuptools  # type: ignore
 
 
 def read(path):
+    # type: (str) -> str
     file_path = os.path.join(os.path.dirname(__file__), *path.split("/"))
-    return io.open(file_path, encoding="utf-8").read()
+    return open(file_path).read()
 
 
 # single-sourcing the package version using method 1 of:
 #   https://packaging.python.org/guides/single-sourcing-package-version/
 def parse_version_from(path):
+    # type: (str) -> str
     version_file = read(path)
     version_match = re.search(r'^__version__ = "(.*)"', version_file, re.M)
     if version_match is None or len(version_match.groups()) > 1:
@@ -48,19 +49,11 @@ setuptools.setup(
     url="https://github.com/ecmwf/cfgrib",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=["attrs>=19.2", "cffi", "click", "numpy"],
+    install_requires=["attrs>=19.2", "cffi", "click", "eccodes", "numpy"],
     python_requires=">=3.5",
     extras_require={
         "xarray": ["xarray>=0.12.0"],
-        "tests": [
-            "dask[array]",
-            "eccodes",
-            "flake8",
-            "pytest",
-            "pytest-cov",
-            "scipy",
-            "xarray>=0.12.0",
-        ],
+        "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.12.0",],
     },
     zip_safe=True,
     keywords="eccodes grib xarray",

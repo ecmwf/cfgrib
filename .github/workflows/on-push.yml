@@ -11,20 +11,15 @@ jobs:
         os: [ubuntu]
         python: [3.6, 3.7, 3.8]
         extras: ['']
-        eccodes: ['']
         include:
           - os: macos
             python: 3.8
-          - os: ubuntu
-            python: 3.8
-            eccodes: 1
           - os: ubuntu
             python: 3.8
             extras: -minimal
 # python-eccodes and cffi both fail
 #          - os: windows
 #            python: 3.8
-#            eccodes: 1
 
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +33,7 @@ jobs:
       run: |
         conda install pytest pytest-cov
         pip install --no-deps -e .
-        CFGRIB_USE_EXTERNAL_ECCODES_BINDINGS=${{ matrix.eccodes || 0 }} pytest -v --cov=. --cov-report=xml .
+        pytest -v --cov=. --cov-report=xml .
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
 
@@ -62,6 +57,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest pytest-cov
+        pip install --no-deps -e .
         pytest -v --cov=. --cov-report=xml README.rst
 
   code-quality:
@@ -69,13 +65,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: 3.8
+        activate-environment: ubuntu-3.8
+        environment-file: tests/environment-ubuntu-3.8.yml
     - name: Lint with flake8
+      shell: bash -l {0}
       run: |
-        $CONDA/bin/conda install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        $CONDA/bin/flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        $CONDA/bin/flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        conda install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Type check with mypy
+      shell: bash -l {0}
+      run: |
+        conda install mypy
+        mypy --strict .
 
   code-style:
     runs-on: ubuntu-latest

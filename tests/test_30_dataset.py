@@ -1,6 +1,6 @@
 import os.path
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 from cfgrib import cfmessage, dataset, messages
@@ -19,7 +19,7 @@ def test_enforce_unique_attributes():
 
 
 def test_Variable():
-    res = dataset.Variable(dimensions=("lat"), data=np.array([0.0]), attributes={})
+    res = dataset.Variable(dimensions=("lat",), data=np.array([0.0]), attributes={})
 
     assert res == res
     assert res != 1
@@ -88,7 +88,6 @@ def test_build_data_var_components_encode_cf_geography():
     assert data_var.data[:, :, :, :, :, :].mean() > 0.0
 
 
-@pytest.mark.xfail
 def test_build_dataset_components_time_dims():
     index_keys = sorted(dataset.ALL_KEYS)
     index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)

@@ -42,6 +42,8 @@ dependencies:
   - pip=20.2.4
   - pycparser=2.20
   - python=3.8.5
+  - python-eccodes=2020.10.1
+  - python_abi=3.8
   - readline=8.0
   - setuptools=50.3.1
   - six=1.15.0

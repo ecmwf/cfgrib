@@ -16,7 +16,6 @@ Features with development status **Beta**:
 - the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
 - works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
 - conda-forge package on all supported platforms,
-- PyPI package with no install time build (binds via *CFFI* ABI mode),
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
 - allows larger-than-memory and distributed processing via *dask*,
 - supports translating coordinates to different data models and naming conventions,
@@ -54,24 +53,9 @@ Python package from *PyPI* with::
 Binary dependencies
 -------------------
 
-The Python module depends on the ECMWF *ecCodes* binary library
-that must be installed on the system and accessible as a shared library.
-Some Linux distributions ship a binary version that may be installed with the standard package manager.
-On Ubuntu 18.04 use the command::
-
-    $ sudo apt-get install libeccodes0
-
-On a MacOS with HomeBrew use::
-
-    $ brew install eccodes
-
-Or if you manage binary packages with *Conda* use::
-
-    $ conda install -c conda-forge eccodes
-
-As an alternative you may install the official source distribution
-by following the instructions at
-https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
+The Python module depends on the `eccodes python package <https://pypi.org/project/eccodes/>`_
+to access the ECMWF *ecCodes* binary library,
+when not using *conda* please follow the *System dependencies* section there.
 
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 

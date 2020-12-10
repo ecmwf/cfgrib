@@ -5,5 +5,6 @@ dependencies:
   - attrs>=19.2
   - cffi
   - click
-  - eccodes
+  - eccodes=>2.19.0
   - numpy
+  - python-eccodes>=2020.10.0

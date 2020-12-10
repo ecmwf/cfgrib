@@ -1,6 +1,6 @@
 import os.path
 
-import numpy as np
+import numpy as np  # type: ignore
 import pytest
 
 from cfgrib import messages
@@ -10,7 +10,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 
 
 def test_Message_read():
-    with open(TEST_DATA) as file:
+    with open(TEST_DATA, "rb") as file:
         res1 = messages.Message.from_file(file)
 
     assert res1.message_get("paramId") == 129
@@ -33,7 +33,7 @@ def test_Message_read():
         else:
             assert v2 == v1
 
-    with open(TEST_DATA) as file:
+    with open(TEST_DATA, "rb") as file:
         with pytest.raises(EOFError):
             while True:
                 messages.Message.from_file(file)
@@ -85,7 +85,7 @@ def test_ComputedKeysMessage_read():
         "error_key": (lambda m: 1 / 0, None),
         "centre": (lambda m: -1, lambda m, v: None),
     }
-    with open(TEST_DATA) as file:
+    with open(TEST_DATA, "rb") as file:
         res = messages.ComputedKeysMessage.from_file(file, computed_keys=computed_keys)
 
     assert res["paramId"] == 129
@@ -127,7 +127,7 @@ def test_compat_create_exclusive(tmpdir):
 
     with pytest.raises(OSError):
         with messages.compat_create_exclusive(str(test_file)) as file:
-            pass
+            pass  # pragma: no cover
 
 
 def test_FileIndex():
@@ -195,7 +195,9 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
 
 def test_FileIndex_errors():
     class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {"error_key": lambda m: 1 / 0}
+        computed_keys = {
+            "error_key": (lambda m: bool(1 / 0), lambda m, v: None)
+        }  # pragma: no branch
 
     stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
     res = messages.FileIndex.from_filestream(stream, ["paramId", "error_key"])

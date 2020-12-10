@@ -1,13 +1,16 @@
 [tool.black]
 line-length = 99
 
+[tool.isort]
+profile = "black"
+line_length = 99
+
 [tool.pytest.ini_options]
 norecursedirs = [
     "build",
     "docs",
     ".tox",
 ]
-filterwarnings = ["ignore::FutureWarning"]
 
 [tool.coverage.run]
 branch = true
