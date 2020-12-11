@@ -159,7 +159,7 @@ SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
 
-ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS)
+INDEX_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + ALL_HEADER_DIMS)
 
 COORD_ATTRS = {
     # geography
@@ -370,10 +370,10 @@ def build_geography_coordinates(
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
-    grid_type = index.getone("gridType")
+    grid_type = first["gridType"]
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
-        geo_shape = (index.getone("Ny"), index.getone("Nx"))  # type: T.Tuple[int, ...]
+        geo_shape = (first["Ny"], first["Nx"])  # type: T.Tuple[int, ...]
         latitudes = np.array(first["distinctLatitudes"])
         geo_coord_vars["latitude"] = Variable(
             dimensions=("latitude",), data=latitudes, attributes=COORD_ATTRS["latitude"].copy()
@@ -387,7 +387,7 @@ def build_geography_coordinates(
         )
     elif "geography" in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
         geo_dims = ("y", "x")
-        geo_shape = (index.getone("Ny"), index.getone("Nx"))
+        geo_shape = (first["Ny"], first["Nx"])
         try:
             geo_coord_vars["latitude"] = Variable(
                 dimensions=("y", "x"),
@@ -404,7 +404,7 @@ def build_geography_coordinates(
                 log.warning("ecCodes provides no latitudes/longitudes for gridType=%r", grid_type)
     else:
         geo_dims = ("values",)
-        geo_shape = (index.getone("numberOfPoints"),)
+        geo_shape = (first["numberOfPoints"],)
         # add secondary coordinates if ecCodes provides them
         try:
             latitude = first["latitudes"]
@@ -470,9 +470,8 @@ def build_variable_components(
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
-    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS)
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS)
     extra_attrs = read_data_var_attrs(index, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
@@ -652,7 +651,7 @@ def open_fileindex(
     path: str,
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
-    index_keys: T.Sequence[str] = ALL_KEYS,
+    index_keys: T.Sequence[str] = INDEX_KEYS,
 ) -> messages.FileIndex:
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return stream.index(index_keys, indexpath=indexpath)
@@ -667,5 +666,5 @@ def open_file(
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath, ALL_KEYS).subindex(filter_by_keys)
+    index = open_fileindex(path, grib_errors, indexpath, INDEX_KEYS).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
