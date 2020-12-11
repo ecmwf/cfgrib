@@ -161,6 +161,8 @@ ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_
 
 INDEX_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + ALL_HEADER_DIMS)
 
+ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS + EXTRA_DATA_ATTRIBUTES_KEYS)
+
 COORD_ATTRS = {
     # geography
     "latitude": {"units": "degrees_north", "standard_name": "latitude", "long_name": "latitude"},
@@ -471,7 +473,8 @@ def build_variable_components(
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS)
+    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS)
     extra_attrs = read_data_var_attrs(index, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
