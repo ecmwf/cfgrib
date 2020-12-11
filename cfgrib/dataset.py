@@ -372,7 +372,7 @@ def build_geography_coordinates(
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     first = index.first()
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
-    grid_type = first["gridType"]
+    grid_type = index.getone("gridType")
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
         geo_shape = (first["Ny"], first["Nx"])  # type: T.Tuple[int, ...]
@@ -474,7 +474,7 @@ def build_variable_components(
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
-    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS)
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS)
     extra_attrs = read_data_var_attrs(index, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
