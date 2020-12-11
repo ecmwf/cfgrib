@@ -131,8 +131,8 @@ class Message(T.MutableMapping[str, T.Any]):
         return values
 
     def message_set(self, item: str, value: T.Any) -> None:
-        set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
-        if set_array:
+        arr = isinstance(value, (np.ndarray, T.Sequence)) and not isinstance(value, str)
+        if arr:
             eccodes.codes_set_array(self.codes_id, item, value)
         else:
             eccodes.codes_set(self.codes_id, item, value)

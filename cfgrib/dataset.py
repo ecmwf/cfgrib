@@ -15,6 +15,7 @@
 #
 # Authors:
 #   Alessandro Amici - B-Open - https://bopen.eu
+#   Aureliana Barghini - B-Open - https://bopen.eu
 #
 
 import datetime
@@ -160,8 +161,6 @@ SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
 
 INDEX_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + ALL_HEADER_DIMS)
-
-ALL_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS + ALL_HEADER_DIMS + EXTRA_DATA_ATTRIBUTES_KEYS)
 
 COORD_ATTRS = {
     # geography
@@ -364,15 +363,14 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    index,  # type: messages.FileIndex
+    first,  # type: messages.Message
     encode_cf,  # type: T.Sequence[str]
     errors,  # type: str
     log=LOG,  # type: logging.Logger
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
-    first = index.first()
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
-    grid_type = index.getone("gridType")
+    grid_type = first["gridType"]
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
         geo_shape = (first["Ny"], first["Nx"])  # type: T.Tuple[int, ...]
@@ -450,8 +448,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(index: messages.FileIndex, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
-    first = index.first()
+def read_data_var_attrs(first: messages.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     attributes = {}
     for key in extra_keys:
         try:
@@ -471,11 +468,11 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
-    data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
-    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
-    data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
-    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS + GRID_TYPE_KEYS)
-    extra_attrs = read_data_var_attrs(index, extra_keys)
+    data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
+    grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS + grid_type_keys)
+    first = index.first()
+    extra_attrs = read_data_var_attrs(first, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
@@ -509,7 +506,7 @@ def build_variable_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(first, encode_cf, errors)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -669,5 +666,5 @@ def open_file(
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath, INDEX_KEYS).subindex(filter_by_keys)
+    index = open_fileindex(path, grib_errors, indexpath).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
