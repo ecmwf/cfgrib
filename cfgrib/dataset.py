@@ -37,22 +37,25 @@ GLOBAL_ATTRIBUTES_KEYS = ["edition", "centre", "centreDescription", "subCentre"]
 
 DATA_ATTRIBUTES_KEYS = [
     "paramId",
+    "dataType",
+    "numberOfPoints",
+    "typeOfLevel",
+    "stepUnits",
+    "stepType",
+    "gridType",
+]
+
+EXTRA_DATA_ATTRIBUTES_KEYS = [
     "shortName",
     "units",
     "name",
     "cfName",
     "cfVarName",
-    "dataType",
     "missingValue",
-    "numberOfPoints",
     "totalNumber",
     "numberOfDirections",
     "numberOfFrequencies",
-    "typeOfLevel",
     "NV",
-    "stepUnits",
-    "stepType",
-    "gridType",
     "gridDefinitionDescription",
 ]
 
@@ -445,6 +448,17 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
+def read_data_var_attrs(index: messages.FileIndex, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
+    first = index.first()
+    attributes = {}
+    for key in extra_keys:
+        try:
+            attributes["GRIB_" + key] = first[key]
+        except:
+            pass
+    return attributes
+
+
 def build_variable_components(
     index: messages.FileIndex,
     encode_cf: T.Sequence[str] = (),
@@ -452,13 +466,15 @@ def build_variable_components(
     log: logging.Logger = LOG,
     errors: str = "warn",
     squeeze: bool = True,
-    read_keys: T.Sequence[str] = (),
+    read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs_keys = DATA_ATTRIBUTES_KEYS[:]
     data_var_attrs_keys.extend(GRID_TYPE_MAP.get(index.getone("gridType"), []))
-    data_var_attrs_keys.extend(read_keys)
     data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
+    extra_keys = sorted(list(read_keys) + EXTRA_DATA_ATTRIBUTES_KEYS)
+    extra_attrs = read_data_var_attrs(index, extra_keys)
+    data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
     coord_name_key_map = {}
@@ -566,7 +582,7 @@ def build_dataset_components(
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
     log: logging.Logger = LOG,
-    read_keys: T.Sequence[str] = (),
+    read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
@@ -651,7 +667,5 @@ def open_file(
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    read_keys = list(read_keys)
-    index_keys = sorted(ALL_KEYS + read_keys)
-    index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
+    index = open_fileindex(path, grib_errors, indexpath, ALL_KEYS).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
