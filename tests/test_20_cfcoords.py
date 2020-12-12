@@ -149,6 +149,6 @@ def test_translate_coords_errors(da3):
     DATA_MODEL = {"config": {"preferred_time_dimension": "valid_time"}}
     cfcoords.translate_coords(da3, DATA_MODEL)
 
-    da3_fail = da3.drop("time")
+    da3_fail = da3.drop_vars("time")
     cfcoords.translate_coords(da3_fail, DATA_MODEL)
     cfcoords.translate_coords(da3_fail, DATA_MODEL, errors="ignore")
