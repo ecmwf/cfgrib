@@ -512,11 +512,14 @@ def build_variable_components(
     coord_vars.update(geo_coord_vars)
 
     offsets = {}  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+    header_value_index = {}
+    for dim in header_dimensions:
+        header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
-            header_indexes.append(coord_vars[dim].data.tolist().index(header_value))
+            header_indexes.append(header_value_index[dim][header_value])
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get("missingValue", 9999)
     data = OnDiskArray(
