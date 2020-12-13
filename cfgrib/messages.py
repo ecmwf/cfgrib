@@ -131,8 +131,8 @@ class Message(T.MutableMapping[str, T.Any]):
         return values
 
     def message_set(self, item: str, value: T.Any) -> None:
-        set_array = isinstance(value, T.Sequence) and not isinstance(value, (str, bytes))
-        if set_array:
+        arr = isinstance(value, (np.ndarray, T.Sequence)) and not isinstance(value, str)
+        if arr:
             eccodes.codes_set_array(self.codes_id, item, value)
         else:
             eccodes.codes_set(self.codes_id, item, value)
@@ -375,12 +375,13 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
     @property
     def header_values(self) -> T.Dict[str, T.List[T.Any]]:
         if not hasattr(self, "_header_values"):
-            self._header_values = {}  # type: T.Dict[str, T.List[T.Any]]
+            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
             for header_values, _ in self.offsets:
                 for i, value in enumerate(header_values):
-                    values = self._header_values.setdefault(self.index_keys[i], [])
+                    values = all_header_values.setdefault(self.index_keys[i], {})
                     if value not in values:
-                        values.append(value)
+                        values[value] = None
+            self._header_values = {k: list(v) for k, v in all_header_values.items()}
         return self._header_values
 
     def __getitem__(self, item: str) -> T.List[T.Any]:
