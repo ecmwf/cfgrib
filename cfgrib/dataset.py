@@ -21,6 +21,7 @@
 import datetime
 import json
 import logging
+import os
 import typing as T
 
 import attr
@@ -650,17 +651,18 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path: str,
+    path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     index_keys: T.Sequence[str] = INDEX_KEYS,
 ) -> messages.FileIndex:
+    path = os.fspath(path)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return stream.index(index_keys, indexpath=indexpath)
 
 
 def open_file(
-    path: str,
+    path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     filter_by_keys: T.Dict[str, T.Any] = {},

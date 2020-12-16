@@ -1,3 +1,4 @@
+import pathlib
 import os.path
 
 import numpy as np  # type: ignore
@@ -135,6 +136,10 @@ def test_Dataset():
         "longitude",
     )
     assert len(res.variables) == 9
+
+    res1 = dataset.open_file(pathlib.Path(TEST_DATA))
+
+    assert res1 == res
 
 
 def test_Dataset_no_encode():
