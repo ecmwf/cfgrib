@@ -1,5 +1,5 @@
-import pathlib
 import os.path
+import pathlib
 
 import numpy as np  # type: ignore
 import pytest
