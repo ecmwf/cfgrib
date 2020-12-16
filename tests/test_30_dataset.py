@@ -208,3 +208,10 @@ def test_OnDiskArray():
     assert np.allclose(
         res.data[2:4:2, [0, 3], 0, 0, 0], res.data.build_array()[2:4:2, [0, 3], 0, 0, 0]
     )
+
+
+def test_open_file() -> None:
+    res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
+
+    assert "t" in res.variables
+    assert "z" not in res.variables
