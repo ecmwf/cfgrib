@@ -15,9 +15,6 @@ jobs:
           - os: macos
             python: 3.8
           - os: ubuntu
-            python: 3.8
-            extras: -minimal
-          - os: ubuntu
             python: 3.9
             extras: -minimal
 # python-eccodes fail on windows

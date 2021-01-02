@@ -48,6 +48,7 @@ dependencies:
   - python_abi=3.8
   - pytz=2020.5
   - readline=8.0
+  - scipy=1.5.2
   - setuptools=51.0.0
   - six=1.15.0
   - sqlite=3.33.0
