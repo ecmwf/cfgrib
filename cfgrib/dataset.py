@@ -568,7 +568,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
         "cfgrib_version": __version__,
         "cfgrib_open_kwargs": json.dumps(encoding),
         "eccodes_version": messages.eccodes_version,
-        "timestamp": datetime.datetime.now().isoformat().partition(".")[0],
+        "timestamp": datetime.datetime.now().isoformat().partition(".")[0][:16],
     }
     history_in = (
         "{timestamp} GRIB to CDM+CF via "
