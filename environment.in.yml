@@ -8,4 +8,5 @@ dependencies:
   - numpy
   - pandas=1.0.5
   - python-eccodes>=2020.10.0
+  - scipy
   - xarray>=0.12.0
