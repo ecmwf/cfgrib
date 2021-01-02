@@ -4,7 +4,7 @@ channels:
 dependencies:
   - attrs>=19.2
   - click
-  - dask
+  - dask-core
   - eccodes=>2.19.0
   - netcdf4
   - numpy
