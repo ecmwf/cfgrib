@@ -9,13 +9,13 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu]
-        python: [3.6, 3.7, 3.8, 3.9]
+        python: [3.6, 3.7, 3.8]
         extras: ['']
         include:
           - os: macos
             python: 3.8
           - os: ubuntu
-            python: 3.8
+            python: 3.9
             extras: -minimal
 # python-eccodes and cffi both fail
 #          - os: windows
