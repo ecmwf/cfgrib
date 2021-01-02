@@ -1,4 +1,4 @@
-name: ubuntu-3.8-minimal
+name: ubuntu-3.9-minimal
 channels:
   - defaults
   - conda-forge
@@ -52,4 +52,4 @@ dependencies:
   - wheel=0.36.2
   - xz=5.2.5
   - zlib=1.2.11
-prefix: /usr/share/miniconda/envs/ubuntu-3.8-minimal
+prefix: /usr/share/miniconda/envs/ubuntu-3.9-minimal
