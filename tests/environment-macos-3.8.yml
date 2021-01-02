@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - attrs=20.3.0
-  - blas=2.3
+  - blas=1.0
   - bzip2=1.0.8
   - ca-certificates=2020.12.8
   - certifi=2020.12.5
@@ -14,25 +14,25 @@ dependencies:
   - eccodes=2.19.1
   - hdf4=4.2.13
   - hdf5=1.10.6
+  - intel-openmp=2019.4
   - jasper=1.900.1
   - jpeg=9d
   - krb5=1.18.2
   - libaec=1.0.4
-  - libblas=3.9.0
-  - libcblas=3.9.0
   - libcurl=7.71.1
   - libcxx=11.0.0
   - libedit=3.1.20191231
   - libffi=3.3
   - libgfortran=5.0.0
   - libgfortran5=9.3.0
-  - liblapack=3.9.0
-  - liblapacke=3.9.0
   - libnetcdf=4.7.4
-  - libopenblas=0.3.12
   - libpng=1.6.37
   - libssh2=1.9.0
-  - llvm-openmp=11.0.0
+  - llvm-openmp=10.0.0
+  - mkl=2019.4
+  - mkl-service=2.3.0
+  - mkl_fft=1.2.0
+  - mkl_random=1.1.1
   - ncurses=6.2
   - numpy=1.19.2
   - numpy-base=1.19.2
