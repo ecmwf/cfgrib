@@ -21,6 +21,7 @@
 import datetime
 import json
 import logging
+import os
 import typing as T
 
 import attr
@@ -327,16 +328,15 @@ class OnDiskArray(object):
 
     def __getitem__(self, item):
         # type: (T.Tuple[T.Any, ...]) -> np.ndarray
-        header_item = expand_item(item[: -self.geo_ndim], self.shape)
-        array_field_shape = tuple(len(l) for l in header_item) + self.shape[-self.geo_ndim :]
+        header_item_list = expand_item(item[: -self.geo_ndim], self.shape)
+        header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
+        array_field_shape = tuple(len(l) for l in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
         with open(self.stream.path, "rb") as file:
             for header_indexes, offset in self.offsets.items():
                 try:
-                    array_field_indexes = [
-                        it.index(ix) for it, ix in zip(header_item, header_indexes)
-                    ]
-                except ValueError:
+                    array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
+                except KeyError:
                     continue
                 # NOTE: fill a single field as found in the message
                 message = self.stream.message_from_file(file, offset=offset[0])
@@ -568,7 +568,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
         "cfgrib_version": __version__,
         "cfgrib_open_kwargs": json.dumps(encoding),
         "eccodes_version": messages.eccodes_version,
-        "timestamp": datetime.datetime.now().isoformat().partition(".")[0],
+        "timestamp": datetime.datetime.now().isoformat().partition(".")[0][:16],
     }
     history_in = (
         "{timestamp} GRIB to CDM+CF via "
@@ -651,17 +651,18 @@ class Dataset(object):
 
 
 def open_fileindex(
-    path: str,
+    path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     index_keys: T.Sequence[str] = INDEX_KEYS,
 ) -> messages.FileIndex:
+    path = os.fspath(path)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
     return stream.index(index_keys, indexpath=indexpath)
 
 
 def open_file(
-    path: str,
+    path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     filter_by_keys: T.Dict[str, T.Any] = {},
@@ -669,5 +670,6 @@ def open_file(
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath).subindex(filter_by_keys)
+    index_keys = INDEX_KEYS + list(filter_by_keys)
+    index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
     return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))

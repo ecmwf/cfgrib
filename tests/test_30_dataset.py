@@ -1,4 +1,5 @@
 import os.path
+import pathlib
 
 import numpy as np  # type: ignore
 import pytest
@@ -136,6 +137,10 @@ def test_Dataset():
     )
     assert len(res.variables) == 9
 
+    res1 = dataset.open_file(pathlib.Path(TEST_DATA))
+
+    assert res1 == res
+
 
 def test_Dataset_no_encode():
     res = dataset.open_file(TEST_DATA, encode_cf=())
@@ -203,3 +208,10 @@ def test_OnDiskArray():
     assert np.allclose(
         res.data[2:4:2, [0, 3], 0, 0, 0], res.data.build_array()[2:4:2, [0, 3], 0, 0, 0]
     )
+
+
+def test_open_file() -> None:
+    res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
+
+    assert "t" in res.variables
+    assert "z" not in res.variables
