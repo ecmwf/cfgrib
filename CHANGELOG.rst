@@ -2,10 +2,14 @@
 Changelog for cfgrib
 ====================
 
-0.9.8.6 (unreleased)
+0.9.9.0 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Many performance improvements during the generation of the index and during data access.
+  See: `#142 <https://github.com/ecmwf/cfgrib/issues/142>`_.
+- ``filter_by_keys`` now can select on all keys known to *ecCodes* without the need to
+  add non default ones to ``read_keys`` explicitely.
+  See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
 
 
 0.9.8.5 (2020-11-11)
