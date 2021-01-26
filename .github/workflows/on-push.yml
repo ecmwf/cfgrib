@@ -80,7 +80,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install mypy
-        mypy --strict .
+        mypy --strict cfgrib
 
   code-style:
     runs-on: ubuntu-latest
