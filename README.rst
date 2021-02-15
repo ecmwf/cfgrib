@@ -1,3 +1,8 @@
+cfgrib: A Python interface to map GRIB files to the NetCDF Common Data Model following the CF Convention using ecCodes
+======================================================================================================================
+
+.. image:: https://img.shields.io/pypi/v/cfgrib.svg
+   :target: https://pypi.python.org/pypi/cfgrib/
 
 Python interface to map GRIB files to the
 `Unidata's Common Data Model v4 <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
