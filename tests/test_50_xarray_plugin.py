@@ -2,8 +2,10 @@ import os
 from distutils.version import LooseVersion
 
 import pytest
+
 try:
     import xarray as xr
+
     has_xarray = True
 except:
     has_xarray = False
@@ -20,6 +22,7 @@ def test_plugin():
     engines = xr.backends.list_engines()
     cfgrib_entrypoint = engines["cfgrib"]
     assert cfgrib_entrypoint.__module__ == "cfgrib.xarray_entrypoint"
+
 
 @pytest.mark.skipif(
     not has_xarray,
