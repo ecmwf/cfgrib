@@ -37,7 +37,7 @@ class CfGribDataStore(AbstractDataStore):
     ):
         if lock is None:
             lock = ECCODES_LOCK
-        self.lock = xr.backends.locks.ensure_lock(lock)
+        self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
         self.ds = dataset.open_file(filename, **backend_kwargs)
 
     def open_store_variable(
@@ -49,11 +49,11 @@ class CfGribDataStore(AbstractDataStore):
             data = var.data
         else:
             wrapped_array = CfGribArrayWrapper(self, var.data)
-            data = xr.core.indexing.LazilyOuterIndexedArray(wrapped_array)
+            data = xr.core.indexing.LazilyOuterIndexedArray(wrapped_array)  # type: ignore
         encoding = self.ds.encoding.copy()
         encoding["original_shape"] = var.data.shape
 
-        return xr.Variable(var.dimensions, data, var.attributes, encoding)
+        return xr.Variable(var.dimensions, data, var.attributes, encoding)  # type: ignore
 
     def get_variables(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
         return xr.core.utils.FrozenDict(
@@ -102,7 +102,7 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn"
-    ) -> xr.Dataset:  # type: ignore
+    ) -> xr.Dataset:
 
         store = CfGribDataStore(
             filename_or_obj,
@@ -116,7 +116,7 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
             errors=errors,
         )
         with xr.core.utils.close_on_error(store):
-            vars, attrs = store.load()
+            vars, attrs = store.load()  # type: ignore
             encoding = store.get_encoding()
             vars, attrs, coord_names = xr.conventions.decode_cf_variables(
                 vars,
@@ -128,7 +128,7 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
                 drop_variables=drop_variables,
                 use_cftime=use_cftime,
                 decode_timedelta=decode_timedelta,
-            )
+            )  # type: ignore
 
             ds = xr.Dataset(vars, attrs=attrs)
             ds = ds.set_coords(coord_names.intersection(vars))
