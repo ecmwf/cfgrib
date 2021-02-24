@@ -101,7 +101,7 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
         encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
-        errors: str = "warn"
+        errors: str = "warn",
     ) -> xr.Dataset:
 
         store = CfGribDataStore(
@@ -139,9 +139,7 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
 
 class CfGribArrayWrapper(BackendArray):
     def __init__(
-        self,
-        datastore: CfGribDataStore,
-        array: T.Union[dataset.OnDiskArray, np.ndarray]
+        self, datastore: CfGribDataStore, array: T.Union[dataset.OnDiskArray, np.ndarray]
     ):
         self.datastore = datastore
         self.shape = array.shape

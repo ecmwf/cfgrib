@@ -2,6 +2,7 @@ import os
 from distutils.version import LooseVersion
 
 import pytest
+import xarray as xr
 
 try:
     import xarray as xr
