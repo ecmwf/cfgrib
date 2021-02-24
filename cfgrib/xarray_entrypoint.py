@@ -1,7 +1,8 @@
 import os
+import typing as T
 from distutils.version import LooseVersion
 
-import numpy as np
+import numpy as np  # type: ignore
 import xarray as xr
 
 from . import dataset
@@ -20,24 +21,7 @@ from xarray.backends.common import (
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
 #       https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
-ECCODES_LOCK = xr.backends.locks.SerializableLock()
-
-
-class CfGribArrayWrapper(BackendArray):
-    def __init__(self, datastore, array):
-        self.datastore = datastore
-        self.shape = array.shape
-        self.dtype = array.dtype
-        self.array = array
-
-    def __getitem__(self, key):
-        return xr.core.indexing.explicit_indexing_adapter(
-            key, self.shape, xr.core.indexing.IndexingSupport.BASIC, self._getitem
-        )
-
-    def _getitem(self, key):
-        with self.datastore.lock:
-            return self.array[key]
+ECCODES_LOCK = xr.backends.locks.SerializableLock()  # type: ignore
 
 
 class CfGribDataStore(AbstractDataStore):
@@ -45,44 +29,54 @@ class CfGribDataStore(AbstractDataStore):
     Implements the ``xr.AbstractDataStore`` read-only API for a GRIB file.
     """
 
-    def __init__(self, filename, lock=None, **backend_kwargs):
-
+    def __init__(
+        self,
+        filename: str,
+        lock: T.Union[T.ContextManager[T.Any], None] = None,
+        **backend_kwargs: T.Any,
+    ):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)
         self.ds = dataset.open_file(filename, **backend_kwargs)
 
-    def open_store_variable(self, name, var):
+    def open_store_variable(
+        self,
+        name: str,
+        var: dataset.Variable,
+    ) -> xr.Variable:
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
             wrapped_array = CfGribArrayWrapper(self, var.data)
             data = xr.core.indexing.LazilyOuterIndexedArray(wrapped_array)
-
         encoding = self.ds.encoding.copy()
         encoding["original_shape"] = var.data.shape
 
-        return xr.core.variable.Variable(var.dimensions, data, var.attributes, encoding)
+        return xr.Variable(var.dimensions, data, var.attributes, encoding)
 
-    def get_variables(self):
+    def get_variables(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
         return xr.core.utils.FrozenDict(
             (k, self.open_store_variable(k, v)) for k, v in self.ds.variables.items()
         )
 
-    def get_attrs(self):
+    def get_attrs(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
         return xr.core.utils.Frozen(self.ds.attributes)
 
-    def get_dimensions(self):
+    def get_dimensions(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
         return xr.core.utils.Frozen(self.ds.dimensions)
 
-    def get_encoding(self):
+    def get_encoding(self) -> T.Dict[str, T.Set[str]]:
         dims = self.get_dimensions()
         encoding = {"unlimited_dims": {k for k, v in dims.items() if v is None}}
         return encoding
 
 
 class CfgribfBackendEntrypoint(BackendEntrypoint):
-    def guess_can_open(self, store_spec):
+    def guess_can_open(
+        self,
+        store_spec: str,
+    ) -> bool:
         try:
             _, ext = os.path.splitext(store_spec)
         except TypeError:
@@ -91,24 +85,24 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj,
+        filename_or_obj: str,
         *,
-        mask_and_scale=True,
-        decode_times=True,
-        concat_characters=True,
-        decode_coords=True,
-        drop_variables=None,
-        use_cftime=None,
-        decode_timedelta=None,
-        lock=None,
-        indexpath="{path}.{short_hash}.idx",
-        filter_by_keys={},
-        read_keys=[],
-        encode_cf=("parameter", "time", "geography", "vertical"),
-        squeeze=True,
-        time_dims=("time", "step"),
+        mask_and_scale: bool = True,
+        decode_times: bool = True,
+        concat_characters: bool = True,
+        decode_coords: bool = True,
+        drop_variables: T.Union[T.Iterable[str], None] = None,
+        use_cftime: T.Union[bool, None] = None,
+        decode_timedelta: T.Union[bool, None] = None,
+        lock: T.Union[T.ContextManager[T.Any], None] = None,
+        indexpath: str = "{path}.{short_hash}.idx",
+        filter_by_keys: T.Dict[str, T.Any] = {},
+        read_keys: T.Iterable[str] = (),
+        encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
+        squeeze: bool = True,
+        time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn"
-    ):
+    ) -> xr.Dataset:  # type: ignore
 
         store = CfGribDataStore(
             filename_or_obj,
@@ -141,3 +135,30 @@ class CfgribfBackendEntrypoint(BackendEntrypoint):
             ds.set_close(store.close)
             ds.encoding = encoding
         return ds
+
+
+class CfGribArrayWrapper(BackendArray):
+    def __init__(
+        self,
+        datastore: CfGribDataStore,
+        array: T.Union[dataset.OnDiskArray, np.ndarray]
+    ):
+        self.datastore = datastore
+        self.shape = array.shape
+        self.dtype = array.dtype
+        self.array = array
+
+    def __getitem__(
+        self,
+        key: xr.core.indexing.ExplicitIndexer,
+    ) -> np.ndarray:
+        return xr.core.indexing.explicit_indexing_adapter(
+            key, self.shape, xr.core.indexing.IndexingSupport.BASIC, self._getitem
+        )
+
+    def _getitem(
+        self,
+        key: T.Tuple[T.Any, ...],
+    ) -> np.ndarray:
+        with self.datastore.lock:
+            return self.array[key]
