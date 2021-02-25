@@ -17,7 +17,6 @@ from xarray.backends.common import (
     BackendEntrypoint,
 )
 
-
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
 #       https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
