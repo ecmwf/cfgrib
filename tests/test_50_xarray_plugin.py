@@ -8,6 +8,7 @@ xr = pytest.importorskip("xarray")  # noqa
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
 
+
 @pytest.mark.skipif(
     not (LooseVersion(xr.__version__ >= "0.18")),
     reason="required xarray >= 0.18",
