@@ -2,21 +2,14 @@ import os
 from distutils.version import LooseVersion
 
 import pytest
-import xarray as xr
 
-try:
-    import xarray as xr
-
-    has_xarray = True
-except:
-    has_xarray = False
+xr = pytest.importorskip("xarray")  # noqa
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
 
-
 @pytest.mark.skipif(
-    not (has_xarray and (LooseVersion(xr.__version__) >= "0.18")),
+    not (LooseVersion(xr.__version__ >= "0.18")),
     reason="required xarray >= 0.18",
 )
 def test_plugin():
@@ -25,10 +18,6 @@ def test_plugin():
     assert cfgrib_entrypoint.__module__ == "cfgrib.xarray_entrypoint"
 
 
-@pytest.mark.skipif(
-    not has_xarray,
-    reason="required xarray",
-)
 def test_xr_open_dataset():
     expected = {
         "latitude": 37,
@@ -41,7 +30,7 @@ def test_xr_open_dataset():
 
 
 @pytest.mark.skipif(
-    not (has_xarray and (LooseVersion(xr.__version__) >= "0.18")),
+    not (LooseVersion(xr.__version__ >= "0.18")),
     reason="required xarray >= 0.18",
 )
 def test_read():
