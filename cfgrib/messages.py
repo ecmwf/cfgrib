@@ -115,6 +115,8 @@ class Message(T.MutableMapping[str, T.Any]):
     def message_get(self, item, key_type=None, default=_MARKER):
         # type: (str, T.Optional[type], T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
+        if key_type is None and item in ('level', 'topLevel', 'bottomLevel',):
+            key_type = float
         try:
             values = eccodes.codes_get_array(self.codes_id, item, key_type)
             if values is None:
@@ -127,7 +129,10 @@ class Message(T.MutableMapping[str, T.Any]):
         if len(values) == 1:
             if isinstance(values, np.ndarray):
                 values = values.tolist()
-            return values[0]
+            val = values[0]
+            if key_type is float and val.is_integer():
+                val = int(val)
+            return val
         return values
 
     def message_set(self, item: str, value: T.Any) -> None:
