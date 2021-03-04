@@ -115,6 +115,7 @@ class Message(T.MutableMapping[str, T.Any]):
     def message_get(self, item, key_type=None, default=_MARKER):
         # type: (str, T.Optional[type], T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
+        original_key_type = key_type
         if key_type is None and item in ('level', 'topLevel', 'bottomLevel',):
             key_type = float
         try:
@@ -130,7 +131,7 @@ class Message(T.MutableMapping[str, T.Any]):
             if isinstance(values, np.ndarray):
                 values = values.tolist()
             val = values[0]
-            if key_type is float and val.is_integer():
+            if original_key_type is None and key_type is float and val.is_integer():
                 val = int(val)
             return val
         return values
