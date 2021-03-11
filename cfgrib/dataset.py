@@ -374,15 +374,16 @@ def build_geography_coordinates(
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
         geo_shape = (first["Ny"], first["Nx"])  # type: T.Tuple[int, ...]
-        latitudes = np.array(first["distinctLatitudes"])
+        latitudes = np.array(first["distinctLatitudes"], ndmin=1)
         geo_coord_vars["latitude"] = Variable(
             dimensions=("latitude",), data=latitudes, attributes=COORD_ATTRS["latitude"].copy()
         )
+
         if latitudes[0] > latitudes[-1]:
             geo_coord_vars["latitude"].attributes["stored_direction"] = "decreasing"
         geo_coord_vars["longitude"] = Variable(
             dimensions=("longitude",),
-            data=np.array(first["distinctLongitudes"]),
+            data=np.array(first["distinctLongitudes"], ndmin=1),
             attributes=COORD_ATTRS["longitude"],
         )
     elif "geography" in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:

@@ -10,6 +10,8 @@ Changelog for cfgrib
 - ``filter_by_keys`` now can select on all keys known to *ecCodes* without the need to
   add non default ones to ``read_keys`` explicitely.
   See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
+- Fixed issue where could not load a GRIB message that has only one grid point.
+  See: `#199 <https://github.com/ecmwf/cfgrib/issues/199>`_.
 
 
 0.9.8.5 (2020-11-11)
