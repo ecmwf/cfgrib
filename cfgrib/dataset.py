@@ -147,7 +147,7 @@ GRID_TYPE_MAP = {
 GRID_TYPE_KEYS = sorted(set(k for _, ks in GRID_TYPE_MAP.items() for k in ks))
 
 ENSEMBLE_KEYS = ["number"]
-VERTICAL_KEYS = ["level"]
+VERTICAL_KEYS = ["level:float"]
 DATA_TIME_KEYS = ["dataDate", "dataTime", "endStep"]
 ALL_REF_TIME_KEYS = [
     "time",
@@ -483,16 +483,17 @@ def build_variable_components(
         if len(values) == 1 and values[0] == "undef":
             log.debug("missing from GRIB stream: %r" % coord_key)
             continue
-        coord_name = coord_key
+        orig_name = coord_key.partition(":")[0]
+        coord_name = orig_name
         if (
             "vertical" in encode_cf
-            and coord_key == "level"
+            and coord_name == "level"
             and "GRIB_typeOfLevel" in data_var_attrs
         ):
             coord_name = data_var_attrs["GRIB_typeOfLevel"]
-            coord_name_key_map[coord_name] = coord_key
+            coord_name_key_map[coord_name] = orig_name
         attributes = {
-            "long_name": "original GRIB coordinate for key: %s(%s)" % (coord_key, coord_name),
+            "long_name": "original GRIB coordinate for key: %s(%s)" % (orig_name, coord_name),
             "units": "1",
         }
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
