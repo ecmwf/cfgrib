@@ -492,7 +492,7 @@ def build_variable_components(
             and "GRIB_typeOfLevel" in data_var_attrs
         ):
             coord_name = data_var_attrs["GRIB_typeOfLevel"]
-            coord_name_key_map[coord_name] = orig_name
+        coord_name_key_map[coord_name] = coord_key
         attributes = {
             "long_name": "original GRIB coordinate for key: %s(%s)" % (orig_name, coord_name),
             "units": "1",
