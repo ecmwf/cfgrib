@@ -1,3 +1,8 @@
+cfgrib: A Python interface to map GRIB files to the NetCDF Common Data Model following the CF Convention using ecCodes
+======================================================================================================================
+
+.. image:: https://img.shields.io/pypi/v/cfgrib.svg
+   :target: https://pypi.python.org/pypi/cfgrib/
 
 Python interface to map GRIB files to the
 `Unidata's Common Data Model v4 <https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/>`_
@@ -652,6 +657,7 @@ can be saved at the moment:
 
 .. code-block: python
 
+>>> from cfgrib.xarray_to_grib import to_grib
 >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> ds
 <xarray.Dataset>
@@ -675,7 +681,7 @@ Attributes:
     Conventions:             CF-1.7
     institution:             European Centre for Medium-Range Weather Forecasts
     history:                 ...
->>> cfgrib.to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
+>>> to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
 >>> xr.open_dataset('out1.grib', engine='cfgrib')
 <xarray.Dataset>
 Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
@@ -715,7 +721,7 @@ for example:
 ...     dims=['latitude', 'longitude'],
 ... ).to_dataset(name='skin_temperature')
 >>> ds2.skin_temperature.attrs['GRIB_shortName'] = 'skt'
->>> cfgrib.to_grib(ds2, 'out2.grib')
+>>> to_grib(ds2, 'out2.grib')
 >>> xr.open_dataset('out2.grib', engine='cfgrib')
 <xarray.Dataset>
 Dimensions:     (latitude: 5, longitude: 6)

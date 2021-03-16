@@ -15,9 +15,9 @@ jobs:
           - os: macos
             python: 3.8
           - os: ubuntu
-            python: 3.8
+            python: 3.9
             extras: -minimal
-# python-eccodes and cffi both fail
+# python-eccodes fail on windows
 #          - os: windows
 #            python: 3.8
 
@@ -80,7 +80,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install mypy
-        mypy --strict .
+        mypy --strict cfgrib
 
   code-style:
     runs-on: ubuntu-latest

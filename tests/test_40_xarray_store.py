@@ -26,7 +26,7 @@ def test_open_dataset():
     assert var.mean() > 0.0
 
     with pytest.raises(ValueError):
-        xarray_store.open_dataset(TEST_DATA, engine="netcdf4")
+        xarray_store.open_dataset(TEST_DATA, engine="any-other-engine")
 
     res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={"errors": "warn"})
     assert "isobaricInhPa" in res.dims

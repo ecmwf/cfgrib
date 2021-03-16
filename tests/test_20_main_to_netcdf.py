@@ -3,7 +3,7 @@ import os.path
 import click.testing
 import pytest
 
-dask = pytest.importorskip("dask")  # noqa
+pytest.importorskip("scipy", reason="scpy not found")
 xr = pytest.importorskip("xarray")  # noqa
 
 from cfgrib import __main__

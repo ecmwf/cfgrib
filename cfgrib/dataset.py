@@ -157,7 +157,6 @@ ALL_REF_TIME_KEYS = [
     "forecastMonth",
     "indexing_time",
 ]
-
 SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
@@ -377,15 +376,16 @@ def build_geography_coordinates(
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
         geo_dims = ("latitude", "longitude")  # type: T.Tuple[str, ...]
         geo_shape = (first["Ny"], first["Nx"])  # type: T.Tuple[int, ...]
-        latitudes = np.array(first["distinctLatitudes"])
+        latitudes = np.array(first["distinctLatitudes"], ndmin=1)
         geo_coord_vars["latitude"] = Variable(
             dimensions=("latitude",), data=latitudes, attributes=COORD_ATTRS["latitude"].copy()
         )
+
         if latitudes[0] > latitudes[-1]:
             geo_coord_vars["latitude"].attributes["stored_direction"] = "decreasing"
         geo_coord_vars["longitude"] = Variable(
             dimensions=("longitude",),
-            data=np.array(first["distinctLongitudes"]),
+            data=np.array(first["distinctLongitudes"], ndmin=1),
             attributes=COORD_ATTRS["longitude"],
         )
     elif "geography" in encode_cf and grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS:
@@ -478,6 +478,7 @@ def build_variable_components(
     extra_attrs = read_data_var_attrs(first, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
+
     coord_name_key_map = {}
     coord_vars = {}
     for coord_key in coords_map:
@@ -570,7 +571,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
         "cfgrib_version": __version__,
         "cfgrib_open_kwargs": json.dumps(encoding),
         "eccodes_version": messages.eccodes_version,
-        "timestamp": datetime.datetime.now().isoformat().partition(".")[0],
+        "timestamp": datetime.datetime.now().isoformat().partition(".")[0][:16],
     }
     history_in = (
         "{timestamp} GRIB to CDM+CF via "
@@ -657,10 +658,13 @@ def open_fileindex(
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
+    filter_by_keys: T.Dict[str, T.Any] = {},
 ) -> messages.FileIndex:
     path = os.fspath(path)
+    index_keys = sorted(set(index_keys) | set(filter_by_keys))
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    return stream.index(index_keys, indexpath=indexpath)
+    index = stream.index(index_keys, indexpath=indexpath)
+    return index.subindex(filter_by_keys)
 
 
 def open_file(
@@ -674,7 +678,7 @@ def open_file(
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims)
-    index = open_fileindex(path, grib_errors, indexpath, index_keys).subindex(filter_by_keys)
+    index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
         *build_dataset_components(index, read_keys=read_keys, time_dims=time_dims, **kwargs)
     )

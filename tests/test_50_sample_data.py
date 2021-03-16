@@ -23,6 +23,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
         "regular_ll_sfc",
         "regular_ll_msl",
         "scanning_mode_64",
+        "single_gridpoint",
         "spherical_harmonics",
         "t_analysis_and_fc_0",
     ],
