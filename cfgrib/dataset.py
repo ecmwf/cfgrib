@@ -159,9 +159,11 @@ ALL_REF_TIME_KEYS = [
 ]
 SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
-ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + ALL_REF_TIME_KEYS + SPECTRA_KEYS
+ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 
-INDEX_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + ALL_HEADER_DIMS)
+INDEX_KEYS = sorted(
+    GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS
+)
 
 COORD_ATTRS = {
     # geography
@@ -655,7 +657,7 @@ def open_fileindex(
     path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
-    index_keys: T.Sequence[str] = INDEX_KEYS,
+    index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
     filter_by_keys: T.Dict[str, T.Any] = {},
 ) -> messages.FileIndex:
     path = os.fspath(path)
@@ -670,9 +672,13 @@ def open_file(
     grib_errors: str = "warn",
     indexpath: str = "{path}.{short_hash}.idx",
     filter_by_keys: T.Dict[str, T.Any] = {},
-    read_keys: T.Iterable[str] = (),
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index = open_fileindex(path, grib_errors, indexpath, filter_by_keys=filter_by_keys)
-    return Dataset(*build_dataset_components(index, read_keys=read_keys, **kwargs))
+    index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims)
+    index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
+    return Dataset(
+        *build_dataset_components(index, read_keys=read_keys, time_dims=time_dims, **kwargs)
+    )
