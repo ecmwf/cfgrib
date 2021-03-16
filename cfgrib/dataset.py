@@ -160,7 +160,7 @@ ALL_REF_TIME_KEYS = [
 
 SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
-ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + DATA_TIME_KEYS + SPECTRA_KEYS
+ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 
 INDEX_KEYS = sorted(GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + ALL_HEADER_DIMS)
 
@@ -476,7 +476,6 @@ def build_variable_components(
     extra_attrs = read_data_var_attrs(first, extra_keys)
     data_var_attrs.update(**extra_attrs)
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
-
     coord_name_key_map = {}
     coord_vars = {}
     for coord_key in coords_map:
