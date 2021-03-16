@@ -39,11 +39,7 @@ class CfGribDataStore(AbstractDataStore):
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
         self.ds = dataset.open_file(filename, **backend_kwargs)
 
-    def open_store_variable(
-        self,
-        name: str,
-        var: dataset.Variable,
-    ) -> xr.Variable:
+    def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
@@ -56,7 +52,7 @@ class CfGribDataStore(AbstractDataStore):
 
     def get_variables(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
         return xr.core.utils.FrozenDict(
-            (k, self.open_store_variable(k, v)) for k, v in self.ds.variables.items()
+            (k, self.open_store_variable(v)) for k, v in self.ds.variables.items()
         )
 
     def get_attrs(self) -> xr.core.utils.Frozen[T.Any, T.Any]:
@@ -72,10 +68,7 @@ class CfGribDataStore(AbstractDataStore):
 
 
 class CfgribfBackendEntrypoint(BackendEntrypoint):
-    def guess_can_open(
-        self,
-        store_spec: str,
-    ) -> bool:
+    def guess_can_open(self, store_spec: str,) -> bool:
         try:
             _, ext = os.path.splitext(store_spec)
         except TypeError:
@@ -145,17 +138,11 @@ class CfGribArrayWrapper(BackendArray):
         self.dtype = array.dtype
         self.array = array
 
-    def __getitem__(
-        self,
-        key: xr.core.indexing.ExplicitIndexer,
-    ) -> np.ndarray:
+    def __getitem__(self, key: xr.core.indexing.ExplicitIndexer,) -> np.ndarray:
         return xr.core.indexing.explicit_indexing_adapter(
             key, self.shape, xr.core.indexing.IndexingSupport.BASIC, self._getitem
         )
 
-    def _getitem(
-        self,
-        key: T.Tuple[T.Any, ...],
-    ) -> np.ndarray:
+    def _getitem(self, key: T.Tuple[T.Any, ...],) -> np.ndarray:
         with self.datastore.lock:
             return self.array[key]
