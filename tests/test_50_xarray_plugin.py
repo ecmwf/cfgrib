@@ -1,18 +1,13 @@
 import os
-from distutils.version import LooseVersion
 
 import pytest
 
-xr = pytest.importorskip("xarray")  # noqa
+xr = pytest.importorskip("xarray", minversion="0.18", reason="required xarray>=0.18")  # noqa
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
 
 
-@pytest.mark.skipif(
-    not (LooseVersion(xr.__version__ >= "0.18")),
-    reason="required xarray >= 0.18",
-)
 def test_plugin():
     engines = xr.backends.list_engines()
     cfgrib_entrypoint = engines["cfgrib"]
@@ -30,10 +25,6 @@ def test_xr_open_dataset():
     assert list(ds.data_vars) == ["skt"]
 
 
-@pytest.mark.skipif(
-    not (LooseVersion(xr.__version__ >= "0.18")),
-    reason="required xarray >= 0.18",
-)
 def test_read():
     expected = {
         "latitude": 37,
