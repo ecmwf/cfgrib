@@ -25,10 +25,8 @@ import pickle
 import typing as T
 
 import attr
-import numpy as np  # type: ignore
-
 import eccodes  # type: ignore
-
+import numpy as np  # type: ignore
 
 eccodes_version = eccodes.codes_get_api_version()
 
