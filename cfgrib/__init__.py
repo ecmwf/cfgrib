@@ -23,6 +23,5 @@ from .messages import FileStream, Message
 # NOTE: xarray is not a hard dependency, but let's provide helpers if it is available.
 try:
     from .xarray_store import open_dataset, open_datasets
-    from .xarray_to_grib import to_grib
 except ImportError:
     pass
