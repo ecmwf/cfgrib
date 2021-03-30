@@ -27,7 +27,7 @@ import typing as T
 import attr
 import numpy as np  # type: ignore
 
-import eccodes
+import eccodes  # type: ignore
 
 
 eccodes_version = eccodes.codes_get_api_version()
