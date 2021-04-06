@@ -536,7 +536,12 @@ def build_variable_components(
                         header_value, coord_value
                     )
                     if saved_coord_value != coord_value:
-                        raise DatasetBuildError("pippo")
+                        raise ValueError(
+                            f"'{coord_name}' cannot be indexed by dimension '{extra_coords[coord_name]}': \n"
+                            f"found two '{coord_name}' distinct values ({saved_coord_value}, {coord_value}) "
+                            f"for '{extra_coords[coord_name]}' value {header_value}."
+                        )
+
                     extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get("missingValue", 9999)
@@ -697,7 +702,7 @@ def open_file(
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
-    **kwargs: T.Any
+    **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
