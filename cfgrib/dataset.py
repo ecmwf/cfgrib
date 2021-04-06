@@ -470,6 +470,7 @@ def build_variable_components(
     squeeze: bool = True,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -516,6 +517,9 @@ def build_variable_components(
 
     offsets = {}  # type: T.Dict[T.Tuple[int, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
     header_value_index = {}
+    extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
+        coord_name: {} for coord_name in extra_coords
+    }
     for dim in header_dimensions:
         header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
@@ -523,6 +527,17 @@ def build_variable_components(
         for dim in header_dimensions:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
             header_indexes.append(header_value_index[dim][header_value])
+            for coord_name in extra_coords:
+                coord_value = header_values[
+                    index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
+                ]
+                if dim == extra_coords[coord_name]:
+                    saved_coord_value = extra_coords_data[coord_name].get(
+                        header_value, coord_value
+                    )
+                    if saved_coord_value != coord_value:
+                        raise DatasetBuildError("pippo")
+                    extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get("missingValue", 9999)
     data = OnDiskArray(
@@ -541,6 +556,11 @@ def build_variable_components(
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
+    for coord_name in extra_coords:
+        coord_vars[coord_name] = Variable(
+            dimensions=(extra_coords[coord_name],),
+            data=np.array(list(extra_coords_data[coord_name].values())),
+        )
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
@@ -589,6 +609,7 @@ def build_dataset_components(
     log: logging.Logger = LOG,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -604,6 +625,7 @@ def build_dataset_components(
                 squeeze=squeeze,
                 read_keys=read_keys,
                 time_dims=time_dims,
+                extra_coords=extra_coords,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -674,11 +696,14 @@ def open_file(
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
     **kwargs: T.Any
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims)
+    index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
-        *build_dataset_components(index, read_keys=read_keys, time_dims=time_dims, **kwargs)
+        *build_dataset_components(
+            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
+        )
     )

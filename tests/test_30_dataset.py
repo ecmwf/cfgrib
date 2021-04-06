@@ -200,6 +200,12 @@ def test_Dataset_reguler_gg_surface():
     assert np.allclose(res.variables["latitude"].data[:2], [88.57216851, 86.72253095])
 
 
+def test_Dataset_extra_coords():
+    res = dataset.open_file(TEST_DATA, extra_coords={"experimentVersionNumber": "time"})
+    assert "experimentVersionNumber" in res.variables
+    assert res.variables["experimentVersionNumber"].dimensions == ("time",)
+
+
 def test_OnDiskArray():
     res = dataset.open_file(TEST_DATA).variables["t"]
 
