@@ -206,6 +206,11 @@ def test_Dataset_extra_coords():
     assert res.variables["experimentVersionNumber"].dimensions == ("time",)
 
 
+def test_Dataet_extra_coords_error():
+    with pytest.raises(ValueError):
+        dataset.open_file(TEST_DATA, extra_coords={"validityDate": "number"})
+
+
 def test_OnDiskArray():
     res = dataset.open_file(TEST_DATA).variables["t"]
 
