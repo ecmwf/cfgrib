@@ -101,10 +101,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Check MANIFEST.in
-      run: |
-        $CONDA/bin/conda install -c conda-forge check-manifest
-        $CONDA/bin/check-manifest .
     - name: Build distributions
       run: |
         $CONDA/bin/conda install pip setuptools wheel

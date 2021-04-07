@@ -28,3 +28,5 @@ try:
     from .xarray_store import open_dataset, open_datasets
 except ImportError:
     pass
+
+__all__ = ["__version__"]

@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import os
-import re
 
 import setuptools  # type: ignore
 
@@ -40,7 +39,7 @@ setuptools.setup(
     python_requires=">=3.5",
     extras_require={
         "xarray": ["xarray>=0.12.0"],
-        "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.12.0",],
+        "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.12.0"],
     },
     zip_safe=True,
     keywords="eccodes grib xarray",
