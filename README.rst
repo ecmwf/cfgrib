@@ -32,9 +32,9 @@ Work in progress:
 - **Beta** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
   with a optional conversion to a specific coordinates data model,
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
-- **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
-  see the *Advanced write usage* section below and
-  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
+- **Alpha/Broken** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
+  see the *Advanced write usage* section below, `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_
+  and `#222 <https://github.com/ecmwf/cfgrib/issues/222>`_.
 
 Limitations:
 
