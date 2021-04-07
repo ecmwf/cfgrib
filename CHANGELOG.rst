@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.9.0 (unreleased)
+0.9.9.0 (2021-04-07)
 --------------------
 
 - Many performance improvements during the generation of the index and during data access.
