@@ -60,7 +60,8 @@ def test_encode_cf_first():
 
 
 def test_build_data_var_components_no_encode():
-    index = messages.FileStream(path=TEST_DATA).index(dataset.INDEX_KEYS).subindex(paramId=130)
+    index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
+    index = messages.FileStream(path=TEST_DATA).index(index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
     assert dims == {"number": 10, "dataDate": 2, "dataTime": 2, "level": 2, "values": 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
@@ -71,7 +72,8 @@ def test_build_data_var_components_no_encode():
 
 def test_build_data_var_components_encode_cf_geography():
     stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
-    index = stream.index(dataset.INDEX_KEYS).subindex(paramId=130)
+    index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
+    index = stream.index(index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
         index=index, encode_cf="geography"
     )
@@ -90,7 +92,7 @@ def test_build_data_var_components_encode_cf_geography():
 
 
 def test_build_dataset_components_time_dims():
-    index_keys = sorted(dataset.INDEX_KEYS)
+    index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
@@ -100,12 +102,10 @@ def test_build_dataset_components_time_dims():
         "step": 20,
         "time": 8,
     }
-
-    index_keys = sorted(dataset.INDEX_KEYS)
+    time_dims = ["indexing_time", "verifying_time"]
+    index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
-    dims, *_ = dataset.build_dataset_components(
-        index, read_keys=[], time_dims=("indexing_time", "verifying_time")
-    )
+    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {
         "number": 28,
         "indexing_time": 2,
@@ -114,11 +114,10 @@ def test_build_dataset_components_time_dims():
         "longitude": 11,
     }
 
-    index_keys = sorted(dataset.INDEX_KEYS)
+    time_dims = ["indexing_time", "step"]
+    index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
-    dims, *_ = dataset.build_dataset_components(
-        index, read_keys=[], time_dims=("indexing_time", "step")
-    )
+    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
@@ -199,6 +198,17 @@ def test_Dataset_reguler_gg_surface():
 
     assert res.dimensions == {"latitude": 96, "longitude": 192}
     assert np.allclose(res.variables["latitude"].data[:2], [88.57216851, 86.72253095])
+
+
+def test_Dataset_extra_coords():
+    res = dataset.open_file(TEST_DATA, extra_coords={"experimentVersionNumber": "time"})
+    assert "experimentVersionNumber" in res.variables
+    assert res.variables["experimentVersionNumber"].dimensions == ("time",)
+
+
+def test_Dataet_extra_coords_error():
+    with pytest.raises(ValueError):
+        dataset.open_file(TEST_DATA, extra_coords={"validityDate": "number"})
 
 
 def test_OnDiskArray():
