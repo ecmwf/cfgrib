@@ -80,6 +80,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install mypy
+        python setup.py --version  # trigger creation of cfgrib/version.py
         mypy --strict cfgrib
 
   code-style:
