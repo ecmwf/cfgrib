@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.9.9.0.dev0"
+try:
+    from .version import __version__
+except ImportError:
+    # Local copy or not installed with setuptools.
+    __version__ = "999"
 
-# cfgrib core API depends on the ECMWF ecCodes C-library only
 from .cfmessage import CfMessage
 from .dataset import Dataset, DatasetBuildError, open_file, open_fileindex
 from .messages import FileStream, Message

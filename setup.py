@@ -25,19 +25,8 @@ def read(path: str) -> str:
     return open(file_path).read()
 
 
-# single-sourcing the package version using method 1 of:
-#   https://packaging.python.org/guides/single-sourcing-package-version/
-def parse_version_from(path: str) -> str:
-    version_file = read(path)
-    version_match = re.search(r'^__version__ = "(.*)"', version_file, re.M)
-    if version_match is None or len(version_match.groups()) > 1:
-        raise ValueError("couldn't parse version")
-    return version_match.group(1)
-
-
 setuptools.setup(
     name="cfgrib",
-    version=parse_version_from("cfgrib/__init__.py"),
     description="Python interface to map GRIB files to the NetCDF Common Data Model "
     "following the CF Convention using ecCodes.",
     long_description=read("README.rst") + read("CHANGELOG.rst"),
