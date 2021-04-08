@@ -74,7 +74,7 @@ def to_netcdf(inpaths, outpath, cdm, engine):
 @click.option("--variable", "-v", default=None)
 @click.option("--cdm", "-c", default=None)
 @click.option("--engine", "-e", default="cfgrib")
-def to_netcdf(inpaths, variable, cdm, engine):
+def dump(inpaths, variable, cdm, engine):
     # type: (T.List[str], str, str, str) -> None
     import xarray as xr
 
