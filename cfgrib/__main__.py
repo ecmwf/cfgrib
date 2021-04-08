@@ -61,10 +61,45 @@ def to_netcdf(inpaths, outpath, cdm, engine):
         ds = xr.open_dataset(inpaths[0], engine=engine)  # type: ignore
     else:
         ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
+
     if cdm:
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
+
     ds.to_netcdf(outpath)
+
+
+@cfgrib_cli.command("dump")
+@click.argument("inpaths", nargs=-1)
+@click.option("--variable", "-v", default=None)
+@click.option("--cdm", "-c", default=None)
+@click.option("--engine", "-e", default="cfgrib")
+def to_netcdf(inpaths, variable, cdm, engine):
+    # type: (T.List[str], str, str, str) -> None
+    import xarray as xr
+
+    import cf2cdm
+
+    # NOTE: noop if no input argument
+    if len(inpaths) == 0:
+        return
+
+    if len(inpaths) == 1:
+        # avoid to depend on dask when passing only one file
+        ds = xr.open_dataset(inpaths[0], engine=engine)  # type: ignore
+    else:
+        ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
+
+    if cdm:
+        coord_model = getattr(cf2cdm, cdm)
+        ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
+
+    if variable:
+        ds_or_da = ds[variable]
+    else:
+        ds_or_da = ds
+
+    print(ds_or_da)
 
 
 if __name__ == "__main__":  # pragma: no cover
