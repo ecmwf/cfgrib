@@ -57,6 +57,14 @@ def multi_enabled(file: T.IO[bytes]) -> T.Iterator[None]:
     eccodes.codes_grib_multi_support_off()
 
 
+KEY_TYPES = {
+    "float": float,
+    "int": int,
+    "str": str,
+    "": None,
+}
+
+
 @attr.attrs(auto_attribs=True)
 class Message(T.MutableMapping[str, T.Any]):
     """Dictionary-line interface to access Message headers."""
@@ -135,7 +143,11 @@ class Message(T.MutableMapping[str, T.Any]):
         eccodes.codes_keys_iterator_delete(iterator)
 
     def __getitem__(self, item: str) -> T.Any:
-        return self.message_get(item)
+        key, _, key_type_text = item.partition(":")
+        if key_type_text not in KEY_TYPES:
+            raise ValueError("key type not supported %r" % key_type_text)
+        key_type = KEY_TYPES[key_type_text]
+        return self.message_get(key, key_type=key_type)
 
     def __setitem__(self, item: str, value: T.Any) -> None:
         try:
