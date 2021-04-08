@@ -34,7 +34,7 @@ Work in progress:
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
 - **Alpha/Broken** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
   see the *Advanced write usage* section below, `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_
-  and `#222 <https://github.com/ecmwf/cfgrib/issues/222>`_.
+  and `#156 <https://github.com/ecmwf/cfgrib/issues/156>`_.
 
 Limitations:
 
