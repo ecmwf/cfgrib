@@ -8,7 +8,10 @@ requires = [
 
 [tool.setuptools_scm]
 write_to = "cfgrib/version.py"
-write_to_template = "# don't change, don't track in version control\n__version__ = \"{version}\""
+write_to_template = '''
+# don't change, don't track in version control
+__version__ = "{version}"
+'''
 
 [tool.black]
 line-length = 99
