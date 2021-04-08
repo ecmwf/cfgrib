@@ -11,29 +11,30 @@ The high level API is designed to support a GRIB engine for `xarray <http://xarr
 and it is inspired by `netCDF4-python <http://unidata.github.io/netcdf4-python/>`_
 and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
-`ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_.
+`ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_ and
+the `eccodes python package <https://pypi.org/project/eccodes>`_.
 
 Features with development status **Beta**:
 
 - enables the ``engine='cfgrib'`` option to read GRIB files with *xarray*,
 - reads most GRIB 1 and 2 files including heterogeneous ones with ``cfgrib.open_datasets``,
-- supports all modern versions of Python 3.9, 3.8, 3.7, 3.6 and PyPy3,
+- supports all modern versions of Python 3.9, 3.8, 3.7 and PyPy3,
 - the 0.9.6.x series with support for Python 2 will stay active and receive critical bugfixes,
-- works on *Linux*, *MacOS* and *Windows*, the *ecCodes* C-library is the only binary dependency,
+- works wherever *eccodes-python* does: *Linux*, *MacOS* and *Windows*
 - conda-forge package on all supported platforms,
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
-- allows larger-than-memory and distributed processing via *dask*,
+- allows larger-than-memory and distributed processing via *xarray* and *dask*,
 - supports translating coordinates to different data models and naming conventions,
 - supports writing the index of a GRIB file to disk, to save a full-file scan on open.
 
 Work in progress:
 
-- **Alpha** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
+- **Beta** install a ``cfgrib`` utility that can convert a GRIB file ``to_netcdf``
   with a optional conversion to a specific coordinates data model,
   see `#40 <https://github.com/ecmwf/cfgrib/issues/40>`_.
-- **Alpha** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
-  see the *Advanced write usage* section below and
-  `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_.
+- **Alpha/Broken** support writing carefully-crafted ``xarray.Dataset``'s to a GRIB1 or GRIB2 file,
+  see the *Advanced write usage* section below, `#18 <https://github.com/ecmwf/cfgrib/issues/18>`_
+  and `#156 <https://github.com/ecmwf/cfgrib/issues/156>`_.
 
 Limitations:
 
@@ -58,14 +59,14 @@ Python package from *PyPI* with::
 Binary dependencies
 -------------------
 
-The Python module depends on the `eccodes python package <https://pypi.org/project/eccodes/>`_
+*cfgrib* depends on the `eccodes python package <https://pypi.org/project/eccodes>`_
 to access the ECMWF *ecCodes* binary library,
 when not using *conda* please follow the *System dependencies* section there.
 
 You may run a simple selfcheck command to ensure that your system is set up correctly::
 
     $ python -m cfgrib selfcheck
-    Found: ecCodes v2.19.0.
+    Found: ecCodes v2.20.0.
     Your system is ready.
 
 
@@ -82,9 +83,9 @@ Read-only *xarray* GRIB engine
 ------------------------------
 
 Most of *cfgrib* users want to open a GRIB file as a ``xarray.Dataset`` and
-need to have *xarray>=0.12.0* installed::
+need to have *xarray* installed::
 
-    $ pip install xarray>=0.12.0
+    $ pip install xarray
 
 In a Python interpreter try:
 
@@ -827,7 +828,7 @@ See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors
 License
 =======
 
-Copyright 2017-2020 European Centre for Medium-Range Weather Forecasts (ECMWF).
+Copyright 2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF).
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
