@@ -100,7 +100,7 @@ Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step           timedelta64[ns] ...
-  * isobaricInhPa  (isobaricInhPa) int64 850 500
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
   * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
   * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time     (time) datetime64[ns] ...
@@ -164,7 +164,7 @@ Coordinates:
   * number      (number) int64 0 1 2 3 4 5 6 7 8 9
   * time        (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step        timedelta64[ns] ...
-  * level       (level) int64 850 500
+  * level       (level) float64 850.0 500.0
   * latitude    (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
   * longitude   (longitude) float64 0.0 3.0 6.0 9.0 ... 348.0 351.0 354.0 357.0
     valid_time  (time) datetime64[ns] ...
@@ -243,7 +243,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] ...
     step        timedelta64[ns] ...
-    surface     int64 ...
+    surface     float64 ...
     latitude    (y, x) float64 ...
     longitude   (y, x) float64 ...
     valid_time  datetime64[ns] ...
@@ -276,7 +276,7 @@ Dimensions:            (x: 93, y: 65)
 Coordinates:
     time               datetime64[ns] ...
     step               timedelta64[ns] ...
-    heightAboveGround  int64 ...
+    heightAboveGround  float64 ...
     latitude           (y, x) float64 ...
     longitude          (y, x) float64 ...
     valid_time         datetime64[ns] ...
@@ -309,7 +309,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    cloudBase   int64 0
+    cloudBase   float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -328,7 +328,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    cloudTop    int64 0
+    cloudTop    float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -348,7 +348,7 @@ Dimensions:            (x: 93, y: 65)
 Coordinates:
     time               datetime64[ns] 2018-09-17
     step               timedelta64[ns] 00:00:00
-    heightAboveGround  int64 10
+    heightAboveGround  float64 10.0
     latitude           (y, x) float64 ...
     longitude          (y, x) float64 ...
     valid_time         datetime64[ns] ...
@@ -366,7 +366,7 @@ Dimensions:            (x: 93, y: 65)
 Coordinates:
     time               datetime64[ns] 2018-09-17
     step               timedelta64[ns] 00:00:00
-    heightAboveGround  int64 2
+    heightAboveGround  float64 2.0
     latitude           (y, x) float64 12.19 12.39 12.58 ... 57.68 57.49 57.29
     longitude          (y, x) float64 226.5 227.2 227.9 ... 308.5 309.6 310.6
     valid_time         datetime64[ns] 2018-09-17
@@ -385,7 +385,7 @@ Dimensions:                 (heightAboveGroundLayer: 2, x: 93, y: 65)
 Coordinates:
     time                    datetime64[ns] 2018-09-17
     step                    timedelta64[ns] 00:00:00
-  * heightAboveGroundLayer  (heightAboveGroundLayer) int64 1000 3000
+  * heightAboveGroundLayer  (heightAboveGroundLayer) float64 1e+03 3e+03
     latitude                (y, x) float64 ...
     longitude               (y, x) float64 ...
     valid_time              datetime64[ns] ...
@@ -403,7 +403,7 @@ Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
 Coordinates:
     time           datetime64[ns] 2018-09-17
     step           timedelta64[ns] 00:00:00
-  * isobaricInhPa  (isobaricInhPa) int64 1000 950 900 850 ... 250 200 150 100
+  * isobaricInhPa  (isobaricInhPa) float64 1e+03 950.0 900.0 ... 150.0 100.0
     latitude       (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude      (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time     datetime64[ns] 2018-09-17
@@ -426,7 +426,7 @@ Dimensions:        (isobaricInhPa: 5, x: 93, y: 65)
 Coordinates:
     time           datetime64[ns] 2018-09-17
     step           timedelta64[ns] 00:00:00
-  * isobaricInhPa  (isobaricInhPa) int64 1000 850 700 500 250
+  * isobaricInhPa  (isobaricInhPa) float64 1e+03 850.0 700.0 500.0 250.0
     latitude       (y, x) float64 ...
     longitude      (y, x) float64 ...
     valid_time     datetime64[ns] ...
@@ -444,7 +444,7 @@ Dimensions:       (x: 93, y: 65)
 Coordinates:
     time          datetime64[ns] 2018-09-17
     step          timedelta64[ns] 00:00:00
-    isothermZero  int64 0
+    isothermZero  float64 0.0
     latitude      (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude     (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time    datetime64[ns] 2018-09-17
@@ -463,7 +463,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    maxWind     int64 0
+    maxWind     float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -484,7 +484,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    meanSea     int64 0
+    meanSea     float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -503,7 +503,7 @@ Dimensions:                  (pressureFromGroundLayer: 2, x: 93, y: 65)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
-  * pressureFromGroundLayer  (pressureFromGroundLayer) int64 9000 18000
+  * pressureFromGroundLayer  (pressureFromGroundLayer) float64 9e+03 1.8e+04
     latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
     longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
     valid_time               datetime64[ns] 2018-09-17
@@ -522,7 +522,7 @@ Dimensions:                  (pressureFromGroundLayer: 5, x: 93, y: 65)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
-  * pressureFromGroundLayer  (pressureFromGroundLayer) int64 3000 6000 ... 15000
+  * pressureFromGroundLayer  (pressureFromGroundLayer) float64 3e+03 ... 1.5e+04
     latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
     longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
     valid_time               datetime64[ns] 2018-09-17
@@ -543,7 +543,7 @@ Dimensions:                  (x: 93, y: 65)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
-    pressureFromGroundLayer  int64 3000
+    pressureFromGroundLayer  float64 3e+03
     latitude                 (y, x) float64 ...
     longitude                (y, x) float64 ...
     valid_time               datetime64[ns] ...
@@ -561,7 +561,7 @@ Dimensions:                  (x: 93, y: 65)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
-    pressureFromGroundLayer  int64 18000
+    pressureFromGroundLayer  float64 1.8e+04
     latitude                 (y, x) float64 ...
     longitude                (y, x) float64 ...
     valid_time               datetime64[ns] ...
@@ -579,7 +579,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    surface     int64 0
+    surface     float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -608,7 +608,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    tropopause  int64 0
+    tropopause  float64 0.0
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
@@ -629,7 +629,7 @@ Dimensions:     (x: 93, y: 65)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
-    level       int64 0
+    level       float64 0.0
     latitude    (y, x) float64 ...
     longitude   (y, x) float64 ...
     valid_time  datetime64[ns] ...
@@ -667,7 +667,7 @@ Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step           timedelta64[ns] ...
-  * isobaricInhPa  (isobaricInhPa) int64 850 500
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
   * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
   * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time     (time) datetime64[ns] ...
@@ -690,7 +690,7 @@ Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step           timedelta64[ns] ...
-  * isobaricInhPa  (isobaricInhPa) int64 850 500
+  * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
   * latitude       (latitude) float64 90.0 87.0 84.0 81.0 ... -84.0 -87.0 -90.0
   * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time     (time) datetime64[ns] ...
@@ -729,7 +729,7 @@ Dimensions:     (latitude: 5, longitude: 6)
 Coordinates:
     time        datetime64[ns] ...
     step        timedelta64[ns] ...
-    surface     int64 ...
+    surface     float64 ...
   * latitude    (latitude) float64 90.0 45.0 0.0 -45.0 -90.0
   * longitude   (longitude) float64 0.0 60.0 120.0 180.0 240.0 300.0
     valid_time  datetime64[ns] ...
