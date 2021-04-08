@@ -30,3 +30,22 @@ def test_cfgrib_cli_to_netcdf(tmpdir):
 
     assert res.exit_code == 0
     assert res.output == ""
+
+
+def test_cfgrib_cli_dump():
+    runner = click.testing.CliRunner()
+
+    res = runner.invoke(__main__.cfgrib_cli, ["dump"])
+
+    assert res.exit_code == 0
+    assert res.output == ""
+
+    res = runner.invoke(__main__.cfgrib_cli, ["dump", TEST_DATA])
+
+    assert res.exit_code == 0
+    assert "<xarray.Dataset" in res.output
+
+    res = runner.invoke(__main__.cfgrib_cli, ["dump", TEST_DATA, "-vlat", "-cCDS"])
+
+    assert res.exit_code == 0
+    assert "<xarray.DataArray" in res.output

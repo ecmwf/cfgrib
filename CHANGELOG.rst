@@ -5,10 +5,18 @@ Changelog for cfgrib
 0.9.9.0 (unreleased)
 --------------------
 
+- Depend on the ECMWF `eccodes python package <https://pypi.org/project/eccodes>`_ to access
+  the low level ecCodes C-library, dropping all other GRIB decoding options.
+  See: `#95 <https://github.com/ecmwf/cfgrib/issues/95>`_,
+  `#14 <https://github.com/ecmwf/cfgrib/issues/14>`_.
+  `#204 <https://github.com/ecmwf/cfgrib/issues/204>`_,
+  `#147 <https://github.com/ecmwf/cfgrib/issues/147>`_ and
+  `#141 <https://github.com/ecmwf/cfgrib/issues/141>`_.
 - Many performance improvements during the generation of the index and during data access.
-  See: `#142 <https://github.com/ecmwf/cfgrib/issues/142>`_.
+  See: `#142 <https://github.com/ecmwf/cfgrib/issues/142>`_ and
+  `#197 <https://github.com/ecmwf/cfgrib/issues/197>`_.
 - ``filter_by_keys`` now can select on all keys known to *ecCodes* without the need to
-  add non default ones to ``read_keys`` explicitely.
+  add non default ones to ``read_keys`` explicitly.
   See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
 - Fixed issue where could not load a GRIB message that has only one grid point.
   See: `#199 <https://github.com/ecmwf/cfgrib/issues/199>`_.
