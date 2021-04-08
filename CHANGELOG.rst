@@ -12,6 +12,8 @@ Changelog for cfgrib
   See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
 - Fixed issue where could not load a GRIB message that has only one grid point.
   See: `#199 <https://github.com/ecmwf/cfgrib/issues/199>`_.
+- Decode ``level`` coordinates as float in all cases, fixed issue with non-int levels.
+  See: `#195 <https://github.com/ecmwf/cfgrib/issues/195>`_.
 
 
 0.9.8.5 (2020-11-11)
