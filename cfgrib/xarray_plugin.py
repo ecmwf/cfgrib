@@ -44,7 +44,7 @@ class CfGribDataStore(AbstractDataStore):
             data = var.data
         else:
             wrapped_array = CfGribArrayWrapper(self, var.data)
-            data = xr.core.indexing.LazilyOuterIndexedArray(wrapped_array)  # type: ignore
+            data = xr.core.indexing.LazilyIndexedArray(wrapped_array)  # type: ignore
         encoding = self.ds.encoding.copy()
         encoding["original_shape"] = var.data.shape
 
