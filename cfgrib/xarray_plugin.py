@@ -7,8 +7,8 @@ import xarray as xr
 
 from . import dataset
 
-if LooseVersion(xr.__version__) < "0.18":
-    raise ImportError("xarray_entrypoints module needs xarray version >= 0.18")
+if LooseVersion(xr.__version__) <= "0.17.0":
+    raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
 from xarray.backends.common import (
     BACKEND_ENTRYPOINTS,
@@ -67,7 +67,7 @@ class CfGribDataStore(AbstractDataStore):
         return encoding
 
 
-class CfgribfBackendEntrypoint(BackendEntrypoint):
+class CfGribBackend(BackendEntrypoint):
     def guess_can_open(self, store_spec: str,) -> bool:
         try:
             _, ext = os.path.splitext(store_spec)
