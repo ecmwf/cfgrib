@@ -2,7 +2,13 @@
 Changelog for cfgrib
 ====================
 
-0.9.9.0 (unreleased)
+0.9.9.1 (unreleased)
+--------------------
+
+- Nothing changed yet.
+
+
+0.9.9.0 (2021-04-09)
 --------------------
 
 - Depend on the ECMWF `eccodes python package <https://pypi.org/project/eccodes>`_ to access
@@ -18,6 +24,8 @@ Changelog for cfgrib
 - ``filter_by_keys`` now can select on all keys known to *ecCodes* without the need to
   add non default ones to ``read_keys`` explicitly.
   See: `#187 <https://github.com/ecmwf/cfgrib/issues/187>`_.
+- Include support for `engine="cfgrib"` using *xarray* 0.18+ new backend API.
+  See: `#216 <https://github.com/ecmwf/cfgrib/pull/216>`_.
 - Fixed issue where could not load a GRIB message that has only one grid point.
   See: `#199 <https://github.com/ecmwf/cfgrib/issues/199>`_.
 - Decode ``level`` coordinates as float in all cases, fixed issue with non-int levels.

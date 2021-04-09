@@ -70,6 +70,6 @@ setuptools.setup(
     ],
     entry_points={
         "console_scripts": ["cfgrib=cfgrib.__main__:cfgrib_cli"],
-        "xarray.backends": ["cfgrib=cfgrib.xarray_entrypoint:CfgribfBackendEntrypoint"],
+        "xarray.backends": ["cfgrib=cfgrib.xarray_plugin:CfGribBackend"],
     },
 )
