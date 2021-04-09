@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.9.0 (unreleased)
+0.9.9.0 (2021-04-09)
 --------------------
 
 - Depend on the ECMWF `eccodes python package <https://pypi.org/project/eccodes>`_ to access
