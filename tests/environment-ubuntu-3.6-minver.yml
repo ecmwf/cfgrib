@@ -1,14 +1,59 @@
-name: ubuntu-3.6-old
+name: ubuntu-3.6-minver
 channels:
   - defaults
   - conda-forge
 dependencies:
+  - _libgcc_mutex=0.1
   - attrs=19.2.0
+  - blas=1.0
+  - bzip2=1.0.8
+  - ca-certificates=2021.4.13
+  - certifi=2020.12.5
+  - cffi=1.14.5
   - click=7.0
+  - curl=7.71.1
   - eccodes=2.16.0
+  - hdf4=4.2.13
+  - hdf5=1.10.5
+  - intel-openmp=2019.4
+  - jasper=1.900.1
+  - jpeg=9d
+  - krb5=1.18.2
+  - ld_impl_linux-64=2.33.1
+  - libaec=1.0.4
+  - libcurl=7.71.1
+  - libedit=3.1.20210216
+  - libffi=3.3
+  - libgcc-ng=9.1.0
+  - libgfortran-ng=7.3.0
+  - libnetcdf=4.7.3
+  - libpng=1.6.37
+  - libssh2=1.9.0
+  - libstdcxx-ng=9.1.0
+  - mkl=2018.0.3
+  - mkl_fft=1.0.6
+  - mkl_random=1.0.1
+  - ncurses=6.2
   - numpy=1.15.0
+  - numpy-base=1.15.0
+  - openssl=1.1.1k
   - pandas=0.25.0
-  - pytest
+  - pip=21.0.1
+  - pycparser=2.20
   - python=3.6.13
+  - python-dateutil=2.8.1
   - python-eccodes=2020.06.0
+  - python_abi=3.6
+  - pytz=2021.1
+  - readline=8.1
+  - setuptools=52.0.0
+  - six=1.15.0
+  - sqlite=3.35.4
+  - tbb=2020.3
+  - tbb4py=2020.3
+  - tk=8.6.10
+  - wheel=0.36.2
   - xarray=0.15.0
+  - xz=5.2.5
+  - zlib=1.2.11
+prefix: /usr/share/miniconda/envs/ubuntu-3.6-minver

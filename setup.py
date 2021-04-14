@@ -50,8 +50,8 @@ setuptools.setup(
     install_requires=["attrs>=19.2", "click", "eccodes", "numpy"],
     python_requires=">=3.6",
     extras_require={
-        "xarray": ["xarray>=0.15.0"],
-        "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.12.0",],
+        "xarray": ["xarray>=0.15"],
+        "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.15",],
     },
     zip_safe=True,
     keywords="eccodes grib xarray",
