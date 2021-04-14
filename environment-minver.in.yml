@@ -1,0 +1,11 @@
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - attrs=19.2.0
+  - click=7.0.0
+  - eccodes=2.16.0
+  - numpy=1.15.0
+  - pandas=0.25.0
+  - python-eccodes=2020.06.0
+  - xarray=0.15.0
