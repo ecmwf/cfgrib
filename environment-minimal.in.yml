@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - attrs>=19.2
-  - cffi
   - click
   - numpy
   - python-eccodes>=2020.10.0

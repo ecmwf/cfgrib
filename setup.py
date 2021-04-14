@@ -48,9 +48,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=["attrs>=19.2", "click", "eccodes", "numpy"],
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     extras_require={
-        "xarray": ["xarray>=0.12.0"],
+        "xarray": ["xarray>=0.15.0"],
         "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.12.0",],
     },
     zip_safe=True,

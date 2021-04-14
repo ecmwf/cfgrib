@@ -23,6 +23,9 @@ jobs:
           - os: ubuntu
             python: 3.9
             extras: -minimal
+          - os: ubuntu
+            python: 3.6
+            extras: -minver
 
     steps:
     - uses: actions/checkout@v2
