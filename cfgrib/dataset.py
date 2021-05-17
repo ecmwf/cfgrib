@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 # Edition-independent keys in ecCodes namespaces. Documented in:
 #   https://software.ecmwf.int/wiki/display/ECC/GRIB%3A+Namespaces
 #
-GLOBAL_ATTRIBUTES_KEYS = ["edition", "centre", "centreDescription", "subCentre"]
+GLOBAL_ATTRIBUTES_KEYS = ["centre", "centreDescription", "subCentre"]
 
 DATA_ATTRIBUTES_KEYS = [
     "paramId",
