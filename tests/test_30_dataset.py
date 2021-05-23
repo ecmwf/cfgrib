@@ -126,7 +126,6 @@ def test_Dataset():
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
     assert "history" in res.attributes
-    assert res.attributes["GRIB_edition"] == 1
     assert tuple(res.dimensions.keys()) == (
         "number",
         "time",
@@ -146,7 +145,6 @@ def test_Dataset_no_encode():
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
     assert "history" in res.attributes
-    assert res.attributes["GRIB_edition"] == 1
     assert tuple(res.dimensions.keys()) == ("number", "dataDate", "dataTime", "level", "values")
     assert len(res.variables) == 9
 
@@ -154,7 +152,6 @@ def test_Dataset_no_encode():
 def test_Dataset_encode_cf_time():
     res = dataset.open_file(TEST_DATA, encode_cf=("time",))
     assert "history" in res.attributes
-    assert res.attributes["GRIB_edition"] == 1
     assert tuple(res.dimensions.keys()) == ("number", "time", "level", "values")
     assert len(res.variables) == 9
 
@@ -165,7 +162,6 @@ def test_Dataset_encode_cf_time():
 def test_Dataset_encode_cf_geography():
     res = dataset.open_file(TEST_DATA, encode_cf=("geography",))
     assert "history" in res.attributes
-    assert res.attributes["GRIB_edition"] == 1
     assert tuple(res.dimensions.keys()) == (
         "number",
         "dataDate",
@@ -183,7 +179,6 @@ def test_Dataset_encode_cf_geography():
 def test_Dataset_encode_cf_vertical():
     res = dataset.open_file(TEST_DATA, encode_cf=("vertical",))
     assert "history" in res.attributes
-    assert res.attributes["GRIB_edition"] == 1
     expected_dimensions = ("number", "dataDate", "dataTime", "isobaricInhPa", "values")
     assert tuple(res.dimensions.keys()) == expected_dimensions
     assert len(res.variables) == 9

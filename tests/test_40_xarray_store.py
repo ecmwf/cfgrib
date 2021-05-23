@@ -16,8 +16,6 @@ TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, "uv_on_different_levels.grib")
 def test_open_dataset():
     res = xarray_store.open_dataset(TEST_DATA)
 
-    assert res.attrs["GRIB_edition"] == 1
-
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"
     assert var.attrs["units"] == "K"
@@ -41,7 +39,6 @@ def test_open_dataset():
 def test_open_dataset_corrupted():
     res = xarray_store.open_dataset(TEST_CORRUPTED)
 
-    assert res.attrs["GRIB_edition"] == 1
     assert len(res.data_vars) == 1
 
     with pytest.raises(Exception):
@@ -52,7 +49,6 @@ def test_open_dataset_encode_cf_time():
     backend_kwargs = {"encode_cf": ("time",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
-    assert res.attrs["GRIB_edition"] == 1
     assert res["t"].attrs["GRIB_gridType"] == "regular_ll"
     assert res["t"].attrs["GRIB_units"] == "K"
     assert res["t"].dims == ("number", "time", "level", "values")
@@ -74,8 +70,6 @@ def test_open_dataset_encode_cf_geography():
     backend_kwargs = {"encode_cf": ("geography",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
-    assert res.attrs["GRIB_edition"] == 1
-
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"
     assert var.attrs["GRIB_units"] == "K"
@@ -86,8 +80,6 @@ def test_open_dataset_encode_cf_geography():
 
 def test_open_dataset_eccodes():
     res = xarray_store.open_dataset(TEST_DATA)
-
-    assert res.attrs["GRIB_edition"] == 1
 
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"
