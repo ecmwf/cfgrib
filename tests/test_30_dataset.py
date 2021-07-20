@@ -9,6 +9,7 @@ from cfgrib import cfmessage, dataset, messages
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
+TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
 
 
 def test_enforce_unique_attributes():
@@ -204,6 +205,14 @@ def test_Dataset_extra_coords():
     res = dataset.open_file(TEST_DATA, extra_coords={"experimentVersionNumber": "time"})
     assert "experimentVersionNumber" in res.variables
     assert res.variables["experimentVersionNumber"].dimensions == ("time",)
+
+
+def test_Dataset_scalar_extra_coords():
+    res = dataset.open_file(
+        TEST_DATA_SCALAR_TIME, extra_coords={"experimentVersionNumber": "time"}
+    )
+    assert "experimentVersionNumber" in res.variables
+    assert res.variables["experimentVersionNumber"].dimensions == ()
 
 
 def test_Dataset_extra_coords_error():
