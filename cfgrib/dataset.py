@@ -278,7 +278,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 @attr.attrs(auto_attribs=True, eq=False)
 class Variable(object):
-    dimensions: T.Tuple[str, ...]
+    dimensions: T.Tuple[T.Optional[str], ...]
     data: np.ndarray
     attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
 
@@ -563,21 +563,22 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data, coord_vars["step"].data,
+            coord_vars["time"].data,
+            coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
         if extra_coords[coord_name] is not None:
-            dimensions = (extra_coords[coord_name],)
-            data = np.array(list(extra_coords_data[coord_name].values()))
+            coord_dimensions = (extra_coords[coord_name],)
+            coord_data = np.array(list(extra_coords_data[coord_name].values()))
         else:
-            dimensions = ()
-            data = np.array(extra_coords_data[coord_name].values())
+            coord_dimensions = ()
+            coord_data = np.array(extra_coords_data[coord_name].values())
         coord_vars[coord_name] = Variable(
-            dimensions=dimensions,
-            data=data,
+            dimensions=coord_dimensions,
+            data=coord_data,
         )
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
