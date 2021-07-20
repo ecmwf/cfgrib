@@ -523,7 +523,7 @@ def build_variable_components(
     }
 
     extra_coords = extra_coords.copy()
-    for coord, dim  in extra_coords.items():
+    for coord, dim in extra_coords.items():
         if dim not in header_dimensions:
             extra_coords[coord] = None
 
