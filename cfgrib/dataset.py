@@ -521,6 +521,12 @@ def build_variable_components(
     extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
         coord_name: {} for coord_name in extra_coords
     }
+
+    extra_coords = extra_coords.copy()
+    for coord, dim  in extra_coords.items():
+        if dim not in header_dimensions:
+            extra_coords[coord] = None
+
     for dim in header_dimensions:
         header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
@@ -532,7 +538,7 @@ def build_variable_components(
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
                 ]
-                if dim == extra_coords[coord_name]:
+                if dim == extra_coords[coord_name] or extra_coords[coord_name] == "__dim0__":
                     saved_coord_value = extra_coords_data[coord_name].get(
                         header_value, coord_value
                     )
@@ -563,9 +569,15 @@ def build_variable_components(
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
+        if extra_coords[coord_name] is not None:
+            dimensions = (extra_coords[coord_name],)
+            data = np.array(list(extra_coords_data[coord_name].values()))
+        else:
+            dimensions = ()
+            data = np.array(extra_coords_data[coord_name].values())
         coord_vars[coord_name] = Variable(
-            dimensions=(extra_coords[coord_name],),
-            data=np.array(list(extra_coords_data[coord_name].values())),
+            dimensions=dimensions,
+            data=data,
         )
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
