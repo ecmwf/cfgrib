@@ -92,11 +92,7 @@ def test_canonical_dataset_to_grib(grib_name, tmpdir):
 
 
 @pytest.mark.parametrize(
-    "grib_name,ndims",
-    [
-        ("era5-levels-members", 1),
-        ("era5-single-level-scalar-time", 0),
-    ],
+    "grib_name,ndims", [("era5-levels-members", 1), ("era5-single-level-scalar-time", 0),],
 )
 def test_open_dataset_extra_coords(grib_name, ndims):
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")

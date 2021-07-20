@@ -563,8 +563,7 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data,
-            coord_vars["step"].data,
+            coord_vars["time"].data, coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
@@ -576,10 +575,7 @@ def build_variable_components(
         else:
             coord_dimensions = ()
             coord_data = np.array(extra_coords_data[coord_name].values())
-        coord_vars[coord_name] = Variable(
-            dimensions=coord_dimensions,
-            data=coord_data,
-        )
+        coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
