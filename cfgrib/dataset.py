@@ -470,7 +470,7 @@ def build_variable_components(
     squeeze: bool = True,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, str] = {},
+    extra_coords: T.Dict[str, T.Union[str, None]] = {},
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -627,7 +627,7 @@ def build_dataset_components(
     log: logging.Logger = LOG,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, str] = {},
+    extra_coords: T.Dict[str, T.Union[str, None]] = {},
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -714,7 +714,7 @@ def open_file(
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, str] = {},
+    extra_coords: T.Dict[str, T.Union[str, None]] = {},
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
