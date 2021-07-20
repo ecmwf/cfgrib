@@ -570,7 +570,7 @@ def build_variable_components(
 
     for coord_name in extra_coords:
         if extra_coords[coord_name] is not None:
-            coord_dimensions: T.Tuple[T.Optional[str], ...]  = (extra_coords[coord_name],)
+            coord_dimensions: T.Tuple[T.Optional[str], ...] = (extra_coords[coord_name],)
             coord_data = np.array(list(extra_coords_data[coord_name].values()))
         else:
             coord_dimensions = ()
