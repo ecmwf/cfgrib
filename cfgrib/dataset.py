@@ -539,6 +539,8 @@ def build_variable_components(
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
                 ]
+                print(extra_coords, len(extra_coords[coord_name]))
+                print()
                 if dim in extra_coords[coord_name] or len(extra_coords[coord_name]) == 0:
                     saved_coord_value = extra_coords_data[coord_name].get(
                         header_value, coord_value
@@ -570,7 +572,7 @@ def build_variable_components(
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
-        if extra_coords[coord_name] is not None:
+        if len(extra_coords[coord_name]) > 0:
             coord_dimensions: T.Tuple[str, ...] = extra_coords[coord_name]
             coord_data = np.array(list(extra_coords_data[coord_name].values()))
         else:
@@ -580,6 +582,7 @@ def build_variable_components(
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
+    print(coord_vars)
     return dims, data_var, coord_vars
 
 
