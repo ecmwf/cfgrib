@@ -94,7 +94,7 @@ class CfGribBackend(BackendEntrypoint):
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn",
-        extra_coords: T.Dict[str, T.Union[str, None]] = {},
+        extra_coords: T.Dict[str, T.Union[str, T.Tuple[str, ...]]] = {},
     ) -> xr.Dataset:
 
         store = CfGribDataStore(

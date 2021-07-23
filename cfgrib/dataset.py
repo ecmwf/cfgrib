@@ -278,7 +278,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 @attr.attrs(auto_attribs=True, eq=False)
 class Variable(object):
-    dimensions: T.Tuple[T.Optional[str], ...]
+    dimensions: T.Tuple[str, ...]
     data: np.ndarray
     attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
 
@@ -470,7 +470,7 @@ def build_variable_components(
     squeeze: bool = True,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Union[str, None]] = {},
+    extra_coords: T.Dict[str, T.Tuple[str, ...]] = {},
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -523,9 +523,10 @@ def build_variable_components(
     }
 
     extra_coords = extra_coords.copy()
-    for coord, dim in extra_coords.items():
-        if dim not in header_dimensions:
-            extra_coords[coord] = None
+    for coord, dims in extra_coords.items():
+        for dim in dims:
+            if dim not in header_dimensions:
+                extra_coords[coord] = ()
 
     for dim in header_dimensions:
         header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
@@ -538,7 +539,7 @@ def build_variable_components(
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
                 ]
-                if dim == extra_coords[coord_name] or extra_coords[coord_name] == "__dim0__":
+                if dim in extra_coords[coord_name] or len(extra_coords[coord_name]) == 0:
                     saved_coord_value = extra_coords_data[coord_name].get(
                         header_value, coord_value
                     )
@@ -570,7 +571,7 @@ def build_variable_components(
 
     for coord_name in extra_coords:
         if extra_coords[coord_name] is not None:
-            coord_dimensions: T.Tuple[T.Optional[str], ...] = (extra_coords[coord_name],)
+            coord_dimensions: T.Tuple[str, ...] = extra_coords[coord_name]
             coord_data = np.array(list(extra_coords_data[coord_name].values()))
         else:
             coord_dimensions = ()
@@ -624,7 +625,7 @@ def build_dataset_components(
     log: logging.Logger = LOG,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Union[str, None]] = {},
+    extra_coords: T.Dict[str, T.Tuple[str, ...]] = {},
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -711,14 +712,23 @@ def open_file(
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Union[str, None]] = {},
+    extra_coords: T.Dict[str, T.Union[str, T.Tuple[str, ...]]] = {},
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
+    for coord in extra_coords:
+        if isinstance(extra_coords[coord], str):
+            extra_coords[coord] = (extra_coords[coord],)  # type: ignore
+        if len(extra_coords[coord]) > 1:
+            raise NotImplementedError(
+                f"Multi-dimensional extra coordinate are not supported: "
+                f"coordinate {coord} depends on more than one dimension: {extra_coords[coord]}"
+                "extra_coords supports only on-dimensional coordintes"
+            )
     index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
         *build_dataset_components(
-            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
+            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs  # type: ignore
         )
     )
