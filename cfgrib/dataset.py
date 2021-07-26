@@ -523,24 +523,27 @@ def build_variable_components(
     }
 
     extra_coords = extra_coords.copy()
-    for coord, dims in extra_coords.items():
-        for dim in dims:
+    extra_dims = []
+    for coord, coord_dims in extra_coords.items():
+        for dim in coord_dims:
             if dim not in header_dimensions:
-                extra_coords[coord] = ()
+                extra_dims.append(dim)
 
-    for dim in header_dimensions:
-        header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
+    for dim in list(header_dimensions) + extra_dims:
+        if np.isscalar(coord_vars[dim].data):
+            header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
+        else:
+            header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
-        for dim in header_dimensions:
+        for dim in list(header_dimensions) + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
-            header_indexes.append(header_value_index[dim][header_value])
+            if dim in header_dimensions:
+                header_indexes.append(header_value_index[dim][header_value])
             for coord_name in extra_coords:
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
                 ]
-                print(extra_coords, len(extra_coords[coord_name]))
-                print()
                 if dim in extra_coords[coord_name] or len(extra_coords[coord_name]) == 0:
                     saved_coord_value = extra_coords_data[coord_name].get(
                         header_value, coord_value
@@ -572,17 +575,18 @@ def build_variable_components(
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
-        if len(extra_coords[coord_name]) > 0:
-            coord_dimensions: T.Tuple[str, ...] = extra_coords[coord_name]
-            coord_data = np.array(list(extra_coords_data[coord_name].values()))
-        else:
-            coord_dimensions = ()
-            coord_data = np.array(extra_coords_data[coord_name].values())
+        coord_dimensions: T.Tuple[str, ...] = ()
+        coord_shape: T.Tuple[int, ...] = ()
+        coord_data = np.array(list(extra_coords_data[coord_name].values()))
+        for sh, dim in zip(coord_data.shape, extra_coords[coord_name]):
+            if dim in header_dimensions:
+                coord_dimensions = coord_dimensions + (dim,)
+                coord_shape = coord_shape + (sh,)
+        coord_data = coord_data.reshape(coord_shape)
         coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
-    print(coord_vars)
     return dims, data_var, coord_vars
 
 
@@ -722,11 +726,10 @@ def open_file(
     for coord in extra_coords:
         if isinstance(extra_coords[coord], str):
             extra_coords[coord] = (extra_coords[coord],)  # type: ignore
-        if len(extra_coords[coord]) > 1:
+        if len(extra_coords[coord]) != 1:
             raise NotImplementedError(
-                f"Multi-dimensional extra coordinate are not supported: "
-                f"coordinate {coord} depends on more than one dimension: {extra_coords[coord]}"
-                "extra_coords supports only on-dimensional coordintes"
+                f"only one-dimesional extra coordinate are supported: "
+                f"coordinate {coord} depends the following dimensions: {extra_coords[coord]}"
             )
     index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
