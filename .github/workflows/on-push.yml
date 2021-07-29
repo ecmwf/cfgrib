@@ -80,7 +80,6 @@ jobs:
     - name: Type check with mypy
       shell: bash -l {0}
       run: |
-        conda install mypy
         mypy --strict cfgrib
 
   code-style:

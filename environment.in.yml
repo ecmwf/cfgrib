@@ -5,6 +5,7 @@ dependencies:
   - attrs>=19.2
   - click
   - eccodes>=2.20.0
+  - mypy=0.812
   - nomkl
   - numpy
   - pandas=1.0.5
