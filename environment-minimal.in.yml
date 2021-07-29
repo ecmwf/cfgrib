@@ -4,5 +4,6 @@ channels:
 dependencies:
   - attrs>=19.2
   - click
+  - nomkl
   - numpy
   - python-eccodes>=2020.10.0
