@@ -10,7 +10,7 @@ dependencies:
   - ca-certificates=2021.1.19
   - certifi=2020.12.5
   - cffi=1.14.5
-  - click=7.1.2
+  - click=8.0.1
   - curl=7.71.1
   - eccodes=2.19.1
   - hdf4=4.2.13
