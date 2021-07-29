@@ -4,10 +4,11 @@ channels:
 dependencies:
   - attrs>=19.2
   - click
-  - eccodes>=2.19.0
+  - eccodes>=2.20.0
   - nomkl
   - numpy
   - pandas=1.0.5
+  - pytest-cov
   - python-eccodes>=2020.10.0
   - scipy
   - xarray>=0.15.0
