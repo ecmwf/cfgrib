@@ -79,7 +79,7 @@ def from_grib_date_time(message, date_key="dataDate", time_key="dataTime", epoch
 def to_grib_date_time(
     message, time_ns, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH
 ):
-    # type: (T.MutableMapping[str, T.Any], np.datetime64, str, str, datetime.datetime) -> None
+    # type: (T.MutableMapping[str, T.Any], int, str, str, datetime.datetime) -> None
     time_s = int(time_ns) * 1e-9
     time = epoch + datetime.timedelta(seconds=time_s)
     datetime_iso = str(time)
