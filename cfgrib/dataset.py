@@ -719,6 +719,6 @@ def open_file(
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
         *build_dataset_components(
-            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs  # type: ignore
+            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
         )
     )
