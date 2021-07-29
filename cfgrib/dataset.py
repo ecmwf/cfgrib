@@ -470,7 +470,7 @@ def build_variable_components(
     squeeze: bool = True,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Tuple[str, ...]] = {},
+    extra_coords: T.Dict[str, str] = {},
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -521,14 +521,7 @@ def build_variable_components(
     extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
         coord_name: {} for coord_name in extra_coords
     }
-
-    extra_coords = extra_coords.copy()
-    extra_dims = []
-    for coord, coord_dims in extra_coords.items():
-        for dim in coord_dims:
-            if dim not in header_dimensions:
-                extra_dims.append(dim)
-
+    extra_dims = list(extra_coords.values())
     for dim in list(header_dimensions) + extra_dims:
         if np.isscalar(coord_vars[dim].data):
             header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
@@ -544,7 +537,7 @@ def build_variable_components(
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
                 ]
-                if dim in extra_coords[coord_name] or len(extra_coords[coord_name]) == 0:
+                if dim == extra_coords[coord_name]:
                     saved_coord_value = extra_coords_data[coord_name].get(
                         header_value, coord_value
                     )
@@ -575,15 +568,14 @@ def build_variable_components(
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
-        coord_dimensions: T.Tuple[str, ...] = ()
-        coord_shape: T.Tuple[int, ...] = ()
         coord_data = np.array(list(extra_coords_data[coord_name].values()))
-        for sh, dim in zip(coord_data.shape, extra_coords[coord_name]):
-            if dim in header_dimensions:
-                coord_dimensions = coord_dimensions + (dim,)
-                coord_shape = coord_shape + (sh,)
-        coord_data = coord_data.reshape(coord_shape)
+        if extra_coords[coord_name] not in header_dimensions:
+            coord_dimensions: T.Tuple[str, ...] = ()
+            coord_data = coord_data.reshape(())
+        else:
+            coord_dimensions = (extra_coords[coord_name],)
         coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
+
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
@@ -632,7 +624,7 @@ def build_dataset_components(
     log: logging.Logger = LOG,
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Tuple[str, ...]] = {},
+    extra_coords: T.Dict[str, str] = {},
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -719,18 +711,10 @@ def open_file(
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
-    extra_coords: T.Dict[str, T.Union[str, T.Tuple[str, ...]]] = {},
+    extra_coords: T.Dict[str, str] = {},
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    for coord in extra_coords:
-        if isinstance(extra_coords[coord], str):
-            extra_coords[coord] = (extra_coords[coord],)  # type: ignore
-        if len(extra_coords[coord]) != 1:
-            raise NotImplementedError(
-                f"only one-dimesional extra coordinate are supported: "
-                f"coordinate {coord} depends the following dimensions: {extra_coords[coord]}"
-            )
     index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
