@@ -526,7 +526,8 @@ def build_variable_components(
             header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, offset in index.offsets:
+    # TODO: the following needs a refactor as it depends on the internals of FileIndex
+    for header_values, offset in index.index_data:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
@@ -551,7 +552,7 @@ def build_variable_components(
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get("missingValue", 9999)
     on_disk_array = OnDiskArray(
-        stream=index.filestream,
+        stream=index.container,
         shape=shape,
         offsets=offsets,
         missing_value=missing_value,
@@ -670,7 +671,7 @@ def build_dataset_components(
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     encoding = {
-        "source": index.filestream.path,
+        # "source": index.container.path,
         "filter_by_keys": filter_by_keys,
         "encode_cf": encode_cf,
     }

@@ -335,38 +335,17 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(T.Mapping[str, T.List[T.Any]]):
-    filestream: FileStream
+class FileIndex(abc.Index[OffsetType]):
+    container: FileStream
     index_keys: T.List[str]
-    offsets: OffsetsType = attr.attrib(repr=False)
+    index_data: OffsetsType = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
-        # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[OffsetType]]
-        index_keys = list(index_keys)
-        count_offsets = {}  # type: T.Dict[int, int]
-        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for offset_field, message in filestream.items():
-            header_values = []
-            for key in index_keys:
-                try:
-                    value = message[key]
-                except:
-                    value = "undef"
-                if isinstance(value, (np.ndarray, list)):
-                    value = tuple(value)
-                # NOTE: the following ensures that values of the same type that evaluate equal are
-                #   exactly the same object. The optimisation is especially useful for strings and
-                #   it also reduces the on-disk size of the index in a backward compatible way.
-                value = header_values_cache.setdefault((value, type(value)), value)
-                header_values.append(value)
-            offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
-        # record the index protocol version in the instance so it is dumped with pickle
-        return self
+        # type: (FileStream, T.Iterable[str]) -> FileIndex
+        return cls.from_container(filestream, index_keys)
 
     @classmethod
     def from_indexpath(cls, indexpath):
@@ -420,55 +399,3 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
             log.exception("Can't read index file %r", indexpath)
 
         return cls.from_filestream(filestream, index_keys)
-
-    def __iter__(self) -> T.Iterator[str]:
-        return iter(self.index_keys)
-
-    def __len__(self) -> int:
-        return len(self.index_keys)
-
-    @property
-    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
-        if not hasattr(self, "_header_values"):
-            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.offsets:
-                for i, value in enumerate(header_values):
-                    values = all_header_values.setdefault(self.index_keys[i], {})
-                    if value not in values:
-                        values[value] = None
-            self._header_values = {k: list(v) for k, v in all_header_values.items()}
-        return self._header_values
-
-    def __getitem__(self, item: str) -> T.List[T.Any]:
-        return self.header_values[item]
-
-    def getone(self, item):
-        # type: (str) -> T.Any
-        values = self[item]
-        if len(values) != 1:
-            raise ValueError("not one value for %r: %r" % (item, len(values)))
-        return values[0]
-
-    def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
-        query.update(filter_by_keys)
-        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = []
-        for header_values, offsets_values in self.offsets:
-            for idx, val in raw_query:
-                if header_values[idx] != val:
-                    break
-            else:
-                offsets.append((header_values, offsets_values))
-        index = type(self)(
-            filestream=self.filestream,
-            index_keys=self.index_keys,
-            offsets=offsets,
-            filter_by_keys=query,
-        )
-        return index
-
-    def first(self) -> Message:
-        with open(self.filestream.path, "rb") as file:
-            first_offset = self.offsets[0][1][0]
-            return self.filestream.message_from_file(file, offset=first_offset)
