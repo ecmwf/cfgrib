@@ -242,7 +242,24 @@ class FileStreamValues(T.ValuesView[Message]):
 
 @attr.attrs(auto_attribs=True)
 class FileStream(T.Mapping[T.Any, Message]):
-    """Iterator-like access to a filestream of Messages."""
+    """Mapping-like access to a filestream of Messages.
+
+    Sample usage:
+
+    >>> filestream = FileStream("era5-levels-members.grib")
+    >>> message1 = filestream[None]
+    >>> message1["offset"]
+    0.0
+    >>> message2 = filestream[14760]
+    >>> message2["offset"]
+    14760.0
+
+    Note that any offset return the first message found _after_ that offset:
+
+    >>> message2_again = filestream[1]
+    >>> message2_again["offset"]
+    14760.0
+    """
 
     path: str
     message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
@@ -250,10 +267,12 @@ class FileStream(T.Mapping[T.Any, Message]):
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
+    # `.values()` is defined explicitly as a performance optimisation for FileIndex
     def values(self) -> T.ValuesView[Message]:
         return FileStreamValues(self)
 
     def __iter__(self) -> T.Iterator[T.Union[int, T.Tuple[int, int]]]:
+        # assumes MULTI-FIELD support in self.values()
         old_offset = -1
         count = 0
         for message in self.values():
