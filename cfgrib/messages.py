@@ -300,10 +300,8 @@ class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
-        try:
-            return self[None]
-        except:
-            raise EOFError
+        for _, message in self.items():
+            return message
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.Sequence[str], str) -> FileIndex
