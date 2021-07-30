@@ -1,7 +1,7 @@
 import os.path
 import typing as T
 
-import numpy as np  # type: ignore
+import numpy as np
 import pytest
 
 from cfgrib import cfmessage
@@ -10,16 +10,16 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 
 
-def test_from_grib_date_time():
+def test_from_grib_date_time() -> None:
     message = {"dataDate": 20160706, "dataTime": 1944}
     result = cfmessage.from_grib_date_time(message)
 
     assert result == 1467834240
 
 
-def test_to_grib_date_time():
+def test_to_grib_date_time() -> None:
     message = {}  # type: T.Dict[str, T.Any]
-    datetime_ns = int(np.datetime64("2001-10-11T01:01:00", "ns"))
+    datetime_ns = np.datetime64("2001-10-11T01:01:00", "ns").item()
 
     cfmessage.to_grib_date_time(message, datetime_ns)
 
@@ -27,14 +27,14 @@ def test_to_grib_date_time():
     assert message["dataTime"] == 101
 
 
-def test_from_grib_step():
+def test_from_grib_step() -> None:
     message = {"endStep": 1, "stepUnits": 1}
     step_seconds = cfmessage.from_grib_step(message)
 
     assert step_seconds == 1
 
 
-def test_to_grib_step():
+def test_to_grib_step() -> None:
     message = {}  # type: T.Dict[str, T.Any]
     step_ns = 3600 * 1_000_000_000
 
@@ -47,7 +47,7 @@ def test_to_grib_step():
         cfmessage.to_grib_step(message, 0, step_unit=3)
 
 
-def test_build_valid_time():
+def test_build_valid_time() -> None:
     forecast_reference_time = np.array(0)
     forecast_period = np.array(0)
 
