@@ -28,6 +28,8 @@ import attr
 import eccodes  # type: ignore
 import numpy as np
 
+from . import abc
+
 eccodes_version = eccodes.codes_get_api_version()
 
 LOG = logging.getLogger(__name__)
@@ -70,7 +72,7 @@ OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
 
 
 @attr.attrs(auto_attribs=True)
-class Message(T.MutableMapping[str, T.Any]):
+class Message(abc.MutableMessage):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -182,8 +184,8 @@ class Message(T.MutableMapping[str, T.Any]):
         eccodes.codes_write(self.codes_id, file)
 
 
-GetterType = T.Callable[[Message], T.Any]
-SetterType = T.Callable[[Message, T.Any], None]
+GetterType = T.Callable[..., T.Any]
+SetterType = T.Callable[..., None]
 ComputedKeysType = T.Dict[str, T.Tuple[GetterType, SetterType]]
 
 
@@ -260,7 +262,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
+class FileStream(abc.Container[OffsetType, Message]):
     """Mapping-like access to a filestream of Messages.
 
     Sample usage:
