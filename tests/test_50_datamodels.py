@@ -12,7 +12,7 @@ TEST_DATA1 = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_DATA2 = os.path.join(SAMPLE_DATA_FOLDER, "lambert_grid.grib")
 
 
-def test_cds():
+def test_cds() -> None:
     ds = xarray_store.open_dataset(TEST_DATA1)
 
     res = cfcoords.translate_coords(ds, coord_model=datamodels.CDS)
@@ -43,7 +43,7 @@ def test_cds():
     }
 
 
-def test_ecmwf():
+def test_ecmwf() -> None:
     ds = xarray_store.open_dataset(TEST_DATA1)
 
     res = cfcoords.translate_coords(ds, coord_model=datamodels.ECMWF)
