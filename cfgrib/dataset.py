@@ -27,7 +27,7 @@ import typing as T
 import attr
 import numpy as np
 
-from . import __version__, cfmessage, messages
+from . import __version__, abc, cfmessage, messages
 
 LOG = logging.getLogger(__name__)
 
@@ -450,7 +450,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(first: messages.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
+def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     attributes = {}
     for key in extra_keys:
         try:

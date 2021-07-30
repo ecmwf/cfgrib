@@ -6,14 +6,14 @@ import attr
 import numpy as np
 
 ItemTypeVar = T.TypeVar("ItemTypeVar")
-MessageTypeVar = T.TypeVar("MessageTypeVar")
+MessageTypeVar = T.TypeVar("MessageTypeVar", bound="Message")
 
 
 class Message(T.Mapping[str, T.Any]):
     pass
 
 
-class MutableMessage(T.MutableMapping[str, T.Any]):
+class MutableMessage(T.MutableMapping[str, T.Any], Message):
     pass
 
 
@@ -21,16 +21,20 @@ class Container(T.Mapping[ItemTypeVar, MessageTypeVar]):
     pass
 
 
+IndexTypeVar = T.TypeVar('IndexTypeVar', bound='Index')  # type: ignore
+
+
 @attr.attrs(auto_attribs=True)
-class Index(T.Mapping[str, ItemTypeVar]):
-    container: Container[ItemTypeVar, Message]
+class Index(T.Mapping[str, T.List[T.Any]], T.Generic[ItemTypeVar, MessageTypeVar]):
+    container: Container[ItemTypeVar, MessageTypeVar]
     index_keys: T.List[str]
     index_data: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[ItemTypeVar]]]
+    filter_by_keys: T.Dict[str, T.Any] = {}
 
     @classmethod
     def from_container(cls, container, index_keys):
-        # type: (Container[ItemTypeVar, Message], T.Iterable[str]) -> Index[ItemTypeVar]
-        index_data: T.Dict[T.Tuple[T.Any, ...], ItemTypeVar] = {}
+        # type: (T.Type[IndexTypeVar], Container[ItemTypeVar, MessageTypeVar], T.Iterable[str]) -> IndexTypeVar
+        index_data: T.Dict[T.Tuple[T.Any, ...], T.List[ItemTypeVar]] = {}
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
@@ -85,7 +89,7 @@ class Index(T.Mapping[str, ItemTypeVar]):
         return values[0]
 
     def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
+        # type: (IndexTypeVar, T.Mapping[str, T.Any], T.Any) -> IndexTypeVar
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = []
@@ -103,5 +107,5 @@ class Index(T.Mapping[str, ItemTypeVar]):
         )
         return index
 
-    def first(self) -> Message:
+    def first(self) -> MessageTypeVar:
         return self.container[self.index_data[0][1][0]]
