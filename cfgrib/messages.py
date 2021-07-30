@@ -302,6 +302,7 @@ class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
     def first(self) -> Message:
         for _, message in self.items():
             return message
+        raise ValueError("index has no message")
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.Sequence[str], str) -> FileIndex
