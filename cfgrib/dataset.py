@@ -520,13 +520,18 @@ def build_variable_components(
     extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
         coord_name: {} for coord_name in extra_coords
     }
-    for dim in header_dimensions:
-        header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
+    extra_dims = tuple(extra_coords.values())
+    for dim in header_dimensions + extra_dims:
+        if np.isscalar(coord_vars[dim].data):
+            header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
+        else:
+            header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
-        for dim in header_dimensions:
+        for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
-            header_indexes.append(header_value_index[dim][header_value])
+            if dim in header_dimensions:
+                header_indexes.append(header_value_index[dim][header_value])
             for coord_name in extra_coords:
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
@@ -562,10 +567,14 @@ def build_variable_components(
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
-        coord_vars[coord_name] = Variable(
-            dimensions=(extra_coords[coord_name],),
-            data=np.array(list(extra_coords_data[coord_name].values())),
-        )
+        coord_data = np.array(list(extra_coords_data[coord_name].values()))
+        if extra_coords[coord_name] not in header_dimensions:
+            coord_dimensions: T.Tuple[str, ...] = ()
+            coord_data = coord_data.reshape(())
+        else:
+            coord_dimensions = (extra_coords[coord_name],)
+        coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
+
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     # OnDiskArray is close enough to np.ndarray to work, but not to make mypy happy
     data_var = Variable(dimensions=dimensions, data=on_disk_array, attributes=data_var_attrs)  # type: ignore
