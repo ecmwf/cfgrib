@@ -94,6 +94,7 @@ class CfGribBackend(BackendEntrypoint):
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn",
+        extra_coords: T.Dict[str, str] = {},
     ) -> xr.Dataset:
 
         store = CfGribDataStore(
@@ -106,6 +107,7 @@ class CfGribBackend(BackendEntrypoint):
             time_dims=time_dims,
             lock=lock,
             errors=errors,
+            extra_coords=extra_coords,
         )
         with xr.core.utils.close_on_error(store):
             vars, attrs = store.load()  # type: ignore

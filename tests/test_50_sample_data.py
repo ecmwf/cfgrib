@@ -89,3 +89,17 @@ def test_canonical_dataset_to_grib(grib_name, tmpdir):
         xarray_to_grib.canonical_dataset_to_grib(res, out_path)
     reread = xarray_store.open_dataset(out_path)
     assert res.equals(reread)
+
+
+@pytest.mark.parametrize(
+    "grib_name,ndims", [("era5-levels-members", 1), ("era5-single-level-scalar-time", 0),],
+)
+def test_open_dataset_extra_coords(grib_name, ndims):
+    grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
+    res = xarray_store.open_dataset(
+        grib_path,
+        backend_kwargs={"extra_coords": {"experimentVersionNumber": "time"}},
+        cache=False,
+    )
+    assert "experimentVersionNumber" in res.coords
+    assert len(res["experimentVersionNumber"].dims) == ndims
