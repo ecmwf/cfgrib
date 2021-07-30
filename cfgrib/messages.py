@@ -213,8 +213,35 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
+class FileStreamValues(T.ValuesView[Message]):
+    def __init__(self, filestream: "FileStream") -> None:
+        self.filestream = filestream
+
+    def __iter__(self) -> T.Iterator[Message]:
+        errors = self.filestream.errors
+        with open(self.filestream.path, "rb") as file:
+            # enable MULTI-FIELD support on sequential reads (like when building the index)
+            with multi_enabled(file):
+                valid_message_found = False
+                while True:
+                    try:
+                        yield self.filestream.message_from_file(file, errors=errors)
+                        valid_message_found = True
+                    except EOFError:
+                        if not valid_message_found:
+                            raise EOFError("No valid message found: %r" % self.filestream.path)
+                        break
+                    except Exception:
+                        if errors == "ignore":
+                            pass
+                        elif errors == "raise":
+                            raise
+                        else:
+                            LOG.exception("skipping corrupted Message")
+
+
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
+class FileStream(T.Mapping[T.Any, Message]):
     """Iterator-like access to a filestream of Messages."""
 
     path: str
@@ -223,39 +250,43 @@ class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
-    def __iter__(self) -> T.Iterator[Message]:
-        with open(self.path, "rb") as file:
-            # enable MULTI-FIELD support on sequential reads (like when building the index)
-            with multi_enabled(file):
-                valid_message_found = False
-                while True:
-                    try:
-                        yield self.message_from_file(file, errors=self.errors)
-                        valid_message_found = True
-                    except EOFError:
-                        if not valid_message_found:
-                            raise EOFError("No valid message found in file: %r" % self.path)
-                        break
-                    except Exception:
-                        if self.errors == "ignore":
-                            pass
-                        elif self.errors == "raise":
-                            raise
-                        else:
-                            LOG.exception("skipping corrupted Message")
+    def values(self) -> T.ValuesView[Message]:
+        return FileStreamValues(self)
+
+    def __iter__(self) -> T.Iterator[T.Union[int, T.Tuple[int, int]]]:
+        old_offset = -1
+        count = 0
+        for message in self.values():
+            offset = message.message_get("offset", int)
+            if offset == old_offset:
+                count += 1
+                offset_field = (offset, count)
+            else:
+                old_offset = offset
+                count = 0
+                offset_field = offset
+            yield offset_field
 
     def message_from_file(self, file, offset=None, **kwargs):
         # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
-        for message in self:
-            return message
-        raise ValueError("index has no message")
+        try:
+            return self[None]
+        except:
+            raise EOFError
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.Sequence[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
+
+    def __getitem__(self, item: T.Union[int, T.Tuple[int, int], None]) -> Message:
+        with open(self.path, "rb") as file:
+            return self.message_from_file(file, offset=item)
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self)
 
 
 @contextlib.contextmanager
@@ -290,7 +321,7 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for message in filestream:
+        for message in filestream.values():
             header_values = []
             for key in index_keys:
                 try:

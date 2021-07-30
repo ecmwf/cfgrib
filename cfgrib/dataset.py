@@ -334,16 +334,15 @@ class OnDiskArray(object):
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
         array_field_shape = tuple(len(l) for l in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
-        with open(self.stream.path, "rb") as file:
-            for header_indexes, offset in self.offsets.items():
-                try:
-                    array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
-                except KeyError:
-                    continue
-                # NOTE: fill a single field as found in the message
-                message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get("values", float)
-                array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
+        for header_indexes, offset in self.offsets.items():
+            try:
+                array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
+            except KeyError:
+                continue
+            # NOTE: fill a single field as found in the message
+            message = self.stream[offset[0]]
+            values = message.message_get("values", float)
+            array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
         array[array == self.missing_value] = np.nan
