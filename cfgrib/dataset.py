@@ -521,15 +521,15 @@ def build_variable_components(
     extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
         coord_name: {} for coord_name in extra_coords
     }
-    extra_dims = list(extra_coords.values())
-    for dim in list(header_dimensions) + extra_dims:
+    extra_dims = tuple(extra_coords.values())
+    for dim in header_dimensions + extra_dims:
         if np.isscalar(coord_vars[dim].data):
             header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     for header_values, offset in index.offsets:
         header_indexes = []  # type: T.List[int]
-        for dim in list(header_dimensions) + extra_dims:
+        for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
             if dim in header_dimensions:
                 header_indexes.append(header_value_index[dim][header_value])
