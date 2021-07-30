@@ -219,11 +219,11 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
-class FileStreamValues(T.ValuesView[Message]):
-    def __init__(self, filestream: "FileStream") -> None:
+class FileStreamItems(T.ItemsView[OffsetType, Message]):
+    def __init__(self, filestream: "FileStream"):
         self.filestream = filestream
 
-    def __iter__(self) -> T.Iterator[Message]:
+    def itervalues(self) -> T.Iterator[Message]:
         errors = self.filestream.errors
         with open(self.filestream.path, "rb") as file:
             # enable MULTI-FIELD support on sequential reads (like when building the index)
@@ -245,24 +245,11 @@ class FileStreamValues(T.ValuesView[Message]):
                         else:
                             LOG.exception("skipping corrupted Message")
 
-
-@attr.attrs(auto_attribs=True)
-class FileStream(T.Mapping[T.Any, Message]):
-    """Iterator-like access to a filestream of Messages."""
-
-    path: str
-    message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
-    errors: str = attr.attrib(
-        default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
-    )
-
-    def values(self) -> T.ValuesView[Message]:
-        return FileStreamValues(self)
-
-    def __iter__(self) -> T.Iterator[T.Union[int, T.Tuple[int, int]]]:
+    def __iter__(self) -> T.Iterator[T.Tuple[OffsetType, Message]]:
+        # assumes MULTI-FIELD support in self.values()
         old_offset = -1
         count = 0
-        for message in self.values():
+        for message in self.itervalues():
             offset = message.message_get("offset", int)
             if offset == old_offset:
                 count += 1
@@ -271,7 +258,44 @@ class FileStream(T.Mapping[T.Any, Message]):
                 old_offset = offset
                 count = 0
                 offset_field = offset
-            yield offset_field
+            yield (offset_field, message)
+
+
+@attr.attrs(auto_attribs=True)
+class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
+    """Mapping-like access to a filestream of Messages.
+
+    Sample usage:
+
+    >>> filestream = FileStream("era5-levels-members.grib")
+    >>> message1 = filestream[None]
+    >>> message1["offset"]
+    0.0
+    >>> message2 = filestream[14760]
+    >>> message2["offset"]
+    14760.0
+
+    Note that any offset return the first message found _after_ that offset:
+
+    >>> message2_again = filestream[1]
+    >>> message2_again["offset"]
+    14760.0
+    """
+
+    path: str
+    message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
+    errors: str = attr.attrib(
+        default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
+    )
+
+    #
+    # NOTE: we implement `.items()`, and not `__iter__()`, as a performance optimisation
+    #
+    def items(self) -> T.ItemsView[OffsetType, Message]:
+        return FileStreamItems(self)
+
+    def __iter__(self) -> T.Iterator[OffsetType]:
+        raise NotImplementedError("use `.items()` instead")
 
     def message_from_file(self, file, offset=None, **kwargs):
         # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
@@ -287,12 +311,12 @@ class FileStream(T.Mapping[T.Any, Message]):
         # type: (T.Sequence[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
 
-    def __getitem__(self, item: T.Union[int, T.Tuple[int, int], None]) -> Message:
+    def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
         with open(self.path, "rb") as file:
             return self.message_from_file(file, offset=item)
 
     def __len__(self) -> int:
-        return sum(1 for _ in self)
+        return sum(1 for _ in self.items())
 
 
 @contextlib.contextmanager
@@ -308,7 +332,6 @@ def compat_create_exclusive(path):
             raise
 
 
-OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
 ALLOWED_PROTOCOL_VERSION = "1"
 
 
@@ -323,11 +346,11 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
     @classmethod
     def from_filestream(cls, filestream, index_keys):
         # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[OffsetType]]
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for message in filestream.values():
+        for offset_field, message in filestream.items():
             header_values = []
             for key in index_keys:
                 try:
@@ -341,13 +364,6 @@ class FileIndex(T.Mapping[str, T.List[T.Any]]):
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
-            offset = message.message_get("offset", int)
-            if offset in count_offsets:
-                count_offsets[offset] += 1
-                offset_field = (offset, count_offsets[offset])
-            else:
-                count_offsets[offset] = 0
-                offset_field = offset
             offsets.setdefault(tuple(header_values), []).append(offset_field)
         self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
         # record the index protocol version in the instance so it is dumped with pickle
