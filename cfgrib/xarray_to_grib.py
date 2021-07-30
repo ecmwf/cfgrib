@@ -24,7 +24,7 @@ import logging
 import typing as T
 import warnings
 
-import numpy as np  # type: ignore
+import numpy as np
 import xarray as xr
 
 from . import cfmessage, dataset, messages
@@ -61,7 +61,7 @@ MESSAGE_DEFINITION_KEYS = [
 
 
 def regular_ll_params(values, min_value=-180.0, max_value=360.0):
-    # type: (T.Sequence[float], float, float) -> T.Tuple[float, float, int]
+    # type: (np.ndarray, float, float) -> T.Tuple[float, float, int]
     start, stop, num = float(values[0]), float(values[-1]), len(values)
     if min(start, stop) < min_value or max(start, stop) > max_value:
         raise ValueError("Unsupported spatial grid: out of bounds (%r, %r)" % (start, stop))
