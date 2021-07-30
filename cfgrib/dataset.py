@@ -25,7 +25,7 @@ import os
 import typing as T
 
 import attr
-import numpy as np  # type: ignore
+import numpy as np
 
 from . import __version__, cfmessage, messages
 
@@ -345,7 +345,7 @@ class OnDiskArray(object):
                 values = message.message_get("values", float)
                 array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
-        array = array_field[(Ellipsis,) + item[-self.geo_ndim :]]
+        array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
         array[array == self.missing_value] = np.nan
         for i, it in reversed(list(enumerate(item[: -self.geo_ndim]))):
             if isinstance(it, int):
@@ -551,7 +551,7 @@ def build_variable_components(
                     extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = offset
     missing_value = data_var_attrs.get("missingValue", 9999)
-    data = OnDiskArray(
+    on_disk_array = OnDiskArray(
         stream=index.filestream,
         shape=shape,
         offsets=offsets,
@@ -577,7 +577,8 @@ def build_variable_components(
         coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
 
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
-    data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
+    # OnDiskArray is close enough to np.ndarray to work, but not to make mypy happy
+    data_var = Variable(dimensions=dimensions, data=on_disk_array, attributes=data_var_attrs)  # type: ignore
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
     return dims, data_var, coord_vars
 

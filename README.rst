@@ -95,7 +95,7 @@ In a Python interpreter try:
 >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> ds
 <xarray.Dataset>
-Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
 Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
@@ -159,7 +159,7 @@ naming conventions you can:
 >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> cf2cdm.translate_coords(ds, cf2cdm.ECMWF)
 <xarray.Dataset>
-Dimensions:     (latitude: 61, level: 2, longitude: 120, number: 10, time: 4)
+Dimensions:     (number: 10, time: 4, level: 2, latitude: 61, longitude: 120)
 Coordinates:
   * number      (number) int64 0 1 2 3 4 5 6 7 8 9
   * time        (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
@@ -187,7 +187,7 @@ To translate to the Common Data Model of the Climate Data Store use:
 >>> import cf2cdm
 >>> cf2cdm.translate_coords(ds, cf2cdm.CDS)
 <xarray.Dataset>
-Dimensions:                  (forecast_reference_time: 4, lat: 61, lon: 120, plev: 2, realization: 10)
+Dimensions:                  (realization: 10, forecast_reference_time: 4, plev: 2, lat: 61, lon: 120)
 Coordinates:
   * realization              (realization) int64 0 1 2 3 4 5 6 7 8 9
   * forecast_reference_time  (forecast_reference_time) datetime64[ns] 2017-01...
@@ -239,7 +239,7 @@ you can use:
 >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'surface'}})
 <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] ...
     step        timedelta64[ns] ...
@@ -247,7 +247,7 @@ Coordinates:
     latitude    (y, x) float64 ...
     longitude   (y, x) float64 ...
     valid_time  datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     gust        (y, x) float32 ...
     sp          (y, x) float32 ...
@@ -272,7 +272,7 @@ Attributes:
 >>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
 ...     backend_kwargs={'filter_by_keys': {'typeOfLevel': 'heightAboveGround', 'level': 2}})
 <xarray.Dataset>
-Dimensions:            (x: 93, y: 65)
+Dimensions:            (y: 65, x: 93)
 Coordinates:
     time               datetime64[ns] ...
     step               timedelta64[ns] ...
@@ -280,7 +280,7 @@ Coordinates:
     latitude           (y, x) float64 ...
     longitude          (y, x) float64 ...
     valid_time         datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     t2m                (y, x) float32 ...
     r2                 (y, x) float32 ...
@@ -305,7 +305,25 @@ and returns a list of all valid ``xarray.Dataset``'s in the GRIB file.
 >>> import cfgrib
 >>> cfgrib.open_datasets('nam.t00z.awp21100.tm00.grib2')
 [<xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:                (y: 65, x: 93)
+Coordinates:
+    time                   datetime64[ns] 2018-09-17
+    step                   timedelta64[ns] 00:00:00
+    atmosphereSingleLayer  float64 0.0
+    latitude               (y, x) float64 ...
+    longitude              (y, x) float64 ...
+    valid_time             datetime64[ns] ...
+Dimensions without coordinates: y, x
+Data variables:
+    pwat                   (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP...
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP , <xarray.Dataset>
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -313,7 +331,7 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     pres        (y, x) float32 ...
     gh          (y, x) float32 ...
@@ -324,7 +342,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -332,7 +350,7 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     pres        (y, x) float32 ...
     t           (y, x) float32 ...
@@ -344,7 +362,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:            (x: 93, y: 65)
+Dimensions:            (y: 65, x: 93)
 Coordinates:
     time               datetime64[ns] 2018-09-17
     step               timedelta64[ns] 00:00:00
@@ -352,9 +370,10 @@ Coordinates:
     latitude           (y, x) float64 ...
     longitude          (y, x) float64 ...
     valid_time         datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     u10                (y, x) float32 ...
+    v10                (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
@@ -362,7 +381,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:            (x: 93, y: 65)
+Dimensions:            (y: 65, x: 93)
 Coordinates:
     time               datetime64[ns] 2018-09-17
     step               timedelta64[ns] 00:00:00
@@ -370,7 +389,7 @@ Coordinates:
     latitude           (y, x) float64 12.19 12.39 12.58 ... 57.68 57.49 57.29
     longitude          (y, x) float64 226.5 227.2 227.9 ... 308.5 309.6 310.6
     valid_time         datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     t2m                (y, x) float32 ...
     r2                 (y, x) float32 ...
@@ -381,7 +400,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:                 (heightAboveGroundLayer: 2, x: 93, y: 65)
+Dimensions:                 (heightAboveGroundLayer: 2, y: 65, x: 93)
 Coordinates:
     time                    datetime64[ns] 2018-09-17
     step                    timedelta64[ns] 00:00:00
@@ -389,7 +408,7 @@ Coordinates:
     latitude                (y, x) float64 ...
     longitude               (y, x) float64 ...
     valid_time              datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     hlcy                    (heightAboveGroundLayer, y, x) float32 ...
 Attributes:
@@ -399,7 +418,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:        (isobaricInhPa: 19, x: 93, y: 65)
+Dimensions:        (isobaricInhPa: 19, y: 65, x: 93)
 Coordinates:
     time           datetime64[ns] 2018-09-17
     step           timedelta64[ns] 00:00:00
@@ -407,7 +426,7 @@ Coordinates:
     latitude       (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude      (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time     datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     t              (isobaricInhPa, y, x) float32 ...
     u              (isobaricInhPa, y, x) float32 ...
@@ -422,7 +441,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:        (isobaricInhPa: 5, x: 93, y: 65)
+Dimensions:        (isobaricInhPa: 5, y: 65, x: 93)
 Coordinates:
     time           datetime64[ns] 2018-09-17
     step           timedelta64[ns] 00:00:00
@@ -430,7 +449,7 @@ Coordinates:
     latitude       (y, x) float64 ...
     longitude      (y, x) float64 ...
     valid_time     datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     absv           (isobaricInhPa, y, x) float32 ...
 Attributes:
@@ -440,7 +459,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:       (x: 93, y: 65)
+Dimensions:       (y: 65, x: 93)
 Coordinates:
     time          datetime64[ns] 2018-09-17
     step          timedelta64[ns] 00:00:00
@@ -448,7 +467,7 @@ Coordinates:
     latitude      (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude     (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time    datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     gh            (y, x) float32 ...
     r             (y, x) float32 ...
@@ -459,7 +478,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -467,7 +486,7 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     pres        (y, x) float32 ...
     u           (y, x) float32 ...
@@ -480,7 +499,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -488,7 +507,7 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     prmsl       (y, x) float32 ...
     mslet       (y, x) float32 ...
@@ -499,7 +518,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:                  (pressureFromGroundLayer: 2, x: 93, y: 65)
+Dimensions:                  (pressureFromGroundLayer: 2, y: 65, x: 93)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
@@ -507,7 +526,7 @@ Coordinates:
     latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
     longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
     valid_time               datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     cape                     (pressureFromGroundLayer, y, x) float32 ...
     cin                      (pressureFromGroundLayer, y, x) float32 ...
@@ -518,7 +537,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:                  (pressureFromGroundLayer: 5, x: 93, y: 65)
+Dimensions:                  (pressureFromGroundLayer: 5, y: 65, x: 93)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
@@ -526,7 +545,7 @@ Coordinates:
     latitude                 (y, x) float64 12.19 12.39 12.58 ... 57.49 57.29
     longitude                (y, x) float64 226.5 227.2 227.9 ... 309.6 310.6
     valid_time               datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     t                        (pressureFromGroundLayer, y, x) float32 ...
     u                        (pressureFromGroundLayer, y, x) float32 ...
@@ -539,7 +558,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:                  (x: 93, y: 65)
+Dimensions:                  (y: 65, x: 93)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
@@ -547,7 +566,7 @@ Coordinates:
     latitude                 (y, x) float64 ...
     longitude                (y, x) float64 ...
     valid_time               datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     pli                      (y, x) float32 ...
 Attributes:
@@ -557,7 +576,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:                  (x: 93, y: 65)
+Dimensions:                  (y: 65, x: 93)
 Coordinates:
     time                     datetime64[ns] 2018-09-17
     step                     timedelta64[ns] 00:00:00
@@ -565,7 +584,7 @@ Coordinates:
     latitude                 (y, x) float64 ...
     longitude                (y, x) float64 ...
     valid_time               datetime64[ns] ...
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     4lftx                    (y, x) float32 ...
 Attributes:
@@ -575,7 +594,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -583,7 +602,7 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
     cape        (y, x) float32 ...
     sp          (y, x) float32 ...
@@ -604,7 +623,7 @@ Attributes:
     GRIB_subCentre:          0
     Conventions:             CF-1.7
     institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
+Dimensions:     (y: 65, x: 93)
 Coordinates:
     time        datetime64[ns] 2018-09-17
     step        timedelta64[ns] 00:00:00
@@ -612,30 +631,12 @@ Coordinates:
     latitude    (y, x) float64 12.19 12.39 12.58 12.77 ... 57.68 57.49 57.29
     longitude   (y, x) float64 226.5 227.2 227.9 228.7 ... 308.5 309.6 310.6
     valid_time  datetime64[ns] 2018-09-17
-Dimensions without coordinates: x, y
+Dimensions without coordinates: y, x
 Data variables:
-    pres        (y, x) float32 ...
     t           (y, x) float32 ...
     u           (y, x) float32 ...
     v           (y, x) float32 ...
-Attributes:
-    GRIB_edition:            2
-    GRIB_centre:             kwbc
-    GRIB_centreDescription:  US National Weather Service - NCEP...
-    GRIB_subCentre:          0
-    Conventions:             CF-1.7
-    institution:             US National Weather Service - NCEP , <xarray.Dataset>
-Dimensions:     (x: 93, y: 65)
-Coordinates:
-    time        datetime64[ns] 2018-09-17
-    step        timedelta64[ns] 00:00:00
-    level       float64 0.0
-    latitude    (y, x) float64 ...
-    longitude   (y, x) float64 ...
-    valid_time  datetime64[ns] ...
-Dimensions without coordinates: x, y
-Data variables:
-    pwat        (y, x) float32 ...
+    trpp        (y, x) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             kwbc
@@ -662,7 +663,7 @@ can be saved at the moment:
 >>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
 >>> ds
 <xarray.Dataset>
-Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
 Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
@@ -685,7 +686,7 @@ Attributes:
 >>> to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
 >>> xr.open_dataset('out1.grib', engine='cfgrib')
 <xarray.Dataset>
-Dimensions:        (isobaricInhPa: 2, latitude: 61, longitude: 120, number: 10, time: 4)
+Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
 Coordinates:
   * number         (number) int64 0 1 2 3 4 5 6 7 8 9
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
