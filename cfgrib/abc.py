@@ -7,21 +7,11 @@ import numpy as np
 
 ItemTypeVar = T.TypeVar("ItemTypeVar")
 MessageTypeVar = T.TypeVar("MessageTypeVar", bound="Message")
+IndexTypeVar = T.TypeVar("IndexTypeVar", bound="Index")  # type: ignore
 
-
-class Message(T.Mapping[str, T.Any]):
-    pass
-
-
-class MutableMessage(T.MutableMapping[str, T.Any], Message):
-    pass
-
-
-class Container(T.Mapping[ItemTypeVar, MessageTypeVar]):
-    pass
-
-
-IndexTypeVar = T.TypeVar('IndexTypeVar', bound='Index')  # type: ignore
+Message = T.Mapping[str, T.Any]
+MutableMessage = T.MutableMapping[str, T.Any]
+Container = T.Mapping[ItemTypeVar, MessageTypeVar]
 
 
 @attr.attrs(auto_attribs=True)
