@@ -319,12 +319,11 @@ class OnDiskArray:
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
-        with open(self.stream.path, "rb") as file:
-            for header_indexes, offset in self.offsets.items():
-                # NOTE: fill a single field as found in the message
-                message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get("values", float)
-                array.__getitem__(header_indexes).flat[:] = values
+        for header_indexes, offset in self.offsets.items():
+            # NOTE: fill a single field as found in the message
+            message = self.stream[offset[0]]
+            values = message["values"]
+            array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
 
@@ -341,7 +340,7 @@ class OnDiskArray:
                 continue
             # NOTE: fill a single field as found in the message
             message = self.stream[offset[0]]
-            values = message.message_get("values", float)
+            values = message["values"]
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
@@ -458,7 +457,7 @@ def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[s
 
 
 def build_variable_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Message],
     encode_cf: T.Sequence[str] = (),
     filter_by_keys: T.Dict[str, T.Any] = {},
     log: logging.Logger = LOG,
