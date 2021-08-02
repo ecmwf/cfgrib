@@ -1,5 +1,7 @@
 import os.path
+import typing as T
 
+import py
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -28,7 +30,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
         "t_analysis_and_fc_0",
     ],
 )
-def test_open_dataset(grib_name):
+def test_open_dataset(grib_name: str) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
     res = xarray_store.open_dataset(grib_path, cache=False)
     print(res)
@@ -43,7 +45,7 @@ def test_open_dataset(grib_name):
         "uv_on_different_levels",
     ],
 )
-def test_open_dataset_fail(grib_name):
+def test_open_dataset_fail(grib_name: str) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
 
     with pytest.raises(ValueError):
@@ -53,7 +55,7 @@ def test_open_dataset_fail(grib_name):
 @pytest.mark.parametrize(
     "grib_name", ["hpa_and_pa", "t_on_different_level_types", "tp_on_different_grid_resolutions"]
 )
-def test_open_datasets(grib_name):
+def test_open_datasets(grib_name: str) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
 
     res = xarray_store.open_datasets(grib_path)
@@ -79,7 +81,7 @@ def test_open_datasets(grib_name):
         "t_analysis_and_fc_0",
     ],
 )
-def test_canonical_dataset_to_grib(grib_name, tmpdir):
+def test_canonical_dataset_to_grib(grib_name: str, tmpdir: py.path.local) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
     out_path = str(tmpdir.join(grib_name + ".grib"))
 
@@ -94,7 +96,7 @@ def test_canonical_dataset_to_grib(grib_name, tmpdir):
 @pytest.mark.parametrize(
     "grib_name,ndims", [("era5-levels-members", 1), ("era5-single-level-scalar-time", 0),],
 )
-def test_open_dataset_extra_coords(grib_name, ndims):
+def test_open_dataset_extra_coords(grib_name: str, ndims: T.Any) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
     res = xarray_store.open_dataset(
         grib_path,

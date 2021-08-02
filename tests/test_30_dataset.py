@@ -1,7 +1,8 @@
 import os.path
 import pathlib
+import typing as T
 
-import numpy as np  # type: ignore
+import numpy as np
 import pytest
 
 from cfgrib import cfmessage, dataset, messages
@@ -12,7 +13,7 @@ TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
 TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
 
 
-def test_enforce_unique_attributes():
+def test_enforce_unique_attributes() -> None:
     assert dataset.enforce_unique_attributes({"key": [1]}, ["key"])
     assert not dataset.enforce_unique_attributes({"key": ["undef"]}, ["key"])
 
@@ -20,7 +21,7 @@ def test_enforce_unique_attributes():
         assert dataset.enforce_unique_attributes({"key": [1, 2]}, ["key"])
 
 
-def test_Variable():
+def test_Variable() -> None:
     res = dataset.Variable(dimensions=("lat",), data=np.array([0.0]), attributes={})
 
     assert res == res
@@ -36,16 +37,16 @@ def test_Variable():
         ((1,), (10,), ([1],)),
     ],
 )
-def test_expand_item(item, shape, expected):
+def test_expand_item(item: T.Any, shape: T.Any, expected: T.Any) -> None:
     assert dataset.expand_item(item, shape) == expected
 
 
-def test_expand_item_error():
+def test_expand_item_error() -> None:
     with pytest.raises(TypeError):
         dataset.expand_item((None,), (1,))
 
 
-def test_dict_merge():
+def test_dict_merge() -> None:
     master = {"one": 1}
     dataset.dict_merge(master, {"two": 2})
     assert master == {"one": 1, "two": 2}
@@ -56,11 +57,11 @@ def test_dict_merge():
         dataset.dict_merge(master, {"two": 3})
 
 
-def test_encode_cf_first():
+def test_encode_cf_first() -> None:
     assert dataset.encode_cf_first({})
 
 
-def test_build_data_var_components_no_encode():
+def test_build_data_var_components_no_encode() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     index = messages.FileStream(path=TEST_DATA).index(index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
@@ -71,7 +72,7 @@ def test_build_data_var_components_no_encode():
     assert data_var.data[:, :, :, :, :].mean() > 0.0
 
 
-def test_build_data_var_components_encode_cf_geography():
+def test_build_data_var_components_encode_cf_geography() -> None:
     stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     index = stream.index(index_keys).subindex(paramId=130)
@@ -92,7 +93,7 @@ def test_build_data_var_components_encode_cf_geography():
     assert data_var.data[:, :, :, :, :, :].mean() > 0.0
 
 
-def test_build_dataset_components_time_dims():
+def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
@@ -122,7 +123,7 @@ def test_build_dataset_components_time_dims():
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
-def test_Dataset():
+def test_Dataset() -> None:
     res = dataset.open_file(TEST_DATA)
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
@@ -142,7 +143,7 @@ def test_Dataset():
     assert res1 == res
 
 
-def test_Dataset_no_encode():
+def test_Dataset_no_encode() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=())
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
@@ -152,7 +153,7 @@ def test_Dataset_no_encode():
     assert len(res.variables) == 9
 
 
-def test_Dataset_encode_cf_time():
+def test_Dataset_encode_cf_time() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("time",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -163,7 +164,7 @@ def test_Dataset_encode_cf_time():
     assert res.variables["t"].data[:, :, :, :].mean() > 0.0
 
 
-def test_Dataset_encode_cf_geography():
+def test_Dataset_encode_cf_geography() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("geography",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -181,7 +182,7 @@ def test_Dataset_encode_cf_geography():
     assert res.variables["t"].data[:, :, :, :, :, :].mean() > 0.0
 
 
-def test_Dataset_encode_cf_vertical():
+def test_Dataset_encode_cf_vertical() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("vertical",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -193,7 +194,7 @@ def test_Dataset_encode_cf_vertical():
     assert res.variables["t"].data[:, :, :, :, :].mean() > 0.0
 
 
-def test_Dataset_reguler_gg_surface():
+def test_Dataset_reguler_gg_surface() -> None:
     path = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_sfc.grib")
     res = dataset.open_file(path)
 
@@ -201,13 +202,13 @@ def test_Dataset_reguler_gg_surface():
     assert np.allclose(res.variables["latitude"].data[:2], [88.57216851, 86.72253095])
 
 
-def test_Dataset_extra_coords():
+def test_Dataset_extra_coords() -> None:
     res = dataset.open_file(TEST_DATA, extra_coords={"experimentVersionNumber": "time"})
     assert "experimentVersionNumber" in res.variables
     assert res.variables["experimentVersionNumber"].dimensions == ("time",)
 
 
-def test_Dataset_scalar_extra_coords():
+def test_Dataset_scalar_extra_coords() -> None:
     res = dataset.open_file(
         TEST_DATA_SCALAR_TIME, extra_coords={"experimentVersionNumber": "time"}
     )
@@ -215,12 +216,12 @@ def test_Dataset_scalar_extra_coords():
     assert res.variables["experimentVersionNumber"].dimensions == ()
 
 
-def test_Dataset_extra_coords_error():
+def test_Dataset_extra_coords_error() -> None:
     with pytest.raises(ValueError):
         dataset.open_file(TEST_DATA, extra_coords={"validityDate": "number"})
 
 
-def test_OnDiskArray():
+def test_OnDiskArray() -> None:
     res = dataset.open_file(TEST_DATA).variables["t"]
 
     assert isinstance(res.data, dataset.OnDiskArray)
