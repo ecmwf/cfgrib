@@ -277,7 +277,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 
 @attr.attrs(auto_attribs=True, eq=False)
-class Variable(object):
+class Variable:
     dimensions: T.Tuple[str, ...]
     data: np.ndarray
     attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
@@ -306,7 +306,7 @@ def expand_item(item, shape):
 
 
 @attr.attrs(auto_attribs=True)
-class OnDiskArray(object):
+class OnDiskArray:
     stream: messages.FileStream
     shape: T.Tuple[int, ...]
     offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(
@@ -680,7 +680,7 @@ def build_dataset_components(
 
 
 @attr.attrs(auto_attribs=True)
-class Dataset(object):
+class Dataset:
     """
     Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
     """
