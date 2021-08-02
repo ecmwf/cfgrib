@@ -250,7 +250,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
         old_offset = -1
         count = 0
         for message in self.itervalues():
-            offset = message.message_get("offset", int)
+            offset = message["offset:int"]
             if offset == old_offset:
                 count += 1
                 offset_field = (offset, count)
