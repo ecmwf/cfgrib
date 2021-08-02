@@ -238,9 +238,9 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
                             raise EOFError("No valid message found: %r" % self.filestream.path)
                         break
                     except Exception:
-                        if self.errors == "ignore":
+                        if errors == "ignore":
                             pass
-                        elif self.errors == "raise":
+                        elif errors == "raise":
                             raise
                         else:
                             LOG.exception("skipping corrupted Message")
@@ -399,55 +399,3 @@ class FileIndex(abc.Index[OffsetType, Message]):
             log.exception("Can't read index file %r", indexpath)
 
         return cls.from_filestream(filestream, index_keys)
-
-    def __iter__(self) -> T.Iterator[str]:
-        return iter(self.index_keys)
-
-    def __len__(self) -> int:
-        return len(self.index_keys)
-
-    @property
-    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
-        if not hasattr(self, "_header_values"):
-            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.offsets:
-                for i, value in enumerate(header_values):
-                    values = all_header_values.setdefault(self.index_keys[i], {})
-                    if value not in values:
-                        values[value] = None
-            self._header_values = {k: list(v) for k, v in all_header_values.items()}
-        return self._header_values
-
-    def __getitem__(self, item: str) -> T.List[T.Any]:
-        return self.header_values[item]
-
-    def getone(self, item):
-        # type: (str) -> T.Any
-        values = self[item]
-        if len(values) != 1:
-            raise ValueError("not one value for %r: %r" % (item, len(values)))
-        return values[0]
-
-    def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
-        query.update(filter_by_keys)
-        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = []
-        for header_values, offsets_values in self.offsets:
-            for idx, val in raw_query:
-                if header_values[idx] != val:
-                    break
-            else:
-                offsets.append((header_values, offsets_values))
-        index = type(self)(
-            filestream=self.filestream,
-            index_keys=self.index_keys,
-            offsets=offsets,
-            filter_by_keys=query,
-        )
-        return index
-
-    def first(self) -> Message:
-        with open(self.filestream.path, "rb") as file:
-            first_offset = self.offsets[0][1][0]
-            return self.filestream.message_from_file(file, offset=first_offset)
