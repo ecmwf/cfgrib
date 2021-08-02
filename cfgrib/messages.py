@@ -231,16 +231,16 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
                 valid_message_found = False
                 while True:
                     try:
-                        yield self.filestream.message_from_file(file, errors=errors)
+                        yield self.message_from_file(file, errors=self.errors)
                         valid_message_found = True
                     except EOFError:
                         if not valid_message_found:
-                            raise EOFError("No valid message found: %r" % self.filestream.path)
+                            raise EOFError("No valid message found in file: %r" % self.path)
                         break
                     except Exception:
-                        if errors == "ignore":
+                        if self.errors == "ignore":
                             pass
-                        elif errors == "raise":
+                        elif self.errors == "raise":
                             raise
                         else:
                             LOG.exception("skipping corrupted Message")
