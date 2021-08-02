@@ -246,7 +246,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
                             LOG.exception("skipping corrupted Message")
 
     def __iter__(self) -> T.Iterator[T.Tuple[OffsetType, Message]]:
-        # assumes MULTI-FIELD support in self.values()
+        # assumes MULTI-FIELD support in self.itervalues()
         old_offset = -1
         count = 0
         for message in self.itervalues():
@@ -262,7 +262,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
+class FileStream(abc.Container[OffsetType, Message]):
     """Mapping-like access to a filestream of Messages.
 
     Sample usage:
@@ -302,10 +302,9 @@ class FileStream(T.Mapping[T.Optional[OffsetType], Message]):
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
-        try:
-            return self[None]
-        except:
-            raise EOFError
+        for _, message in self.items():
+            return message
+        raise ValueError("index has no message")
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.Sequence[str], str) -> FileIndex
@@ -336,7 +335,7 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(T.Mapping[str, T.List[T.Any]]):
+class FileIndex(abc.Index[OffsetType, Message]):
     filestream: FileStream
     index_keys: T.List[str]
     offsets: OffsetsType = attr.attrib(repr=False)
