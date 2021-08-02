@@ -60,6 +60,7 @@ jobs:
       run: |
         pip install --no-deps -e .
         pytest -v --cov=. --cov-report=xml README.rst
+        pytest -v --doctest-modules cfgrib
 
   code-quality:
     runs-on: ubuntu-latest

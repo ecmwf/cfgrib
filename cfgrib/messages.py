@@ -28,6 +28,8 @@ import attr
 import eccodes  # type: ignore
 import numpy as np
 
+from . import abc
+
 eccodes_version = eccodes.codes_get_api_version()
 
 LOG = logging.getLogger(__name__)
@@ -64,9 +66,12 @@ KEY_TYPES = {
     "": None,
 }
 
+OffsetType = T.Union[int, T.Tuple[int, int]]
+OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
+
 
 @attr.attrs(auto_attribs=True)
-class Message(T.MutableMapping[str, T.Any]):
+class Message(abc.MutableMessage):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -178,8 +183,8 @@ class Message(T.MutableMapping[str, T.Any]):
         eccodes.codes_write(self.codes_id, file)
 
 
-GetterType = T.Callable[[Message], T.Any]
-SetterType = T.Callable[[Message, T.Any], None]
+GetterType = T.Callable[..., T.Any]
+SetterType = T.Callable[..., None]
 ComputedKeysType = T.Dict[str, T.Tuple[GetterType, SetterType]]
 
 
@@ -214,7 +219,7 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
+class FileStream(T.Iterable[Message]):
     """Iterator-like access to a filestream of Messages."""
 
     path: str
@@ -271,7 +276,6 @@ def compat_create_exclusive(path):
             raise
 
 
-OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
 ALLOWED_PROTOCOL_VERSION = "1"
 
 
