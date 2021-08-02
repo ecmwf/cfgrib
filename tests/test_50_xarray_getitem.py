@@ -11,7 +11,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 
 
 @pytest.mark.parametrize("cache", [True, False])
-def test_all(cache):
+def test_all(cache: bool) -> None:
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars["t"]
     va = da.values[:]
 
@@ -21,7 +21,7 @@ def test_all(cache):
 
 
 @pytest.mark.parametrize("cache", [True, False])
-def test_getitem_int(cache):
+def test_getitem_int(cache: bool) -> None:
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars["t"]
     va = da.values[:]
 
@@ -31,7 +31,7 @@ def test_getitem_int(cache):
 
 
 @pytest.mark.parametrize("cache", [True, False])
-def test_getitem_slice(cache):
+def test_getitem_slice(cache: bool) -> None:
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars["t"]
     va = da.values[:]
 
@@ -43,7 +43,7 @@ def test_getitem_slice(cache):
 
 
 @pytest.mark.parametrize("cache", [True, False])
-def test_getitem_list(cache):
+def test_getitem_list(cache: bool) -> None:
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars["t"]
     va = da.values[:]
 
@@ -54,7 +54,7 @@ def test_getitem_list(cache):
 
 
 @pytest.mark.parametrize("cache", [True, False])
-def test_getitem_latlon(cache):
+def test_getitem_latlon(cache: bool) -> None:
     da = xarray_store.open_dataset(TEST_DATA, cache=cache).data_vars["t"]
     va = da.values[:]
 

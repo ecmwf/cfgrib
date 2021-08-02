@@ -1,6 +1,7 @@
 import os.path
 
 import click.testing
+import py
 import pytest
 
 pytest.importorskip("scipy", reason="scpy not found")
@@ -12,7 +13,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 
 
-def test_cfgrib_cli_to_netcdf(tmpdir):
+def test_cfgrib_cli_to_netcdf(tmpdir: py.path.local) -> None:
     runner = click.testing.CliRunner()
 
     res = runner.invoke(__main__.cfgrib_cli, ["to_netcdf"])
@@ -32,7 +33,7 @@ def test_cfgrib_cli_to_netcdf(tmpdir):
     assert res.output == ""
 
 
-def test_cfgrib_cli_dump():
+def test_cfgrib_cli_dump() -> None:
     runner = click.testing.CliRunner()
 
     res = runner.invoke(__main__.cfgrib_cli, ["dump"])

@@ -1,16 +1,18 @@
 import sys
 import typing as T
 
-import numpy as np  # type: ignore
+import numpy as np
 import pytest
 
-xr = pytest.importorskip("xarray")  # noqa
+pytest.importorskip("xarray")  # noqa
+
+import xarray as xr
 
 from cf2cdm import cfcoords
 
 
 @pytest.fixture
-def da1():
+def da1() -> xr.Dataset:
     latitude = [0.5, 0.0]
     longitude = [10.0, 10.5]
     time = ["2017-12-01T00:00:00", "2017-12-01T12:00:00", "2017-12-02T00:00:00"]
@@ -32,7 +34,7 @@ def da1():
 
 
 @pytest.fixture
-def da2():
+def da2() -> xr.Dataset:
     latitude = [0.5, 0.0]
     longitude = [10.0, 10.5]
     time = ["2017-12-01T00:00:00", "2017-12-01T12:00:00", "2017-12-02T00:00:00"]
@@ -50,7 +52,7 @@ def da2():
 
 
 @pytest.fixture
-def da3():
+def da3() -> xr.Dataset:
     latitude = [0.5, 0.0]
     longitude = [10.0, 10.5]
     step = [0, 24, 48]
@@ -74,14 +76,14 @@ def da3():
     return data.to_dataset(name="da3")
 
 
-def test_match_values():
+def test_match_values() -> None:
     mapping = {"callable": len, "int": 1}  # type: T.Dict[T.Hashable, T.Any]
     res = cfcoords.match_values(callable, mapping)
 
     assert res == ["callable"]
 
 
-def test_translate_coord_direction(da1):
+def test_translate_coord_direction(da1: xr.Dataset) -> None:
     res = cfcoords.translate_coord_direction(da1, "lat", "increasing")
     assert res.lat.values[-1] > res.lat.values[0]
 
@@ -101,7 +103,7 @@ def test_translate_coord_direction(da1):
         cfcoords.translate_coord_direction(da1, "lat", "wrong")
 
 
-def test_coord_translator(da1):
+def test_coord_translator(da1: xr.Dataset) -> None:
     res = cfcoords.coord_translator("level", "hPa", "decreasing", lambda x: False, "lvl", da1)
     assert da1.equals(res)
 
@@ -121,7 +123,7 @@ def test_coord_translator(da1):
     assert da1.equals(res)
 
 
-def test_translate_coords(da1, da2, da3):
+def test_translate_coords(da1: xr.Dataset, da2: xr.Dataset, da3: xr.Dataset) -> None:
     res = cfcoords.translate_coords(da1)
 
     assert "latitude" in res.coords
@@ -140,7 +142,7 @@ def test_translate_coords(da1, da2, da3):
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason="test needs stable dict's")
-def test_translate_coords_errors(da3):
+def test_translate_coords_errors(da3: xr.Dataset) -> None:
     cfcoords.translate_coords(da3)
     cfcoords.translate_coords(da3, errors="ignore")
     with pytest.raises(RuntimeError):
