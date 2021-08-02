@@ -28,6 +28,8 @@ import attr
 import eccodes  # type: ignore
 import numpy as np
 
+from . import abc
+
 eccodes_version = eccodes.codes_get_api_version()
 
 LOG = logging.getLogger(__name__)
@@ -65,8 +67,12 @@ KEY_TYPES = {
 }
 
 
+OffsetType = T.Union[int, T.Tuple[int, int]]
+OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
+
+
 @attr.attrs(auto_attribs=True)
-class Message(T.MutableMapping[str, T.Any]):
+class Message(abc.MutableMessage):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -77,7 +83,7 @@ class Message(T.MutableMapping[str, T.Any]):
 
     @classmethod
     def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Union[int, T.Tuple[int ,int], None], T.Any) -> Message
+        # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -178,8 +184,8 @@ class Message(T.MutableMapping[str, T.Any]):
         eccodes.codes_write(self.codes_id, file)
 
 
-GetterType = T.Callable[[Message], T.Any]
-SetterType = T.Callable[[Message, T.Any], None]
+GetterType = T.Callable[..., T.Any]
+SetterType = T.Callable[..., None]
 ComputedKeysType = T.Dict[str, T.Tuple[GetterType, SetterType]]
 
 
@@ -214,7 +220,7 @@ class ComputedKeysMessage(Message):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
+class FileStream(T.Iterable[Message]):
     """Iterator-like access to a filestream of Messages."""
 
     path: str
@@ -245,7 +251,7 @@ class FileStream(T.Iterable[T.MutableMapping[str, T.Any]]):
                             LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
+        # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
@@ -271,12 +277,11 @@ def compat_create_exclusive(path):
             raise
 
 
-OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]]
 ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(T.Mapping[str, T.List[T.Any]]):
+class FileIndex(abc.Index[OffsetType, Message]):
     filestream: FileStream
     index_keys: T.List[str]
     offsets: OffsetsType = attr.attrib(repr=False)

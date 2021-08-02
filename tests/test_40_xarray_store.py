@@ -13,7 +13,7 @@ TEST_DATASETS = os.path.join(SAMPLE_DATA_FOLDER, "t_on_different_level_types.gri
 TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, "uv_on_different_levels.grib")
 
 
-def test_open_dataset():
+def test_open_dataset() -> None:
     res = xarray_store.open_dataset(TEST_DATA)
 
     assert res.attrs["GRIB_edition"] == 1
@@ -38,7 +38,7 @@ def test_open_dataset():
         xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={"errors": "raise"})
 
 
-def test_open_dataset_corrupted():
+def test_open_dataset_corrupted() -> None:
     res = xarray_store.open_dataset(TEST_CORRUPTED)
 
     assert res.attrs["GRIB_edition"] == 1
@@ -48,7 +48,7 @@ def test_open_dataset_corrupted():
         xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={"grib_errors": "raise"})
 
 
-def test_open_dataset_encode_cf_time():
+def test_open_dataset_encode_cf_time() -> None:
     backend_kwargs = {"encode_cf": ("time",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
@@ -60,7 +60,7 @@ def test_open_dataset_encode_cf_time():
     assert res["t"].mean() > 0.0
 
 
-def test_open_dataset_encode_cf_vertical():
+def test_open_dataset_encode_cf_vertical() -> None:
     backend_kwargs = {"encode_cf": ("vertical",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
@@ -70,7 +70,7 @@ def test_open_dataset_encode_cf_vertical():
     assert var.mean() > 0.0
 
 
-def test_open_dataset_encode_cf_geography():
+def test_open_dataset_encode_cf_geography() -> None:
     backend_kwargs = {"encode_cf": ("geography",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
@@ -84,7 +84,7 @@ def test_open_dataset_encode_cf_geography():
     assert var.mean() > 0.0
 
 
-def test_open_dataset_eccodes():
+def test_open_dataset_eccodes() -> None:
     res = xarray_store.open_dataset(TEST_DATA)
 
     assert res.attrs["GRIB_edition"] == 1
@@ -97,7 +97,7 @@ def test_open_dataset_eccodes():
     assert var.mean() > 0.0
 
 
-def test_open_datasets():
+def test_open_datasets() -> None:
     res = xarray_store.open_datasets(TEST_DATASETS)
 
     assert len(res) > 1

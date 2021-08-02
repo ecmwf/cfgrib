@@ -27,7 +27,7 @@ import typing as T
 import attr
 import numpy as np
 
-from . import __version__, cfmessage, messages
+from . import __version__, abc, cfmessage, messages
 
 LOG = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ class DatasetBuildError(ValueError):
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (T.Mapping[str, T.Any], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (T.Mapping[str, T.List[T.Any]], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = {}  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index[key]
@@ -277,7 +277,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 
 @attr.attrs(auto_attribs=True, eq=False)
-class Variable(object):
+class Variable:
     dimensions: T.Tuple[str, ...]
     data: np.ndarray
     attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
@@ -306,7 +306,7 @@ def expand_item(item, shape):
 
 
 @attr.attrs(auto_attribs=True)
-class OnDiskArray(object):
+class OnDiskArray:
     stream: messages.FileStream
     shape: T.Tuple[int, ...]
     offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(
@@ -365,10 +365,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first,  # type: messages.Message
-    encode_cf,  # type: T.Sequence[str]
-    errors,  # type: str
-    log=LOG,  # type: logging.Logger
+    first: abc.Message, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
@@ -451,7 +448,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(first: messages.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
+def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     attributes = {}
     for key in extra_keys:
         try:
@@ -680,7 +677,7 @@ def build_dataset_components(
 
 
 @attr.attrs(auto_attribs=True)
-class Dataset(object):
+class Dataset:
     """
     Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
     """
