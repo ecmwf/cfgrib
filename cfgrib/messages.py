@@ -281,7 +281,7 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(T.Mapping[str, T.List[T.Any]]):
+class FileIndex(abc.Index[OffsetType, Message]):
     filestream: FileStream
     index_keys: T.List[str]
     offsets: OffsetsType = attr.attrib(repr=False)
