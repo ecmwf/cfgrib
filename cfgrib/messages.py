@@ -66,6 +66,7 @@ KEY_TYPES = {
     "": None,
 }
 
+
 OffsetType = T.Union[int, T.Tuple[int, int]]
 OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
 
@@ -82,7 +83,7 @@ class Message(abc.MutableMessage):
 
     @classmethod
     def from_file(cls, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Union[int, T.Tuple[int ,int], None], T.Any) -> Message
+        # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         field_in_message = 0
         if isinstance(offset, tuple):
             offset, field_in_message = offset
@@ -250,7 +251,7 @@ class FileStream(T.Iterable[Message]):
                             LOG.exception("skipping corrupted Message")
 
     def message_from_file(self, file, offset=None, **kwargs):
-        # type: (T.IO[bytes], T.Union[int, T.Tuple[int, int], None], T.Any) -> Message
+        # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
