@@ -246,7 +246,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
                             LOG.exception("skipping corrupted Message")
 
     def __iter__(self) -> T.Iterator[T.Tuple[OffsetType, Message]]:
-        # assumes MULTI-FIELD support in self.values()
+        # assumes MULTI-FIELD support in self.itervalues()
         old_offset = -1
         count = 0
         for message in self.itervalues():
