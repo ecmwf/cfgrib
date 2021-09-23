@@ -167,7 +167,7 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
     for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS + dataset.ALL_REF_TIME_KEYS:
-        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1:
+        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1 and coord_name not in data_var.dims:
             data_var = data_var.expand_dims(coord_name)
         if coord_name in data_var.dims:
             coords_names.append(coord_name)
@@ -219,7 +219,7 @@ def canonical_dataarray_to_grib(
 
     coords_names, data_var = expand_dims(data_var)
 
-    header_coords_values = [data_var.coords[name].values.tolist() for name in coords_names]
+    header_coords_values = [data_var.coords[name].values for name in coords_names]
     for items in itertools.product(*header_coords_values):
         select = {n: v for n, v in zip(coords_names, items)}
         field_values = data_var.sel(**select).values.flat[:]
