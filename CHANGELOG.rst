@@ -5,7 +5,12 @@ Changelog for cfgrib
 0.9.9.1 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fix the plugin interface that was missing ``extra_coords``.
+  See `#231 <https://github.com/ecmwf/cfgrib/issues/231>`_.
+- Fix the crash when ``extra_coords`` return a scalar.
+  See `#238 <https://github.com/ecmwf/cfgrib/issues/238>`_.
+- Improve type-hints.
+  Needed by `#243 <https://github.com/ecmwf/cfgrib/issues/243>`_.
 
 
 0.9.9.0 (2021-04-09)
