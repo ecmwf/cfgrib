@@ -519,7 +519,7 @@ def build_variable_components(
     extra_dims = tuple(extra_coords.values())
     for dim in header_dimensions + extra_dims:
         if np.isscalar(coord_vars[dim].data):
-            header_value_index[dim] = {np.asscalar(coord_vars[dim].data): 0}
+            header_value_index[dim] = {coord_vars[dim].data.item(): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
     # TODO: the following needs a refactor as it depends on the internals of FileIndex
