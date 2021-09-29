@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-0.9.9.1 (unreleased)
+0.9.9.1 (2021-09-29)
 --------------------
 
 - Fix the plugin interface that was missing ``extra_coords``.
