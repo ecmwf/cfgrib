@@ -219,9 +219,68 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
+class FileStreamItems(T.ItemsView[OffsetType, Message]):
+    def __init__(self, filestream: "FileStream"):
+        self.filestream = filestream
+
+    def itervalues(self) -> T.Iterator[Message]:
+        errors = self.filestream.errors
+        with open(self.filestream.path, "rb") as file:
+            # enable MULTI-FIELD support on sequential reads (like when building the index)
+            with multi_enabled(file):
+                valid_message_found = False
+                while True:
+                    try:
+                        yield self.filestream.message_from_file(file, errors=errors)
+                        valid_message_found = True
+                    except EOFError:
+                        if not valid_message_found:
+                            raise EOFError("No valid message found: %r" % self.filestream.path)
+                        break
+                    except Exception:
+                        if errors == "ignore":
+                            pass
+                        elif errors == "raise":
+                            raise
+                        else:
+                            LOG.exception("skipping corrupted Message")
+
+    def __iter__(self) -> T.Iterator[T.Tuple[OffsetType, Message]]:
+        # assumes MULTI-FIELD support in self.itervalues()
+        old_offset = -1
+        count = 0
+        for message in self.itervalues():
+            offset = message.message_get("offset", int)
+            if offset == old_offset:
+                count += 1
+                offset_field = (offset, count)
+            else:
+                old_offset = offset
+                count = 0
+                offset_field = offset
+            yield (offset_field, message)
+
+
 @attr.attrs(auto_attribs=True)
-class FileStream(T.Iterable[Message]):
-    """Iterator-like access to a filestream of Messages."""
+class FileStream(abc.Container[OffsetType, Message]):
+    """Mapping-like access to a filestream of Messages.
+
+    Sample usage:
+
+    >>> filestream = FileStream("era5-levels-members.grib")
+    >>> message1 = filestream[None]
+    >>> message1["offset"]
+    0.0
+    >>> message2 = filestream[14760]
+    >>> message2["offset"]
+    14760.0
+
+    Note that any offset return the first message found _after_ that offset:
+
+    >>> message2_again = filestream[1]
+    >>> message2_again["offset"]
+    14760.0
+    """
 
     path: str
     message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
@@ -229,39 +288,34 @@ class FileStream(T.Iterable[Message]):
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
 
-    def __iter__(self) -> T.Iterator[Message]:
-        with open(self.path, "rb") as file:
-            # enable MULTI-FIELD support on sequential reads (like when building the index)
-            with multi_enabled(file):
-                valid_message_found = False
-                while True:
-                    try:
-                        yield self.message_from_file(file, errors=self.errors)
-                        valid_message_found = True
-                    except EOFError:
-                        if not valid_message_found:
-                            raise EOFError("No valid message found in file: %r" % self.path)
-                        break
-                    except Exception:
-                        if self.errors == "ignore":
-                            pass
-                        elif self.errors == "raise":
-                            raise
-                        else:
-                            LOG.exception("skipping corrupted Message")
+    #
+    # NOTE: we implement `.items()`, and not `__iter__()`, as a performance optimisation
+    #
+    def items(self) -> T.ItemsView[OffsetType, Message]:
+        return FileStreamItems(self)
+
+    def __iter__(self) -> T.Iterator[OffsetType]:
+        raise NotImplementedError("use `.items()` instead")
 
     def message_from_file(self, file, offset=None, **kwargs):
         # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
     def first(self) -> Message:
-        for message in self:
+        for _, message in self.items():
             return message
         raise ValueError("index has no message")
 
     def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
         # type: (T.Sequence[str], str) -> FileIndex
         return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
+
+    def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
+        with open(self.path, "rb") as file:
+            return self.message_from_file(file, offset=item)
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self.items())
 
 
 @contextlib.contextmanager
@@ -291,11 +345,11 @@ class FileIndex(abc.Index[OffsetType, Message]):
     @classmethod
     def from_filestream(cls, filestream, index_keys):
         # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]]
+        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[OffsetType]]
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for message in filestream:
+        for offset_field, message in filestream.items():
             header_values = []
             for key in index_keys:
                 try:
@@ -309,13 +363,6 @@ class FileIndex(abc.Index[OffsetType, Message]):
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
-            offset = message.message_get("offset", int)
-            if offset in count_offsets:
-                count_offsets[offset] += 1
-                offset_field = (offset, count_offsets[offset])
-            else:
-                count_offsets[offset] = 0
-                offset_field = offset
             offsets.setdefault(tuple(header_values), []).append(offset_field)
         self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
         # record the index protocol version in the instance so it is dumped with pickle
