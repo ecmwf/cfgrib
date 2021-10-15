@@ -297,7 +297,7 @@ Attributes:
 Automatic filtering
 -------------------
 
-*cfgrib* also provides a function that automate the selection of appropriate ``filter_by_keys``
+*cfgrib* also provides a function that automates the selection of appropriate ``filter_by_keys``
 and returns a list of all valid ``xarray.Dataset``'s in the GRIB file.
 
 .. code-block: python
