@@ -73,7 +73,6 @@ venv.bak/
 .mypy_cache/
 
 # local ignores
-.docker-tox/
 tests/sample-data/cds*.grib
 tests/sample-data/cds*.nc
 *.idx
