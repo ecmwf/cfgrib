@@ -306,10 +306,6 @@ class FileStream(abc.Container[OffsetType, Message]):
             return message
         raise ValueError("index has no message")
 
-    def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
-        # type: (T.Sequence[str], str) -> FileIndex
-        return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
-
     def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
         with open(self.path, "rb") as file:
             return self.message_from_file(file, offset=item)

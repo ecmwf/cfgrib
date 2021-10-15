@@ -696,7 +696,9 @@ def open_fileindex(
     path = os.fspath(path)
     index_keys = sorted(set(index_keys) | set(filter_by_keys))
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    index = stream.index(index_keys, indexpath=indexpath)
+    index = messages.FileIndex.from_indexpath_or_filestream(
+        stream, index_keys, indexpath=indexpath
+    )
     return index.subindex(filter_by_keys)
 
 

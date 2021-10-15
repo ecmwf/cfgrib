@@ -216,7 +216,6 @@ def test_FileStream() -> None:
     leader = res.first()
     assert len(leader) > 100
     assert sum(1 for _ in res.items()) == leader["count"]
-    assert len(res.index(["paramId"])) == 1
 
     # __file__ is not a GRIB, but contains the "GRIB" string, so it is a very tricky corner case
     res = messages.FileStream(str(__file__))
