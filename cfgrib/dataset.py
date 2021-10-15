@@ -594,7 +594,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
-    # type: (messages.FileIndex, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (abc.Index[T.Any, abc.Message], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
@@ -614,7 +614,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
 
 
 def build_dataset_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Message],
     errors: str = "warn",
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
@@ -719,3 +719,16 @@ def open_file(
             index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
         )
     )
+
+
+def from_index(
+    index: abc.Index[T.Any, abc.Message],
+    variable_keys: T.Tuple[str, ...],
+    variable_attr_keys: T.Tuple[str, ...],
+    dimension_keys: T.Tuple[str, ...],
+    coordinate_keys: T.Tuple[str, ...],
+) -> Dataset:
+    if isinstace(variable_keys, str):
+        variable_keys = (variable_keys,)
+    dimensions, variables, attributes, encoding = build_dataset_components(index)
+    return Dataset(dimensions, variables, attributes, encoding)
