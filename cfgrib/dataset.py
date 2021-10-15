@@ -713,7 +713,7 @@ def open_file(
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
+    index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
     return Dataset(
         *build_dataset_components(
