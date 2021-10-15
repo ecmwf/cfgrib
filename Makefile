@@ -15,7 +15,8 @@ unit-test: testclean
 	python -m pytest --cov=. --cov-report=$(COV_REPORT) tests/
 
 doc-test: testclean
-	python -m pytest README.rst
+	python -m pytest -v README.rst
+	python -m pytest -v --doctest-modules cfgrib
 
 test: unit-test doc-test
 
