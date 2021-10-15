@@ -12,7 +12,7 @@ fix-code-style:
 	isort .
 
 unit-test: testclean
-	python -m pytest --cov=. --cov-report=$(COV_REPORT) tests/
+	python -m pytest -v --cov=. --cov-report=$(COV_REPORT) tests/
 
 doc-test: testclean
 	python -m pytest -v README.rst
@@ -23,11 +23,13 @@ test: unit-test doc-test
 code-quality:
 	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 	flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-	mypy --strict .
+	mypy --strict cfgrib tests/test_*py
 
 code-style:
 	black --check .
 	isort --check .
+
+qc: code-quality
 
 testclean:
 	$(RM) -r */__pycache__ .coverage .cache tests/.ipynb_checkpoints *.idx tests/sample-data/*.idx out*.grib
