@@ -2,9 +2,6 @@
 
 import typing as T
 
-import attr
-import numpy as np
-
 ItemTypeVar = T.TypeVar("ItemTypeVar")
 MessageTypeVar = T.TypeVar("MessageTypeVar", bound="Message")
 IndexTypeVar = T.TypeVar("IndexTypeVar", bound="Index")  # type: ignore
