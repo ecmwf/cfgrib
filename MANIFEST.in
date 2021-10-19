@@ -2,8 +2,6 @@ include *.grib
 include *.grib2
 include *.rst
 include *.yml
-include .dockerignore
-include Dockerfile
 include LICENSE
 include Makefile
 include tox.ini
