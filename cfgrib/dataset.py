@@ -565,11 +565,12 @@ def build_variable_components(
     for coord_name in extra_coords:
         coord_data = np.array(list(extra_coords_data[coord_name].values()))
         if extra_coords[coord_name] not in header_dimensions:
-            coord_dimensions: T.Tuple[str, ...] = ()
+            coord_dims: T.Tuple[str, ...] = ()
             coord_data = coord_data.reshape(())
         else:
-            coord_dimensions = (extra_coords[coord_name],)
-        coord_vars[coord_name] = Variable(dimensions=coord_dimensions, data=coord_data,)
+            coord_dims = (extra_coords[coord_name],)
+        attrs = COORD_ATTRS.get(coord_name, {}).copy()
+        coord_vars[coord_name] = Variable(dimensions=coord_dims, data=coord_data, attributes=attrs)
 
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
     # OnDiskArray is close enough to np.ndarray to work, but not to make mypy happy
