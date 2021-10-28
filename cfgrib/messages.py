@@ -316,6 +316,9 @@ class FileStream(abc.Container[OffsetType, Message]):
 ALLOWED_PROTOCOL_VERSION = "1"
 
 
+C = T.TypeVar("C", bound="ContainerIndex")
+
+
 @attr.attrs(auto_attribs=True)
 class ContainerIndex(abc.Index[T.Any, abc.Message]):
     container: abc.Container[T.Any, abc.Message]
@@ -328,7 +331,7 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
 
     @classmethod
     def from_container(cls, container, index_keys):
-        # type: (abc.Container[T.Any, abc.Message], T.Sequence[str]) -> ContainerIndex
+        # type: (T.Type[C], abc.Container[T.Any, abc.Message], T.Sequence[str]) -> C
         offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
@@ -356,7 +359,7 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
 
     @classmethod
     def from_indexpath(cls, indexpath):
-        # type: (str) -> ContainerIndex
+        # type: (T.Type[C], str) -> C
         with open(indexpath, "rb") as file:
             index = pickle.load(file)
             if not isinstance(index, cls):
@@ -394,7 +397,7 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
         return values[0]
 
     def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> ContainerIndex
+        # type: (C, T.Mapping[str, T.Any], T.Any) -> C
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = []
@@ -438,45 +441,6 @@ class FileIndex(ContainerIndex):
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
-    def from_filestream(cls, filestream, index_keys):
-        # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
-        index_keys = list(index_keys)
-        count_offsets = {}  # type: T.Dict[int, int]
-        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for offset_field, message in filestream.items():
-            header_values = []
-            for key in index_keys:
-                try:
-                    value = message[key]
-                except:
-                    value = "undef"
-                if isinstance(value, (np.ndarray, list)):
-                    value = tuple(value)
-                # NOTE: the following ensures that values of the same type that evaluate equal are
-                #   exactly the same object. The optimisation is especially useful for strings and
-                #   it also reduces the on-disk size of the index in a backward compatible way.
-                value = header_values_cache.setdefault((value, type(value)), value)
-                header_values.append(value)
-            offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(
-            container=filestream, index_keys=index_keys, message_id_index=list(offsets.items())
-        )
-        # record the index protocol version in the instance so it is dumped with pickle
-        return self
-
-    @classmethod
-    def from_indexpath(cls, indexpath):
-        # type: (str) -> FileIndex
-        with open(indexpath, "rb") as file:
-            index = pickle.load(file)
-            if not isinstance(index, cls):
-                raise ValueError("on-disk index not of expected type {cls}")
-            if index.index_protocol_version != ALLOWED_PROTOCOL_VERSION:
-                raise ValueError("protocol versione to allowed {index.index_protocol_version}")
-            return index
-
-    @classmethod
     def from_indexpath_or_filestream(
         cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", log=LOG
     ):
@@ -484,13 +448,13 @@ class FileIndex(ContainerIndex):
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
-            return cls.from_filestream(filestream, index_keys)
+            return cls.from_container(filestream, index_keys)
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
-                self = cls.from_filestream(filestream, index_keys)
+                self = cls.from_container(filestream, index_keys)
                 pickle.dump(self, new_index_file)
                 return self
         except FileExistsError:
@@ -516,4 +480,4 @@ class FileIndex(ContainerIndex):
         except Exception:
             log.exception("Can't read index file %r", indexpath)
 
-        return cls.from_filestream(filestream, index_keys)
+        return cls.from_container(filestream, index_keys)

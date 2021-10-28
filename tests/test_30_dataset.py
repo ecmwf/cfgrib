@@ -64,7 +64,7 @@ def test_encode_cf_first() -> None:
 def test_build_data_var_components_no_encode() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     stream = messages.FileStream(path=TEST_DATA)
-    index = messages.FileIndex.from_filestream(stream, index_keys).subindex(paramId=130)
+    index = messages.FileIndex.from_container(stream, index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
     assert dims == {"number": 10, "dataDate": 2, "dataTime": 2, "level": 2, "values": 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
@@ -76,7 +76,7 @@ def test_build_data_var_components_no_encode() -> None:
 def test_build_data_var_components_encode_cf_geography() -> None:
     stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = messages.FileIndex.from_filestream(stream, index_keys).subindex(paramId=130)
+    index = messages.FileIndex.from_container(stream, index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
         index=index, encode_cf="geography"
     )

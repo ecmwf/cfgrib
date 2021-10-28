@@ -135,7 +135,7 @@ def test_compat_create_exclusive(tmpdir: py.path.local) -> None:
 
 
 def test_FileIndex() -> None:
-    res = messages.FileIndex.from_filestream(messages.FileStream(TEST_DATA), ["paramId"])
+    res = messages.FileIndex.from_container(messages.FileStream(TEST_DATA), ["paramId"])
     assert res["paramId"] == [129, 130]
     assert len(res) == 1
     assert list(res) == ["paramId"]
@@ -204,7 +204,7 @@ def test_FileIndex_errors() -> None:
         }  # pragma: no branch
 
     stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
-    res = messages.FileIndex.from_filestream(stream, ["paramId", "error_key"])
+    res = messages.FileIndex.from_container(stream, ["paramId", "error_key"])
     assert res["paramId"] == [129, 130]
     assert len(res) == 2
     assert list(res) == ["paramId", "error_key"]
