@@ -332,9 +332,9 @@ ALLOWED_PROTOCOL_VERSION = "1"
 
 @attr.attrs(auto_attribs=True)
 class FileIndex(abc.Index[OffsetType, Message]):
-    filestream: FileStream
+    container: FileStream
     index_keys: T.List[str]
-    offsets: OffsetsType = attr.attrib(repr=False)
+    message_id_index: OffsetsType = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
@@ -360,7 +360,9 @@ class FileIndex(abc.Index[OffsetType, Message]):
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
             offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
+        self = cls(
+            container=filestream, index_keys=index_keys, message_id_index=list(offsets.items())
+        )
         # record the index protocol version in the instance so it is dumped with pickle
         return self
 
@@ -427,7 +429,7 @@ class FileIndex(abc.Index[OffsetType, Message]):
     def header_values(self) -> T.Dict[str, T.List[T.Any]]:
         if not hasattr(self, "_header_values"):
             all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.offsets:
+            for header_values, _ in self.message_id_index:
                 for i, value in enumerate(header_values):
                     values = all_header_values.setdefault(self.index_keys[i], {})
                     if value not in values:
@@ -450,21 +452,21 @@ class FileIndex(abc.Index[OffsetType, Message]):
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = []
-        for header_values, offsets_values in self.offsets:
+        for header_values, offsets_values in self.message_id_index:
             for idx, val in raw_query:
                 if header_values[idx] != val:
                     break
             else:
                 offsets.append((header_values, offsets_values))
         index = type(self)(
-            filestream=self.filestream,
+            container=self.container,
             index_keys=self.index_keys,
-            offsets=offsets,
+            message_id_index=offsets,
             filter_by_keys=query,
         )
         return index
 
     def first(self) -> Message:
-        with open(self.filestream.path, "rb") as file:
-            first_offset = self.offsets[0][1][0]
-            return self.filestream.message_from_file(file, offset=first_offset)
+        with open(self.container.path, "rb") as file:
+            first_offset = self.message_id_index[0][1][0]
+            return self.container.message_from_file(file, offset=first_offset)

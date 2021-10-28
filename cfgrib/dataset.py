@@ -457,7 +457,7 @@ def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[s
 
 
 def build_variable_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Message],
     encode_cf: T.Sequence[str] = (),
     filter_by_keys: T.Dict[str, T.Any] = {},
     log: logging.Logger = LOG,
@@ -522,7 +522,7 @@ def build_variable_components(
             header_value_index[dim] = {coord_vars[dim].data.item(): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, offset in index.offsets:
+    for header_values, message_id in index.message_id_index:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
@@ -544,10 +544,10 @@ def build_variable_components(
                         )
 
                     extra_coords_data[coord_name][header_value] = coord_value
-        offsets[tuple(header_indexes)] = offset
+        offsets[tuple(header_indexes)] = message_id
     missing_value = data_var_attrs.get("missingValue", 9999)
     on_disk_array = OnDiskArray(
-        stream=index.filestream,
+        stream=index.container,
         shape=shape,
         offsets=offsets,
         missing_value=missing_value,
@@ -594,7 +594,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
-    # type: (messages.FileIndex, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (abc.Index[T.Any, abc.Message], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
@@ -614,7 +614,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
 
 
 def build_dataset_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Message],
     errors: str = "warn",
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
@@ -667,7 +667,7 @@ def build_dataset_components(
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     encoding = {
-        "source": index.filestream.path,
+        # "source": index.container.path,
         "filter_by_keys": filter_by_keys,
         "encode_cf": encode_cf,
     }
@@ -685,6 +685,19 @@ class Dataset:
     variables: T.Dict[str, Variable]
     attributes: T.Dict[str, T.Any]
     encoding: T.Dict[str, T.Any]
+
+
+def open_index(
+    index: abc.Index[T.Any, abc.Message],
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    **kwargs: T.Any,
+) -> Dataset:
+    dimensions, variables, attributes, encoding = build_dataset_components(
+        index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
+    )
+    return Dataset(dimensions, variables, attributes, encoding)
 
 
 def open_fileindex(
@@ -717,8 +730,4 @@ def open_file(
     index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
-    return Dataset(
-        *build_dataset_components(
-            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
-        )
-    )
+    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)
