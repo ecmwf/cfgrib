@@ -307,7 +307,7 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    container: abc.Container
+    container: abc.Container[T.Any, abc.Message]
     shape: T.Tuple[int, ...]
     message_id_index: T.Dict[
         T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
@@ -730,4 +730,4 @@ def open_file(
     index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
-    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)
+    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)  # type: ignore
