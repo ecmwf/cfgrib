@@ -307,11 +307,11 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    stream: messages.FileStream
+    container: abc.Container
     shape: T.Tuple[int, ...]
-    offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(
-        repr=False
-    )
+    message_id_index: T.Dict[
+        T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
+    ] = attr.attrib(repr=False)
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
@@ -319,9 +319,9 @@ class OnDiskArray:
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
-        for header_indexes, offset in self.offsets.items():
+        for header_indexes, message_ids in self.message_id_index.items():
             # NOTE: fill a single field as found in the message
-            message = self.stream[offset[0]]
+            message = self.container[message_ids[0]]
             values = message["values"]
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
@@ -333,13 +333,13 @@ class OnDiskArray:
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
         array_field_shape = tuple(len(l) for l in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
-        for header_indexes, offset in self.offsets.items():
+        for header_indexes, message_ids in self.message_id_index.items():
             try:
                 array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
             except KeyError:
                 continue
             # NOTE: fill a single field as found in the message
-            message = self.stream[offset[0]]
+            message = self.container[message_ids[0]]
             values = message["values"]
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
@@ -522,7 +522,7 @@ def build_variable_components(
             header_value_index[dim] = {coord_vars[dim].data.item(): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, message_id in index.message_id_index:
+    for header_values, message_ids in index.message_id_index:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
@@ -544,12 +544,12 @@ def build_variable_components(
                         )
 
                     extra_coords_data[coord_name][header_value] = coord_value
-        offsets[tuple(header_indexes)] = message_id
+        offsets[tuple(header_indexes)] = message_ids
     missing_value = data_var_attrs.get("missingValue", 9999)
     on_disk_array = OnDiskArray(
-        stream=index.container,
+        container=index.container,
         shape=shape,
-        offsets=offsets,
+        message_id_index=offsets,
         missing_value=missing_value,
         geo_ndim=len(geo_dims),
     )
