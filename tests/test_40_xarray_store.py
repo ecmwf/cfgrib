@@ -1,5 +1,6 @@
 import os.path
 
+import numpy as np
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -11,6 +12,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-corrupted.grib")
 TEST_DATASETS = os.path.join(SAMPLE_DATA_FOLDER, "t_on_different_level_types.grib")
 TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, "uv_on_different_levels.grib")
+TEST_DATA_NCEP_MONTHLY = os.path.join(SAMPLE_DATA_FOLDER, "ncep-seasonal-monthly.grib")
 
 
 def test_open_dataset() -> None:
@@ -82,6 +84,20 @@ def test_open_dataset_encode_cf_geography() -> None:
     assert var.dims == ("number", "dataDate", "dataTime", "level", "latitude", "longitude")
 
     assert var.mean() > 0.0
+
+
+def test_open_dataset_extra_coords_attrs() -> None:
+    backend_kwargs = {
+        "time_dims": ("forecastMonth", "indexing_time"),
+        "extra_coords": {"time": "number"},
+    }
+
+    res = xarray_store.open_dataset(TEST_DATA_NCEP_MONTHLY, backend_kwargs=backend_kwargs)
+    assert "time" in res.variables
+    assert res.variables["time"].dims == ("number",)
+    assert res.variables["time"].data[0] == np.datetime64("2021-09-01T00:00:00")
+    assert res.variables["time"].data[123] == np.datetime64("2021-08-02T00:18:00")
+    assert res.variables["time"].attrs["standard_name"] == "forecast_reference_time"
 
 
 def test_open_dataset_eccodes() -> None:
