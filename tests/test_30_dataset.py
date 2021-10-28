@@ -65,7 +65,7 @@ def test_build_data_var_components_no_encode() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     stream = messages.FileStream(path=TEST_DATA)
     index = messages.FileIndex.from_filestream(stream, index_keys).subindex(paramId=130)
-    dims, data_var, coord_vars = dataset.build_variable_components(index=index)
+    dims, data_var, coord_vars = dataset.build_variable_components(index=index)  # type: ignore
     assert dims == {"number": 10, "dataDate": 2, "dataTime": 2, "level": 2, "values": 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
 
@@ -78,7 +78,7 @@ def test_build_data_var_components_encode_cf_geography() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     index = messages.FileIndex.from_filestream(stream, index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
-        index=index, encode_cf="geography"
+        index=index, encode_cf="geography"  # type: ignore
     )
     assert dims == {
         "number": 10,
@@ -98,7 +98,7 @@ def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     stream = messages.FileStream(TEST_DATA_UKMO, cfmessage.CfMessage, "warn")
     index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
-    dims = dataset.build_dataset_components(index, read_keys=[])[0]
+    dims = dataset.build_dataset_components(index, read_keys=[])[0]  # type: ignore
     assert dims == {
         "latitude": 6,
         "longitude": 11,
@@ -110,7 +110,7 @@ def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     stream = messages.FileStream(TEST_DATA_UKMO, cfmessage.CfMessage, "warn")
     index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
-    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
+    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)  # type: ignore
     assert dims == {
         "number": 28,
         "indexing_time": 2,
@@ -123,7 +123,7 @@ def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     stream = messages.FileStream(TEST_DATA_UKMO, cfmessage.CfMessage, "warn")
     index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
-    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
+    dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)  # type: ignore
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
