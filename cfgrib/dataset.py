@@ -687,7 +687,7 @@ class Dataset:
     encoding: T.Dict[str, T.Any]
 
 
-def open_index(
+def open_from_index(
     index: abc.Index[T.Any, abc.Message],
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
@@ -698,6 +698,20 @@ def open_index(
         index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
     )
     return Dataset(dimensions, variables, attributes, encoding)
+
+
+def open_container(
+    container: abc.Container[T.Any, abc.Message],
+    filter_by_keys: T.Dict[str, T.Any] = {},
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    **kwargs: T.Any,
+) -> Dataset:
+    index_keys = sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
+    index = messages.ContainerIndex.from_container(container, index_keys)
+    filtered_index = index.subindex(filter_by_keys)
+    return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
 
 
 def open_fileindex(
@@ -727,7 +741,11 @@ def open_file(
     path = os.fspath(path)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
 
+    # FIXME: this is just to test open_container
+    if indexpath is None:
+        return open_container(stream, filter_by_keys, read_keys, time_dims, extra_coords, **kwargs)
+
     index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
-    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)
+    return open_from_index(index, read_keys, time_dims, extra_coords, **kwargs)
