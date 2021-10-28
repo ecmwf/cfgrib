@@ -467,6 +467,5 @@ class FileIndex(abc.Index[OffsetType, Message]):
         return index
 
     def first(self) -> Message:
-        with open(self.container.path, "rb") as file:
-            first_offset = self.message_id_index[0][1][0]
-            return self.container.message_from_file(file, offset=first_offset)
+        first_offset = self.message_id_index[0][1][0]
+        return self.container[first_offset]
