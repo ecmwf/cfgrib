@@ -730,4 +730,4 @@ def open_file(
     index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
-    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)  # type: ignore
+    return open_index(index, read_keys, time_dims, extra_coords, **kwargs)

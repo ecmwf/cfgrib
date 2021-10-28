@@ -68,7 +68,6 @@ KEY_TYPES = {
 
 
 OffsetType = T.Union[int, T.Tuple[int, int]]
-OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
 
 
 @attr.attrs(auto_attribs=True)
@@ -314,6 +313,110 @@ class FileStream(abc.Container[OffsetType, Message]):
         return sum(1 for _ in self.items())
 
 
+ALLOWED_PROTOCOL_VERSION = "1"
+
+
+@attr.attrs(auto_attribs=True)
+class ContainerIndex(abc.Index[T.Any, abc.Message]):
+    container: abc.Container[T.Any, abc.Message]
+    index_keys: T.List[str]
+    message_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Message]]] = attr.attrib(
+        repr=False
+    )
+    filter_by_keys: T.Dict[str, T.Any] = {}
+    index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
+
+    @classmethod
+    def from_container(cls, container, index_keys):
+        # type: (abc.Container[T.Any, abc.Message], T.Sequence[str]) -> ContainerIndex
+        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
+        index_keys = list(index_keys)
+        count_offsets = {}  # type: T.Dict[int, int]
+        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
+        for offset_field, message in container.items():
+            header_values = []
+            for key in index_keys:
+                try:
+                    value = message[key]
+                except:
+                    value = "undef"
+                if isinstance(value, (np.ndarray, list)):
+                    value = tuple(value)
+                # NOTE: the following ensures that values of the same type that evaluate equal are
+                #   exactly the same object. The optimisation is especially useful for strings and
+                #   it also reduces the on-disk size of the index in a backward compatible way.
+                value = header_values_cache.setdefault((value, type(value)), value)
+                header_values.append(value)
+            offsets.setdefault(tuple(header_values), []).append(offset_field)
+        self = cls(
+            container=container, index_keys=index_keys, message_id_index=list(offsets.items())
+        )
+        # record the index protocol version in the instance so it is dumped with pickle
+        return self
+
+    @classmethod
+    def from_indexpath(cls, indexpath):
+        # type: (str) -> ContainerIndex
+        with open(indexpath, "rb") as file:
+            index = pickle.load(file)
+            if not isinstance(index, cls):
+                raise ValueError("on-disk index not of expected type {cls}")
+            if index.index_protocol_version != ALLOWED_PROTOCOL_VERSION:
+                raise ValueError("protocol versione to allowed {index.index_protocol_version}")
+            return index
+
+    def __iter__(self) -> T.Iterator[str]:
+        return iter(self.index_keys)
+
+    def __len__(self) -> int:
+        return len(self.index_keys)
+
+    @property
+    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
+        if not hasattr(self, "_header_values"):
+            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
+            for header_values, _ in self.message_id_index:
+                for i, value in enumerate(header_values):
+                    values = all_header_values.setdefault(self.index_keys[i], {})
+                    if value not in values:
+                        values[value] = None
+            self._header_values = {k: list(v) for k, v in all_header_values.items()}
+        return self._header_values
+
+    def __getitem__(self, item: str) -> T.List[T.Any]:
+        return self.header_values[item]
+
+    def getone(self, item):
+        # type: (str) -> T.Any
+        values = self[item]
+        if len(values) != 1:
+            raise ValueError("not one value for %r: %r" % (item, len(values)))
+        return values[0]
+
+    def subindex(self, filter_by_keys={}, **query):
+        # type: (T.Mapping[str, T.Any], T.Any) -> ContainerIndex
+        query.update(filter_by_keys)
+        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
+        offsets = []
+        for header_values, offsets_values in self.message_id_index:
+            for idx, val in raw_query:
+                if header_values[idx] != val:
+                    break
+            else:
+                offsets.append((header_values, offsets_values))
+        index = type(self)(
+            container=self.container,
+            index_keys=self.index_keys,
+            message_id_index=offsets,
+            filter_by_keys=query,
+        )
+        return index
+
+    def first(self) -> abc.Message:
+        first_offset = self.message_id_index[0][1][0]
+        return self.container[first_offset]
+
+
 @contextlib.contextmanager
 def compat_create_exclusive(path):
     # type: (str) -> T.Generator[T.IO[bytes], None, None]
@@ -327,21 +430,17 @@ def compat_create_exclusive(path):
             raise
 
 
-ALLOWED_PROTOCOL_VERSION = "1"
-
-
 @attr.attrs(auto_attribs=True)
-class FileIndex(abc.Index[OffsetType, Message]):
+class FileIndex(ContainerIndex):
     container: FileStream
-    index_keys: T.List[str]
-    message_id_index: OffsetsType = attr.attrib(repr=False)
+    message_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
     def from_filestream(cls, filestream, index_keys):
         # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[OffsetType]]
+        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
@@ -418,54 +517,3 @@ class FileIndex(abc.Index[OffsetType, Message]):
             log.exception("Can't read index file %r", indexpath)
 
         return cls.from_filestream(filestream, index_keys)
-
-    def __iter__(self) -> T.Iterator[str]:
-        return iter(self.index_keys)
-
-    def __len__(self) -> int:
-        return len(self.index_keys)
-
-    @property
-    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
-        if not hasattr(self, "_header_values"):
-            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.message_id_index:
-                for i, value in enumerate(header_values):
-                    values = all_header_values.setdefault(self.index_keys[i], {})
-                    if value not in values:
-                        values[value] = None
-            self._header_values = {k: list(v) for k, v in all_header_values.items()}
-        return self._header_values
-
-    def __getitem__(self, item: str) -> T.List[T.Any]:
-        return self.header_values[item]
-
-    def getone(self, item):
-        # type: (str) -> T.Any
-        values = self[item]
-        if len(values) != 1:
-            raise ValueError("not one value for %r: %r" % (item, len(values)))
-        return values[0]
-
-    def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
-        query.update(filter_by_keys)
-        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = []
-        for header_values, offsets_values in self.message_id_index:
-            for idx, val in raw_query:
-                if header_values[idx] != val:
-                    break
-            else:
-                offsets.append((header_values, offsets_values))
-        index = type(self)(
-            container=self.container,
-            index_keys=self.index_keys,
-            message_id_index=offsets,
-            filter_by_keys=query,
-        )
-        return index
-
-    def first(self) -> Message:
-        first_offset = self.message_id_index[0][1][0]
-        return self.container[first_offset]
