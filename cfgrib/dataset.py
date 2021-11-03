@@ -741,10 +741,6 @@ def open_file(
     path = os.fspath(path)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
 
-    # FIXME: this is just to test open_container
-    if indexpath is None:
-        return open_container(stream, filter_by_keys, read_keys, time_dims, extra_coords, **kwargs)
-
     index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
