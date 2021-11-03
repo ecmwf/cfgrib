@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import typing as T
+import warnings
 
 import attr
 import numpy as np
@@ -702,12 +703,16 @@ def open_from_index(
 
 def open_container(
     container: abc.Container[T.Any, abc.Message],
+    indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     **kwargs: T.Any,
 ) -> Dataset:
+    if indexpath is not None:
+        warnings.warn(f"indexpath value {indexpath} is ignored")
+
     index_keys = sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
     index = messages.ContainerIndex.from_container(container, index_keys)
     filtered_index = index.subindex(filter_by_keys)

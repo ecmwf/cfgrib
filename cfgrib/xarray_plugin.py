@@ -5,7 +5,7 @@ from distutils.version import LooseVersion
 import numpy as np  # type: ignore
 import xarray as xr
 
-from . import dataset
+from . import abc, dataset
 
 if LooseVersion(xr.__version__) <= "0.17.0":
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
@@ -30,14 +30,18 @@ class CfGribDataStore(AbstractDataStore):
 
     def __init__(
         self,
-        filename: str,
+        filename: T.Union[str, abc.Container[T.Any, abc.Message]],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
-        self.ds = dataset.open_file(filename, **backend_kwargs)
+        if isinstance(filename, str):
+            opener = dataset.open_file
+        else:
+            opener = dataset.open_container
+        self.ds = opener(filename, **backend_kwargs)
 
     def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
         if isinstance(var.data, np.ndarray):
@@ -77,7 +81,7 @@ class CfGribBackend(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj: str,
+        filename_or_obj: T.Union[str, abc.Container[T.Any, abc.Message]],
         *,
         mask_and_scale: bool = True,
         decode_times: bool = True,

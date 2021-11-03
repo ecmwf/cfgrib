@@ -26,6 +26,24 @@ def test_xr_open_dataset() -> None:
     assert ds.dims == expected
     assert list(ds.data_vars) == ["skt"]
 
+    container = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+
+    ds = xr.open_dataset(container, engine="cfgrib")
+
+    assert ds.dims == {"latitude": 3, "longitude": 2}
+    assert list(ds.data_vars) == ["2t"]
+
 
 def test_read() -> None:
     expected = {
