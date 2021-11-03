@@ -234,6 +234,26 @@ def test_OnDiskArray() -> None:
     )
 
 
+def test_open_container() -> None:
+    container = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [0.0, 10.0],
+            "distinctLongitudes": [-10.0, 0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+
+    res = dataset.open_container(container)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert np.allclose(res.variables["2t"].data[()], container[-10]["values"])
+
+
 def test_open_file() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
