@@ -668,7 +668,7 @@ def build_dataset_components(
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
     encoding = {
-        # "source": index.container.path,
+        "source": index.source(),
         "filter_by_keys": filter_by_keys,
         "encode_cf": encode_cf,
     }

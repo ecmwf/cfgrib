@@ -418,6 +418,9 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
         first_offset = self.message_id_index[0][1][0]
         return self.container[first_offset]
 
+    def source(self) -> str:
+        return "N/A"
+
 
 @contextlib.contextmanager
 def compat_create_exclusive(path):
@@ -480,3 +483,6 @@ class FileIndex(ContainerIndex):
             log.exception("Can't read index file %r", indexpath)
 
         return cls.from_container(filestream, index_keys)
+
+    def source(self) -> str:
+        return os.path.relpath(self.container.path)

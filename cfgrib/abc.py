@@ -29,3 +29,7 @@ class Index(T.Mapping[str, T.List[T.Any]], T.Generic[MessageIdTypeVar, MessageTy
     @abc.abstractmethod
     def first(self) -> MessageTypeVar:
         pass
+
+    @abc.abstractmethod
+    def source(self) -> str:
+        pass
