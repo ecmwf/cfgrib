@@ -4,7 +4,6 @@ import typing as T
 
 MessageIdTypeVar = T.TypeVar("MessageIdTypeVar")
 MessageTypeVar = T.TypeVar("MessageTypeVar", bound="Message")
-IndexTypeVar = T.TypeVar("IndexTypeVar", bound="Index")  # type: ignore
 
 Message = T.Mapping[str, T.Any]
 MutableMessage = T.MutableMapping[str, T.Any]
