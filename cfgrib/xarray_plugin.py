@@ -10,12 +10,7 @@ from . import abc, dataset
 if LooseVersion(xr.__version__) <= "0.17.0":
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
-from xarray.backends.common import (
-    BACKEND_ENTRYPOINTS,
-    AbstractDataStore,
-    BackendArray,
-    BackendEntrypoint,
-)
+from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:

@@ -334,14 +334,13 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
         # type: (T.Type[C], abc.Container[T.Any, abc.Message], T.Sequence[str]) -> C
         offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
-        count_offsets = {}  # type: T.Dict[int, int]
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
         for offset_field, message in container.items():
             header_values = []
             for key in index_keys:
                 try:
                     value = message[key]
-                except:
+                except Exception:
                     value = "undef"
                 if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)

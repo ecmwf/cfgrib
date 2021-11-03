@@ -332,7 +332,7 @@ class OnDiskArray:
         # type: (T.Tuple[T.Any, ...]) -> np.ndarray
         header_item_list = expand_item(item[: -self.geo_ndim], self.shape)
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
-        array_field_shape = tuple(len(l) for l in header_item_list) + self.shape[-self.geo_ndim :]
+        array_field_shape = tuple(len(i) for i in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
         for header_indexes, message_ids in self.message_id_index.items():
             try:
@@ -452,7 +452,7 @@ def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[s
     for key in extra_keys:
         try:
             attributes["GRIB_" + key] = first[key]
-        except:
+        except Exception:
             pass
     return attributes
 
