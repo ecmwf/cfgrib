@@ -300,11 +300,6 @@ class FileStream(abc.Container[OffsetType, Message]):
         # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
         return self.message_class.from_file(file, offset, **kwargs)
 
-    def first(self) -> Message:
-        for _, message in self.items():
-            return message
-        raise ValueError("index has no message")
-
     def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
         with open(self.path, "rb") as file:
             return self.message_from_file(file, offset=item)

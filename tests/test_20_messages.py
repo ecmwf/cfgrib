@@ -1,5 +1,6 @@
 import os.path
 
+import eccodes  # type: ignore
 import numpy as np
 import py
 import pytest
@@ -213,15 +214,11 @@ def test_FileIndex_errors() -> None:
 
 def test_FileStream() -> None:
     res = messages.FileStream(TEST_DATA)
-    leader = res.first()
+    leader = res[0]
     assert len(leader) > 100
     assert sum(1 for _ in res.items()) == leader["count"]
 
     # __file__ is not a GRIB, but contains the "GRIB" string, so it is a very tricky corner case
     res = messages.FileStream(str(__file__))
-    with pytest.raises(EOFError):
-        res.first()
-
-    res = messages.FileStream(str(__file__), errors="ignore")
-    with pytest.raises(EOFError):
-        res.first()
+    with pytest.raises(eccodes.UnsupportedEditionError):
+        res[0]
