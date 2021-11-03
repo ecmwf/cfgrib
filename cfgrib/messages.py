@@ -345,9 +345,7 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
             offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(
-            container=container, index_keys=index_keys, message_id_index=list(offsets.items())
-        )
+        self = cls(container, index_keys=index_keys, message_id_index=list(offsets.items()))
         # record the index protocol version in the instance so it is dumped with pickle
         return self
 
@@ -433,6 +431,7 @@ def compat_create_exclusive(path):
 @attr.attrs(auto_attribs=True)
 class FileIndex(ContainerIndex):
     container: FileStream
+    index_keys: T.List[str]
     message_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
