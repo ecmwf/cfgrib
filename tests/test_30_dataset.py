@@ -251,7 +251,7 @@ def test_open_container() -> None:
     res = dataset.open_container(container)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
-    assert np.array_equal(res.variables["2t"].data[()], container[-10]["values"])
+    assert np.array_equal(res.variables["2t"].data[()], np.array(container[-10]["values"]))
 
 
 def test_open_file() -> None:
