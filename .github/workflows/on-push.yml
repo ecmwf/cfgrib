@@ -59,7 +59,7 @@ jobs:
       shell: bash -l {0}
       run: |
         pip install --no-deps -e .
-        pytest -v --cov=. --cov-report=xml README.rst
+        pytest -v --cov=. --cov-report=xml *.rst
         pytest -v --doctest-modules cfgrib
 
   code-quality:
