@@ -523,7 +523,7 @@ def build_variable_components(
             header_value_index[dim] = {coord_vars[dim].data.item(): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, message_ids in index.field_id_index:
+    for header_values, message_ids in index.iter_index():
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]

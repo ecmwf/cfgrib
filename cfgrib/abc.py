@@ -13,7 +13,6 @@ Fieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
 class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVar]):
     fieldset: Fieldset[FieldIdTypeVar, FieldTypeVar]
     index_keys: T.List[str]
-    field_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[FieldIdTypeVar]]]
     filter_by_keys: T.Dict[str, T.Any] = {}
 
     @abc.abstractmethod
@@ -32,4 +31,8 @@ class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVa
 
     @abc.abstractmethod
     def source(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def iter_index(self) -> T.Iterator[T.Tuple[T.Tuple[T.Any, ...], T.List[FieldIdTypeVar]]]:
         pass

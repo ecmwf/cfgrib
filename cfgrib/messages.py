@@ -318,16 +318,16 @@ C = T.TypeVar("C", bound="FieldsetIndex")
 class FieldsetIndex(abc.Index[T.Any, abc.Field]):
     fieldset: abc.Fieldset[T.Any, abc.Field]
     index_keys: T.List[str]
-    field_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
-        repr=False
-    )
     filter_by_keys: T.Dict[str, T.Any] = {}
+    field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
+        repr=False, default=[]
+    )
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
     def from_fieldset(cls, fieldset, index_keys):
         # type: (T.Type[C], abc.Fieldset[T.Any, abc.Field], T.Sequence[str]) -> C
-        field_id_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
+        field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
         for field_id, field in fieldset.items():
@@ -344,8 +344,8 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
-            field_id_index.setdefault(tuple(header_values), []).append(field_id)
-        self = cls(fieldset, index_keys=index_keys, field_id_index=list(field_id_index.items()))
+            field_ids_index.setdefault(tuple(header_values), []).append(field_id)
+        self = cls(fieldset, index_keys=index_keys, field_ids_index=list(field_ids_index.items()))
         # record the index protocol version in the instance so it is dumped with pickle
         return self
 
@@ -370,7 +370,7 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
     def header_values(self) -> T.Dict[str, T.List[T.Any]]:
         if not hasattr(self, "_header_values"):
             all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.field_id_index:
+            for header_values, _ in self.field_ids_index:
                 for i, value in enumerate(header_values):
                     values = all_header_values.setdefault(self.index_keys[i], {})
                     if value not in values:
@@ -392,27 +392,30 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         # type: (C, T.Mapping[str, T.Any], T.Any) -> C
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = []
-        for header_values, offsets_values in self.field_id_index:
+        field_ids_index = []
+        for header_values, field_ids_values in self.field_ids_index:
             for idx, val in raw_query:
                 if header_values[idx] != val:
                     break
             else:
-                offsets.append((header_values, offsets_values))
+                field_ids_index.append((header_values, field_ids_values))
         index = type(self)(
             fieldset=self.fieldset,
             index_keys=self.index_keys,
-            field_id_index=offsets,
+            field_ids_index=field_ids_index,
             filter_by_keys=query,
         )
         return index
 
     def first(self) -> abc.Field:
-        first_offset = self.field_id_index[0][1][0]
+        first_offset = self.field_ids_index[0][1][0]
         return self.fieldset[first_offset]
 
     def source(self) -> str:
         return "N/A"
+
+    def iter_index(self) -> T.Iterator[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]]:
+        return iter(self.field_ids_index)
 
 
 @contextlib.contextmanager
@@ -432,8 +435,10 @@ def compat_create_exclusive(path):
 class FileIndex(FieldsetIndex):
     fieldset: FileStream
     index_keys: T.List[str]
-    field_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
+    field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(
+        repr=False, default=[]
+    )
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
