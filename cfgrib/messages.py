@@ -71,7 +71,7 @@ OffsetType = T.Union[int, T.Tuple[int, int]]
 
 
 @attr.attrs(auto_attribs=True)
-class Message(abc.MutableMessage):
+class Message(abc.MutableField):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -261,7 +261,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(abc.Container[OffsetType, Message]):
+class FileStream(abc.Fieldset[OffsetType, Message]):
     """Mapping-like access to a filestream of Messages.
 
     Sample usage:
@@ -311,30 +311,30 @@ class FileStream(abc.Container[OffsetType, Message]):
 ALLOWED_PROTOCOL_VERSION = "1"
 
 
-C = T.TypeVar("C", bound="ContainerIndex")
+C = T.TypeVar("C", bound="FieldsetIndex")
 
 
 @attr.attrs(auto_attribs=True)
-class ContainerIndex(abc.Index[T.Any, abc.Message]):
-    container: abc.Container[T.Any, abc.Message]
+class FieldsetIndex(abc.Index[T.Any, abc.Field]):
+    fieldset: abc.Fieldset[T.Any, abc.Field]
     index_keys: T.List[str]
-    message_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Message]]] = attr.attrib(
+    field_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
         repr=False
     )
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
-    def from_container(cls, container, index_keys):
-        # type: (T.Type[C], abc.Container[T.Any, abc.Message], T.Sequence[str]) -> C
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
+    def from_fieldset(cls, fieldset, index_keys):
+        # type: (T.Type[C], abc.Fieldset[T.Any, abc.Field], T.Sequence[str]) -> C
+        field_id_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for offset_field, message in container.items():
+        for field_id, field in fieldset.items():
             header_values = []
             for key in index_keys:
                 try:
-                    value = message[key]
+                    value = field[key]
                 except Exception:
                     value = "undef"
                 if isinstance(value, (np.ndarray, list)):
@@ -344,8 +344,8 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
                 #   it also reduces the on-disk size of the index in a backward compatible way.
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
-            offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(container, index_keys=index_keys, message_id_index=list(offsets.items()))
+            field_id_index.setdefault(tuple(header_values), []).append(field_id)
+        self = cls(fieldset, index_keys=index_keys, field_id_index=list(field_id_index.items()))
         # record the index protocol version in the instance so it is dumped with pickle
         return self
 
@@ -370,7 +370,7 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
     def header_values(self) -> T.Dict[str, T.List[T.Any]]:
         if not hasattr(self, "_header_values"):
             all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.message_id_index:
+            for header_values, _ in self.field_id_index:
                 for i, value in enumerate(header_values):
                     values = all_header_values.setdefault(self.index_keys[i], {})
                     if value not in values:
@@ -393,23 +393,23 @@ class ContainerIndex(abc.Index[T.Any, abc.Message]):
         query.update(filter_by_keys)
         raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
         offsets = []
-        for header_values, offsets_values in self.message_id_index:
+        for header_values, offsets_values in self.field_id_index:
             for idx, val in raw_query:
                 if header_values[idx] != val:
                     break
             else:
                 offsets.append((header_values, offsets_values))
         index = type(self)(
-            container=self.container,
+            fieldset=self.fieldset,
             index_keys=self.index_keys,
-            message_id_index=offsets,
+            field_id_index=offsets,
             filter_by_keys=query,
         )
         return index
 
-    def first(self) -> abc.Message:
-        first_offset = self.message_id_index[0][1][0]
-        return self.container[first_offset]
+    def first(self) -> abc.Field:
+        first_offset = self.field_id_index[0][1][0]
+        return self.fieldset[first_offset]
 
     def source(self) -> str:
         return "N/A"
@@ -429,10 +429,10 @@ def compat_create_exclusive(path):
 
 
 @attr.attrs(auto_attribs=True)
-class FileIndex(ContainerIndex):
-    container: FileStream
+class FileIndex(FieldsetIndex):
+    fieldset: FileStream
     index_keys: T.List[str]
-    message_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(repr=False)
+    field_id_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
@@ -444,13 +444,13 @@ class FileIndex(ContainerIndex):
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
-            return cls.from_container(filestream, index_keys)
+            return cls.from_fieldset(filestream, index_keys)
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
-                self = cls.from_container(filestream, index_keys)
+                self = cls.from_fieldset(filestream, index_keys)
                 pickle.dump(self, new_index_file)
                 return self
         except FileExistsError:
@@ -476,7 +476,7 @@ class FileIndex(ContainerIndex):
         except Exception:
             log.exception("Can't read index file %r", indexpath)
 
-        return cls.from_container(filestream, index_keys)
+        return cls.from_fieldset(filestream, index_keys)
 
     def source(self) -> str:
-        return os.path.relpath(self.container.path)
+        return os.path.relpath(self.fieldset.path)

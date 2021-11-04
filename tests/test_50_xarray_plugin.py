@@ -26,7 +26,7 @@ def test_xr_open_dataset() -> None:
     assert ds.dims == expected
     assert list(ds.data_vars) == ["skt"]
 
-    container = {
+    fieldset = {
         -10: {
             "gridType": "regular_ll",
             "Nx": 2,
@@ -40,7 +40,7 @@ def test_xr_open_dataset() -> None:
     }
 
     with pytest.warns(UserWarning):
-        ds = xr.open_dataset(container, engine="cfgrib")
+        ds = xr.open_dataset(fieldset, engine="cfgrib")
 
     assert ds.dims == {"latitude": 3, "longitude": 2}
     assert list(ds.data_vars) == ["2t"]

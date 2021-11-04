@@ -308,9 +308,9 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    container: abc.Container[T.Any, abc.Message]
+    fieldset: abc.Fieldset[T.Any, abc.Field]
     shape: T.Tuple[int, ...]
-    message_id_index: T.Dict[
+    field_id_index: T.Dict[
         T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
     ] = attr.attrib(repr=False)
     missing_value: float
@@ -320,9 +320,9 @@ class OnDiskArray:
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
-        for header_indexes, message_ids in self.message_id_index.items():
+        for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
-            message = self.container[message_ids[0]]
+            message = self.fieldset[message_ids[0]]
             values = message["values"]
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
@@ -334,13 +334,13 @@ class OnDiskArray:
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
         array_field_shape = tuple(len(i) for i in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
-        for header_indexes, message_ids in self.message_id_index.items():
+        for header_indexes, message_ids in self.field_id_index.items():
             try:
                 array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
             except KeyError:
                 continue
             # NOTE: fill a single field as found in the message
-            message = self.container[message_ids[0]]
+            message = self.fieldset[message_ids[0]]
             values = message["values"]
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
@@ -364,7 +364,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first: abc.Message, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
+    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
@@ -447,7 +447,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
+def read_data_var_attrs(first: abc.Field, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     attributes = {}
     for key in extra_keys:
         try:
@@ -458,7 +458,7 @@ def read_data_var_attrs(first: abc.Message, extra_keys: T.List[str]) -> T.Dict[s
 
 
 def build_variable_components(
-    index: abc.Index[T.Any, abc.Message],
+    index: abc.Index[T.Any, abc.Field],
     encode_cf: T.Sequence[str] = (),
     filter_by_keys: T.Dict[str, T.Any] = {},
     log: logging.Logger = LOG,
@@ -523,7 +523,7 @@ def build_variable_components(
             header_value_index[dim] = {coord_vars[dim].data.item(): 0}
         else:
             header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, message_ids in index.message_id_index:
+    for header_values, message_ids in index.field_id_index:
         header_indexes = []  # type: T.List[int]
         for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
@@ -548,9 +548,9 @@ def build_variable_components(
         offsets[tuple(header_indexes)] = message_ids
     missing_value = data_var_attrs.get("missingValue", 9999)
     on_disk_array = OnDiskArray(
-        container=index.container,
+        fieldset=index.fieldset,
         shape=shape,
-        message_id_index=offsets,
+        field_id_index=offsets,
         missing_value=missing_value,
         geo_ndim=len(geo_dims),
     )
@@ -595,7 +595,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
-    # type: (abc.Index[T.Any, abc.Message], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (abc.Index[T.Any, abc.Field], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
@@ -615,7 +615,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
 
 
 def build_dataset_components(
-    index: abc.Index[T.Any, abc.Message],
+    index: abc.Index[T.Any, abc.Field],
     errors: str = "warn",
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
@@ -689,7 +689,7 @@ class Dataset:
 
 
 def open_from_index(
-    index: abc.Index[T.Any, abc.Message],
+    index: abc.Index[T.Any, abc.Field],
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
@@ -701,8 +701,8 @@ def open_from_index(
     return Dataset(dimensions, variables, attributes, encoding)
 
 
-def open_container(
-    container: abc.Container[T.Any, abc.Message],
+def open_fieldset(
+    fieldset: abc.Fieldset[T.Any, abc.Field],
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
@@ -710,11 +710,12 @@ def open_container(
     extra_coords: T.Dict[str, str] = {},
     **kwargs: T.Any,
 ) -> Dataset:
+    """Builds a ``cfgrib.Dataset`` form a mapping of mappings."""
     if indexpath is not None:
         warnings.warn(f"indexpath value {indexpath} is ignored")
 
     index_keys = sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
-    index = messages.ContainerIndex.from_container(container, index_keys)
+    index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
 
