@@ -702,7 +702,7 @@ def open_from_index(
 
 
 def open_fieldset(
-    fieldset: abc.Fieldset[T.Any, abc.Field],
+    fieldset: T.Union[abc.Fieldset[T.Any, abc.Field], T.Sequence[abc.Field]],
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
