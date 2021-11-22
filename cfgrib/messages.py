@@ -337,6 +337,8 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
             for key in index_keys:
                 try:
                     value = field[key]
+                    if value is None:
+                        value = "undef"
                 except Exception:
                     value = "undef"
                 if isinstance(value, (np.ndarray, list)):
