@@ -330,7 +330,11 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for field_id, field in fieldset.items():
+        if hasattr(fieldset, 'items') and callable(fieldset.items):
+            iterate = fieldset.items()
+        else:
+            iterate = enumerate(fieldset)
+        for field_id, field in iterate:
             header_values = []
             for key in index_keys:
                 try:
