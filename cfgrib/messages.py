@@ -23,7 +23,6 @@ import logging
 import os
 import pickle
 import typing as T
-from collections.abc import Iterable
 
 import attr
 import eccodes  # type: ignore
@@ -331,7 +330,7 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        if isinstance(fieldset, Iterable):
+        if isinstance(fieldset, T.Sequence):
             fieldset = dict(enumerate(fieldset))
         for field_id, field in fieldset.items():
             header_values = []
