@@ -451,7 +451,9 @@ def read_data_var_attrs(first: abc.Field, extra_keys: T.List[str]) -> T.Dict[str
     attributes = {}
     for key in extra_keys:
         try:
-            attributes["GRIB_" + key] = first[key]
+            value = first[key]
+            if value is not None:
+                attributes["GRIB_" + key] = value
         except Exception:
             pass
     return attributes
