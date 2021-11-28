@@ -702,7 +702,7 @@ def open_from_index(
 
 
 def open_fieldset(
-    fieldset: T.Union[abc.Fieldset[T.Any, abc.Field], T.Sequence[abc.Field]],
+    fieldset: abc.Fieldset[T.Any, abc.Field],
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
@@ -718,6 +718,11 @@ def open_fieldset(
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
+
+
+def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T.Any) -> Dataset:
+    fieldset = dict(enumerate(sequence_fieldset))
+    return open_fieldset(fieldset, **kwargs)
 
 
 def open_fileindex(

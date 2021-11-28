@@ -254,6 +254,26 @@ def test_open_fieldset() -> None:
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
 
 
+def test_open_sequence_fieldset() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    ]
+
+    res = dataset.open_sequence_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
+
+
 def test_open_file() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
