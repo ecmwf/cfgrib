@@ -731,7 +731,7 @@ def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T
             for i, e in enumerate(self.sequence):
                 yield i, e
 
-        def __getitem__(self, i: T.Optional[int]) -> abc.Message:
+        def __getitem__(self, i: T.Optional[int]) -> messages.Message:
             return self.sequence[i]
 
         def __iter__(self) -> T.Iterator[int]:
