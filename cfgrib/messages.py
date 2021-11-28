@@ -326,12 +326,10 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
 
     @classmethod
     def from_fieldset(cls, fieldset, index_keys):
-        # type: (T.Type[C], T.Union[abc.Fieldset[T.Any, abc.Field], T.Sequence[abc.Field]], T.Sequence[str]) -> C
+        # type: (T.Type[C], abc.Fieldset[T.Any, abc.Field], T.Sequence[str]) -> C
         field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        if isinstance(fieldset, T.Sequence):
-            fieldset = dict(enumerate(fieldset))
         for field_id, field in fieldset.items():
             header_values = []
             for key in index_keys:
