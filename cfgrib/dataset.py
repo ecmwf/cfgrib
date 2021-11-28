@@ -364,10 +364,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first: abc.Field,
-    encode_cf: T.Sequence[str],
-    errors: str,
-    log: logging.Logger = LOG,
+    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
 ):
     # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
@@ -563,8 +560,7 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data,
-            coord_vars["step"].data,
+            coord_vars["time"].data, coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
