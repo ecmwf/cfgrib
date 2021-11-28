@@ -727,7 +727,7 @@ def open_fieldset(
 
 
 def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T.Any) -> Dataset:
-    class SequenceFS:
+    class SequenceFS(abc.Fieldset[int, messages.Message]):
         def __init__(self, sequence):
             self.sequence = sequence
 
@@ -737,6 +737,12 @@ def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T
 
         def __getitem__(self, i):
             return self.sequence[i]
+
+        def __iter__(self):
+            raise NotImplemented()
+
+        def __len__(self):
+            raise NotImplemented()
 
     fieldset = SequenceFS(sequence_fieldset)
     return open_fieldset(fieldset, **kwargs)
