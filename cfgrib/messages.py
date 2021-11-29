@@ -316,7 +316,7 @@ C = T.TypeVar("C", bound="FieldsetIndex")
 
 @attr.attrs(auto_attribs=True)
 class FieldsetIndex(abc.Index[T.Any, abc.Field]):
-    fieldset: abc.MappingFieldset[T.Any, abc.Field]
+    fieldset: abc.Getter[T.Any, abc.Field]
     index_keys: T.List[str]
     filter_by_keys: T.Dict[str, T.Any] = {}
     field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
@@ -325,12 +325,28 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
-    def from_fieldset(cls, fieldset, index_keys):
-        # type: (T.Type[C], abc.MappingFieldset[T.Any, abc.Field], T.Sequence[str]) -> C
+    def from_fieldset(
+        cls: T.Type[C],
+        fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
+        index_keys: T.Sequence[str],
+    ) -> C:
+        if isinstance(fieldset, T.Mapping):
+            iteritems = iter(fieldset.items())
+        else:
+            iteritems = enumerate(fieldset)
+        return cls.from_fieldset_and_iteritems(fieldset, iteritems, index_keys)
+
+    @classmethod
+    def from_fieldset_and_iteritems(
+        cls: T.Type[C],
+        fieldset: abc.Getter[T.Any, abc.Field],
+        iteritems: T.Iterable[T.Tuple[T.Any, abc.Field]],
+        index_keys: T.Sequence[str],
+    ) -> C:
         field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for field_id, field in fieldset.items():
+        for field_id, field in iteritems:
             header_values = []
             for key in index_keys:
                 try:

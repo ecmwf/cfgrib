@@ -234,7 +234,7 @@ def test_OnDiskArray() -> None:
     )
 
 
-def test_open_mapping_fieldset() -> None:
+def test_open_fieldset_dict() -> None:
     fieldset = {
         -10: {
             "gridType": "regular_ll",
@@ -248,13 +248,13 @@ def test_open_mapping_fieldset() -> None:
         }
     }
 
-    res = dataset.open_mapping_fieldset(fieldset)
+    res = dataset.open_fieldset(fieldset)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
 
 
-def test_open_sequence_fieldset() -> None:
+def test_open_fieldset_list() -> None:
     fieldset = [
         {
             "gridType": "regular_ll",
@@ -268,7 +268,7 @@ def test_open_sequence_fieldset() -> None:
         }
     ]
 
-    res = dataset.open_sequence_fieldset(fieldset)
+    res = dataset.open_fieldset(fieldset)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))

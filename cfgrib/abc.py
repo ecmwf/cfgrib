@@ -2,8 +2,8 @@
 import abc
 import typing as T
 
-FieldIdTypeVar = T.TypeVar("FieldIdTypeVar")
-FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field")
+FieldIdTypeVar = T.TypeVar("FieldIdTypeVar", contravariant=True)
+FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field", covariant=True)
 
 Field = T.Mapping[str, T.Any]
 MutableField = T.MutableMapping[str, T.Any]
@@ -11,8 +11,13 @@ MappingFieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
 SequenceFieldset = T.Sequence[FieldTypeVar]
 
 
+class Getter(T.Protocol[FieldIdTypeVar, FieldTypeVar]):
+    def __getitem__(self, item: FieldIdTypeVar) -> FieldTypeVar:
+        raise NotImplementedError
+
+
 class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVar]):
-    fieldset: MappingFieldset[FieldIdTypeVar, FieldTypeVar]
+    fieldset: Getter[FieldIdTypeVar, FieldTypeVar]
     index_keys: T.List[str]
     filter_by_keys: T.Dict[str, T.Any] = {}
 

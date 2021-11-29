@@ -36,10 +36,8 @@ class CfGribDataStore(AbstractDataStore):
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
         if isinstance(filename, str):
             opener = dataset.open_file
-        elif isinstance(filename, T.Sequence):
-            opener = dataset.open_sequence_fieldset
         else:
-            opener = dataset.open_mapping_fieldset
+            opener = dataset.open_fieldset
         self.ds = opener(filename, **backend_kwargs)
 
     def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
