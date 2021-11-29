@@ -25,7 +25,9 @@ class CfGribDataStore(AbstractDataStore):
 
     def __init__(
         self,
-        filename: T.Union[str, abc.MappingFieldset[T.Any, abc.Field]],
+        filename: T.Union[
+            str, abc.SequnceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]
+        ],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
@@ -34,6 +36,8 @@ class CfGribDataStore(AbstractDataStore):
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
         if isinstance(filename, str):
             opener = dataset.open_file
+        elif isinstance(filename, T.Sequence):
+            opener = dataset.open_sequence_fieldset
         else:
             opener = dataset.open_mapping_fieldset
         self.ds = opener(filename, **backend_kwargs)

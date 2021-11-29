@@ -704,7 +704,7 @@ def open_from_index(
 
 
 def open_mapping_fieldset(
-    fieldset: abc.MappingFieldset[T.Any, abc.Field],
+    mapping_fieldset: abc.MappingFieldset[T.Any, abc.Field],
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
@@ -717,9 +717,14 @@ def open_mapping_fieldset(
         warnings.warn(f"indexpath value {indexpath} is ignored")
 
     index_keys = sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
-    index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys)
+    index = messages.FieldsetIndex.from_fieldset(mapping_fieldset, index_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
+
+
+def open_sequence_fieldset(sequence_fieldset: abc.SequnceFieldset, **kwargs):
+    mapping_fieldset = dict(enumerate(sequence_fieldset))
+    return open_mapping_fieldset(mapping_fieldset, **kwargs)
 
 
 def open_fileindex(

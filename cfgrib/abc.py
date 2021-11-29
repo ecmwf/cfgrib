@@ -8,6 +8,7 @@ FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field")
 Field = T.Mapping[str, T.Any]
 MutableField = T.MutableMapping[str, T.Any]
 MappingFieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
+SequnceFieldset = T.Sequence[FieldTypeVar]
 
 
 class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVar]):
