@@ -76,7 +76,6 @@ dependencies:
   - tk=8.6.10
   - toml=0.10.2
   - typed-ast=1.4.3
-  - typing=3.10.0.0
   - typing-extensions=3.10.0.0
   - typing_extensions=3.10.0.0
   - wheel=0.36.2

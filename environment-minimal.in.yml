@@ -8,4 +8,3 @@ dependencies:
   - numpy
   - pytest-cov
   - python-eccodes>=2020.10.0
-  - typing

@@ -9,5 +9,4 @@ dependencies:
   - pandas=0.25.0
   - pytest-cov
   - python-eccodes=2020.06.0
-  - typing
   - xarray=0.15.0
