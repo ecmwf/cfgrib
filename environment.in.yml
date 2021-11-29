@@ -12,4 +12,5 @@ dependencies:
   - pytest-cov
   - python-eccodes>=2020.10.0
   - scipy
+  - typing
   - xarray>=0.15.0
