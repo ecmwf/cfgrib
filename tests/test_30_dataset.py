@@ -254,7 +254,6 @@ def test_open_fieldset() -> None:
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
 
 
-
 def test_open_file() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
