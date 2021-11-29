@@ -2,7 +2,7 @@ import os
 import typing as T
 from distutils.version import LooseVersion
 
-import numpy as np  # type: ignore
+import numpy as np
 import xarray as xr
 
 from . import abc, dataset
