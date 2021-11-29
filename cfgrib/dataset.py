@@ -724,10 +724,10 @@ def open_fieldset(
 
 def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T.Any) -> Dataset:
     class SequenceFS(abc.Fieldset[int, messages.Message]):
-        def __init__(self, sequence):
+        def __init__(self, sequence: T.Sequence[abc.Field]) -> None:
             self.sequence = sequence
 
-        def items(self) -> T.ItemsView[int, messages.Message]:
+        def items(self) -> T.Iterator[int, messages.Message]:
             for i, e in enumerate(self.sequence):
                 yield i, e
 
