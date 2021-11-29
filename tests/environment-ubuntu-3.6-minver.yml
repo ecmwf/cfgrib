@@ -67,6 +67,7 @@ dependencies:
   - tbb4py=2021.3.0
   - tk=8.6.10
   - toml=0.10.2
+  - typing=3.10.0.0
   - typing_extensions=3.10.0.0
   - wheel=0.36.2
   - xarray=0.15.0
