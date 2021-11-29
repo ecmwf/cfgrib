@@ -722,7 +722,9 @@ def open_mapping_fieldset(
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
 
 
-def open_sequence_fieldset(sequence_fieldset: abc.SequnceFieldset, **kwargs):
+def open_sequence_fieldset(
+    sequence_fieldset: abc.SequnceFieldset[abc.Field], **kwargs: T.Any
+) -> Dataset:
     mapping_fieldset = dict(enumerate(sequence_fieldset))
     return open_mapping_fieldset(mapping_fieldset, **kwargs)
 
