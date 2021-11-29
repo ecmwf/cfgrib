@@ -722,28 +722,6 @@ def open_fieldset(
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
 
 
-def open_sequence_fieldset(sequence_fieldset: T.Sequence[abc.Field], **kwargs: T.Any) -> Dataset:
-    class SequenceFS(abc.Fieldset[int, messages.Message]):
-        def __init__(self, sequence: T.Sequence[abc.Field]) -> None:
-            self.sequence = sequence
-
-        def items(self) -> T.Iterator[int, messages.Message]:
-            for i, e in enumerate(self.sequence):
-                yield i, e
-
-        def __getitem__(self, i: T.Optional[int]) -> messages.Message:
-            return self.sequence[i]
-
-        def __iter__(self) -> T.Iterator[int]:
-            raise NotImplementedError()
-
-        def __len__(self) -> int:
-            raise NotImplementedError()
-
-    fieldset = SequenceFS(sequence_fieldset)
-    return open_fieldset(fieldset, **kwargs)
-
-
 def open_fileindex(
     stream: messages.FileStream,
     indexpath: str = "{path}.{short_hash}.idx",
