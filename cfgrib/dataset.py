@@ -723,7 +723,7 @@ def open_mapping_fieldset(
 
 
 def open_sequence_fieldset(
-    sequence_fieldset: abc.SequnceFieldset[abc.Field], **kwargs: T.Any
+    sequence_fieldset: abc.SequenceFieldset[abc.Field], **kwargs: T.Any
 ) -> Dataset:
     mapping_fieldset = dict(enumerate(sequence_fieldset))
     return open_mapping_fieldset(mapping_fieldset, **kwargs)

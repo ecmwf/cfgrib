@@ -26,7 +26,7 @@ class CfGribDataStore(AbstractDataStore):
     def __init__(
         self,
         filename: T.Union[
-            str, abc.SequnceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]
+            str, abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]
         ],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
