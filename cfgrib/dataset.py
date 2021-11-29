@@ -308,7 +308,7 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    fieldset: abc.Getter[T.Any, abc.Field]
+    fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
     shape: T.Tuple[int, ...]
     field_id_index: T.Dict[
         T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
@@ -322,7 +322,7 @@ class OnDiskArray:
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
-            message = self.fieldset[message_ids[0]]
+            message = self.fieldset[message_ids[0]]  # type: ignore
             values = message["values"]
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
@@ -340,7 +340,7 @@ class OnDiskArray:
             except KeyError:
                 continue
             # NOTE: fill a single field as found in the message
-            message = self.fieldset[message_ids[0]]
+            message = self.fieldset[message_ids[0]]  # type: ignore
             values = message["values"]
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 

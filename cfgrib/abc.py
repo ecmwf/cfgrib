@@ -11,13 +11,10 @@ MappingFieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
 SequenceFieldset = T.Sequence[FieldTypeVar]
 
 
-class Getter(T.Protocol[FieldIdTypeVar, FieldTypeVar]):
-    def __getitem__(self, item: FieldIdTypeVar) -> FieldTypeVar:
-        raise NotImplementedError
-
-
 class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVar]):
-    fieldset: Getter[FieldIdTypeVar, FieldTypeVar]
+    fieldset: T.Union[
+        SequenceFieldset[FieldTypeVar], MappingFieldset[FieldIdTypeVar, FieldTypeVar]
+    ]
     index_keys: T.List[str]
     filter_by_keys: T.Dict[str, T.Any] = {}
 

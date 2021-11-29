@@ -316,7 +316,7 @@ C = T.TypeVar("C", bound="FieldsetIndex")
 
 @attr.attrs(auto_attribs=True)
 class FieldsetIndex(abc.Index[T.Any, abc.Field]):
-    fieldset: abc.Getter[T.Any, abc.Field]
+    fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
     index_keys: T.List[str]
     filter_by_keys: T.Dict[str, T.Any] = {}
     field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
@@ -339,7 +339,7 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
     @classmethod
     def from_fieldset_and_iteritems(
         cls: T.Type[C],
-        fieldset: abc.Getter[T.Any, abc.Field],
+        fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
         iteritems: T.Iterable[T.Tuple[T.Any, abc.Field]],
         index_keys: T.Sequence[str],
     ) -> C:
@@ -427,7 +427,7 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
 
     def first(self) -> abc.Field:
         first_offset = self.field_ids_index[0][1][0]
-        return self.fieldset[first_offset]
+        return self.fieldset[first_offset]  # type: ignore
 
     def source(self) -> str:
         return "N/A"
