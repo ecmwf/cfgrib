@@ -2,8 +2,8 @@
 import abc
 import typing as T
 
-FieldIdTypeVar = T.TypeVar("FieldIdTypeVar", contravariant=True)
-FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field", covariant=True)
+FieldIdTypeVar = T.TypeVar("FieldIdTypeVar")
+FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field")
 
 Field = T.Mapping[str, T.Any]
 MutableField = T.MutableMapping[str, T.Any]
