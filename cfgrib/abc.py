@@ -7,11 +7,11 @@ FieldTypeVar = T.TypeVar("FieldTypeVar", bound="Field")
 
 Field = T.Mapping[str, T.Any]
 MutableField = T.MutableMapping[str, T.Any]
-Fieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
+MappingFieldset = T.Mapping[FieldIdTypeVar, FieldTypeVar]
 
 
 class Index(T.Mapping[str, T.List[T.Any]], T.Generic[FieldIdTypeVar, FieldTypeVar]):
-    fieldset: Fieldset[FieldIdTypeVar, FieldTypeVar]
+    fieldset: MappingFieldset[FieldIdTypeVar, FieldTypeVar]
     index_keys: T.List[str]
     filter_by_keys: T.Dict[str, T.Any] = {}
 

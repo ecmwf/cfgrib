@@ -25,7 +25,7 @@ class CfGribDataStore(AbstractDataStore):
 
     def __init__(
         self,
-        filename: T.Union[str, abc.Fieldset[T.Any, abc.Field]],
+        filename: T.Union[str, abc.MappingFieldset[T.Any, abc.Field]],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
@@ -35,7 +35,7 @@ class CfGribDataStore(AbstractDataStore):
         if isinstance(filename, str):
             opener = dataset.open_file
         else:
-            opener = dataset.open_fieldset
+            opener = dataset.open_mapping_fieldset
         self.ds = opener(filename, **backend_kwargs)
 
     def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
@@ -76,7 +76,7 @@ class CfGribBackend(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj: T.Union[str, abc.Fieldset[T.Any, abc.Field]],
+        filename_or_obj: T.Union[str, abc.MappingFieldset[T.Any, abc.Field]],
         *,
         mask_and_scale: bool = True,
         decode_times: bool = True,
