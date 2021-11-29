@@ -76,4 +76,3 @@ venv.bak/
 tests/sample-data/cds*.grib
 tests/sample-data/cds*.nc
 *.idx
-tests/sample-data/era5-levels-members.nc
