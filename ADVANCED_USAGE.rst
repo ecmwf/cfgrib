@@ -6,14 +6,14 @@ internally as an array of *Field*s, each *Field* being represented by a file pat
 length where the actual GRIB message can be found. Thus, a *Fieldset* can represent an
 ordered collection of *Field*s which are at various locations of several files.
 
-*cfgrib* now provides the definition of a ``Field`` and two *Fieldsets*
-(``SequenceFieldset`` and ``MappingFieldset``) interfaces in the ``cfgrib.abc`` module.
-The implementations are based on simple python mappings and sequences so that *cfgrib*
-can build a Dataset for example from something as simple as a list of dictionaries.
+*cfgrib* now provides the definition of a ``Field`` and `Fieldset`` types in the ``cfgrib.abc`` module
+and additionally a ``MappingFieldset`` for specialised use.
+The implementations are based on simple python sequences and mappings so that *cfgrib*
+can build a Dataset for example from something as simple as a list of dicts.
 
-Classes that implemnent the ``SequenceFieldset`` and the ``MappingFieldset`` interface
+Classes that implemnent the ``Fieldset`` and the ``MappingFieldset`` interface
 can use the low-level intreface ``cfgrib.open_fielset`` to obtain a ``cfgrib.Dataset``
-or be passed directly to *Xarray*.
+or they can be passed directly to *Xarray*.
 
 The simplest *Fieldset* is a list of dictionaries:
 
@@ -49,3 +49,23 @@ The simplest *Fieldset* is a list of dictionaries:
     Dimensions:  ()
     Data variables:
         t        float32 3.5
+
+
+For exmple you can implemnt a dedicated ``Fieldset`` class following this pattern:
+
+.. code-block: python
+
+    from typing import Iterator
+
+    from cfgrib import abc
+
+    class MyFieldset(abc.Fieldset):
+        def __len__(self) -> int:
+            ...
+        def __getitem__(self, item: int) -> abc.Field:
+            ...
+        def __iter__(self) -> Iterator[abc.Field]:
+            ...
+
+If `__getitem__` and `__iter__` implement lazy loading of GRIB fields *cfgrib* and
+*xarray will be able to access larger-than-memory files.

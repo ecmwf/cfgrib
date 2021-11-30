@@ -308,7 +308,7 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
+    fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
     shape: T.Tuple[int, ...]
     field_id_index: T.Dict[
         T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
@@ -704,7 +704,7 @@ def open_from_index(
 
 
 def open_fieldset(
-    fieldset: T.Union[abc.SequenceFieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
+    fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
