@@ -91,8 +91,8 @@ developers may implemnt a ``MappingFieldset`` class following this pattern:
             ...
 
 
-Again if ``__getitem__`` and ``items``implement lazy loading of GRIB fields *cfgrib* and
-*xarray will be able to access larger-than-memory files.
+Again if ``__getitem__`` and ``items`` implement lazy loading of GRIB fields *cfgrib* and
+*Xarray* will be able to access larger-than-memory files.
 
 An example of the ``MappingFieldset`` use is ``cfgrib.messages.FileStream`` that
 uses the *file offset* as the *key*.
