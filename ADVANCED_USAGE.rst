@@ -60,12 +60,40 @@ For exmple you can implemnt a dedicated ``Fieldset`` class following this patter
     from cfgrib import abc
 
     class MyFieldset(abc.Fieldset):
-        def __len__(self) -> int:
+        def __len__(self) -> int:  # not used by cfgrib
             ...
         def __getitem__(self, item: int) -> abc.Field:
             ...
         def __iter__(self) -> Iterator[abc.Field]:
             ...
 
+
 If `__getitem__` and `__iter__` implement lazy loading of GRIB fields *cfgrib* and
 *xarray will be able to access larger-than-memory files.
+
+
+In the event a `Field` is identified by a more complex *key* than just an sequence *index*
+developers may implemnt a ``MappingFieldset`` class following this pattern:
+
+.. code-block: python
+
+    from typing import ItemsView, Iterator
+
+    from cfgrib import abc
+
+    class MyFieldset(abc.MappingFieldset[T.Any, abc.Field]):
+        def __len__(self) -> int:  # not used by cfgrib
+            ...
+        def __getitem__(self, item: int) -> abc.Field:
+            ...
+        def __iter__(self) -> Iterator[abc.Field]:  # not used by cfgrib
+            ...
+        def items() -> ItemsView[T.Any, abc.Field]:
+            ...
+
+
+Again if `__getitem__` and `items` implement lazy loading of GRIB fields *cfgrib* and
+*xarray will be able to access larger-than-memory files.
+
+An example of the ``MappingFieldset`` use is ``cfgrib.messages.FileStream`` that
+uses the *file offset* as the *key*.
