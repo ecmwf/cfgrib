@@ -19,53 +19,53 @@ The simplest *Fieldset* is a list of dictionaries:
 
 .. code-block: python
 
-    >>> import xarray as xr
-    >>> fieldset = [
-    ...     {
-    ...         "gridType": "regular_ll",
-    ...         "Nx": 2,
-    ...         "Ny": 3,
-    ...         "distinctLatitudes": [-10.0, 0.0, 10.0],
-    ...         "distinctLongitudes": [0.0, 10.0],
-    ...         "paramId": 130,
-    ...         "shortName": "t",
-    ...         "values": [[1, 2], [3, 4], [5, 6]],
-    ...     }
-    ... ]
-    >>> ds = xr.open_dataset(fieldset, engine="cfgrib")
-    >>> ds
-    <xarray.Dataset>
-    Dimensions:    (latitude: 3, longitude: 2)
-    Coordinates:
-      * latitude   (latitude) float64 -10.0 0.0 10.0
-      * longitude  (longitude) float64 0.0 10.0
-    Data variables:
-        t          (latitude, longitude) float32 ...
-    Attributes:
-        Conventions:  CF-1.7
-        history:      ...
-    >>> ds.mean()
-    <xarray.Dataset>
-    Dimensions:  ()
-    Data variables:
-        t        float32 3.5
+>>> import xarray as xr
+>>> fieldset = [
+...     {
+...         "gridType": "regular_ll",
+...         "Nx": 2,
+...         "Ny": 3,
+...         "distinctLatitudes": [-10.0, 0.0, 10.0],
+...         "distinctLongitudes": [0.0, 10.0],
+...         "paramId": 130,
+...         "shortName": "t",
+...         "values": [[1, 2], [3, 4], [5, 6]],
+...     }
+... ]
+>>> ds = xr.open_dataset(fieldset, engine="cfgrib")
+>>> ds
+<xarray.Dataset>
+Dimensions:    (latitude: 3, longitude: 2)
+Coordinates:
+  * latitude   (latitude) float64 -10.0 0.0 10.0
+  * longitude  (longitude) float64 0.0 10.0
+Data variables:
+    t          (latitude, longitude) float32 ...
+Attributes:
+    Conventions:  CF-1.7
+    history:      ...
+>>> ds.mean()
+<xarray.Dataset>
+Dimensions:  ()
+Data variables:
+    t        float32 3.5
 
 
 For exmple you can implemnt a dedicated ``Fieldset`` class following this pattern:
 
 .. code-block: python
 
-    from typing import Iterator
+from typing import Iterator
 
-    from cfgrib import abc
+from cfgrib import abc
 
-    class MyFieldset(abc.Fieldset):
-        def __len__(self) -> int:  # not used by cfgrib
-            ...
-        def __getitem__(self, item: int) -> abc.Field:
-            ...
-        def __iter__(self) -> Iterator[abc.Field]:
-            ...
+class MyFieldset(abc.Fieldset):
+    def __len__(self) -> int:  # not used by cfgrib
+        ...
+    def __getitem__(self, item: int) -> abc.Field:
+        ...
+    def __iter__(self) -> Iterator[abc.Field]:
+        ...
 
 
 If `__getitem__` and `__iter__` implement lazy loading of GRIB fields *cfgrib* and
@@ -77,19 +77,19 @@ developers may implemnt a ``MappingFieldset`` class following this pattern:
 
 .. code-block: python
 
-    from typing import ItemsView, Iterator
+from typing import ItemsView, Iterator
 
-    from cfgrib import abc
+from cfgrib import abc
 
-    class MyFieldset(abc.MappingFieldset[T.Any, abc.Field]):
-        def __len__(self) -> int:  # not used by cfgrib
-            ...
-        def __getitem__(self, item: int) -> abc.Field:
-            ...
-        def __iter__(self) -> Iterator[abc.Field]:  # not used by cfgrib
-            ...
-        def items() -> ItemsView[T.Any, abc.Field]:
-            ...
+class MyFieldset(abc.MappingFieldset[T.Any, abc.Field]):
+    def __len__(self) -> int:  # not used by cfgrib
+        ...
+    def __getitem__(self, item: int) -> abc.Field:
+        ...
+    def __iter__(self) -> Iterator[abc.Field]:  # not used by cfgrib
+        ...
+    def items() -> ItemsView[T.Any, abc.Field]:
+        ...
 
 
 Again if `__getitem__` and `items` implement lazy loading of GRIB fields *cfgrib* and
