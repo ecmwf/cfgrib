@@ -690,6 +690,14 @@ class Dataset:
     encoding: T.Dict[str, T.Any]
 
 
+def compute_index_keys(
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    filter_by_keys: T.Dict[str, T.Any] = {},
+) -> T.List[str]:
+    return sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
+
+
 def open_from_index(
     index: abc.Index[T.Any, abc.Field],
     read_keys: T.Sequence[str] = (),
@@ -716,7 +724,7 @@ def open_fieldset(
     if indexpath is not None:
         warnings.warn(f"indexpath value {indexpath} is ignored")
 
-    index_keys = sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
+    index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
@@ -749,7 +757,7 @@ def open_file(
     path = os.fspath(path)
     stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
 
-    index_keys = sorted(set(INDEX_KEYS) | set(time_dims) | set(extra_coords))
+    index_keys = compute_index_keys(time_dims, extra_coords)
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
     return open_from_index(index, read_keys, time_dims, extra_coords, **kwargs)
