@@ -334,7 +334,7 @@ class FileStream(abc.MappingFieldset[OffsetType, Message]):
         return sum(1 for _ in self.items())
 
 
-ALLOWED_PROTOCOL_VERSION = "1"
+ALLOWED_PROTOCOL_VERSION = "2"
 
 
 C = T.TypeVar("C", bound="FieldsetIndex")
