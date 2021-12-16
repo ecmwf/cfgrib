@@ -718,6 +718,7 @@ def open_fieldset(
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
     **kwargs: T.Any,
 ) -> Dataset:
     """Builds a ``cfgrib.Dataset`` form a mapping of mappings."""
@@ -725,7 +726,7 @@ def open_fieldset(
         warnings.warn(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
-    index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys)
+    index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
 

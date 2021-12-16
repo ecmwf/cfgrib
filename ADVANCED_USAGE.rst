@@ -11,8 +11,8 @@ and additionally a ``MappingFieldset`` for specialised use.
 The implementations are based on simple python sequences and mappings so that *cfgrib*
 can build a Dataset for example from something as simple as a list of dicts.
 
-Classes that implemnent the ``Fieldset`` and the ``MappingFieldset`` interface
-can use the low-level intreface ``cfgrib.open_fielset`` to obtain a ``cfgrib.Dataset``
+Classes that implement the ``Fieldset`` and the ``MappingFieldset`` interface
+can use the low-level interface ``cfgrib.open_fielset`` to obtain a ``cfgrib.Dataset``
 or they can be passed directly to *Xarray*.
 
 The simplest *Fieldset* is a list of dictionaries:
@@ -30,6 +30,8 @@ The simplest *Fieldset* is a list of dictionaries:
 ...         "paramId": 130,
 ...         "shortName": "t",
 ...         "values": [[1, 2], [3, 4], [5, 6]],
+...         "dataDate": 20211216,
+...         "dataTime": 1200,
 ...     }
 ... ]
 >>> ds = xr.open_dataset(fieldset, engine="cfgrib")
@@ -37,6 +39,7 @@ The simplest *Fieldset* is a list of dictionaries:
 <xarray.Dataset>
 Dimensions:    (latitude: 3, longitude: 2)
 Coordinates:
+    time       datetime64[ns] ...
   * latitude   (latitude) float64 -10.0 0.0 10.0
   * longitude  (longitude) float64 0.0 10.0
 Data variables:
@@ -47,11 +50,13 @@ Attributes:
 >>> ds.mean()
 <xarray.Dataset>
 Dimensions:  ()
+Coordinates:
+    time     datetime64[ns] ...
 Data variables:
     t        float32 3.5
 
 
-For exmple you can implemnt a dedicated ``Fieldset`` class following this pattern:
+For example you can implement a dedicated ``Fieldset`` class following this pattern:
 
 .. code-block:: python
 

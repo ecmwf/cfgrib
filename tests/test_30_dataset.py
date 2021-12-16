@@ -251,6 +251,7 @@ def test_open_fieldset_dict() -> None:
     res = dataset.open_fieldset(fieldset)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
 
 
@@ -275,7 +276,6 @@ def test_open_fieldset_list() -> None:
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
 
 
-@pytest.mark.xfail
 def test_open_fieldset_computed_keys() -> None:
     fieldset = [
         {
@@ -295,7 +295,7 @@ def test_open_fieldset_computed_keys() -> None:
     res = dataset.open_fieldset(fieldset)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
-    assert set(res.variables) == {"latitude", "longitude",  "time", "2t"}
+    assert set(res.variables) == {"latitude", "longitude", "time", "2t"}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
 
 

@@ -218,6 +218,33 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
+@attr.attrs(auto_attribs=True)
+class ComputedKeysAdapter(abc.Field):
+    """Extension of Message class for adding computed keys."""
+
+    context: abc.Field
+    computed_keys: ComputedKeysType = {}
+
+    def __getitem__(self, item: str) -> T.Any:
+        if item in self.computed_keys:
+            getter, _ = self.computed_keys[item]
+            return getter(self)
+        else:
+            return self.context[item]
+
+    def __iter__(self) -> T.Iterator[str]:
+        seen = set()
+        for key in self.context:
+            yield key
+            seen.add(key)
+        for key in self.computed_keys:
+            if key not in seen:
+                yield key
+
+    def __len__(self) -> int:
+        return len(self.context)
+
+
 class FileStreamItems(T.ItemsView[OffsetType, Message]):
     def __init__(self, filestream: "FileStream"):
         self.filestream = filestream
@@ -329,12 +356,13 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         cls: T.Type[C],
         fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
         index_keys: T.Sequence[str],
+        computed_keys: ComputedKeysType = {},
     ) -> C:
         if isinstance(fieldset, T.Mapping):
             iteritems = iter(fieldset.items())
         else:
             iteritems = enumerate(fieldset)
-        return cls.from_fieldset_and_iteritems(fieldset, iteritems, index_keys)
+        return cls.from_fieldset_and_iteritems(fieldset, iteritems, index_keys, computed_keys)
 
     @classmethod
     def from_fieldset_and_iteritems(
@@ -342,11 +370,13 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
         iteritems: T.Iterable[T.Tuple[T.Any, abc.Field]],
         index_keys: T.Sequence[str],
+        computed_keys: ComputedKeysType = {},
     ) -> C:
         field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
         index_keys = list(index_keys)
         header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for field_id, field in iteritems:
+        for field_id, raw_field in iteritems:
+            field = ComputedKeysAdapter(raw_field, computed_keys)
             header_values = []
             for key in index_keys:
                 try:
