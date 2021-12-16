@@ -83,8 +83,8 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
         if key in backend_kwargs
     }
     errors = backend_kwargs.get("grib_errors", "warn")
-    stream = messages.FileStream(path, cfmessage.CfMessage, errors)
-    index = open_fileindex(stream, **fileindex_kwargs)
+    stream = messages.FileStream(path, errors=errors)
+    index = open_fileindex(stream, computed_keys=cfmessage.COMPUTED_KEYS, **fileindex_kwargs)
     datasets = []  # type: T.List[xr.Dataset]
     for param_id in sorted(index["paramId"]):
         bk = backend_kwargs.copy()

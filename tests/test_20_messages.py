@@ -199,13 +199,10 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
 
 
 def test_FileIndex_errors() -> None:
-    class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {
-            "error_key": (lambda m: bool(1 / 0), lambda m, v: None)
-        }  # pragma: no branch
+    computed_keys = {"error_key": (lambda m: bool(1 / 0), lambda m, v: None)}  # pragma: no branch
 
-    stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
-    res = messages.FileIndex.from_fieldset(stream, ["paramId", "error_key"])
+    stream = messages.FileStream(TEST_DATA)
+    res = messages.FileIndex.from_fieldset(stream, ["paramId", "error_key"], computed_keys)
     assert res["paramId"] == [129, 130]
     assert len(res) == 2
     assert list(res) == ["paramId", "error_key"]

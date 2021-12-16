@@ -308,7 +308,7 @@ def expand_item(item, shape):
 
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
-    fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
+    index: abc.Index[T.Any, abc.Field]
     shape: T.Tuple[int, ...]
     field_id_index: T.Dict[
         T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
@@ -322,7 +322,7 @@ class OnDiskArray:
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
-            message = self.fieldset[message_ids[0]]  # type: ignore
+            message = self.index.get_field(message_ids[0])  # type: ignore
             values = message["values"]
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
@@ -340,7 +340,7 @@ class OnDiskArray:
             except KeyError:
                 continue
             # NOTE: fill a single field as found in the message
-            message = self.fieldset[message_ids[0]]  # type: ignore
+            message = self.index.get_field(message_ids[0])  # type: ignore
             values = message["values"]
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
@@ -550,7 +550,7 @@ def build_variable_components(
         offsets[tuple(header_indexes)] = message_ids
     missing_value = data_var_attrs.get("missingValue", 9999)
     on_disk_array = OnDiskArray(
-        fieldset=index.fieldset,
+        index=index,
         shape=shape,
         field_id_index=offsets,
         missing_value=missing_value,
@@ -736,10 +736,11 @@ def open_fileindex(
     indexpath: str = "{path}.{short_hash}.idx",
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
     filter_by_keys: T.Dict[str, T.Any] = {},
+    computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
 ) -> messages.FileIndex:
     index_keys = sorted(set(index_keys) | set(filter_by_keys))
     index = messages.FileIndex.from_indexpath_or_filestream(
-        stream, index_keys, indexpath=indexpath
+        stream, index_keys, indexpath=indexpath, computed_keys=computed_keys
     )
     return index.subindex(filter_by_keys)
 
@@ -756,7 +757,7 @@ def open_file(
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     path = os.fspath(path)
-    stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
+    stream = messages.FileStream(path, errors=grib_errors)
 
     index_keys = compute_index_keys(time_dims, extra_coords)
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)

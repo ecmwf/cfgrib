@@ -309,7 +309,6 @@ class FileStream(abc.MappingFieldset[OffsetType, Message]):
     """
 
     path: str
-    message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
     errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
@@ -325,7 +324,7 @@ class FileStream(abc.MappingFieldset[OffsetType, Message]):
 
     def message_from_file(self, file, offset=None, **kwargs):
         # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
-        return self.message_class.from_file(file, offset, **kwargs)
+        return Message.from_file(file, offset, **kwargs)
 
     def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
         with open(self.path, "rb") as file:
@@ -349,6 +348,7 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
     field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
         repr=False, default=[]
     )
+    computed_keys: ComputedKeysType = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
@@ -393,7 +393,12 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
                 value = header_values_cache.setdefault((value, type(value)), value)
                 header_values.append(value)
             field_ids_index.setdefault(tuple(header_values), []).append(field_id)
-        self = cls(fieldset, index_keys=index_keys, field_ids_index=list(field_ids_index.items()))
+        self = cls(
+            fieldset,
+            index_keys,
+            field_ids_index=list(field_ids_index.items()),
+            computed_keys=computed_keys,
+        )
         # record the index protocol version in the instance so it is dumped with pickle
         return self
 
@@ -455,9 +460,12 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         )
         return index
 
+    def get_field(self, message_id: T.Any) -> abc.Field:
+        return ComputedKeysAdapter(self.fieldset[message_id], self.computed_keys)
+
     def first(self) -> abc.Field:
-        first_offset = self.field_ids_index[0][1][0]
-        return self.fieldset[first_offset]  # type: ignore
+        first_message_id = self.field_ids_index[0][1][0]
+        return self.get_field(first_message_id)
 
     def source(self) -> str:
         return "N/A"
@@ -487,23 +495,24 @@ class FileIndex(FieldsetIndex):
     field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(
         repr=False, default=[]
     )
+    computed_keys: ComputedKeysType = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", log=LOG
+        cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", computed_keys={}, log=LOG
     ):
-        # type: (FileStream, T.Sequence[str], str, logging.Logger) -> FileIndex
+        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger) -> FileIndex
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
-            return cls.from_fieldset(filestream, index_keys)
+            return cls.from_fieldset(filestream, index_keys, computed_keys)
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
-                self = cls.from_fieldset(filestream, index_keys)
+                self = cls.from_fieldset(filestream, index_keys, computed_keys)
                 pickle.dump(self, new_index_file)
                 return self
         except FileExistsError:
@@ -529,7 +538,7 @@ class FileIndex(FieldsetIndex):
         except Exception:
             log.exception("Can't read index file %r", indexpath)
 
-        return cls.from_fieldset(filestream, index_keys)
+        return cls.from_fieldset(filestream, index_keys, computed_keys)
 
     def source(self) -> str:
         return os.path.relpath(self.fieldset.path)
