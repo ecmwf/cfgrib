@@ -271,6 +271,31 @@ def test_open_fieldset_list() -> None:
     res = dataset.open_fieldset(fieldset)
 
     assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
+
+
+@pytest.mark.xfail
+def test_open_fieldset_computed_keys() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+            "dataDate": 20200101,
+            "dataTime": 1200,
+        }
+    ]
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude",  "time", "2t"}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
 
 
