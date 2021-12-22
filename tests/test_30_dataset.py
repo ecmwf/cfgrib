@@ -99,7 +99,7 @@ def test_build_data_var_components_encode_cf_geography() -> None:
 def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
     stream = messages.FileStream(TEST_DATA_UKMO, "warn")
-    index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
         "latitude": 6,
@@ -111,7 +111,7 @@ def test_build_dataset_components_time_dims() -> None:
     time_dims = ["indexing_time", "verifying_time"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     stream = messages.FileStream(TEST_DATA_UKMO, "warn")
-    index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {
         "number": 28,
@@ -124,7 +124,7 @@ def test_build_dataset_components_time_dims() -> None:
     time_dims = ["indexing_time", "step"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
     stream = messages.FileStream(TEST_DATA_UKMO, "warn")
-    index = dataset.open_fileindex(stream, "{path}.{short_hash}.idx", index_keys)
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 

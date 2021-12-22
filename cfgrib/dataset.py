@@ -363,7 +363,10 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
+    first: abc.Field,
+    encode_cf: T.Sequence[str],
+    errors: str,
+    log: logging.Logger = LOG,
 ) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]:
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = first["gridType"]
@@ -558,7 +561,8 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data, coord_vars["step"].data,
+            coord_vars["time"].data,
+            coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
@@ -721,8 +725,8 @@ def open_fieldset(
     **kwargs: T.Any,
 ) -> Dataset:
     """Builds a ``cfgrib.Dataset`` form a mapping of mappings."""
-    if indexpath is not None:
-        log.info(f"indexpath value {indexpath} is ignored")
+    if indexpath is not None and indexpath is not messages.DEFAULT_INDEXPATH:
+        log.warning(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
@@ -732,7 +736,7 @@ def open_fieldset(
 
 def open_fileindex(
     stream: messages.FileStream,
-    indexpath: str = "{path}.{short_hash}.idx",
+    indexpath: str = messages.DEFAULT_INDEXPATH,
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
     filter_by_keys: T.Dict[str, T.Any] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
@@ -747,7 +751,7 @@ def open_fileindex(
 def open_file(
     path: T.Union[str, "os.PathLike[str]"],
     grib_errors: str = "warn",
-    indexpath: str = "{path}.{short_hash}.idx",
+    indexpath: str = messages.DEFAULT_INDEXPATH,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),

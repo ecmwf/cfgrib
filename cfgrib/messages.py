@@ -66,6 +66,7 @@ KEY_TYPES = {
     "": None,
 }
 
+DEFAULT_INDEXPATH = "{path}.{short_hash}.idx"
 
 OffsetType = T.Union[int, T.Tuple[int, int]]
 
@@ -500,7 +501,7 @@ class FileIndex(FieldsetIndex):
 
     @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", computed_keys={}, log=LOG
+        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG
     ):
         # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger) -> FileIndex
 
