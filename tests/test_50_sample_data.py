@@ -94,11 +94,7 @@ def test_canonical_dataset_to_grib(grib_name: str, tmpdir: py.path.local) -> Non
 
 
 @pytest.mark.parametrize(
-    "grib_name,ndims",
-    [
-        ("era5-levels-members", 1),
-        ("era5-single-level-scalar-time", 0),
-    ],
+    "grib_name,ndims", [("era5-levels-members", 1), ("era5-single-level-scalar-time", 0),],
 )
 def test_open_dataset_extra_coords(grib_name: str, ndims: T.Any) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
