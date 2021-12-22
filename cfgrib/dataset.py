@@ -260,7 +260,7 @@ class DatasetBuildError(ValueError):
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (abc.Index[T.Any, abc.Field], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (T.Mapping[str, T.List[T.Any]], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = {}  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
         values = index.get(key, [])
@@ -364,8 +364,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 def build_geography_coordinates(
     first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
-):
-    # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
+) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]:
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = first["gridType"]
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
