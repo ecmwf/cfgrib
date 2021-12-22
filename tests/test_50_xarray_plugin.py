@@ -16,7 +16,7 @@ def test_plugin() -> None:
     assert cfgrib_entrypoint.__module__ == "cfgrib.xarray_plugin"
 
 
-def test_xr_open_dataset_dict() -> None:
+def test_xr_open_dataset_file() -> None:
     expected = {
         "latitude": 37,
         "longitude": 72,
@@ -26,6 +26,8 @@ def test_xr_open_dataset_dict() -> None:
     assert ds.dims == expected
     assert list(ds.data_vars) == ["skt"]
 
+
+def test_xr_open_dataset_dict() -> None:
     fieldset = {
         -10: {
             "gridType": "regular_ll",
@@ -39,23 +41,13 @@ def test_xr_open_dataset_dict() -> None:
         }
     }
 
-    with pytest.warns(UserWarning):
-        ds = xr.open_dataset(fieldset, engine="cfgrib")
+    ds = xr.open_dataset(fieldset, engine="cfgrib")
 
     assert ds.dims == {"latitude": 3, "longitude": 2}
     assert list(ds.data_vars) == ["2t"]
 
 
 def test_xr_open_dataset_list() -> None:
-    expected = {
-        "latitude": 37,
-        "longitude": 72,
-    }
-
-    ds = xr.open_dataset(TEST_DATA, engine="cfgrib")
-    assert ds.dims == expected
-    assert list(ds.data_vars) == ["skt"]
-
     fieldset = [
         {
             "gridType": "regular_ll",
@@ -69,11 +61,14 @@ def test_xr_open_dataset_list() -> None:
         }
     ]
 
-    with pytest.warns(UserWarning):
-        ds = xr.open_dataset(fieldset, engine="cfgrib")
+    ds = xr.open_dataset(fieldset, engine="cfgrib")
 
     assert ds.dims == {"latitude": 3, "longitude": 2}
     assert list(ds.data_vars) == ["2t"]
+
+    ds_empty = xr.open_dataset([], engine="cfgrib")
+
+    assert ds_empty.equals(xr.Dataset())
 
 
 def test_read() -> None:

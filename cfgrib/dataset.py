@@ -261,10 +261,10 @@ class DatasetBuildError(ValueError):
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (T.Mapping[str, T.List[T.Any]], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (abc.Index[T.Any, abc.Field], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = {}  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
-        values = index[key]
+        values = index.get(key, [])
         if len(values) > 1:
             fbks = []
             for value in values:
@@ -629,7 +629,7 @@ def build_dataset_components(
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
-    for param_id in index["paramId"]:
+    for param_id in index.get("paramId", []):
         var_index = index.subindex(paramId=param_id)
         try:
             dims, data_var, coord_vars = build_variable_components(
@@ -719,11 +719,12 @@ def open_fieldset(
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
+    log: logging.Logger = LOG,
     **kwargs: T.Any,
 ) -> Dataset:
     """Builds a ``cfgrib.Dataset`` form a mapping of mappings."""
     if indexpath is not None:
-        warnings.warn(f"indexpath value {indexpath} is ignored")
+        log.info(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
