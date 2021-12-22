@@ -23,7 +23,6 @@ import json
 import logging
 import os
 import typing as T
-import warnings
 
 import attr
 import numpy as np
