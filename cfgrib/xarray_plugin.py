@@ -2,20 +2,15 @@ import os
 import typing as T
 from distutils.version import LooseVersion
 
-import numpy as np  # type: ignore
+import numpy as np
 import xarray as xr
 
-from . import dataset
+from . import abc, dataset, messages
 
 if LooseVersion(xr.__version__) <= "0.17.0":
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
-from xarray.backends.common import (
-    BACKEND_ENTRYPOINTS,
-    AbstractDataStore,
-    BackendArray,
-    BackendEntrypoint,
-)
+from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
@@ -30,14 +25,18 @@ class CfGribDataStore(AbstractDataStore):
 
     def __init__(
         self,
-        filename: str,
+        filename: T.Union[str, abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
-        self.ds = dataset.open_file(filename, **backend_kwargs)
+        if isinstance(filename, str):
+            opener = dataset.open_file
+        else:
+            opener = dataset.open_fieldset
+        self.ds = opener(filename, **backend_kwargs)
 
     def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
         if isinstance(var.data, np.ndarray):
@@ -77,7 +76,7 @@ class CfGribBackend(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj: str,
+        filename_or_obj: T.Union[str, abc.MappingFieldset[T.Any, abc.Field]],
         *,
         mask_and_scale: bool = True,
         decode_times: bool = True,
@@ -87,7 +86,7 @@ class CfGribBackend(BackendEntrypoint):
         use_cftime: T.Union[bool, None] = None,
         decode_timedelta: T.Union[bool, None] = None,
         lock: T.Union[T.ContextManager[T.Any], None] = None,
-        indexpath: str = "{path}.{short_hash}.idx",
+        indexpath: str = messages.DEFAULT_INDEXPATH,
         filter_by_keys: T.Dict[str, T.Any] = {},
         read_keys: T.Iterable[str] = (),
         encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),

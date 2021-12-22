@@ -16,9 +16,17 @@
 __version__ = "0.9.9.2.dev0"
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
-from .cfmessage import CfMessage
-from .dataset import Dataset, DatasetBuildError, open_file, open_fileindex
-from .messages import FileStream, Message
+from .abc import Field, Fieldset, Index, MappingFieldset
+from .cfmessage import COMPUTED_KEYS
+from .dataset import (
+    Dataset,
+    DatasetBuildError,
+    compute_index_keys,
+    open_fieldset,
+    open_file,
+    open_from_index,
+)
+from .messages import FieldsetIndex, FileStream, Message
 
 # NOTE: xarray is not a hard dependency, but let's provide helpers if it is available.
 try:

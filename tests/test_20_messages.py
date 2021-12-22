@@ -1,5 +1,6 @@
 import os.path
 
+import eccodes  # type: ignore
 import numpy as np
 import py
 import pytest
@@ -135,7 +136,7 @@ def test_compat_create_exclusive(tmpdir: py.path.local) -> None:
 
 
 def test_FileIndex() -> None:
-    res = messages.FileIndex.from_filestream(messages.FileStream(TEST_DATA), ["paramId"])
+    res = messages.FileIndex.from_fieldset(messages.FileStream(TEST_DATA), ["paramId"])
     assert res["paramId"] == [129, 130]
     assert len(res) == 1
     assert list(res) == ["paramId"]
@@ -198,13 +199,10 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
 
 
 def test_FileIndex_errors() -> None:
-    class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {
-            "error_key": (lambda m: bool(1 / 0), lambda m, v: None)
-        }  # pragma: no branch
+    computed_keys = {"error_key": (lambda m: bool(1 / 0), lambda m, v: None)}  # pragma: no branch
 
-    stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
-    res = messages.FileIndex.from_filestream(stream, ["paramId", "error_key"])
+    stream = messages.FileStream(TEST_DATA)
+    res = messages.FileIndex.from_fieldset(stream, ["paramId", "error_key"], computed_keys)
     assert res["paramId"] == [129, 130]
     assert len(res) == 2
     assert list(res) == ["paramId", "error_key"]
@@ -213,16 +211,11 @@ def test_FileIndex_errors() -> None:
 
 def test_FileStream() -> None:
     res = messages.FileStream(TEST_DATA)
-    leader = res.first()
+    leader = res[0]
     assert len(leader) > 100
     assert sum(1 for _ in res.items()) == leader["count"]
-    assert len(res.index(["paramId"])) == 1
 
     # __file__ is not a GRIB, but contains the "GRIB" string, so it is a very tricky corner case
     res = messages.FileStream(str(__file__))
-    with pytest.raises(EOFError):
-        res.first()
-
-    res = messages.FileStream(str(__file__), errors="ignore")
-    with pytest.raises(EOFError):
-        res.first()
+    with pytest.raises(eccodes.UnsupportedEditionError):
+        res[0]

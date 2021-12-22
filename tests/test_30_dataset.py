@@ -63,7 +63,8 @@ def test_encode_cf_first() -> None:
 
 def test_build_data_var_components_no_encode() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = messages.FileStream(path=TEST_DATA).index(index_keys).subindex(paramId=130)
+    stream = messages.FileStream(path=TEST_DATA)
+    index = messages.FileIndex.from_fieldset(stream, index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
     assert dims == {"number": 10, "dataDate": 2, "dataTime": 2, "level": 2, "values": 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
@@ -73,9 +74,11 @@ def test_build_data_var_components_no_encode() -> None:
 
 
 def test_build_data_var_components_encode_cf_geography() -> None:
-    stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
+    stream = messages.FileStream(path=TEST_DATA)
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = stream.index(index_keys).subindex(paramId=130)
+    index = messages.FieldsetIndex.from_fieldset(
+        stream, index_keys, cfmessage.COMPUTED_KEYS
+    ).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
         index=index, encode_cf="geography"
     )
@@ -95,7 +98,8 @@ def test_build_data_var_components_encode_cf_geography() -> None:
 
 def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
         "latitude": 6,
@@ -106,7 +110,8 @@ def test_build_dataset_components_time_dims() -> None:
     }
     time_dims = ["indexing_time", "verifying_time"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {
         "number": 28,
@@ -118,7 +123,8 @@ def test_build_dataset_components_time_dims() -> None:
 
     time_dims = ["indexing_time", "step"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
@@ -228,6 +234,71 @@ def test_OnDiskArray() -> None:
     assert np.allclose(
         res.data[2:4:2, [0, 3], 0, 0, 0], res.data.build_array()[2:4:2, [0, 3], 0, 0, 0]
     )
+
+
+def test_open_fieldset_dict() -> None:
+    fieldset = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
+
+
+def test_open_fieldset_list() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    ]
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
+
+
+def test_open_fieldset_computed_keys() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+            "dataDate": 20200101,
+            "dataTime": 1200,
+        }
+    ]
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "time", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
 
 
 def test_open_file() -> None:

@@ -25,7 +25,8 @@ Features with development status **Beta**:
 - reads the data lazily and efficiently in terms of both memory usage and disk access,
 - allows larger-than-memory and distributed processing via *xarray* and *dask*,
 - supports translating coordinates to different data models and naming conventions,
-- supports writing the index of a GRIB file to disk, to save a full-file scan on open.
+- supports writing the index of a GRIB file to disk, to save a full-file scan on open,
+- accepts objects implementing a generic *Fieldset* interface as described in `ADVANCED_USAGE.rst`.
 
 Work in progress:
 

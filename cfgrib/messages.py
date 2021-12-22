@@ -66,13 +66,13 @@ KEY_TYPES = {
     "": None,
 }
 
+DEFAULT_INDEXPATH = "{path}.{short_hash}.idx"
 
 OffsetType = T.Union[int, T.Tuple[int, int]]
-OffsetsType = T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[OffsetType]]]
 
 
 @attr.attrs(auto_attribs=True)
-class Message(abc.MutableMessage):
+class Message(abc.MutableField):
     """Dictionary-line interface to access Message headers."""
 
     codes_id: int
@@ -219,6 +219,33 @@ class ComputedKeysMessage(Message):
             return super(ComputedKeysMessage, self).__setitem__(item, value)
 
 
+@attr.attrs(auto_attribs=True)
+class ComputedKeysAdapter(abc.Field):
+    """Extension of Message class for adding computed keys."""
+
+    context: abc.Field
+    computed_keys: ComputedKeysType = {}
+
+    def __getitem__(self, item: str) -> T.Any:
+        if item in self.computed_keys:
+            getter, _ = self.computed_keys[item]
+            return getter(self)
+        else:
+            return self.context[item]
+
+    def __iter__(self) -> T.Iterator[str]:
+        seen = set()
+        for key in self.context:
+            yield key
+            seen.add(key)
+        for key in self.computed_keys:
+            if key not in seen:
+                yield key
+
+    def __len__(self) -> int:
+        return len(self.context)
+
+
 class FileStreamItems(T.ItemsView[OffsetType, Message]):
     def __init__(self, filestream: "FileStream"):
         self.filestream = filestream
@@ -262,7 +289,7 @@ class FileStreamItems(T.ItemsView[OffsetType, Message]):
 
 
 @attr.attrs(auto_attribs=True)
-class FileStream(abc.Container[OffsetType, Message]):
+class FileStream(abc.MappingFieldset[OffsetType, Message]):
     """Mapping-like access to a filestream of Messages.
 
     Sample usage:
@@ -283,7 +310,6 @@ class FileStream(abc.Container[OffsetType, Message]):
     """
 
     path: str
-    message_class: T.Type[Message] = attr.attrib(default=Message, repr=False)
     errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
@@ -299,16 +325,7 @@ class FileStream(abc.Container[OffsetType, Message]):
 
     def message_from_file(self, file, offset=None, **kwargs):
         # type: (T.IO[bytes], T.Optional[OffsetType], T.Any) -> Message
-        return self.message_class.from_file(file, offset, **kwargs)
-
-    def first(self) -> Message:
-        for _, message in self.items():
-            return message
-        raise ValueError("index has no message")
-
-    def index(self, index_keys, indexpath="{path}.{short_hash}.idx"):
-        # type: (T.Sequence[str], str) -> FileIndex
-        return FileIndex.from_indexpath_or_filestream(self, index_keys, indexpath)
+        return Message.from_file(file, offset, **kwargs)
 
     def __getitem__(self, item: T.Optional[OffsetType]) -> Message:
         with open(self.path, "rb") as file:
@@ -316,6 +333,146 @@ class FileStream(abc.Container[OffsetType, Message]):
 
     def __len__(self) -> int:
         return sum(1 for _ in self.items())
+
+
+ALLOWED_PROTOCOL_VERSION = "2"
+
+
+C = T.TypeVar("C", bound="FieldsetIndex")
+
+
+@attr.attrs(auto_attribs=True)
+class FieldsetIndex(abc.Index[T.Any, abc.Field]):
+    fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]]
+    index_keys: T.List[str]
+    filter_by_keys: T.Dict[str, T.Any] = {}
+    field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[abc.Field]]] = attr.attrib(
+        repr=False, default=[]
+    )
+    computed_keys: ComputedKeysType = {}
+    index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
+
+    @classmethod
+    def from_fieldset(
+        cls: T.Type[C],
+        fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
+        index_keys: T.Sequence[str],
+        computed_keys: ComputedKeysType = {},
+    ) -> C:
+        if isinstance(fieldset, T.Mapping):
+            iteritems = iter(fieldset.items())
+        else:
+            iteritems = enumerate(fieldset)
+        return cls.from_fieldset_and_iteritems(fieldset, iteritems, index_keys, computed_keys)
+
+    @classmethod
+    def from_fieldset_and_iteritems(
+        cls: T.Type[C],
+        fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
+        iteritems: T.Iterable[T.Tuple[T.Any, abc.Field]],
+        index_keys: T.Sequence[str],
+        computed_keys: ComputedKeysType = {},
+    ) -> C:
+        field_ids_index = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[T.Any]]
+        index_keys = list(index_keys)
+        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
+        for field_id, raw_field in iteritems:
+            field = ComputedKeysAdapter(raw_field, computed_keys)
+            header_values = []
+            for key in index_keys:
+                try:
+                    value = field[key]
+                    if value is None:
+                        value = "undef"
+                except Exception:
+                    value = "undef"
+                if isinstance(value, (np.ndarray, list)):
+                    value = tuple(value)
+                # NOTE: the following ensures that values of the same type that evaluate equal are
+                #   exactly the same object. The optimisation is especially useful for strings and
+                #   it also reduces the on-disk size of the index in a backward compatible way.
+                value = header_values_cache.setdefault((value, type(value)), value)
+                header_values.append(value)
+            field_ids_index.setdefault(tuple(header_values), []).append(field_id)
+        self = cls(
+            fieldset,
+            index_keys,
+            field_ids_index=list(field_ids_index.items()),
+            computed_keys=computed_keys,
+        )
+        # record the index protocol version in the instance so it is dumped with pickle
+        return self
+
+    @classmethod
+    def from_indexpath(cls, indexpath):
+        # type: (T.Type[C], str) -> C
+        with open(indexpath, "rb") as file:
+            index = pickle.load(file)
+            if not isinstance(index, cls):
+                raise ValueError("on-disk index not of expected type {cls}")
+            if index.index_protocol_version != ALLOWED_PROTOCOL_VERSION:
+                raise ValueError("protocol versione to allowed {index.index_protocol_version}")
+            return index
+
+    def __iter__(self) -> T.Iterator[str]:
+        return iter(self.index_keys)
+
+    def __len__(self) -> int:
+        return len(self.index_keys)
+
+    @property
+    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
+        if not hasattr(self, "_header_values"):
+            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
+            for header_values, _ in self.field_ids_index:
+                for i, value in enumerate(header_values):
+                    values = all_header_values.setdefault(self.index_keys[i], {})
+                    if value not in values:
+                        values[value] = None
+            self._header_values = {k: list(v) for k, v in all_header_values.items()}
+        return self._header_values
+
+    def __getitem__(self, item: str) -> T.List[T.Any]:
+        return self.header_values[item]
+
+    def getone(self, item):
+        # type: (str) -> T.Any
+        values = self[item]
+        if len(values) != 1:
+            raise ValueError("not one value for %r: %r" % (item, len(values)))
+        return values[0]
+
+    def subindex(self, filter_by_keys={}, **query):
+        # type: (C, T.Mapping[str, T.Any], T.Any) -> C
+        query.update(filter_by_keys)
+        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
+        field_ids_index = []
+        for header_values, field_ids_values in self.field_ids_index:
+            for idx, val in raw_query:
+                if header_values[idx] != val:
+                    break
+            else:
+                field_ids_index.append((header_values, field_ids_values))
+        index = type(self)(
+            fieldset=self.fieldset,
+            index_keys=self.index_keys,
+            field_ids_index=field_ids_index,
+            filter_by_keys=query,
+        )
+        return index
+
+    def get_field(self, message_id: T.Any) -> abc.Field:
+        return ComputedKeysAdapter(self.fieldset[message_id], self.computed_keys)
+
+    def first(self) -> abc.Field:
+        first_message_id = self.field_ids_index[0][1][0]
+        return self.get_field(first_message_id)
+
+    def source(self) -> str:
+        return "N/A"
+
+    def iter_index(self) -> T.Iterator[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]]:
+        return iter(self.field_ids_index)
 
 
 @contextlib.contextmanager
@@ -331,69 +488,32 @@ def compat_create_exclusive(path):
             raise
 
 
-ALLOWED_PROTOCOL_VERSION = "1"
-
-
 @attr.attrs(auto_attribs=True)
-class FileIndex(abc.Index[OffsetType, Message]):
-    filestream: FileStream
+class FileIndex(FieldsetIndex):
+    fieldset: FileStream
     index_keys: T.List[str]
-    offsets: OffsetsType = attr.attrib(repr=False)
     filter_by_keys: T.Dict[str, T.Any] = {}
+    field_ids_index: T.List[T.Tuple[T.Tuple[T.Any, ...], T.List[T.Any]]] = attr.attrib(
+        repr=False, default=[]
+    )
+    computed_keys: ComputedKeysType = {}
     index_protocol_version: str = ALLOWED_PROTOCOL_VERSION
 
     @classmethod
-    def from_filestream(cls, filestream, index_keys):
-        # type: (FileStream, T.Sequence[str]) -> FileIndex
-        offsets = {}  # type: T.Dict[T.Tuple[T.Any, ...], T.List[OffsetType]]
-        index_keys = list(index_keys)
-        count_offsets = {}  # type: T.Dict[int, int]
-        header_values_cache = {}  # type: T.Dict[T.Tuple[T.Any, type], T.Any]
-        for offset_field, message in filestream.items():
-            header_values = []
-            for key in index_keys:
-                try:
-                    value = message[key]
-                except:
-                    value = "undef"
-                if isinstance(value, (np.ndarray, list)):
-                    value = tuple(value)
-                # NOTE: the following ensures that values of the same type that evaluate equal are
-                #   exactly the same object. The optimisation is especially useful for strings and
-                #   it also reduces the on-disk size of the index in a backward compatible way.
-                value = header_values_cache.setdefault((value, type(value)), value)
-                header_values.append(value)
-            offsets.setdefault(tuple(header_values), []).append(offset_field)
-        self = cls(filestream=filestream, index_keys=index_keys, offsets=list(offsets.items()))
-        # record the index protocol version in the instance so it is dumped with pickle
-        return self
-
-    @classmethod
-    def from_indexpath(cls, indexpath):
-        # type: (str) -> FileIndex
-        with open(indexpath, "rb") as file:
-            index = pickle.load(file)
-            if not isinstance(index, cls):
-                raise ValueError("on-disk index not of expected type {cls}")
-            if index.index_protocol_version != ALLOWED_PROTOCOL_VERSION:
-                raise ValueError("protocol versione to allowed {index.index_protocol_version}")
-            return index
-
-    @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath="{path}.{short_hash}.idx", log=LOG
+        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG
     ):
-        # type: (FileStream, T.Sequence[str], str, logging.Logger) -> FileIndex
+        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger) -> FileIndex
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
-            return cls.from_filestream(filestream, index_keys)
+            return cls.from_fieldset(filestream, index_keys, computed_keys)
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
-                self = cls.from_filestream(filestream, index_keys)
+                self = cls.from_fieldset(filestream, index_keys, computed_keys)
                 pickle.dump(self, new_index_file)
                 return self
         except FileExistsError:
@@ -419,56 +539,7 @@ class FileIndex(abc.Index[OffsetType, Message]):
         except Exception:
             log.exception("Can't read index file %r", indexpath)
 
-        return cls.from_filestream(filestream, index_keys)
+        return cls.from_fieldset(filestream, index_keys, computed_keys)
 
-    def __iter__(self) -> T.Iterator[str]:
-        return iter(self.index_keys)
-
-    def __len__(self) -> int:
-        return len(self.index_keys)
-
-    @property
-    def header_values(self) -> T.Dict[str, T.List[T.Any]]:
-        if not hasattr(self, "_header_values"):
-            all_header_values = {}  # type: T.Dict[str, T.Dict[T.Any, None]]
-            for header_values, _ in self.offsets:
-                for i, value in enumerate(header_values):
-                    values = all_header_values.setdefault(self.index_keys[i], {})
-                    if value not in values:
-                        values[value] = None
-            self._header_values = {k: list(v) for k, v in all_header_values.items()}
-        return self._header_values
-
-    def __getitem__(self, item: str) -> T.List[T.Any]:
-        return self.header_values[item]
-
-    def getone(self, item):
-        # type: (str) -> T.Any
-        values = self[item]
-        if len(values) != 1:
-            raise ValueError("not one value for %r: %r" % (item, len(values)))
-        return values[0]
-
-    def subindex(self, filter_by_keys={}, **query):
-        # type: (T.Mapping[str, T.Any], T.Any) -> FileIndex
-        query.update(filter_by_keys)
-        raw_query = [(self.index_keys.index(k), v) for k, v in query.items()]
-        offsets = []
-        for header_values, offsets_values in self.offsets:
-            for idx, val in raw_query:
-                if header_values[idx] != val:
-                    break
-            else:
-                offsets.append((header_values, offsets_values))
-        index = type(self)(
-            filestream=self.filestream,
-            index_keys=self.index_keys,
-            offsets=offsets,
-            filter_by_keys=query,
-        )
-        return index
-
-    def first(self) -> Message:
-        with open(self.filestream.path, "rb") as file:
-            first_offset = self.offsets[0][1][0]
-            return self.filestream.message_from_file(file, offset=first_offset)
+    def source(self) -> str:
+        return os.path.relpath(self.fieldset.path)
