@@ -340,6 +340,15 @@ ALLOWED_PROTOCOL_VERSION = "2"
 
 C = T.TypeVar("C", bound="FieldsetIndex")
 
+TYPES = {"float": float,
+         "double": float,
+         "d": float,
+         "long": int,
+         "int": int,
+         "l": int,
+         "str": str,
+         "string": str,
+         "s": str}
 
 @attr.attrs(auto_attribs=True)
 class FieldsetIndex(abc.Index[T.Any, abc.Field]):
@@ -381,10 +390,16 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
             header_values = []
             for key in index_keys:
                 try:
-                    value = field[key]
+                    if ":" in key:
+                        name, kind = key.split(":")
+                        value = field[name]
+                        if value is not None:
+                            value = TYPES[kind](value)
+                    else:
+                        value = field[key]
                     if value is None:
                         value = "undef"
-                except Exception:
+                except KeyError:
                     value = "undef"
                 if isinstance(value, (np.ndarray, list)):
                     value = tuple(value)

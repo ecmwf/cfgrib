@@ -165,6 +165,8 @@ INDEX_KEYS = sorted(
     GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS
 )
 
+RAW_INDEX_KEYS = [k.split(":")[0] for k in INDEX_KEYS]
+
 COORD_ATTRS = {
     # geography
     "latitude": {"units": "degrees_north", "standard_name": "latitude", "long_name": "latitude"},
