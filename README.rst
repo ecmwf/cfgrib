@@ -813,15 +813,15 @@ https://github.com/ecmwf/cfgrib
 
 Please see the CONTRIBUTING.rst document for the best way to help.
 
-Lead developer:
+Lead developers:
 
-- `Alessandro Amici <https://github.com/alexamici>`_ - `B-Open <https://bopen.eu>`_
+- `Iain Russell <https://github.com/iainrussell>`_ - `ECMWF <https://ecmwf.int>`_
+- `Baudouin Raoult <https://github.com/b8raoult>`_ - ECMWF
 
 Main contributors:
 
+- `Alessandro Amici <https://github.com/alexamici>`_ - `B-Open <https://bopen.eu>`_
 - `Aureliana Barghini <https://github.com/aurghs>`_ - B-Open
-- `Baudouin Raoult <https://github.com/b8raoult>`_ - `ECMWF <https://ecmwf.int>`_
-- `Iain Russell <https://github.com/iainrussell>`_ - ECMWF
 - `Leonardo Barcaroli <https://github.com/leophys>`_ - B-Open
 
 See also the list of `contributors <https://github.com/ecmwf/cfgrib/contributors>`_ who participated in this project.
