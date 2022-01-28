@@ -381,7 +381,14 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
             header_values = []
             for key in index_keys:
                 try:
-                    value = field[key]
+                    try:
+                        value = field[key]
+                    except KeyError:
+                        # get default type if Field does not support type specifier
+                        if ":" not in key:
+                            raise
+                        else:
+                            value = field[key.partition(":")[0]]
                     if value is None:
                         value = "undef"
                 except Exception:
