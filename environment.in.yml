@@ -8,8 +8,8 @@ dependencies:
   - mypy=0.812
   - nomkl
   - numpy
-  - pandas=1.0.5
   - pytest-cov
-  - python-eccodes>=2020.10.0
+  - python-eccodes
   - scipy
-  - xarray>=0.15.0
+  - tomli
+  - xarray>=0.20.2

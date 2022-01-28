@@ -66,7 +66,7 @@ def test_open_datasets(grib_name: str) -> None:
 @pytest.mark.parametrize(
     "grib_name",
     [
-        "era5-levels-members",
+        pytest.param("era5-levels-members", marks=pytest.mark.xfail),
         "fields_with_missing_values",
         pytest.param("lambert_grid", marks=pytest.mark.xfail),
         "reduced_gg",
@@ -75,7 +75,7 @@ def test_open_datasets(grib_name: str) -> None:
         "regular_gg_ml",
         pytest.param("regular_gg_ml_g2", marks=pytest.mark.xfail),
         "regular_ll_sfc",
-        "regular_ll_msl",
+        pytest.param("regular_ll_msl", marks=pytest.mark.xfail),
         "scanning_mode_64",
         pytest.param("spherical_harmonics", marks=pytest.mark.xfail),
         "t_analysis_and_fc_0",

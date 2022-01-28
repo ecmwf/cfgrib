@@ -24,7 +24,7 @@ def da1() -> xr.Dataset:
             ("lon", longitude, {"units": "degrees_east"}),
             (
                 "ref_time",
-                np.array(time, dtype=np.datetime64),
+                np.array(time, dtype="datetime64[ns]"),
                 {"standard_name": "forecast_reference_time"},
             ),
             ("level", np.array(level), {"units": "hPa"}),
@@ -44,7 +44,7 @@ def da2() -> xr.Dataset:
         coords=[
             ("lat", latitude, {"units": "degrees_north"}),
             ("lon", longitude, {"units": "degrees_east"}),
-            ("time", np.array(time, dtype=np.datetime64)),
+            ("time", np.array(time, dtype="datetime64[ns]")),
             ("level", np.array(level), {"units": "hPa"}),
         ],
     )
@@ -63,10 +63,10 @@ def da3() -> xr.Dataset:
         coords=[
             ("lat", latitude, {"units": "degrees_north"}),
             ("lon", longitude, {"units": "degrees_east"}),
-            ("step", np.array(step, dtype=np.timedelta64), {"standard_name": "forecast_period"}),
+            ("step", np.array(step, dtype="timedelta64[h]"), {"standard_name": "forecast_period"}),
             (
                 "ref_time",
-                np.array(time, dtype=np.datetime64),
+                np.array(time, dtype="datetime64[ns]"),
                 {"standard_name": "forecast_reference_time"},
             ),
             ("time", np.array(level), {"units": "hPa"}),
