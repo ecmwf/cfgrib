@@ -219,7 +219,8 @@ def canonical_dataarray_to_grib(
 
     coords_names, data_var = expand_dims(data_var)
 
-    header_coords_values = [data_var.coords[name].values.tolist() for name in coords_names]
+    header_coords_values = [list(data_var.coords[name].values) for name in coords_names]
+
     for items in itertools.product(*header_coords_values):
         select = {n: v for n, v in zip(coords_names, items)}
         field_values = data_var.sel(**select).values.flat[:]
