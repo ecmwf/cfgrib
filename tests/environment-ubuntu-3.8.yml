@@ -80,7 +80,7 @@ dependencies:
   - sqlite=3.37.0
   - tk=8.6.11
   - toml=0.10.2
-  - tomli
+  - tomli=1.2.2
   - typed-ast=1.4.3
   - typing_extensions=3.10.0.2
   - wheel=0.37.1

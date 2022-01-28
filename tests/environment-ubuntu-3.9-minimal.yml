@@ -67,6 +67,7 @@ dependencies:
   - sqlite=3.37.0
   - tk=8.6.11
   - toml=0.10.2
+  - tomli=1.2.2
   - tzdata=2021e
   - wheel=0.37.1
   - xz=5.2.5
