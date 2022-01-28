@@ -661,12 +661,12 @@ can be saved at the moment:
 .. code-block: python
 
 >>> from cfgrib.xarray_to_grib import to_grib
->>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib')
+>>> ds = xr.open_dataset('era5-levels-members.grib', engine='cfgrib').sel(number=0)
 >>> ds
 <xarray.Dataset>
-Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
+Dimensions:        (time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
 Coordinates:
-  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+    number         int64 0
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step           timedelta64[ns] ...
   * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
@@ -674,8 +674,8 @@ Coordinates:
   * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time     (time) datetime64[ns] ...
 Data variables:
-    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
-    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    z              (time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (time, isobaricInhPa, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            1
     GRIB_centre:             ecmf
@@ -687,9 +687,9 @@ Attributes:
 >>> to_grib(ds, 'out1.grib', grib_keys={'edition': 2})
 >>> xr.open_dataset('out1.grib', engine='cfgrib')
 <xarray.Dataset>
-Dimensions:        (number: 10, time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
+Dimensions:        (time: 4, isobaricInhPa: 2, latitude: 61, longitude: 120)
 Coordinates:
-  * number         (number) int64 0 1 2 3 4 5 6 7 8 9
+    number         ...
   * time           (time) datetime64[ns] 2017-01-01 ... 2017-01-02T12:00:00
     step           timedelta64[ns] ...
   * isobaricInhPa  (isobaricInhPa) float64 850.0 500.0
@@ -697,8 +697,8 @@ Coordinates:
   * longitude      (longitude) float64 0.0 3.0 6.0 9.0 ... 351.0 354.0 357.0
     valid_time     (time) datetime64[ns] ...
 Data variables:
-    z              (number, time, isobaricInhPa, latitude, longitude) float32 ...
-    t              (number, time, isobaricInhPa, latitude, longitude) float32 ...
+    z              (time, isobaricInhPa, latitude, longitude) float32 ...
+    t              (time, isobaricInhPa, latitude, longitude) float32 ...
 Attributes:
     GRIB_edition:            2
     GRIB_centre:             ecmf
