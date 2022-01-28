@@ -11,4 +11,5 @@ dependencies:
   - pytest-cov
   - python-eccodes
   - scipy
+  - tomli
   - xarray>=0.20.2
