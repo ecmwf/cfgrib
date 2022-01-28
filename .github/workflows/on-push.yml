@@ -82,7 +82,7 @@ jobs:
     - name: Type check with mypy
       shell: bash -l {0}
       run: |
-        mypy --strict cfgrib tests/test_*py
+        mypy cfgrib tests/test_*py
 
   code-style:
     runs-on: ubuntu-latest
