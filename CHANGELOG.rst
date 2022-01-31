@@ -2,10 +2,17 @@
 Changelog for cfgrib
 ====================
 
-0.9.9.2 (unreleased)
---------------------
+0.9.10.1 (unreleased)
+---------------------
 
 - Nothing changed yet.
+
+
+0.9.10.0 (2022-01-31)
+---------------------
+
+- Big internal refactor to add support for a generic ``Fieldset`` similar to Metview.
+  See `#243 <https://github.com/ecmwf/cfgrib/issues/243>`_.
 
 
 0.9.9.1 (2021-09-29)
