@@ -5,7 +5,8 @@ Changelog for cfgrib
 0.9.10.1 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fix passing of pathlib.Path.
+  See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
 
 
 0.9.10.0 (2022-01-31)

@@ -1,4 +1,5 @@
 import os
+import pathlib
 import typing as T
 from distutils.version import LooseVersion
 
@@ -32,7 +33,7 @@ class CfGribDataStore(AbstractDataStore):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
-        if isinstance(filename, str):
+        if isinstance(filename, (str, pathlib.PurePath)):
             opener = dataset.open_file
         else:
             opener = dataset.open_fieldset
