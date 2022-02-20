@@ -103,7 +103,7 @@ def to_grib_step(message, step_ns, step_unit=1, step_key="endStep", step_unit_ke
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
     if to_seconds is None:
         raise ValueError("unsupported stepUnit %r" % step_unit)
-    message[step_key] = step_s / to_seconds
+    message[step_key] = int(step_s / to_seconds)
     message[step_unit_key] = step_unit
 
 
