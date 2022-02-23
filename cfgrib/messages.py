@@ -549,4 +549,7 @@ class FileIndex(FieldsetIndex):
         return cls.from_fieldset(filestream, index_keys, computed_keys)
 
     def source(self) -> str:
-        return os.path.relpath(self.fieldset.path)
+        try:
+            return os.path.relpath(self.fieldset.path)
+        except ValueError:
+            return os.path.basename(self.fieldset.path)
