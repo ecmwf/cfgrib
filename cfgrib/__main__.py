@@ -40,14 +40,28 @@ def selfcheck() -> None:
 
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
-@click.option("--outpath", "-o", default=None)
-@click.option("--cdm", "-c", default=None)
-@click.option("--engine", "-e", default="cfgrib")
-def to_netcdf(inpaths, outpath, cdm, engine):
-    # type: (T.List[str], str, str, str) -> None
+@click.option(
+    "--outpath", "-o", default=None,
+    help="Filename of the netcdf filename."
+)
+@click.option(
+    "--cdm", "-c", default=None,
+    help='Coordinate model to translate the grib coordinates to.'
+)
+@click.option(
+    "--engine", "-e", default="cfgrib",
+    help='xarray engine to use in xarray.open_dataset.'
+)
+@click.option(
+    "--backend-kwargs-json", "-b", default=None,
+    help=(
+        'path to JSON file containing the backend kwargs '
+        'used in xarray.open_dataset.'
+    )
+)
+def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
+    # type: (T.List[str], str, str, str, str) -> None
     import xarray as xr
-
-    import cf2cdm
 
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
@@ -56,13 +70,27 @@ def to_netcdf(inpaths, outpath, cdm, engine):
     if not outpath:
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
+    if backend_kwargs_json is not None:
+        import json   # only import if used
+        with open(backend_kwargs_json, 'r') as f:
+            backend_kwargs = json.load(f)
+    else:
+        backend_kwargs = {}
+
     if len(inpaths) == 1:
         # avoid to depend on dask when passing only one file
-        ds = xr.open_dataset(inpaths[0], engine=engine)  # type: ignore
+        ds = xr.open_dataset(
+            inpaths[0], engine=engine,
+            backend_kwargs=backend_kwargs,
+        )  # type: ignore
     else:
-        ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
+        ds = xr.open_mfdataset(
+            inpaths, engine=engine, combine="by_coords",
+            backend_kwargs=backend_kwargs,
+        )  # type: ignore
 
     if cdm:
+        import cf2cdm   # only import if used
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
