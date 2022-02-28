@@ -77,7 +77,7 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         except json.JSONDecodeError:
             # Then a json file
             with open(backend_kwargs_json, "r") as f:
-                backend_kwargs_json = json.load(f)
+                backend_kwargs = json.load(f)
     else:
         backend_kwargs = {}
 
