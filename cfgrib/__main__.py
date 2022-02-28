@@ -40,29 +40,27 @@ def selfcheck() -> None:
 
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
+@click.option("--outpath", "-o", default=None, help="Filename of the output netcdf file.")
 @click.option(
-    "--outpath", "-o", default=None,
-    help="Filename of the output netcdf file."
+    "--cdm", "-c", default=None, help="Coordinate model to translate the grib coordinates to."
 )
 @click.option(
-    "--cdm", "-c", default=None,
-    help='Coordinate model to translate the grib coordinates to.'
+    "--engine", "-e", default="cfgrib", help="xarray engine to use in xarray.open_dataset."
 )
 @click.option(
-    "--engine", "-e", default="cfgrib",
-    help='xarray engine to use in xarray.open_dataset.'
-)
-@click.option(
-    "--backend-kwargs-json", "-b", default=None,
+    "--backend-kwargs-json",
+    "-b",
+    default=None,
     help=(
-        'Backend kwargs used in xarray.open_dataset.'
-        'Can either be a JSON format string or '
-        'the path to JSON file'
-    )
+        "Backend kwargs used in xarray.open_dataset."
+        "Can either be a JSON format string or "
+        "the path to JSON file"
+    ),
 )
 def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     # type: (T.List[str], str, str, str, str) -> None
     import xarray as xr
+
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
         return
@@ -71,13 +69,14 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
     if backend_kwargs_json is not None:
-        import json   # only import if used
+        import json  # only import if used
+
         try:
             # Assume a json format string
             backend_kwargs = json.loads(backend_kwargs_json)
         except json.JSONDecodeError:
             # Then a json file
-            with open(backend_kwargs_json, 'r') as f:
+            with open(backend_kwargs_json, "r") as f:
                 backend_kwargs_json = json.load(f)
     else:
         backend_kwargs = {}
@@ -85,17 +84,16 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     if len(inpaths) == 1:
         # avoid to depend on dask when passing only one file
         ds = xr.open_dataset(
-            inpaths[0], engine=engine,
-            backend_kwargs=backend_kwargs,
+            inpaths[0], engine=engine, backend_kwargs=backend_kwargs,
         )  # type: ignore
     else:
         ds = xr.open_mfdataset(
-            inpaths, engine=engine, combine="by_coords",
-            backend_kwargs=backend_kwargs,
+            inpaths, engine=engine, combine="by_coords", backend_kwargs=backend_kwargs,
         )  # type: ignore
 
     if cdm:
-        import cf2cdm   # only import if used
+        import cf2cdm  # only import if used
+
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
