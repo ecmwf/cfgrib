@@ -59,7 +59,10 @@ def selfcheck() -> None:
 )
 def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     # type: (T.List[str], str, str, str, str) -> None
+    import json
     import xarray as xr
+
+    import cf2cdm
 
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
@@ -69,8 +72,6 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
     if backend_kwargs_json is not None:
-        import json  # only import if used
-
         try:
             # Assume a json format string
             backend_kwargs = json.loads(backend_kwargs_json)
@@ -92,8 +93,6 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         )  # type: ignore
 
     if cdm:
-        import cf2cdm  # only import if used
-
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
