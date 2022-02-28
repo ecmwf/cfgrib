@@ -40,11 +40,27 @@ def selfcheck() -> None:
 
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
-@click.option("--outpath", "-o", default=None)
-@click.option("--cdm", "-c", default=None)
-@click.option("--engine", "-e", default="cfgrib")
-def to_netcdf(inpaths, outpath, cdm, engine):
-    # type: (T.List[str], str, str, str) -> None
+@click.option("--outpath", "-o", default=None, help="Filename of the output netcdf file.")
+@click.option(
+    "--cdm", "-c", default=None, help="Coordinate model to translate the grib coordinates to."
+)
+@click.option(
+    "--engine", "-e", default="cfgrib", help="xarray engine to use in xarray.open_dataset."
+)
+@click.option(
+    "--backend-kwargs-json",
+    "-b",
+    default=None,
+    help=(
+        "Backend kwargs used in xarray.open_dataset."
+        "Can either be a JSON format string or "
+        "the path to JSON file"
+    ),
+)
+def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
+    # type: (T.List[str], str, str, str, str) -> None
+    import json
+
     import xarray as xr
 
     import cf2cdm
@@ -56,11 +72,26 @@ def to_netcdf(inpaths, outpath, cdm, engine):
     if not outpath:
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
+    if backend_kwargs_json is not None:
+        try:
+            # Assume a json format string
+            backend_kwargs = json.loads(backend_kwargs_json)
+        except json.JSONDecodeError:
+            # Then a json file
+            with open(backend_kwargs_json, "r") as f:
+                backend_kwargs = json.load(f)
+    else:
+        backend_kwargs = {}
+
     if len(inpaths) == 1:
         # avoid to depend on dask when passing only one file
-        ds = xr.open_dataset(inpaths[0], engine=engine)  # type: ignore
+        ds = xr.open_dataset(
+            inpaths[0], engine=engine, backend_kwargs=backend_kwargs,
+        )  # type: ignore
     else:
-        ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
+        ds = xr.open_mfdataset(
+            inpaths, engine=engine, combine="by_coords", backend_kwargs=backend_kwargs,
+        )  # type: ignore
 
     if cdm:
         coord_model = getattr(cf2cdm, cdm)
