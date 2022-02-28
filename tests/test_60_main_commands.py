@@ -39,8 +39,11 @@ def test_cfgrib_cli_to_netcdf(tmpdir: py.path.local) -> None:
     assert res.output == ""
 
     backend_kwargs_json = tmpdir.join("temp.json")
-    with open(backend_kwargs_json, 'w') as f: f.write(backend_kwargs)
-    res = runner.invoke(__main__.cfgrib_cli, ["to_netcdf", TEST_DATA, "-b", str(backend_kwargs_json)])
+    with open(backend_kwargs_json, "w") as f:
+        f.write(backend_kwargs)
+    res = runner.invoke(
+        __main__.cfgrib_cli, ["to_netcdf", TEST_DATA, "-b", str(backend_kwargs_json)]
+    )
 
     assert res.exit_code == 0
     assert res.output == ""
