@@ -60,6 +60,7 @@ def selfcheck() -> None:
 def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     # type: (T.List[str], str, str, str, str) -> None
     import json
+
     import xarray as xr
 
     import cf2cdm
