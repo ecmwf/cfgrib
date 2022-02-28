@@ -55,14 +55,14 @@ def selfcheck() -> None:
 @click.option(
     "--backend-kwargs-json", "-b", default=None,
     help=(
-        'path to JSON file containing the backend kwargs '
-        'used in xarray.open_dataset.'
+        'Backend kwargs used in xarray.open_dataset.'
+        'Can either be a JSON format string or '
+        'the path to JSON file'
     )
 )
 def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     # type: (T.List[str], str, str, str, str) -> None
     import xarray as xr
-    print('test')
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
         return
@@ -72,8 +72,13 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
 
     if backend_kwargs_json is not None:
         import json   # only import if used
-        with open(backend_kwargs_json, 'r') as f:
-            backend_kwargs = json.load(f)
+        try:
+            # Assume a json format string
+            backend_kwargs = json.loads(backend_kwargs_json)
+        except json.JSONDecodeError:
+            # Then a json file
+            with open(backend_kwargs_json, 'r') as f:
+                backend_kwargs_json = json.load(f)
     else:
         backend_kwargs = {}
 
