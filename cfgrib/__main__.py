@@ -42,7 +42,7 @@ def selfcheck() -> None:
 @click.argument("inpaths", nargs=-1)
 @click.option(
     "--outpath", "-o", default=None,
-    help="Filename of the netcdf filename."
+    help="Filename of the output netcdf file."
 )
 @click.option(
     "--cdm", "-c", default=None,
@@ -62,7 +62,7 @@ def selfcheck() -> None:
 def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
     # type: (T.List[str], str, str, str, str) -> None
     import xarray as xr
-
+    print('test')
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
         return
