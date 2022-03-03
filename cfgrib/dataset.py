@@ -265,12 +265,9 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
     for key in attributes_keys:
         values = index.get(key, [])
         if len(values) > 1:
-            fbks = []
-            for value in values:
-                fbk = {key: value}
-                fbk.update(filter_by_keys)
-                fbks.append(fbk)
-            raise DatasetBuildError("multiple values for key %r" % key, key, fbks)
+            if not (isinstance(values[0], str)):
+                values = [str(val) for val in values]
+            attributes["GRIB_"+key] = " AND ".join(values)
         if values and values[0] not in ("undef", "unknown"):
             attributes["GRIB_" + key] = values[0]
     return attributes
@@ -588,6 +585,11 @@ def dict_merge(master, update):
         elif master[key] == value:
             pass
         else:
+            for i in range(len(master)):
+                tmp_key = key + "_" + str(i)
+                if tmp_key not in master.keys():
+                    master[tmp_key] = value
+                    break
             raise DatasetBuildError(
                 "key present and new value is different: "
                 "key=%r value=%r new_value=%r" % (key, master[key], value)
