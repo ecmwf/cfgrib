@@ -268,7 +268,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
             if not (isinstance(values[0], str)):
                 values = [str(val) for val in values]
             attributes["GRIB_"+key] = " AND ".join(values)
-        if values and values[0] not in ("undef", "unknown"):
+        elif values and values[0] not in ("undef", "unknown"):
             attributes["GRIB_" + key] = values[0]
     return attributes
 
