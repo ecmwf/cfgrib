@@ -21,7 +21,7 @@ Changelog for cfgrib
 - Fix passing of pathlib.Path.
   See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
 - Fixed issue where writing an ensemble number into a GRIB file caused an error.
-  See `#278<https://github.com/ecmwf/cfgrib/issues/278>`_.
+  See `#278 <https://github.com/ecmwf/cfgrib/issues/278>`_.
 
 
 0.9.10.0 (2022-01-31)
