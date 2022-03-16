@@ -2,13 +2,26 @@
 Changelog for cfgrib
 ====================
 
-0.9.10.1 (unreleased)
+0.9.10.2 (unreleased)
 ---------------------
 
-- Fix passing of pathlib.Path.
-  See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
+- Nothing changed yet.
+
+
+0.9.10.1 (2022-03-16)
+---------------------
+
 - Fix failure to read index files.
   See `#292 <https://github.com/ecmwf/cfgrib/issues/292>`_.
+- Allow backend kwargs to be provided in the to_netcdf executable,
+  either via a json format string, or a path to a json file via -b.
+  See `#288 <https://github.com/ecmwf/cfgrib/pull/288/>`_.
+- Fixed issue where the use of relpath() could cause a problem on Windows.
+  See `#284 <https://github.com/ecmwf/cfgrib/issues/284>`_.
+- Fix passing of pathlib.Path.
+  See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
+- Fixed issue where writing an ensemble number into a GRIB file caused an error.
+  See `#278<https://github.com/ecmwf/cfgrib/issues/278>`_.
 
 
 0.9.10.0 (2022-01-31)
