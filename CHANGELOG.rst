@@ -7,6 +7,8 @@ Changelog for cfgrib
 
 - Fix passing of pathlib.Path.
   See `#282 <https://github.com/ecmwf/cfgrib/issues/282>`_.
+- Fix failure to read index files.
+  See `#292 <https://github.com/ecmwf/cfgrib/issues/292>`_.
 
 
 0.9.10.0 (2022-01-31)

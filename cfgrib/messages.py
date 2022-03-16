@@ -535,7 +535,7 @@ class FileIndex(FieldsetIndex):
                 self = cls.from_indexpath(indexpath)
                 if (
                     getattr(self, "index_keys", None) == index_keys
-                    and getattr(self, "filestream", None) == filestream
+                    and getattr(self, "fieldset", None) == filestream
                     and getattr(self, "index_protocol_version", None) == ALLOWED_PROTOCOL_VERSION
                 ):
                     return self
