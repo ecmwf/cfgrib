@@ -5,7 +5,8 @@ Changelog for cfgrib
 0.9.10.2 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- added --netcdf_kwargs_json option to 'cfgrib to_netcdf'
+  See `#294 <https://github.com/ecmwf/cfgrib/pull/294/>`_.
 
 
 0.9.10.1 (2022-03-16)

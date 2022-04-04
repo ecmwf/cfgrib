@@ -17,12 +17,28 @@
 #   Alessandro Amici - B-Open - https://bopen.eu
 #
 
+import json
 import os.path
 import typing as T
 
 import click
 
 # NOTE: imports are executed inside functions so missing dependencies don't break all commands
+
+
+def handle_json(in_json):
+    """
+    Handle input json which can be a a json format string, or path to a json format file.
+    Returns a dictionary of the json contents.
+    """
+    try:
+        # Assume a json format string
+        out_json = json.loads(in_json)
+    except json.JSONDecodeError:
+        # Then a json file
+        with open(in_json, "r") as f:
+            out_json = json.load(f)
+    return out_json
 
 
 @click.group()
@@ -57,10 +73,18 @@ def selfcheck() -> None:
         "the path to JSON file"
     ),
 )
-def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
-    # type: (T.List[str], str, str, str, str) -> None
-    import json
-
+@click.option(
+    "--netcdf-kwargs-json",
+    "-n",
+    default=None,
+    help=(
+        "kwargs used xarray.to_netcdf when creating the netCDF file."
+        "Can either be a JSON format string or "
+        "the path to JSON file."
+    ),
+)
+def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_json):
+    # type: (T.List[str], str, str, str, str, str) -> None
     import xarray as xr
 
     import cf2cdm
@@ -73,13 +97,7 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         outpath = os.path.splitext(inpaths[0])[0] + ".nc"
 
     if backend_kwargs_json is not None:
-        try:
-            # Assume a json format string
-            backend_kwargs = json.loads(backend_kwargs_json)
-        except json.JSONDecodeError:
-            # Then a json file
-            with open(backend_kwargs_json, "r") as f:
-                backend_kwargs = json.load(f)
+        backend_kwargs = handle_json(backend_kwargs_json)
     else:
         backend_kwargs = {}
 
@@ -97,7 +115,12 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json):
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
-    ds.to_netcdf(outpath)
+    if netcdf_kwargs_json is not None:
+        netcdf_kwargs = handle_json(netcdf_kwargs_json)
+    else:
+        netcdf_kwargs = {}
+
+    ds.to_netcdf(outpath, **netcdf_kwargs)
 
 
 @cfgrib_cli.command("dump")
