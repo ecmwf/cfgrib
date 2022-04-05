@@ -7,6 +7,8 @@ Changelog for cfgrib
 
 - added --netcdf_kwargs_json option to 'cfgrib to_netcdf'
   See `#294 <https://github.com/ecmwf/cfgrib/pull/294/>`_.
+- fixed support for GRIB files with alternativeRowScanning=1
+  See  `#296 <https://github.com/ecmwf/cfgrib/pull/296/>`_.
 
 
 0.9.10.1 (2022-03-16)

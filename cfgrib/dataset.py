@@ -306,7 +306,7 @@ def expand_item(item, shape):
 
 
 def get_values_in_order(message, shape):
-# type: (np.ndarray, T.Tuple[int]) -> np.ndarray
+    # type: (np.ndarray, T.Tuple[int]) -> np.ndarray
     values = message["values"]
     if message.get("alternativeRowScanning", False):
         values = values.copy().reshape(shape)
