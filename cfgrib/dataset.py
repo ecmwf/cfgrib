@@ -305,6 +305,17 @@ def expand_item(item, shape):
     return tuple(expanded_item)
 
 
+def get_values_in_order(message, shape):
+    # type: (abc.Field, T.Tuple[int]) -> np.ndarray
+    values = message["values"]
+    if message.get("alternativeRowScanning", False):
+        values = values.copy().reshape(shape)
+        values[1::2, :] = values[1::2, ::-1]
+        return values.flatten()
+    else:
+        return values
+
+
 @attr.attrs(auto_attribs=True)
 class OnDiskArray:
     index: abc.Index[T.Any, abc.Field]
@@ -322,7 +333,7 @@ class OnDiskArray:
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = message["values"]
+            values = get_values_in_order(message, array[header_indexes].shape)
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -340,7 +351,7 @@ class OnDiskArray:
                 continue
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = message["values"]
+            values = get_values_in_order(message, array_field[tuple(array_field_indexes)].shape)
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])

@@ -11,6 +11,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
 TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
+TEST_DATA_ALTERNATE_ROWS = os.path.join(SAMPLE_DATA_FOLDER, "alternate-scanning.grib")
 
 
 def test_enforce_unique_attributes() -> None:
@@ -306,3 +307,12 @@ def test_open_file() -> None:
 
     assert "t" in res.variables
     assert "z" not in res.variables
+
+
+def test_alternating_rows() -> None:
+    res = dataset.open_file(TEST_DATA_ALTERNATE_ROWS)
+    # the vals at the east end should be larger than those at the west
+    east_ref = [301.78, 303.78, 305.03]
+    west_ref = [292.03, 291.78, 291.78]
+    assert np.all(np.isclose(res.variables["t2m"].data[84, 288:291], east_ref, 0.0001))
+    assert np.all(np.isclose(res.variables["t2m"].data[85, 0:3], west_ref, 0.0001))
