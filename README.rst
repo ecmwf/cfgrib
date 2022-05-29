@@ -11,7 +11,7 @@ The high level API is designed to support a GRIB engine for `xarray <http://xarr
 and it is inspired by `netCDF4-python <http://unidata.github.io/netcdf4-python/>`_
 and `h5netcdf <https://github.com/shoyer/h5netcdf>`_.
 Low level access and decoding is performed via the
-`ECMWF ecCodes library <https://software.ecmwf.int/wiki/display/ECC/>`_ and
+`ECMWF ecCodes library <https://confluence.ecmwf.int/display/ECC/>`_ and
 the `eccodes python package <https://pypi.org/project/eccodes>`_.
 
 Features with development status **Beta**:
