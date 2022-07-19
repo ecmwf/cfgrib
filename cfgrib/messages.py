@@ -489,10 +489,8 @@ def compat_create_exclusive(path):
     with open(fd, mode="wb") as file:
         try:
             yield file
-        except Exception:
-            file.close()
+        finally:
             os.unlink(path)
-            raise
 
 
 @attr.attrs(auto_attribs=True)
