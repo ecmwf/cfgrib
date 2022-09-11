@@ -104,11 +104,16 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_
     if len(inpaths) == 1:
         # avoid to depend on dask when passing only one file
         ds = xr.open_dataset(
-            inpaths[0], engine=engine, backend_kwargs=backend_kwargs,
+            inpaths[0],
+            engine=engine,
+            backend_kwargs=backend_kwargs,
         )  # type: ignore
     else:
         ds = xr.open_mfdataset(
-            inpaths, engine=engine, combine="by_coords", backend_kwargs=backend_kwargs,
+            inpaths,
+            engine=engine,
+            combine="by_coords",
+            backend_kwargs=backend_kwargs,
         )  # type: ignore
 
     if cdm:
