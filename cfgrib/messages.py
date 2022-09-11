@@ -233,6 +233,12 @@ class ComputedKeysAdapter(abc.Field):
         else:
             return self.context[item]
 
+    def __setitem__(self, item: str, value: T.Any) -> None:
+        if item in self.computed_keys:
+            self.computed_keys[item] = value
+        else:
+            self.context[item] = value
+
     def __iter__(self) -> T.Iterator[str]:
         seen = set()
         for key in self.context:

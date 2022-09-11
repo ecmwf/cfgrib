@@ -12,6 +12,7 @@ TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
 TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
 TEST_DATA_ALTERNATE_ROWS = os.path.join(SAMPLE_DATA_FOLDER, "alternate-scanning.grib")
+TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
 
 
 def test_enforce_unique_attributes() -> None:
@@ -316,3 +317,10 @@ def test_alternating_rows() -> None:
     west_ref = [292.03, 291.78, 291.78]
     assert np.all(np.isclose(res.variables["t2m"].data[84, 288:291], east_ref, 0.0001))
     assert np.all(np.isclose(res.variables["t2m"].data[85, 0:3], west_ref, 0.0001))
+
+
+def test_missing_field_values() -> None:
+    res = dataset.open_file(TEST_DATA_MISSING_VALS)
+    t2 = res.variables["t2m"]
+    assert np.isclose(np.nanmean(t2.data.build_array()[0, :, :]), 268.375)
+    assert np.isclose(np.nanmean(t2.data.build_array()[1, :, :]), 270.716)

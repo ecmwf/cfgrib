@@ -1,6 +1,7 @@
 import os.path
 import typing as T
 
+import numpy as np
 import py
 import pytest
 
@@ -94,7 +95,11 @@ def test_canonical_dataset_to_grib(grib_name: str, tmpdir: py.path.local) -> Non
 
 
 @pytest.mark.parametrize(
-    "grib_name,ndims", [("era5-levels-members", 1), ("era5-single-level-scalar-time", 0),],
+    "grib_name,ndims",
+    [
+        ("era5-levels-members", 1),
+        ("era5-single-level-scalar-time", 0),
+    ],
 )
 def test_open_dataset_extra_coords(grib_name: str, ndims: T.Any) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
@@ -105,3 +110,12 @@ def test_open_dataset_extra_coords(grib_name: str, ndims: T.Any) -> None:
     )
     assert "experimentVersionNumber" in res.coords
     assert len(res["experimentVersionNumber"].dims) == ndims
+
+
+def test_dataset_missing_field_values() -> None:
+    res = xarray_store.open_dataset(
+        os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
+    )
+    t2 = res.variables["t2m"]
+    assert np.isclose(t2[0, :, :].mean(), 268.375)
+    assert np.isclose(t2[1, :, :].mean(), 270.716)

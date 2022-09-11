@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pytest
 
 xr = pytest.importorskip(
@@ -8,6 +9,7 @@ xr = pytest.importorskip(
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
+TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
 
 
 def test_plugin() -> None:
@@ -82,3 +84,10 @@ def test_read() -> None:
     ds = opener.open_dataset(TEST_DATA)
     assert ds.dims == expected
     assert list(ds.data_vars) == ["skt"]
+
+
+def test_xr_open_dataset_file_missing_vals() -> None:
+    ds = xr.open_dataset(TEST_DATA_MISSING_VALS, engine="cfgrib")
+    t2 = ds["t2m"]
+    assert np.isclose(t2[0, :, :].mean(), 268.375)
+    assert np.isclose(t2[1, :, :].mean(), 270.716)

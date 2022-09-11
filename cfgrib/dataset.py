@@ -305,8 +305,10 @@ def expand_item(item, shape):
     return tuple(expanded_item)
 
 
-def get_values_in_order(message, shape):
+def get_values_in_order(message, shape, missing_value):
     # type: (abc.Field, T.Tuple[int]) -> np.ndarray
+    # inform the data provider to return missing values as missing_value
+    message["missingValue"] = missing_value
     values = message["values"]
     if message.get("alternativeRowScanning", False):
         values = values.copy().reshape(shape)
@@ -333,7 +335,7 @@ class OnDiskArray:
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = get_values_in_order(message, array[header_indexes].shape)
+            values = get_values_in_order(message, array[header_indexes].shape, self.missing_value)
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -351,7 +353,9 @@ class OnDiskArray:
                 continue
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = get_values_in_order(message, array_field[tuple(array_field_indexes)].shape)
+            values = get_values_in_order(
+                message, array_field[tuple(array_field_indexes)].shape, self.missing_value
+            )
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
@@ -374,7 +378,10 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG,
+    first: abc.Field,
+    encode_cf: T.Sequence[str],
+    errors: str,
+    log: logging.Logger = LOG,
 ) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]:
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = first["gridType"]
@@ -557,7 +564,7 @@ def build_variable_components(
 
                     extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = message_ids
-    missing_value = data_var_attrs.get("missingValue", 9999)
+    missing_value = data_var_attrs.get("missingValue", np.finfo(np.float32).max)
     on_disk_array = OnDiskArray(
         index=index,
         shape=shape,
@@ -569,7 +576,8 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data, coord_vars["step"].data,
+            coord_vars["time"].data,
+            coord_vars["step"].data,
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
