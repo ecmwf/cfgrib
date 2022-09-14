@@ -117,5 +117,5 @@ def test_dataset_missing_field_values() -> None:
         os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
     )
     t2 = res.variables["t2m"]
-    assert np.isclose(t2[0, :, :].mean(), 268.375)
-    assert np.isclose(t2[1, :, :].mean(), 270.716)
+    assert np.isclose(np.nanmean(t2[0, :, :]), 268.375)
+    assert np.isclose(np.nanmean(t2[1, :, :]), 270.716)

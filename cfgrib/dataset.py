@@ -305,10 +305,9 @@ def expand_item(item, shape):
     return tuple(expanded_item)
 
 
-def get_values_in_order(message, shape, missing_value):
+def get_values_in_order(message, shape):
     # type: (abc.Field, T.Tuple[int]) -> np.ndarray
     # inform the data provider to return missing values as missing_value
-    message["missingValue"] = missing_value
     values = message["values"]
     if message.get("alternativeRowScanning", False):
         values = values.copy().reshape(shape)
@@ -335,7 +334,7 @@ class OnDiskArray:
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = get_values_in_order(message, array[header_indexes].shape, self.missing_value)
+            values = get_values_in_order(message, array[header_indexes].shape)
             array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
@@ -353,9 +352,7 @@ class OnDiskArray:
                 continue
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
-            values = get_values_in_order(
-                message, array_field[tuple(array_field_indexes)].shape, self.missing_value
-            )
+            values = get_values_in_order(message, array_field[tuple(array_field_indexes)].shape)
             array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
         array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
@@ -564,7 +561,7 @@ def build_variable_components(
 
                     extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = message_ids
-    missing_value = data_var_attrs.get("missingValue", np.finfo(np.float32).max)
+    missing_value = data_var_attrs.get("missingValue", messages.MISSING_VAUE_INDICATOR)
     on_disk_array = OnDiskArray(
         index=index,
         shape=shape,

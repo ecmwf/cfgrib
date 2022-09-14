@@ -89,5 +89,5 @@ def test_read() -> None:
 def test_xr_open_dataset_file_missing_vals() -> None:
     ds = xr.open_dataset(TEST_DATA_MISSING_VALS, engine="cfgrib")
     t2 = ds["t2m"]
-    assert np.isclose(t2[0, :, :].mean(), 268.375)
-    assert np.isclose(t2[1, :, :].mean(), 270.716)
+    assert np.isclose(np.nanmean(t2.values[0, :, :]), 268.375)
+    assert np.isclose(np.nanmean(t2.values[1, :, :]), 270.716)

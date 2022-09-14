@@ -30,6 +30,8 @@ import numpy as np
 
 from . import abc
 
+MISSING_VAUE_INDICATOR = np.finfo(np.float32).max
+
 eccodes_version = eccodes.codes_get_api_version()
 
 LOG = logging.getLogger(__name__)
@@ -113,6 +115,10 @@ class Message(abc.MutableField):
         # type: (Message, T.Any) -> Message
         codes_id = eccodes.codes_clone(message.codes_id)
         return cls(codes_id=codes_id, **kwargs)
+
+    # ensure that missing values in the values array are represented by MISSING_VAUE_INDICATOR
+    def __attrs_post_init__(self):
+        self["missingValue"] = MISSING_VAUE_INDICATOR
 
     def __del__(self) -> None:
         eccodes.codes_release(self.codes_id)
@@ -232,12 +238,6 @@ class ComputedKeysAdapter(abc.Field):
             return getter(self)
         else:
             return self.context[item]
-
-    def __setitem__(self, item: str, value: T.Any) -> None:
-        if item in self.computed_keys:
-            self.computed_keys[item] = value
-        else:
-            self.context[item] = value
 
     def __iter__(self) -> T.Iterator[str]:
         seen = set()

@@ -322,5 +322,5 @@ def test_alternating_rows() -> None:
 def test_missing_field_values() -> None:
     res = dataset.open_file(TEST_DATA_MISSING_VALS)
     t2 = res.variables["t2m"]
-    assert np.isclose(np.nanmean(t2.data.build_array()[0, :, :]), 268.375)
-    assert np.isclose(np.nanmean(t2.data.build_array()[1, :, :]), 270.716)
+    assert np.isclose(np.nanmean(t2.data[0, :, :]), 268.375)
+    assert np.isclose(np.nanmean(t2.data[1, :, :]), 270.716)
