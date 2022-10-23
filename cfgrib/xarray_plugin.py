@@ -73,6 +73,9 @@ class CfGribDataStore(AbstractDataStore):
 
 
 class CfGribBackend(BackendEntrypoint):
+    description = "Open GRIB files (.grib, .grib2, .grb and .grb2) in Xarray"
+    url = "https://github.com/ecmwf/cfgrib"
+
     def guess_can_open(
         self,
         store_spec: str,
