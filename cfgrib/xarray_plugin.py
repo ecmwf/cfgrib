@@ -32,6 +32,7 @@ class CfGribDataStore(AbstractDataStore):
         **backend_kwargs: T.Any,
     ):
         from . import dataset
+
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
