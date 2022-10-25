@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import typing as T
@@ -11,8 +13,7 @@ if Version(xr.__version__) <= Version("0.17.0"):
 
 from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
 
-if T.TYPE_CHECKING:
-    from . import abc, dataset, messages
+from . import abc, dataset, messages
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
@@ -31,8 +32,6 @@ class CfGribDataStore(AbstractDataStore):
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
-        from . import dataset
-
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
