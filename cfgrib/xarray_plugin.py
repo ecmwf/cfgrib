@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 import os
 import pathlib
 import typing as T
-from packaging.version import Version
 
 import numpy as np
 import xarray as xr
+from packaging.version import Version
 
 if Version(xr.__version__) <= Version("0.17.0"):
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
