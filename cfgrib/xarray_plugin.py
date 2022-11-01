@@ -1,17 +1,17 @@
 import os
 import pathlib
 import typing as T
-from distutils.version import LooseVersion
 
 import numpy as np
 import xarray as xr
+from packaging.version import Version
 
-from . import abc, dataset, messages
-
-if LooseVersion(xr.__version__) <= "0.17.0":
+if Version(xr.__version__) <= Version("0.17.0"):
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
 from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
+
+from . import abc, dataset, messages
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
@@ -71,6 +71,9 @@ class CfGribDataStore(AbstractDataStore):
 
 
 class CfGribBackend(BackendEntrypoint):
+    description = "Open GRIB files (.grib, .grib2, .grb and .grb2) in Xarray"
+    url = "https://github.com/ecmwf/cfgrib"
+
     def guess_can_open(
         self,
         store_spec: str,

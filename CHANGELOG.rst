@@ -2,6 +2,14 @@
 Changelog for cfgrib
 ====================
 
+0.9.10.3 (2022-xx-xx)
+---------------------
+
+- Replaced ``distutils.version`` py ``packaging.version`` and
+  added description and url to the xarray plugin.
+  See `#318 <https://github.com/ecmwf/cfgrib/pull/318/>`_.
+
+
 0.9.10.2 (2022-10-04)
 ---------------------
 
