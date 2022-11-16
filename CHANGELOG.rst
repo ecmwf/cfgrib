@@ -5,6 +5,9 @@ Changelog for cfgrib
 0.9.10.3 (2022-xx-xx)
 ---------------------
 
+- large reduction in memory leak
+  See `#294 <https://github.com/ecmwf/cfgrib/pull/320/>`_.
+
 - Replaced ``distutils.version`` py ``packaging.version`` and
   added description and url to the xarray plugin.
   See `#318 <https://github.com/ecmwf/cfgrib/pull/318/>`_.
