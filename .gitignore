@@ -72,7 +72,14 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# editors
+.vscode
+
 # local ignores
 tests/sample-data/cds*.grib
 tests/sample-data/cds*.nc
 *.idx
+_dev
+
+# mac
+.DS_Store

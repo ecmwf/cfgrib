@@ -127,19 +127,25 @@ class Message(abc.MutableField):
         # type: (str, T.Optional[type], T.Any) -> T.Any
         """Get value of a given key as its native or specified type."""
         try:
-            values = eccodes.codes_get_array(self.codes_id, item, key_type)
+            if eccodes.codes_get_size(self.codes_id, item) > 1:
+                values = eccodes.codes_get_array(self.codes_id, item, key_type)
+            else:
+                values = [eccodes.codes_get(self.codes_id, item, key_type)]
+
             if values is None:
-                values = ["unsupported_key_type"]
+                return "unsupported_key_type"
+
+            if len(values) == 1:
+                if isinstance(values, np.ndarray):
+                    values = values.tolist()
+                return values[0]
+            return values
+
         except eccodes.KeyValueNotFoundError:
             if default is _MARKER:
                 raise KeyError(item)
             else:
                 return default
-        if len(values) == 1:
-            if isinstance(values, np.ndarray):
-                values = values.tolist()
-            return values[0]
-        return values
 
     def message_set(self, item: str, value: T.Any) -> None:
         arr = isinstance(value, (np.ndarray, T.Sequence)) and not isinstance(value, str)
