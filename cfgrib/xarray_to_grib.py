@@ -167,7 +167,7 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
     for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS + dataset.ALL_REF_TIME_KEYS:
-        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1:
+        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1 and coord_name not in data_var.dims:
             data_var = data_var.expand_dims(coord_name)
         if coord_name in data_var.dims:
             coords_names.append(coord_name)
