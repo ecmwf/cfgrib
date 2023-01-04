@@ -28,6 +28,21 @@ def canonic_da() -> xr.DataArray:
     )
     return da
 
+@pytest.fixture()
+def dim_with_length1_da() -> xr.DataArray:
+    coords: T.List[T.Any] = [
+        pd.date_range("2018-01-01T00:00", "2018-01-02T12:00", periods=4),
+        pd.timedelta_range(0, "12h", periods=1),
+        [1000.0, 850.0, 500.0],
+        np.linspace(90.0, -90.0, 5),
+        np.linspace(0.0, 360.0, 6, endpoint=False),
+    ]
+    da = xr.DataArray(
+        np.zeros((4, 1, 3, 5, 6)),
+        coords=coords,
+        dims=["time", "step", "isobaricInhPa", "latitude", "longitude"],
+    )
+    return da
 
 def test_canonical_dataarray_to_grib_with_grib_keys(
     canonic_da: xr.DataArray, tmpdir: py.path.local
@@ -70,3 +85,10 @@ def test_to_grib(canonic_da: xr.DataArray, tmpdir: py.path.local) -> None:
     canonic_ds = canonic_da.to_dataset(name="t")
     with pytest.warns(FutureWarning):
         xarray_to_grib.to_grib(canonic_ds, str(out_path))
+
+def test_canonical_dataarray_to_grib_with_dim_length1(
+    dim_with_length1_da: xr.DataArray, tmpdir: py.path.local
+) -> None:
+    out_path = tmpdir.join("res.grib")
+    with open(str(out_path), "wb") as file:
+        xarray_to_grib.canonical_dataarray_to_grib(dim_with_length1_da, file)
