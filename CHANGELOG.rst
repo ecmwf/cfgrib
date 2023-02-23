@@ -2,6 +2,14 @@
 Changelog for cfgrib
 ====================
 
+0.9.10.4 (unreleased)
+---------------------
+
+- fix issue where xarrays derived from Gaussian grids did not have the correct
+  geometry when written back out as GRIB
+  See `#330 <https://github.com/ecmwf/cfgrib/issues/330>`_.
+
+
 0.9.10.3 (2022-11-24)
 ---------------------
 
