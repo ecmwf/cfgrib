@@ -7,20 +7,20 @@
 alabaster==0.7.12         # via sphinx
 attrs==19.3.0
 babel==2.9.1              # via sphinx
-certifi==2020.4.5.1       # via requests
+certifi==2022.12.07       # via requests
 cffi==1.14.0
 chardet==3.0.4            # via requests
 click==7.1.2
 docutils==0.16            # via sphinx
 idna==2.9                 # via requests
 imagesize==1.2.0          # via sphinx
-jinja2==2.11.2            # via sphinx
+jinja2==2.11.3            # via sphinx
 markupsafe==1.1.1         # via jinja2
-numpy==1.18.4
+numpy==1.22.0
 packaging==20.3           # via sphinx
 pandas==1.0.3             # via xarray
 pycparser==2.20           # via cffi
-pygments==2.6.1           # via sphinx
+pygments==2.7.4           # via sphinx
 pyparsing==2.4.7          # via packaging
 pytest-runner==5.2
 python-dateutil==2.8.1    # via pandas
