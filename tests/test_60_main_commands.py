@@ -76,7 +76,7 @@ def test_cfgrib_cli_to_netcdf_netcdf_kwargs(tmpdir: py.path.local) -> None:
 def test_cfgrib_cli_to_netcdf_var_encoding(tmpdir: py.path.local) -> None:
     runner = click.testing.CliRunner()
 
-    var_encoding = '{"compression": "gzip", "complevel": 1}'
+    var_encoding = '{"compression": "zlib", "complevel": 1}'
     res = runner.invoke(__main__.cfgrib_cli, ["to_netcdf", TEST_DATA, "-v", var_encoding])
 
     assert res.exit_code == 0

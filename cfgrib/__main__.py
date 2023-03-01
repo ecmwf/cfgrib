@@ -93,7 +93,7 @@ def selfcheck() -> None:
 )
 def to_netcdf(
     inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_json, var_encoding_json
-):  # type: (T.List[str], str, str, str, str, str) -> None
+):  # type: (T.List[str], str, str, str, str, str, str) -> None
     import xarray as xr
 
     import cf2cdm
