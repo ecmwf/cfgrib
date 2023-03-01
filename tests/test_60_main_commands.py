@@ -73,6 +73,26 @@ def test_cfgrib_cli_to_netcdf_netcdf_kwargs(tmpdir: py.path.local) -> None:
     assert res.output == ""
 
 
+def test_cfgrib_cli_to_netcdf_var_encoding(tmpdir: py.path.local) -> None:
+    runner = click.testing.CliRunner()
+
+    var_encoding = '{"compression": "gzip", "complevel": 1}'
+    res = runner.invoke(__main__.cfgrib_cli, ["to_netcdf", TEST_DATA, "-v", var_encoding])
+
+    assert res.exit_code == 0
+    assert res.output == ""
+
+    var_encoding_json = tmpdir.join("temp.json")
+    with open(var_encoding_json, "w") as f:
+        f.write(var_encoding)
+    res = runner.invoke(
+        __main__.cfgrib_cli, ["to_netcdf", TEST_DATA, "-v", str(var_encoding_json)]
+    )
+
+    assert res.exit_code == 0
+    assert res.output == ""
+
+
 def test_cfgrib_cli_dump() -> None:
     runner = click.testing.CliRunner()
 

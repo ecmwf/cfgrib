@@ -78,13 +78,22 @@ def selfcheck() -> None:
     "-n",
     default=None,
     help=(
-        "kwargs used xarray.to_netcdf when creating the netCDF file."
-        "Can either be a JSON format string or "
-        "the path to JSON file."
+        "kwargs used xarray.to_netcdf when creating the netCDF file. "
+        "Can either be a JSON format string or the path to JSON file. "
     ),
 )
-def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_json):
-    # type: (T.List[str], str, str, str, str, str) -> None
+@click.option(
+    "--var-encoding-json",
+    "-v",
+    default=None,
+    help=(
+        "encoding options to apply to all data variables in the dataset. "
+        "Can either be a JSON format string or the path to JSON file. "
+    ),
+)
+def to_netcdf(
+    inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_json, var_encoding_json
+):  # type: (T.List[str], str, str, str, str, str) -> None
     import xarray as xr
 
     import cf2cdm
@@ -124,6 +133,12 @@ def to_netcdf(inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_
         netcdf_kwargs = handle_json(netcdf_kwargs_json)
     else:
         netcdf_kwargs = {}
+
+    if var_encoding_json is not None:
+        var_encoding = handle_json(var_encoding_json)
+        netcdf_kwargs.setdefault("encoding", {})
+        for var in ds.data_vars:
+            netcdf_kwargs["encoding"].setdefault(var, var_encoding)
 
     ds.to_netcdf(outpath, **netcdf_kwargs)
 
