@@ -105,7 +105,6 @@ class CfGribBackend(BackendEntrypoint):
         errors: str = "warn",
         extra_coords: T.Dict[str, str] = {},
     ) -> xr.Dataset:
-
         store = CfGribDataStore(
             filename_or_obj,
             indexpath=indexpath,
