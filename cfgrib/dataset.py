@@ -486,6 +486,7 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    precomputed_geo_coords: T.Dict[str, T.Any] = {},
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -526,7 +527,12 @@ def build_variable_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(first, encode_cf, errors)
+    if precomputed_geo_coords:
+        geo_dims = precomputed_geo_coords["geo_dims"]
+        geo_shape = precomputed_geo_coords["geo_shape"]
+        geo_coord_vars = precomputed_geo_coords["geo_coord_vars"]
+    else:
+        geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(first, encode_cf, errors)
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -600,6 +606,16 @@ def build_variable_components(
     return dims, data_var, coord_vars
 
 
+def get_first_geo_coords(path: str) -> T.Dict[str, T.Any]:
+    """Get geography coordinates for the first message in the file."""
+    stream = messages.FileStream(path)
+    index_keys = compute_index_keys(("time", "step"), {})
+    index = open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys=index_keys)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index.first(), encode_cf=("geography",), errors="warn")
+    geo_coords = {"geo_dims": geo_dims, "geo_shape": geo_shape, "geo_coord_vars": geo_coord_vars}
+    return geo_coords
+
+
 def dict_merge(master, update):
     # type: (T.Dict[str, T.Any], T.Dict[str, T.Any]) -> None
     for key, value in update.items():
@@ -643,6 +659,7 @@ def build_dataset_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    precomputed_geo_coords: T.Dict[str, T.Any] = {},
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -659,6 +676,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
+                precomputed_geo_coords=precomputed_geo_coords
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
