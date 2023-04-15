@@ -5,7 +5,7 @@ import typing as T
 import numpy as np
 import pytest
 
-from cfgrib import cfmessage, dataset, messages
+from cfgrib import cfmessage, dataset, messages, open_dataset
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
@@ -13,6 +13,7 @@ TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
 TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
 TEST_DATA_ALTERNATE_ROWS = os.path.join(SAMPLE_DATA_FOLDER, "alternate-scanning.grib")
 TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
+TEST_DATA_MULTIPLE_FIELDS = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_ml_g2.grib")
 
 
 def test_enforce_unique_attributes() -> None:
@@ -324,3 +325,10 @@ def test_missing_field_values() -> None:
     t2 = res.variables["t2m"]
     assert np.isclose(np.nanmean(t2.data[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2.data[1, :, :]), 270.716)
+
+
+def test_precomputed_geo_coords() -> None:
+    ds1 = open_dataset(TEST_DATA_MULTIPLE_FIELDS)
+    geocoords = dataset.get_first_geo_coords(TEST_DATA_MULTIPLE_FIELDS)
+    ds2 = open_dataset(TEST_DATA_MULTIPLE_FIELDS, backend_kwargs=dict(precomputed_geo_coords=geocoords))
+    assert ds2.identical(ds1)
