@@ -790,6 +790,25 @@ remove them and try again in case of problems. Index files saving can be disable
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
+Read Optimization
+---------------
+
+By default, *cfgrib* builds geography coordinates for each record in the GRIB
+file when opening a dataset, which is expensive. If a GRIB file has the same
+geography coordinates for each record, the coordinates can be computed once and
+then resused:
+
+.. code-block: python
+
+import cfgrib
+import xarray as xr
+geocoords = cfgrib.dataset.get_first_geo_coords(gribfile)
+ds = xr.open_dataset(gribfile, engine='cfgrib', backend_kwargs=dict(precomputed_geo_coords=geocoords))
+
+This can decrease dataset construction time dramatically, especially for large
+GRIB files with many records.
+
+
 Project resources
 =================
 
