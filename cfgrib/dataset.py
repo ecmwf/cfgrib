@@ -611,7 +611,9 @@ def get_first_geo_coords(path: str) -> T.Dict[str, T.Any]:
     stream = messages.FileStream(path)
     index_keys = compute_index_keys(("time", "step"), {})
     index = open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys=index_keys)
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index.first(), encode_cf=("geography",), errors="warn")
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
+        index.first(), encode_cf=("geography",), errors="warn"
+    )
     geo_coords = {"geo_dims": geo_dims, "geo_shape": geo_shape, "geo_coord_vars": geo_coord_vars}
     return geo_coords
 
@@ -676,7 +678,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
-                precomputed_geo_coords=precomputed_geo_coords
+                precomputed_geo_coords=precomputed_geo_coords,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
