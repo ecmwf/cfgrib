@@ -5,7 +5,7 @@ import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
 
-from cfgrib import xarray_store
+from cfgrib import dataset, xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
@@ -13,6 +13,7 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-corrupted.grib")
 TEST_DATASETS = os.path.join(SAMPLE_DATA_FOLDER, "t_on_different_level_types.grib")
 TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, "uv_on_different_levels.grib")
 TEST_DATA_NCEP_MONTHLY = os.path.join(SAMPLE_DATA_FOLDER, "ncep-seasonal-monthly.grib")
+TEST_DATA_MULTIPLE_FIELDS = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_ml_g2.grib")
 
 
 def test_open_dataset() -> None:
@@ -118,3 +119,12 @@ def test_open_datasets() -> None:
 
     assert len(res) > 1
     assert res[0].attrs["GRIB_centre"] == "ecmf"
+
+
+def test_precomputed_geo_coords() -> None:
+    ds1 = xarray_store.open_dataset(TEST_DATA_MULTIPLE_FIELDS)
+    geocoords = dataset.get_first_geo_coords(TEST_DATA_MULTIPLE_FIELDS)
+    ds2 = xarray_store.open_dataset(
+        TEST_DATA_MULTIPLE_FIELDS, backend_kwargs=dict(precomputed_geo_coords=geocoords)
+    )
+    assert ds2.identical(ds1)
