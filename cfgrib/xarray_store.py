@@ -97,7 +97,7 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
 def open_datasets(path, backend_kwargs={}, **kwargs):
     # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     """
-    Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
+    Open a GRIB file grouping incompatible hypercubes to different datasets via simple heuristics.
     """
     squeeze = backend_kwargs.get("squeeze", True)
     backend_kwargs = backend_kwargs.copy()
@@ -112,6 +112,8 @@ def open_datasets(path, backend_kwargs={}, **kwargs):
 
     merged = []  # type: T.List[xr.Dataset]
     for type_of_level in sorted(type_of_level_datasets):
-        for ds in merge_datasets(type_of_level_datasets[type_of_level], join="exact"):
+        for ds in merge_datasets(
+            type_of_level_datasets[type_of_level], join="exact", combine_attrs="identical"
+        ):
             merged.append(ds.squeeze() if squeeze else ds)
     return merged
