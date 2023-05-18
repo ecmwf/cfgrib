@@ -9,7 +9,7 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu]
-        python: [3.7, 3.8, 3.10]
+        python: [3.7, 3.8, '3.10']
         extras: ['']
         include:
           - os: macos
