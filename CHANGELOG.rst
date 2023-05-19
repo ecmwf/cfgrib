@@ -2,17 +2,18 @@
 Changelog for cfgrib
 ====================
 
-0.9.10.4 (2023-05-18)
+0.9.10.4 (2023-05-19)
 ---------------------
 
 - added --var-encoding-json (or -v) option to the to_netcdf tool, e.g.
   ``cfgrib to_netcdf -v '{"dtype": "float", "scale_factor": 0.1}' -o $OUTFILE $INFILE``
+  See `#334 <https://github.com/ecmwf/cfgrib/pull/334>`_.
 - fix issue where xarrays derived from Gaussian grids did not have the correct
   geometry when written back out as GRIB
   See `#330 <https://github.com/ecmwf/cfgrib/issues/330>`_.
 - fix issue where open_datasets() could merge different GRIB fields
   that have the same data values
-
+  See `#336 <https://github.com/ecmwf/cfgrib/issues/336>`_.
 
 0.9.10.3 (2022-11-24)
 ---------------------
