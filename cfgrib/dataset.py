@@ -165,8 +165,10 @@ SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 
+HASH_KEYS = [f"md5Section{i}" for i in (2, 3)]
+
 INDEX_KEYS = sorted(
-    GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS
+    GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS + HASH_KEYS
 )
 
 COORD_ATTRS = {
@@ -256,6 +258,8 @@ COORD_ATTRS = {
     },
     "forecastMonth": {"units": "1", "long_name": "months since forecast_reference_time"},
 }
+
+GEOCACHE: T.Dict[str, T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, "Variable"]]] = {} 
 
 
 class DatasetBuildError(ValueError):
@@ -379,10 +383,7 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first: abc.Field,
-    encode_cf: T.Sequence[str],
-    errors: str,
-    log: logging.Logger = LOG,
+    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG
 ) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]:
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = first["gridType"]
@@ -486,7 +487,7 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
-    precomputed_geo_coords: T.Dict[str, T.Any] = {},
+    cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -527,12 +528,21 @@ def build_variable_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    if precomputed_geo_coords:
-        geo_dims = precomputed_geo_coords["geo_dims"]
-        geo_shape = precomputed_geo_coords["geo_shape"]
-        geo_coord_vars = precomputed_geo_coords["geo_coord_vars"]
+    first = index.first()
+    grib_edition = first.get('edition')
+    gds_md5sum = index.get('md5Section3' if grib_edition == 2 else 'md5Section2')
+    # If parameter is associated with a single grid definition, try to cache geometry
+    if cache_geo_coords and gds_md5sum and len(gds_md5sum) == 1:
+        md5sum = gds_md5sum[0]
+        if md5sum in GEOCACHE:
+            geo_coords = GEOCACHE[md5sum]
+        else:
+            geo_coords = build_geography_coordinates(first, encode_cf, errors)
+            GEOCACHE[md5sum] = geo_coords
     else:
-        geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(first, encode_cf, errors)
+        geo_coords = build_geography_coordinates(first, encode_cf, errors)
+
+    geo_dims, geo_shape, geo_coord_vars = geo_coords
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -583,8 +593,7 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data,
-            coord_vars["step"].data,
+            coord_vars["time"].data, coord_vars["step"].data
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
@@ -604,18 +613,6 @@ def build_variable_components(
     data_var = Variable(dimensions=dimensions, data=on_disk_array, attributes=data_var_attrs)  # type: ignore
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
     return dims, data_var, coord_vars
-
-
-def get_first_geo_coords(path: str) -> T.Dict[str, T.Any]:
-    """Get geography coordinates for the first message in the file."""
-    stream = messages.FileStream(path)
-    index_keys = compute_index_keys(("time", "step"), {})
-    index = open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys=index_keys)
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
-        index.first(), encode_cf=("geography",), errors="warn"
-    )
-    geo_coords = {"geo_dims": geo_dims, "geo_shape": geo_shape, "geo_coord_vars": geo_coord_vars}
-    return geo_coords
 
 
 def dict_merge(master, update):
@@ -661,11 +658,12 @@ def build_dataset_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
-    precomputed_geo_coords: T.Dict[str, T.Any] = {},
+    cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
+
     for param_id in index.get("paramId", []):
         var_index = index.subindex(paramId=param_id)
         try:
@@ -678,7 +676,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
-                precomputed_geo_coords=precomputed_geo_coords,
+                cache_geo_coords=cache_geo_coords,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -707,11 +705,7 @@ def build_dataset_components(
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
-    encoding = {
-        "source": index.source(),
-        "filter_by_keys": filter_by_keys,
-        "encode_cf": encode_cf,
-    }
+    encoding = {"source": index.source(), "filter_by_keys": filter_by_keys, "encode_cf": encode_cf}
     attributes = build_dataset_attributes(index, filter_by_keys, encoding)
     return dimensions, variables, attributes, encoding
 
