@@ -259,7 +259,7 @@ COORD_ATTRS = {
     "forecastMonth": {"units": "1", "long_name": "months since forecast_reference_time"},
 }
 
-GEOCACHE: T.Dict[str, T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, "Variable"]]] = {} 
+GEOCACHE: T.Dict[T.Hashable, T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, "Variable"]]] = {} 
 
 
 class DatasetBuildError(ValueError):
@@ -534,11 +534,13 @@ def build_variable_components(
     # If parameter is associated with a single grid definition, try to cache geometry
     if cache_geo_coords and gds_md5sum and len(gds_md5sum) == 1:
         md5sum = gds_md5sum[0]
-        if md5sum in GEOCACHE:
-            geo_coords = GEOCACHE[md5sum]
+        cache_key = (md5sum, tuple(encode_cf))
+        if cache_key in GEOCACHE:
+            log.debug(f'cache hit for {cache_key}; using cached geometry')
+            geo_coords = GEOCACHE[cache_key]
         else:
             geo_coords = build_geography_coordinates(first, encode_cf, errors)
-            GEOCACHE[md5sum] = geo_coords
+            GEOCACHE[cache_key] = geo_coords
     else:
         geo_coords = build_geography_coordinates(first, encode_cf, errors)
 
