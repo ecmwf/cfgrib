@@ -126,7 +126,7 @@ def test_open_datasets() -> None:
 def test_cached_geo_coords() -> None:
     ds1 = xarray_store.open_dataset(TEST_DATA_MULTIPLE_FIELDS)
     ds2 = xarray_store.open_dataset(
-        TEST_DATA_MULTIPLE_FIELDS, backend_kwargs=dict(cache_geo_coords=True)
+        TEST_DATA_MULTIPLE_FIELDS, backend_kwargs=dict(cache_geo_coords=False)
     )
     assert ds2.identical(ds1)
 
