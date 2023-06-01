@@ -165,7 +165,7 @@ SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 
-HASH_KEYS = [f"md5Section{i}" for i in (2, 3)]
+HASH_KEYS = ["md5GridSection"]
 
 INDEX_KEYS = sorted(
     GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS + HASH_KEYS
@@ -530,9 +530,7 @@ def build_variable_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    first = index.first()
-    grib_edition = first.get("edition")
-    gds_md5sum = index.get("md5Section3" if grib_edition == 2 else "md5Section2")
+    gds_md5sum = index.get("md5GridSection")
     # If parameter is associated with a single grid definition, try to cache geometry
     if cache_geo_coords and gds_md5sum and len(gds_md5sum) == 1:
         md5sum = gds_md5sum[0]
@@ -541,10 +539,10 @@ def build_variable_components(
             log.debug(f"cache hit for {cache_key}; using cached geometry")
             geo_coords = GEOCACHE[cache_key]
         else:
-            geo_coords = build_geography_coordinates(first, encode_cf, errors)
+            geo_coords = build_geography_coordinates(index.first(), encode_cf, errors)
             GEOCACHE[cache_key] = geo_coords
     else:
-        geo_coords = build_geography_coordinates(first, encode_cf, errors)
+        geo_coords = build_geography_coordinates(index.first(), encode_cf, errors)
 
     geo_dims, geo_shape, geo_coord_vars = geo_coords
     dimensions = header_dimensions + geo_dims
