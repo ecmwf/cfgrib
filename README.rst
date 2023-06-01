@@ -790,24 +790,16 @@ remove them and try again in case of problems. Index files saving can be disable
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
-Read Optimization
+Geographic Coordinate Caching
 ---------------
 
-By default, *cfgrib* builds geography coordinates for each record in the GRIB
-file when opening a dataset, which is expensive. If a GRIB file has the same
-geography coordinates for each record, the coordinates can be computed once and
-then resused:
-
-.. code-block: python
-
-import cfgrib
-import xarray as xr
-geocoords = cfgrib.dataset.get_first_geo_coords(gribfile)
-ds = xr.open_dataset(gribfile, engine='cfgrib', backend_kwargs=dict(precomputed_geo_coords=geocoords))
-
-This can decrease dataset construction time dramatically, especially for large
-GRIB files with many records.
-
+By default, *cfgrib* caches computed geography coordinates for each record in the GRIB
+file when opening a dataset, which significantly speeds up dataset creation.
+This cache can theoretically grow unboundedly in memory in long-lived
+applications which read many different grid types. Should it be necessary,
+caching can be disabled by passing `backend_kwargs=dict(cache_geo_coords=False)`
+to `xarray.open_dataset()`, `cfgrib.open_dataset()`, or
+`cfgrib.open_datasets()`.
 
 Project resources
 =================
