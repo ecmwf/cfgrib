@@ -21,7 +21,8 @@ TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_a
 def test_open_dataset() -> None:
     res = xarray_store.open_dataset(TEST_DATA)
 
-    assert res.attrs["GRIB_edition"] == 1
+    print(res.attrs)
+    assert res.attrs["GRIB_centre"] == "ecmf"
 
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"
@@ -46,7 +47,7 @@ def test_open_dataset() -> None:
 def test_open_dataset_corrupted() -> None:
     res = xarray_store.open_dataset(TEST_CORRUPTED)
 
-    assert res.attrs["GRIB_edition"] == 1
+    assert res.attrs["GRIB_centre"] == "ecmf"
     assert len(res.data_vars) == 1
 
     with pytest.raises(Exception):
@@ -57,7 +58,7 @@ def test_open_dataset_encode_cf_time() -> None:
     backend_kwargs = {"encode_cf": ("time",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
-    assert res.attrs["GRIB_edition"] == 1
+    assert res.attrs["GRIB_centre"] == "ecmf"
     assert res["t"].attrs["GRIB_gridType"] == "regular_ll"
     assert res["t"].attrs["GRIB_units"] == "K"
     assert res["t"].dims == ("number", "time", "level", "values")
@@ -79,7 +80,7 @@ def test_open_dataset_encode_cf_geography() -> None:
     backend_kwargs = {"encode_cf": ("geography",)}
     res = xarray_store.open_dataset(TEST_DATA, backend_kwargs=backend_kwargs)
 
-    assert res.attrs["GRIB_edition"] == 1
+    assert res.attrs["GRIB_centre"] == "ecmf"
 
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"
@@ -106,7 +107,7 @@ def test_open_dataset_extra_coords_attrs() -> None:
 def test_open_dataset_eccodes() -> None:
     res = xarray_store.open_dataset(TEST_DATA)
 
-    assert res.attrs["GRIB_edition"] == 1
+    assert res.attrs["GRIB_centre"] == "ecmf"
 
     var = res["t"]
     assert var.attrs["GRIB_gridType"] == "regular_ll"

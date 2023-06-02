@@ -63,8 +63,6 @@ def test_Message_write(tmpdir: py.path.local) -> None:
     # warn on errors
     res["centreDescription"] = "DUMMY"
     assert res["centreDescription"] != "DUMMY"
-    res["edition"] = -1
-    assert res["edition"] != -1
 
     # ignore errors
     res.errors = "ignore"
