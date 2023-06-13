@@ -5,7 +5,7 @@ import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
 
-from cfgrib import xarray_store
+from cfgrib import dataset, xarray_store
 
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
@@ -13,6 +13,9 @@ TEST_CORRUPTED = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-corrupted.grib")
 TEST_DATASETS = os.path.join(SAMPLE_DATA_FOLDER, "t_on_different_level_types.grib")
 TEST_IGNORE = os.path.join(SAMPLE_DATA_FOLDER, "uv_on_different_levels.grib")
 TEST_DATA_NCEP_MONTHLY = os.path.join(SAMPLE_DATA_FOLDER, "ncep-seasonal-monthly.grib")
+TEST_DATA_MULTIPLE_FIELDS = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_ml_g2.grib")
+TEST_DATA_DIFFERENT_STEP_TYPES = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat.grib")
+TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat_0s.grib")
 
 
 def test_open_dataset() -> None:
@@ -118,3 +121,33 @@ def test_open_datasets() -> None:
 
     assert len(res) > 1
     assert res[0].attrs["GRIB_centre"] == "ecmf"
+
+
+def test_cached_geo_coords() -> None:
+    ds1 = xarray_store.open_dataset(TEST_DATA_MULTIPLE_FIELDS)
+    ds2 = xarray_store.open_dataset(
+        TEST_DATA_MULTIPLE_FIELDS, backend_kwargs=dict(cache_geo_coords=False)
+    )
+    assert ds2.identical(ds1)
+
+
+def test_open_datasets_differet_step_types() -> None:
+    res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES)
+
+    assert len(res) == 2
+    assert res[0].cprat.attrs["GRIB_stepType"] == "instant"
+    assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
+    assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
+    assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
+
+
+# test the case where we have two different step types, but the data values
+# are all zero - we should still separate into differernt datasets
+def test_open_datasets_differet_step_types_zeros() -> None:
+    res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS)
+
+    assert len(res) == 2
+    assert res[0].cprat.attrs["GRIB_stepType"] == "instant"
+    assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
+    assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
+    assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
