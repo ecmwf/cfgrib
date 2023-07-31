@@ -529,7 +529,8 @@ class FileIndex(FieldsetIndex):
             return cls.from_fieldset(filestream, index_keys, computed_keys)
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
-        indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
+        indexpath = indexpath.format(path=filestream.path, file_name=os.path.basename(filestream.path), hash=hash, short_hash=hash[:5])
+
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
                 self = cls.from_fieldset(filestream, index_keys, computed_keys)
