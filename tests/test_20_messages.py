@@ -179,6 +179,13 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
     )
     assert isinstance(res, messages.FileIndex)
 
+    # setting the indexpath manually (with file_name variable)
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)), ["paramId"], 
+        indexpath=str(tmpdir) + '{file_name}.idx.{short_hash}'
+    )
+    assert isinstance(res, messages.FileIndex)
+
     # can't create nor read index file
     res = messages.FileIndex.from_indexpath_or_filestream(
         messages.FileStream(str(grib_file)),
