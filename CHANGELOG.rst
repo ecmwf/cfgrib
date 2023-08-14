@@ -2,6 +2,13 @@
 Changelog for cfgrib
 ====================
 
+0.9.10.5 (2023-xx-xx)
+-----------------
+
+- fix issue where to_grib() could crash if given a dataset with a single-valued dimension
+  See `#347 <https://github.com/ecmwf/cfgrib/issues/347>`_.
+
+
 0.9.10.4 (2023-05-19)
 ---------------------
 

@@ -11,18 +11,18 @@ import xarray as xr
 
 from cfgrib import xarray_to_grib
 
-
-@pytest.fixture()
-def canonic_da() -> xr.DataArray:
+# we make sure to test the cases where we have a) multiple dates, and b) a single date
+@pytest.fixture(params=[4, 1])
+def canonic_da(request) -> xr.DataArray:
     coords: T.List[T.Any] = [
-        pd.date_range("2018-01-01T00:00", "2018-01-02T12:00", periods=4),
+        pd.date_range("2018-01-01T00:00", "2018-01-02T12:00", periods=request.param),
         pd.timedelta_range(0, "12h", periods=2),
         [1000.0, 850.0, 500.0],
         np.linspace(90.0, -90.0, 5),
         np.linspace(0.0, 360.0, 6, endpoint=False),
     ]
     da = xr.DataArray(
-        np.zeros((4, 2, 3, 5, 6)),
+        np.zeros((request.param, 2, 3, 5, 6)),
         coords=coords,
         dims=["time", "step", "isobaricInhPa", "latitude", "longitude"],
     )
