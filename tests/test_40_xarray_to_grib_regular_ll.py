@@ -11,6 +11,7 @@ import xarray as xr
 
 from cfgrib import xarray_to_grib
 
+
 # we make sure to test the cases where we have a) multiple dates, and b) a single date
 @pytest.fixture(params=[4, 1])
 def canonic_da(request) -> xr.DataArray:
