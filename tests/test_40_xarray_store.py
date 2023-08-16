@@ -1,5 +1,6 @@
 import os.path
 
+import gribapi
 import numpy as np
 import pytest
 
@@ -39,8 +40,10 @@ def test_open_dataset() -> None:
     res = xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={"errors": "ignore"})
     assert "isobaricInhPa" in res.dims
 
-    with pytest.raises(ValueError):
+    with pytest.raises(dataset.DatasetBuildError):
         xarray_store.open_dataset(TEST_IGNORE, backend_kwargs={"errors": "raise"})
+
+    xarray_store.open_dataset(TEST_DATA, backend_kwargs={"errors": "raise"})
 
 
 def test_open_dataset_corrupted() -> None:
@@ -49,8 +52,8 @@ def test_open_dataset_corrupted() -> None:
     assert res.attrs["GRIB_edition"] == 1
     assert len(res.data_vars) == 1
 
-    with pytest.raises(Exception):
-        xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={"grib_errors": "raise"})
+    with pytest.raises(gribapi.GribInternalError):
+        xarray_store.open_dataset(TEST_CORRUPTED, backend_kwargs={"errors": "raise"})
 
 
 def test_open_dataset_encode_cf_time() -> None:

@@ -82,7 +82,7 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
         for key in ["filter_by_keys", "indexpath"]
         if key in backend_kwargs
     }
-    errors = backend_kwargs.get("grib_errors", "warn")
+    errors = backend_kwargs.get("errors", "warn")
     stream = messages.FileStream(path, errors=errors)
     index = open_fileindex(stream, computed_keys=cfmessage.COMPUTED_KEYS, **fileindex_kwargs)
     datasets = []  # type: T.List[xr.Dataset]

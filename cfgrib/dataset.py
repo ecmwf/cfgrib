@@ -782,7 +782,7 @@ def open_fileindex(
 
 def open_file(
     path: T.Union[str, "os.PathLike[str]"],
-    grib_errors: str = "warn",
+    errors: str = "warn",
     indexpath: str = messages.DEFAULT_INDEXPATH,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
@@ -792,9 +792,8 @@ def open_file(
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     path = os.fspath(path)
-    stream = messages.FileStream(path, errors=grib_errors)
-
+    stream = messages.FileStream(path, errors=errors)
     index_keys = compute_index_keys(time_dims, extra_coords)
     index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
 
-    return open_from_index(index, read_keys, time_dims, extra_coords, **kwargs)
+    return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)
