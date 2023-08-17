@@ -62,7 +62,7 @@ dependencies:
   - pytest=7.3.1
   - python=3.10.11
   - python-dateutil=2.8.2
-  - python-eccodes=1.5.1
+  - python-eccodes=1.6.0
   - python-tzdata=2023.3
   - python_abi=3.10
   - pytz=2023.3

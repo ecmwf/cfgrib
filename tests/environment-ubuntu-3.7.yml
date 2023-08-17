@@ -16,7 +16,7 @@ dependencies:
   - click=8.0.3
   - coverage=6.2
   - curl=7.80.0
-  - eccodes=2.24.2
+  - eccodes=2.31.0
   - findlibs=0.0.2
   - freeglut=3.2.1
   - hdf4=4.2.15
@@ -70,7 +70,7 @@ dependencies:
   - pytest-cov=3.0.0
   - python=3.7.11
   - python-dateutil=2.8.2
-  - python-eccodes=1.4.0
+  - python-eccodes=1.6.0
   - python_abi=3.7
   - pytz=2021.3
   - readline=8.1.2
