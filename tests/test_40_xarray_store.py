@@ -1,6 +1,6 @@
 import os.path
 
-import gribapi
+import gribapi  # type: ignore
 import numpy as np
 import pytest
 
