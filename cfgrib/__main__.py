@@ -169,9 +169,9 @@ def dump(inpaths, variable, cdm, engine):
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
     if variable:
-        ds_or_da = ds[variable]
+        ds_or_da = ds[variable]  # type: ignore
     else:
-        ds_or_da = ds
+        ds_or_da = ds  # type: ignore
 
     print(ds_or_da)
 
