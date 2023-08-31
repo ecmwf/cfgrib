@@ -5,4 +5,6 @@ build:
   dependencies:
     - ecmwf/ecbuild@develop
     - ecmwf/eccodes@develop
+  python_dependencies:
+    - ecmwf/eccodes-python@develop
   parallel: 64
