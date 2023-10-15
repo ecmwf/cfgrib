@@ -56,9 +56,7 @@ def selfcheck() -> None:
 
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
-@click.option(
-    "--outpath", "-o", default=None, help="Filename of the output netcdf file."
-)
+@click.option("--outpath", "-o", default=None, help="Filename of the output netcdf file.")
 @click.option(
     "--cdm",
     "-c",
