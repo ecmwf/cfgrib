@@ -56,12 +56,20 @@ def selfcheck() -> None:
 
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
-@click.option("--outpath", "-o", default=None, help="Filename of the output netcdf file.")
 @click.option(
-    "--cdm", "-c", default=None, help="Coordinate model to translate the grib coordinates to."
+    "--outpath", "-o", default=None, help="Filename of the output netcdf file."
 )
 @click.option(
-    "--engine", "-e", default="cfgrib", help="xarray engine to use in xarray.open_dataset."
+    "--cdm",
+    "-c",
+    default=None,
+    help="Coordinate model to translate the grib coordinates to.",
+)
+@click.option(
+    "--engine",
+    "-e",
+    default="cfgrib",
+    help="xarray engine to use in xarray.open_dataset.",
 )
 @click.option(
     "--backend-kwargs-json",
@@ -92,11 +100,15 @@ def selfcheck() -> None:
     ),
 )
 def to_netcdf(
-    inpaths, outpath, cdm, engine, backend_kwargs_json, netcdf_kwargs_json, var_encoding_json
+    inpaths,
+    outpath,
+    cdm,
+    engine,
+    backend_kwargs_json,
+    netcdf_kwargs_json,
+    var_encoding_json,
 ):  # type: (T.List[str], str, str, str, str, str, str) -> None
     import xarray as xr
-
-    import cf2cdm
 
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
@@ -126,6 +138,8 @@ def to_netcdf(
         )  # type: ignore
 
     if cdm:
+        import cf2cdm
+
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
@@ -152,8 +166,6 @@ def dump(inpaths, variable, cdm, engine):
     # type: (T.List[str], str, str, str) -> None
     import xarray as xr
 
-    import cf2cdm
-
     # NOTE: noop if no input argument
     if len(inpaths) == 0:
         return
@@ -165,6 +177,8 @@ def dump(inpaths, variable, cdm, engine):
         ds = xr.open_mfdataset(inpaths, engine=engine, combine="by_coords")  # type: ignore
 
     if cdm:
+        import cf2cdm
+
         coord_model = getattr(cf2cdm, cdm)
         ds = cf2cdm.translate_coords(ds, coord_model=coord_model)
 
