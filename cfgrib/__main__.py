@@ -57,18 +57,8 @@ def selfcheck() -> None:
 @cfgrib_cli.command("to_netcdf")
 @click.argument("inpaths", nargs=-1)
 @click.option("--outpath", "-o", default=None, help="Filename of the output netcdf file.")
-@click.option(
-    "--cdm",
-    "-c",
-    default=None,
-    help="Coordinate model to translate the grib coordinates to.",
-)
-@click.option(
-    "--engine",
-    "-e",
-    default="cfgrib",
-    help="xarray engine to use in xarray.open_dataset.",
-)
+@click.option("--cdm", "-c", default=None, help="Coordinate model to translate the grib coordinates to.")
+@click.option("--engine", "-e", default="cfgrib", help="xarray engine to use in xarray.open_dataset.")
 @click.option(
     "--backend-kwargs-json",
     "-b",
