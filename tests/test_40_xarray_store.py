@@ -17,6 +17,7 @@ TEST_DATA_NCEP_MONTHLY = os.path.join(SAMPLE_DATA_FOLDER, "ncep-seasonal-monthly
 TEST_DATA_MULTIPLE_FIELDS = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_ml_g2.grib")
 TEST_DATA_DIFFERENT_STEP_TYPES = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat.grib")
 TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat_0s.grib")
+TEST_DATA_ALTERNATE_ROWS_MERCATOR = os.path.join(SAMPLE_DATA_FOLDER, "ds.waveh.5.grib")
 
 
 def test_open_dataset() -> None:
@@ -154,3 +155,11 @@ def test_open_datasets_differet_step_types_zeros() -> None:
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
     assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
+
+
+def test_alternating_scanning_mercator() -> None:
+    ds = xarray_store.open_dataset(TEST_DATA_ALTERNATE_ROWS_MERCATOR)
+    values = ds.variables["shww"].data
+    assert np.isnan(values[5])
+    assert values[760500] == 1.5
+    values_all = ds.variables["shww"].data[:]
