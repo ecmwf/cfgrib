@@ -319,7 +319,11 @@ def get_values_in_order(message, shape):
     # type: (abc.Field, T.Tuple[int]) -> np.ndarray
     # inform the data provider to return missing values as missing_value
     values = message["values"]
-    if len(values.shape) == 2 and message.get("alternativeRowScanning", False):
+    if (
+        isinstance(values, np.ndarray)
+        and len(values.shape) == 2
+        and message.get("alternativeRowScanning", False)
+    ):
         values = values.copy().reshape(shape)
         values[1::2, :] = values[1::2, ::-1]
         return values.flatten()
