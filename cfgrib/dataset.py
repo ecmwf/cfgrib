@@ -661,13 +661,31 @@ def build_dataset_components(
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
+    filter_heterogeneous: bool = False,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
 
-    for param_id in index.get("paramId", []):
-        var_index = index.subindex(paramId=param_id)
+    subindex_kwargs_list = [{"paramId": param_id} for param_id in index.get("paramId", [])]
+    if filter_heterogeneous:
+        subindex_kwargs_list = []
+        for param_id in index.get('paramId', []):
+            for type_of_level in index.get('typeOfLevel', []):
+                for step_type in index.get('stepType', []):
+                    subindex_kwargs_list.append({
+                        'paramId': param_id,
+                        'typeOfLevel': type_of_level,
+                        'stepType': step_type
+                    })
+
+
+    for subindex_kwargs in subindex_kwargs_list:
+        var_index = index.subindex(**subindex_kwargs)
+        if not var_index.header_values:
+            log.debug(f"No match for {subindex_kwargs}")
+            continue
+
         try:
             dims, data_var, coord_vars = build_variable_components(
                 var_index,
@@ -696,6 +714,15 @@ def build_dataset_components(
         var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
         if "parameter" in encode_cf and var_name not in ("undef", "unknown"):
             short_name = var_name
+
+        if filter_heterogeneous:
+            # Unique variable name looking like "t__surface__instant"
+            short_name = "__".join([
+                short_name,
+                data_var.attributes.get("GRIB_typeOfLevel", "unknown"),
+                data_var.attributes.get("GRIB_stepType", "unknown"),
+            ])
+
         try:
             dict_merge(variables, coord_vars)
             dict_merge(variables, {short_name: data_var})
