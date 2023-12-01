@@ -20,6 +20,7 @@
 import json
 import os.path
 import typing as T
+from pathlib import Path
 
 import click
 
@@ -174,6 +175,36 @@ def dump(inpaths, variable, cdm, engine):
         ds_or_da = ds  # type: ignore
 
     print(ds_or_da)
+
+
+@cfgrib_cli.command("build_index")
+@click.argument("inpaths", nargs=-1, required=True)
+@click.option("--index-basedir", default=None)
+@click.option("--force", default=None)
+def build_index(inpaths, index_basedir, force):
+    # type: (T.List[str], str, bool) -> None
+    from .messages import FileStream, FileIndex
+    from .dataset import compute_index_keys
+
+    index_keys = compute_index_keys(("time", "step", "shortName"), {})
+    indexpath = "{path}.idx"
+    if index_basedir:
+        indexpath = os.path.join(index_basedir, '{path}.idx')
+
+    for fp in inpaths:
+        fp_idx = Path(indexpath.format(path=fp))
+        if force:
+            fp_idx.unlink(missing_ok=True)
+
+        print(f"{fp}: Creating index to {fp_idx}")
+        stream = FileStream(str(fp))
+        index = FileIndex.from_indexpath_or_filestream(
+            filestream=stream,
+            index_keys=index_keys,
+            indexpath=indexpath
+        )
+
+
 
 
 if __name__ == "__main__":  # pragma: no cover
