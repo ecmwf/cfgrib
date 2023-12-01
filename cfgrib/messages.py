@@ -23,6 +23,7 @@ import logging
 import os
 import pickle
 import typing as T
+from pathlib import Path
 
 import attr
 import eccodes  # type: ignore
@@ -530,6 +531,12 @@ class FileIndex(FieldsetIndex):
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
+
+        if not Path(indexpath).parent.exists():
+            # When reading from read-only partition, we can define indexes in another
+            # directory, eg. indexpath='/tmp/indexes/{path}.idx'
+            Path(indexpath).parent.mkdir(parents=True, exist_ok=True)
+
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
                 self = cls.from_fieldset(filestream, index_keys, computed_keys)
