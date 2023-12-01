@@ -649,6 +649,46 @@ Attributes:
     institution:             US National Weather Service - NCEP]
 
 
+Alternatively, you can as well use the ``filter_heterogeneous`` args, *cfgrib* will try to load
+all heterogeneous variable at once, and them merge them to a single ``xr.Dataset```.
+
+Please note that variable name will be concatenation of ``{shortName}__{typeOfLevel}__{stepType}``,
+cf. example below.
+
+.. code-block: python
+
+>>> import xarray as xr
+>>> xr.open_dataset('nam.t00z.awp21100.tm00.grib2', engine='cfgrib',
+        backend_kwargs={'filter_heterogeneous': True})
+<xarray.Dataset>
+Dimensions:                                (y: 65, x: 93, isobaricInhPa: 19,
+                                            pressureFromGroundLayer: 5,
+                                            heightAboveGroundLayer: 2)
+Coordinates: (12/17)
+    time                                   datetime64[ns] ...
+    step                                   timedelta64[ns] ...
+    meanSea                                float64 ...
+    gh__cloudBase__instant                 (y, x) float32 ...
+    gh__cloudTop__instant                  (y, x) float32 ...
+    gh__maxWind__instant                   (y, x) float32 ...
+    ...                                     ...
+    pres__cloudBase__instant               (y, x) float32 ...
+    pres__cloudTop__instant                (y, x) float32 ...
+    pres__maxWind__instant                 (y, x) float32 ...
+    hlcy__heightAboveGroundLayer__instant  (heightAboveGroundLayer, y, x) float32 ...
+    trpp__tropopause__instant              (y, x) float32 ...
+    unknown__surface__instant              (y, x) float32 ...
+Attributes:
+    GRIB_edition:            2
+    GRIB_centre:             kwbc
+    GRIB_centreDescription:  US National Weather Service - NCEP
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             US National Weather Service - NCEP
+    history:                 2023-12-01T23:23 GRIB to CDM+CF via cfgrib-0.9.1...
+
+
+
 Advanced usage
 ==============
 
