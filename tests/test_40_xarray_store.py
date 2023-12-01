@@ -126,9 +126,9 @@ def test_open_datasets() -> None:
     assert res[0].attrs["GRIB_centre"] == "ecmf"
 
 
-def test_open_filter_heteorogeneous() -> None:
-    res = xarray_store.open_dataset(TEST_DATASETS, backend_kwargs={
-        'filter_heteorogeneous': True
+def test_open_filter_heterogeneous() -> None:
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs={
+        'filter_heterogeneous': True
     })
 
     assert isinstance(res, xr.Dataset)

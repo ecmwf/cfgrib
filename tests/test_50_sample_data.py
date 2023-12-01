@@ -65,13 +65,31 @@ def test_open_datasets(grib_name: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "grib_name", ["hpa_and_pa", "t_on_different_level_types", "tp_on_different_grid_resolutions"]
+    "grib_name",
+    [
+        "era5-levels-members",
+        "fields_with_missing_values",
+        "lambert_grid",
+        "reduced_gg",
+        "regular_gg_sfc",
+        "regular_gg_pl",
+        "regular_gg_ml",
+        "regular_gg_ml_g2",
+        "regular_ll_sfc",
+        "regular_ll_msl",
+        "scanning_mode_64",
+        "single_gridpoint",
+        "spherical_harmonics",
+        "t_analysis_and_fc_0",
+        "hpa_and_pa",
+        "uv_on_different_levels",
+    ]
 )
-def test_open_datasets(grib_name: str) -> None:
+def test_open_dataset_heterogeneous(grib_name: str) -> None:
     grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
 
     res = xarray_store.open_dataset(grib_path, backend_kwargs={
-        'filter_heteorogeneous': True
+        'filter_heterogeneous': True
     })
 
     assert isinstance(res, xr.Dataset)
