@@ -65,6 +65,19 @@ def test_open_datasets(grib_name: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "grib_name", ["hpa_and_pa", "t_on_different_level_types", "tp_on_different_grid_resolutions"]
+)
+def test_open_datasets(grib_name: str) -> None:
+    grib_path = os.path.join(SAMPLE_DATA_FOLDER, grib_name + ".grib")
+
+    res = xarray_store.open_dataset(grib_path, backend_kwargs={
+        'filter_heteorogeneous': True
+    })
+
+    assert isinstance(res, xr.Dataset)
+
+
+@pytest.mark.parametrize(
     "grib_name",
     [
         pytest.param("era5-levels-members", marks=pytest.mark.xfail),
