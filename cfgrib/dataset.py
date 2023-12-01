@@ -710,6 +710,7 @@ def build_dataset_components(
                 fbks.append(fbk)
                 error_message += "\n    filter_by_keys=%r" % fbk
             raise DatasetBuildError(error_message, key, fbks)
+        param_id = subindex_kwargs['paramId']
         short_name = data_var.attributes.get("GRIB_shortName", "paramId_%d" % param_id)
         var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
         if "parameter" in encode_cf and var_name not in ("undef", "unknown"):
