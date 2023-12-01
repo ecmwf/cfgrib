@@ -132,6 +132,7 @@ def test_open_filter_heterogeneous() -> None:
     })
 
     assert isinstance(res, xr.Dataset)
+    assert "t__isobaricInhPa__instant" in res
     assert res.attrs["GRIB_centre"] == "ecmf"
 
 
