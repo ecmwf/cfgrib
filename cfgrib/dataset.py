@@ -738,7 +738,7 @@ def build_dataset_components(
                         continue
 
                     # When coordinates mismatches, create unique name
-                    coord_name_count = len([x for x in variables.keys() if x.__contains__(coord_name)])
+                    coord_name_count = len([x for x in variables.keys() if x.startswith(coord_name)])
                     coord_name_unique = f"{coord_name}{coord_name_count}"# + "".join(random.choices(string.ascii_lowercase, k=4))
 
                     # Update coord_vars
