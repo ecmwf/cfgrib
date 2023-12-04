@@ -22,7 +22,7 @@ import datetime
 import json
 import logging
 import os
-import random
+import itertools
 import typing as T
 
 import attr
@@ -299,13 +299,6 @@ class Variable:
             return NotImplemented
         equal = (self.dimensions, self.attributes) == (other.dimensions, other.attributes)
         return equal and np.array_equal(self.data, other.data)
-
-    def merge_data(self, other_data):
-        data = np.unique(np.append(self.data, other_data))
-        sort_reverse = self.attributes.get("stored_direction") == "decreasing"
-        self.data = np.array(sorted(data, reverse=sort_reverse))
-
-        return self
 
 
 def expand_item(item, shape):
@@ -677,20 +670,20 @@ def build_dataset_components(
 
     subindex_kwargs_list = [{"paramId": param_id} for param_id in index.get("paramId", [])]
     if filter_heterogeneous:
+        # Generate all possible combinations of paramId/typeOfLevel/stepType
         subindex_kwargs_list = []
-        for param_id in index.get('paramId', []):
-            for type_of_level in index.get('typeOfLevel', []):
-                for step_type in index.get('stepType', []):
-                    subindex_kwargs_list.append({
-                        'paramId': param_id,
-                        'typeOfLevel': type_of_level,
-                        'stepType': step_type
-                    })
-
+        combinations = index.get('paramId', []), index.get('typeOfLevel', []), index.get('stepType', [])
+        for param_id, type_of_level, step_type in itertools.product(combinations):
+            subindex_kwargs_list.append({
+                'paramId': param_id,
+                'typeOfLevel': type_of_level,
+                'stepType': step_type
+            })
 
     for subindex_kwargs in subindex_kwargs_list:
         var_index = index.subindex(**subindex_kwargs)
         if not var_index.header_values:
+            # For some combinations, no match availables
             log.debug(f"No match for {subindex_kwargs}")
             continue
 
