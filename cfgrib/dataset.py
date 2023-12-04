@@ -300,6 +300,17 @@ class Variable:
         equal = (self.dimensions, self.attributes) == (other.dimensions, other.attributes)
         return equal and np.array_equal(self.data, other.data)
 
+    def rename_coordinate(self, existing_coord_name, new_coord_name):
+        # type: (str, str) -> None
+        # Update data_var dimensions, eg. ('isobaricInhPa', 'y', 'x')
+        self.dimensions = tuple(
+            [x.replace(existing_coord_name, new_coord_name) for x in self.dimensions]
+        )
+        if 'coordinates' in self.attributes:
+            # Update data_var attributes, eg. 'time step isobaricInhPa latitude longitude valid_time'
+            new_coordinates = self.attributes['coordinates'].replace(existing_coord_name, new_coord_name)
+            self.attributes['coordinates'] = new_coordinates
+
 
 def expand_item(item, shape):
     # type: (T.Tuple[T.Any, ...], T.Sequence[int]) -> T.Tuple[T.List[int], ...]
@@ -673,7 +684,7 @@ def build_dataset_components(
         # Generate all possible combinations of paramId/typeOfLevel/stepType
         subindex_kwargs_list = []
         combinations = index.get('paramId', []), index.get('typeOfLevel', []), index.get('stepType', [])
-        for param_id, type_of_level, step_type in itertools.product(combinations):
+        for param_id, type_of_level, step_type in itertools.product(*combinations):
             subindex_kwargs_list.append({
                 'paramId': param_id,
                 'typeOfLevel': type_of_level,
@@ -724,46 +735,26 @@ def build_dataset_components(
                 data_var.attributes.get("GRIB_typeOfLevel", "unknown"),
                 data_var.attributes.get("GRIB_stepType", "unknown"),
             ])
-            import string, random
+
+            # Handle coordinates name/values collision
             for coord_name in list(coord_vars.keys()):
                 if coord_name in variables:
-                    if coord_vars[coord_name] == variables[coord_name]:
+                    current_coord_var = coord_vars[coord_name]
+                    existing_coord_var = variables[coord_name]
+                    if current_coord_var == existing_coord_var:
                         continue
 
-                    # When coordinates mismatches, create unique name
+                    # Coordinates have same name, but values not equal -> we need to rename to avoid collision
+                    # Renaming will follow something like isobaricInhPa, isobaricInhPa1, etc.
                     coord_name_count = len([x for x in variables.keys() if x.startswith(coord_name)])
-                    coord_name_unique = f"{coord_name}{coord_name_count}"# + "".join(random.choices(string.ascii_lowercase, k=4))
+                    coord_name_unique = f"{coord_name}{coord_name_count}"
 
-                    # Update coord_vars
-                    coord_vars[coord_name].dimensions = tuple(
-                        [x.replace(coord_name, coord_name_unique) for x in coord_vars[coord_name].dimensions]
-                    )
-                    # Update coord_vars dict
-                    coord_vars[coord_name_unique] = coord_vars.pop(coord_name)
-                    # Update data_var attributes, eg. 'time step isobaricInhPa latitude longitude valid_time'
-                    data_var.attributes['coordinates'] = data_var.attributes['coordinates'].replace(coord_name, coord_name_unique)
-                    # Update data_var dimensions, eg. ('isobaricInhPa', 'y', 'x')
-                    data_var.dimensions = tuple(
-                        [x.replace(coord_name, coord_name_unique) for x in data_var.dimensions]
-                    )
-
+                    # Update attributes
                     if coord_name in dims:
                         dims[coord_name_unique] = dims.pop(coord_name)
-
-
-            # # Do our best to  merge coordinates variables and prevent exception below
-            # # By merging only coordinate Variable, we expect missing data to get nan
-            # for coord_name in set(coord_vars.keys()).intersection(set(variables.keys())):
-            #     coord_existing = variables[coord_name]
-            #     coord_var = coord_vars[coord_name]
-            #     if coord_existing == coord_var:
-            #         continue
-            #     # Update coords data
-            #     coord_existing.merge_data(coord_var.data)
-            #     coord_vars[coord_name] = coord_existing
-            #     # Update coords shape
-            #     dims[coord_name] = len(coord_existing.data)
-            #     dimensions[coord_name] = len(coord_existing.data)
+                    data_var.rename_coordinate(coord_name, coord_name_unique)
+                    current_coord_var.rename_coordinate(coord_name, coord_name_unique)
+                    coord_vars[coord_name_unique] = coord_vars.pop(coord_name)
 
         try:
             dict_merge(variables, coord_vars)
