@@ -521,9 +521,10 @@ class FileIndex(FieldsetIndex):
 
     @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG
+        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG,
+            force_index_creation=False
     ):
-        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger) -> FileIndex
+        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger, bool) -> FileIndex
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
@@ -536,6 +537,9 @@ class FileIndex(FieldsetIndex):
             # When reading from read-only partition, we can define indexes in another
             # directory, eg. indexpath='/tmp/indexes/{path}.idx'
             Path(indexpath).parent.mkdir(parents=True, exist_ok=True)
+
+        if force_index_creation and os.path.exists(indexpath):
+            os.unlink(indexpath)
 
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
