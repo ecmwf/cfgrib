@@ -50,14 +50,6 @@ GRID_TYPES = [
     "rotated_ll",
     "sh",
 ]
-MESSAGE_DEFINITION_KEYS = [
-    # for the GRIB 2 sample we must set this before setting 'totalNumber'
-    "productDefinitionTemplateNumber",
-    # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
-    #   unless `units` is set before some other unknown key, this happens at random and only in
-    #   Python 3.5, so it must be linked to dict key stability.
-    "units",
-]
 
 
 def regular_ll_params(values, min_value=-180.0, max_value=360.0):
@@ -190,11 +182,6 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
         if sample_name is None:
             sample_name = detect_sample_name(merged_grib_keys)
         template_message = cfmessage.CfMessage.from_sample_name(sample_name)
-
-    for key in MESSAGE_DEFINITION_KEYS:
-        if key in list(merged_grib_keys):
-            template_message[key] = merged_grib_keys[key]
-            merged_grib_keys.pop(key)
 
     for key, value in merged_grib_keys.items():
         try:
