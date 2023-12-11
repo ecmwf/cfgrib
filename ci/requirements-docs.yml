@@ -7,7 +7,6 @@ dependencies:
   - eccodes
   - future
   - nomkl
-  - python=3.6
   - sphinx
   - xarray
 

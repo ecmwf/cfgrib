@@ -48,7 +48,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=["attrs>=19.2", "click", "eccodes>=0.9.8", "numpy"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     extras_require={
         "xarray": ["xarray>=0.15"],
         "tests": ["dask[array]", "flake8", "pytest", "pytest-cov", "scipy", "xarray>=0.15"],
@@ -60,7 +60,6 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
