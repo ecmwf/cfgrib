@@ -8,6 +8,9 @@ Changelog for cfgrib
 - fix issue where to_grib() could crash if given a dataset with a single-valued dimension
   See `#347 <https://github.com/ecmwf/cfgrib/issues/347>`_.
 
+- fix issue where values could not be extracted when alternativeRowScanning=1 and
+  grid is not represented as 2D
+  See `#358 <https://github.com/ecmwf/cfgrib/issues/358>`_.
 
 0.9.10.4 (2023-05-19)
 ---------------------
