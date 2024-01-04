@@ -52,7 +52,7 @@ you already have `virtualenv` and `Git` installed and ready to go.
     $ git clone https://github.com/YOUR_NAME/cfgrib.git
     $ cd cfgrib
 
-3. Assuming you have virtualenv installed (If you have Python3.5 this should already be there), you can create a new environment for your local development by typing::
+3. Assuming you have virtualenv installed, you can create a new environment for your local development by typing::
 
     $ virtualenv ../cfgrib-env
     $ source ../cfgrib-env/bin/activate
@@ -101,7 +101,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 
-3. The pull request should work for Python 2.7, 3.5, 3.6 and 3.7, and for PyPy2 and Pypy3. Check
+3. The pull request should work for all supported versions of Python, including PyPy3. Check
    the tox results and make sure that the tests pass for all supported Python versions.
 
 

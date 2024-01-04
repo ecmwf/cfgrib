@@ -141,7 +141,6 @@ def test_translate_coords(da1: xr.Dataset, da2: xr.Dataset, da3: xr.Dataset) -> 
     assert "longitude" in res.coords
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6), reason="test needs stable dict's")
 def test_translate_coords_errors(da3: xr.Dataset) -> None:
     cfcoords.translate_coords(da3)
     cfcoords.translate_coords(da3, errors="ignore")
