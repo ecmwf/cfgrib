@@ -75,9 +75,9 @@ Usage
 =====
 
 First, you need a well-formed GRIB file, if you don't have one at hand you can download our
-`ERA5 on pressure levels sample <http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib>`_::
+`ERA5 on pressure levels sample <    $ wget https://get.ecmwf.int/repository/test-data/cfgrib/era5-levels-members.grib>`_::
 
-    $ wget http://download.ecmwf.int/test-data/cfgrib/era5-levels-members.grib
+    $ wget https://get.ecmwf.int/repository/test-data/cfgrib/era5-levels-members.grib
 
 
 Read-only *xarray* GRIB engine
