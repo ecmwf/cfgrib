@@ -197,6 +197,15 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
     )
     assert isinstance(res, messages.FileIndex)
 
+    # trigger index dir creation
+    res = messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(grib_file)),
+        ["paramId"],
+        indexpath=str(tmpdir / "non-existent-folder" / "{path}.idx"),
+    )
+    assert isinstance(res, messages.FileIndex)
+    assert (tmpdir / "non-existent-folder").exists()
+
 
 def test_FileIndex_errors() -> None:
     computed_keys = {"error_key": (lambda m: bool(1 / 0), lambda m, v: None)}  # pragma: no branch
