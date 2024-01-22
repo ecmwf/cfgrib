@@ -22,6 +22,7 @@ import datetime
 import json
 import logging
 import os
+import itertools
 import typing as T
 
 import attr
@@ -298,6 +299,17 @@ class Variable:
             return NotImplemented
         equal = (self.dimensions, self.attributes) == (other.dimensions, other.attributes)
         return equal and np.array_equal(self.data, other.data)
+
+    def rename_coordinate(self, existing_coord_name, new_coord_name):
+        # type: (str, str) -> None
+        # Update data_var dimensions, eg. ('isobaricInhPa', 'y', 'x')
+        self.dimensions = tuple(
+            [x.replace(existing_coord_name, new_coord_name) for x in self.dimensions]
+        )
+        if 'coordinates' in self.attributes:
+            # Update data_var attributes, eg. 'time step isobaricInhPa latitude longitude valid_time'
+            new_coordinates = self.attributes['coordinates'].replace(existing_coord_name, new_coord_name)
+            self.attributes['coordinates'] = new_coordinates
 
 
 def expand_item(item, shape):
@@ -662,13 +674,31 @@ def build_dataset_components(
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
+    filter_heterogeneous: bool = False,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
 
-    for param_id in index.get("paramId", []):
-        var_index = index.subindex(paramId=param_id)
+    subindex_kwargs_list = [{"paramId": param_id} for param_id in index.get("paramId", [])]
+    if filter_heterogeneous:
+        # Generate all possible combinations of paramId/typeOfLevel/stepType
+        subindex_kwargs_list = []
+        combinations = index.get('paramId', []), index.get('typeOfLevel', []), index.get('stepType', [])
+        for param_id, type_of_level, step_type in itertools.product(*combinations):
+            subindex_kwargs_list.append({
+                'paramId': param_id,
+                'typeOfLevel': type_of_level,
+                'stepType': step_type
+            })
+
+    for subindex_kwargs in subindex_kwargs_list:
+        var_index = index.subindex(**subindex_kwargs)
+        if not var_index.header_values:
+            # For some combinations, no match availables
+            log.debug(f"No match for {subindex_kwargs}")
+            continue
+
         try:
             dims, data_var, coord_vars = build_variable_components(
                 var_index,
@@ -693,10 +723,40 @@ def build_dataset_components(
                 fbks.append(fbk)
                 error_message += "\n    filter_by_keys=%r" % fbk
             raise DatasetBuildError(error_message, key, fbks)
+        param_id = subindex_kwargs['paramId']
         short_name = data_var.attributes.get("GRIB_shortName", "paramId_%d" % param_id)
         var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
         if "parameter" in encode_cf and var_name not in ("undef", "unknown"):
             short_name = var_name
+
+        if filter_heterogeneous:
+            # Unique variable name looking like "t__surface__instant"
+            short_name = "__".join([
+                short_name,
+                data_var.attributes.get("GRIB_typeOfLevel", "unknown"),
+                data_var.attributes.get("GRIB_stepType", "unknown"),
+            ])
+
+            # Handle coordinates name/values collision
+            for coord_name in list(coord_vars.keys()):
+                if coord_name in variables:
+                    current_coord_var = coord_vars[coord_name]
+                    existing_coord_var = variables[coord_name]
+                    if current_coord_var == existing_coord_var:
+                        continue
+
+                    # Coordinates have same name, but values not equal -> we need to rename to avoid collision
+                    # Renaming will follow something like isobaricInhPa, isobaricInhPa1, etc.
+                    coord_name_count = len([x for x in variables.keys() if x.startswith(coord_name)])
+                    coord_name_unique = f"{coord_name}{coord_name_count}"
+
+                    # Update attributes
+                    if coord_name in dims:
+                        dims[coord_name_unique] = dims.pop(coord_name)
+                    data_var.rename_coordinate(coord_name, coord_name_unique)
+                    current_coord_var.rename_coordinate(coord_name, coord_name_unique)
+                    coord_vars[coord_name_unique] = coord_vars.pop(coord_name)
+
         try:
             dict_merge(variables, coord_vars)
             dict_merge(variables, {short_name: data_var})
