@@ -87,7 +87,7 @@ def to_grib_date_time(
     message[time_key] = int(datetime_iso[11:16].replace(":", ""))
 
 
-def from_grib_step(message, step_key="endStep", step_unit_key="stepUnits"):
+def from_grib_step(message, step_key="endStep:int", step_unit_key="stepUnits:int"):
     # type: (abc.Field, str, str) -> float
     step_unit = message[step_unit_key]
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
@@ -97,7 +97,7 @@ def from_grib_step(message, step_key="endStep", step_unit_key="stepUnits"):
     return int(message[step_key]) * to_seconds / 3600.0
 
 
-def to_grib_step(message, step_ns, step_unit=1, step_key="endStep", step_unit_key="stepUnits"):
+def to_grib_step(message, step_ns, step_unit=1, step_key="endStep:int", step_unit_key="stepUnits:int"):
     # type: (abc.MutableField, int, int, str, str) -> None
     step_s = step_ns * 1e-9
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
