@@ -793,7 +793,7 @@ adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
 Geographic Coordinate Caching
----------------
+-----------------------------
 
 By default, *cfgrib* caches computed geography coordinates for each record in the GRIB
 file when opening a dataset, which significantly speeds up dataset creation.
