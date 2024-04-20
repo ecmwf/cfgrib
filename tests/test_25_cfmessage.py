@@ -28,7 +28,7 @@ def test_to_grib_date_time() -> None:
 
 
 def test_from_grib_step() -> None:
-    message = {"endStep": 1, "stepUnits": 1}
+    message = {"endStep:int": 1, "stepUnits:int": 1}
     step_seconds = cfmessage.from_grib_step(message)
 
     assert step_seconds == 1
@@ -40,8 +40,8 @@ def test_to_grib_step() -> None:
 
     cfmessage.to_grib_step(message, step_ns, step_unit=1)
 
-    assert message["endStep"] == 1
-    assert message["stepUnits"] == 1
+    assert message["endStep:int"] == 1
+    assert message["stepUnits:int"] == 1
 
     with pytest.raises(ValueError):
         cfmessage.to_grib_step(message, 0, step_unit=3)

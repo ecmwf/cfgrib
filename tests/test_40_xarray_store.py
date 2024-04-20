@@ -2,6 +2,7 @@ import os.path
 
 import gribapi  # type: ignore
 import numpy as np
+import pandas as pd
 import pytest
 
 xr = pytest.importorskip("xarray")  # noqa
@@ -17,6 +18,7 @@ TEST_DATA_NCEP_MONTHLY = os.path.join(SAMPLE_DATA_FOLDER, "ncep-seasonal-monthly
 TEST_DATA_MULTIPLE_FIELDS = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_ml_g2.grib")
 TEST_DATA_DIFFERENT_STEP_TYPES = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat.grib")
 TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS = os.path.join(SAMPLE_DATA_FOLDER, "cfrzr_and_cprat_0s.grib")
+TEST_DATA_STEPS_IN_MINUTES = os.path.join(SAMPLE_DATA_FOLDER, "step_60m.grib")
 TEST_DATA_ALTERNATE_ROWS_MERCATOR = os.path.join(SAMPLE_DATA_FOLDER, "ds.waveh.5.grib")
 
 
@@ -155,6 +157,16 @@ def test_open_datasets_differet_step_types_zeros() -> None:
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
     assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
+
+
+def test_open_dataset_steps_in_minutes() -> None:
+    res = xarray_store.open_dataset(TEST_DATA_STEPS_IN_MINUTES)
+
+    var = res["t2m"]
+    steps = var.step
+    assert steps[0] == pd.Timedelta("0 hours")
+    assert steps[1] == pd.Timedelta("1 hours")
+    assert steps[5] == pd.Timedelta("5 hours")
 
 
 def test_alternating_scanning_mercator() -> None:

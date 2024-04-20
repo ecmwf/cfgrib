@@ -107,6 +107,17 @@ def to_grib_step(message, step_ns, step_unit=1, step_key="endStep:int", step_uni
     message[step_unit_key] = step_unit
 
 
+def from_grib_step_units(message):
+    # type: (abc.Field) -> float
+    # we always index steps in hours
+    return 1
+
+
+def to_grib_step_units(message, step_unit=1, step_unit_key="stepUnits:int"):
+    # type: (abc.MutableField, int, int, str, str) -> None
+    message[step_unit_key] = step_unit
+
+
 def from_grib_month(message, verifying_month_key="verifyingMonth", epoch=DEFAULT_EPOCH):
     # type: (abc.Field, str, datetime.datetime) -> int
     date = message[verifying_month_key]
@@ -149,6 +160,8 @@ def build_valid_time(time, step):
 COMPUTED_KEYS = {
     "time": (from_grib_date_time, to_grib_date_time),
     "step": (from_grib_step, to_grib_step),
+    "endStep": (from_grib_step, to_grib_step),
+    "stepUnits": (from_grib_step_units, to_grib_step_units),
     "valid_time": (
         functools.partial(from_grib_date_time, date_key="validityDate", time_key="validityTime"),
         functools.partial(to_grib_date_time, date_key="validityDate", time_key="validityTime"),

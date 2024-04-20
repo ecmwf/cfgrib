@@ -29,6 +29,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
         "single_gridpoint",
         "spherical_harmonics",
         "t_analysis_and_fc_0",
+        "step_60m",
     ],
 )
 def test_open_dataset(grib_name: str) -> None:
