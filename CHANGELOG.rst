@@ -2,15 +2,26 @@
 Changelog for cfgrib
 ====================
 
-0.9.10.5 (2023-xx-xx)
------------------
+0.9.11.0 (2024-04-05)
+---------------------
 
-- fix issue where to_grib() could crash if given a dataset with a single-valued dimension
+- added automatic caching of geographic coordinates for improved performance
+  See `#341 <https://github.com/ecmwf/cfgrib/pull/341>`_.
+
+- fixed issue where to_grib() could crash if given a dataset with a single-valued dimension
   See `#347 <https://github.com/ecmwf/cfgrib/issues/347>`_.
 
-- fix issue where values could not be extracted when alternativeRowScanning=1 and
+- fixed issue where values could not be extracted when alternativeRowScanning=1 and
   grid is not represented as 2D
   See `#358 <https://github.com/ecmwf/cfgrib/issues/358>`_.
+
+- fixed issue where the `grib_errors` parameter was not being handled correctly.
+  This parameter has now been renamed to `errors`.
+  See `#349 <https://github.com/ecmwf/cfgrib/issues/349>`_.
+
+- dropped support for Python 3.6.
+  See `#363 <https://github.com/ecmwf/cfgrib/issues/363>`_.
+
 
 0.9.10.4 (2023-05-19)
 ---------------------
