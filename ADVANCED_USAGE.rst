@@ -17,43 +17,43 @@ or they can be passed directly to *Xarray*.
 
 The simplest *Fieldset* is a list of dictionaries:
 
-.. code-block: python
+.. code-block:: python
 
->>> import xarray as xr
->>> fieldset = [
-...     {
-...         "gridType": "regular_ll",
-...         "Nx": 2,
-...         "Ny": 3,
-...         "distinctLatitudes": [-10.0, 0.0, 10.0],
-...         "distinctLongitudes": [0.0, 10.0],
-...         "paramId": 130,
-...         "shortName": "t",
-...         "values": [[1, 2], [3, 4], [5, 6]],
-...         "dataDate": 20211216,
-...         "dataTime": 1200,
-...     }
-... ]
->>> ds = xr.open_dataset(fieldset, engine="cfgrib")
->>> ds
-<xarray.Dataset>
-Dimensions:    (latitude: 3, longitude: 2)
-Coordinates:
-    time       datetime64[ns] ...
-  * latitude   (latitude) float64 -10.0 0.0 10.0
-  * longitude  (longitude) float64 0.0 10.0
-Data variables:
-    t          (latitude, longitude) float32 ...
-Attributes:
-    Conventions:  CF-1.7
-    history:      ...
->>> ds.mean()
-<xarray.Dataset>
-Dimensions:  ()
-Coordinates:
-    time     datetime64[ns] ...
-Data variables:
-    t        float32 3.5
+    >>> import xarray as xr
+    >>> fieldset = [
+    ...     {
+    ...         "gridType": "regular_ll",
+    ...         "Nx": 2,
+    ...         "Ny": 3,
+    ...         "distinctLatitudes": [-10.0, 0.0, 10.0],
+    ...         "distinctLongitudes": [0.0, 10.0],
+    ...         "paramId": 130,
+    ...         "shortName": "t",
+    ...         "values": [[1, 2], [3, 4], [5, 6]],
+    ...         "dataDate": 20211216,
+    ...         "dataTime": 1200,
+    ...     }
+    ... ]
+    >>> ds = xr.open_dataset(fieldset, engine="cfgrib")
+    >>> ds
+    <xarray.Dataset>
+    Dimensions:    (latitude: 3, longitude: 2)
+    Coordinates:
+        time       datetime64[ns] ...
+    * latitude   (latitude) float64 -10.0 0.0 10.0
+    * longitude  (longitude) float64 0.0 10.0
+    Data variables:
+        t          (latitude, longitude) float32 ...
+    Attributes:
+        Conventions:  CF-1.7
+        history:      ...
+    >>> ds.mean()
+    <xarray.Dataset>
+    Dimensions:  ()
+    Coordinates:
+        time     datetime64[ns] ...
+    Data variables:
+        t        float32 3.5
 
 
 For example you can implement a dedicated ``Fieldset`` class following this pattern:
