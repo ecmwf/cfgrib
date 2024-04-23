@@ -114,7 +114,7 @@ def from_grib_step_units(message):
 
 
 def to_grib_step_units(message, step_unit=1, step_unit_key="stepUnits:int"):
-    # type: (abc.MutableField, int, int, str, str) -> None
+    # type: (abc.MutableField, int, str) -> None
     message[step_unit_key] = step_unit
 
 
