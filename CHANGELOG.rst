@@ -3,7 +3,7 @@ Changelog for cfgrib
 ====================
 
 0.9.12.0 (2024-05-26)
---------------------
+---------------------
 
 - fixed issue where GRIB messages with non-hourly steps could not be read
   See `#370 <https://github.com/ecmwf/cfgrib/pull/370>`_.
