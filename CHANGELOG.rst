@@ -2,7 +2,7 @@
 Changelog for cfgrib
 ====================
 
-x.x.x.x (xxxx-xx-xx)
+0.9.12.0 (2024-05-26)
 --------------------
 
 - fixed issue where GRIB messages with non-hourly steps could not be read
