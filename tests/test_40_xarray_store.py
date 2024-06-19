@@ -159,6 +159,18 @@ def test_open_datasets_differet_step_types_zeros() -> None:
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
 
 
+# ensure that the encoding of the coordinates is preserved
+def test_open_datasets_differet_preserve_coordinate_encoding() -> None:
+    res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES)
+    assert len(res) == 2
+    assert "units" in res[0].valid_time.encoding
+    assert "units" in res[1].valid_time.encoding
+
+    res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS)
+    assert len(res) == 2
+    assert "units" in res[0].valid_time.encoding
+    assert "units" in res[1].valid_time.encoding
+
 def test_open_dataset_steps_in_minutes() -> None:
     res = xarray_store.open_dataset(TEST_DATA_STEPS_IN_MINUTES)
 
