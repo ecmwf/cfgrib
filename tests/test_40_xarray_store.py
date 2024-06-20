@@ -171,6 +171,7 @@ def test_open_datasets_differet_preserve_coordinate_encoding() -> None:
     assert "units" in res[0].valid_time.encoding
     assert "units" in res[1].valid_time.encoding
 
+
 def test_open_dataset_steps_in_minutes() -> None:
     res = xarray_store.open_dataset(TEST_DATA_STEPS_IN_MINUTES)
 

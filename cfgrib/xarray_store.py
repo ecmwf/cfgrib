@@ -57,15 +57,15 @@ def merge_datasets(datasets, **kwargs):
         else:
             merged.append(ds)
             first.append(ds)
-    
+
     # Add the important coordinate encoding fields from the first found, to the merged:
-    preserve_encoding_fields = [
-        'source', 'units', 'calendar', 'dtype'
-    ]
+    preserve_encoding_fields = ["source", "units", "calendar", "dtype"]
     for i, o in enumerate(first):
         for var in o.coords:
             out_encoding = {
-                key: o[var].encoding[key] for key in preserve_encoding_fields if key in o[var].encoding
+                key: o[var].encoding[key]
+                for key in preserve_encoding_fields
+                if key in o[var].encoding
             }
             merged[i][var].encoding.update(out_encoding)
 
