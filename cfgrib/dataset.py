@@ -751,6 +751,7 @@ def open_fieldset(
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
+    ignore_keys: T.Sequence[str] = [],
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
@@ -762,6 +763,7 @@ def open_fieldset(
         log.warning(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
+    index_keys = [key for key in index_keys if key not in ignore_keys]
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
