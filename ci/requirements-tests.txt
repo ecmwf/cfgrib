@@ -14,12 +14,12 @@ execnet==1.7.1            # via pytest-cache
 importlib-metadata==1.6.0  # via pluggy, pytest
 mccabe==0.6.1             # via pytest-mccabe
 more-itertools==8.2.0     # via pytest
-numpy==1.18.4
+numpy==1.22.0
 packaging==20.3           # via pytest
 pandas==1.0.3             # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.13.1            # via pytest
-py==1.8.1                 # via pytest
+py==1.10.0                # via pytest
 pycparser==2.20           # via cffi
 pyflakes==2.2.0           # via pytest-flakes
 pyparsing==2.4.7          # via packaging
@@ -32,7 +32,7 @@ pytest-runner==5.2
 pytest==5.4.2
 python-dateutil==2.8.1    # via pandas
 pytz==2020.1              # via pandas
-scipy==1.4.1
+scipy==1.8.0
 six==1.14.0               # via packaging, python-dateutil
 toolz==0.10.0             # via dask
 wcwidth==0.1.9            # via pytest

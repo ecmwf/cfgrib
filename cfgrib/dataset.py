@@ -25,9 +25,9 @@ import os
 import typing as T
 
 import attr
-import numpy as np  # type: ignore
+import numpy as np
 
-from . import __version__, cfmessage, messages
+from . import __version__, abc, cfmessage, messages
 
 LOG = logging.getLogger(__name__)
 
@@ -100,13 +100,17 @@ GRID_TYPE_MAP = {
         "latitudeOfLastGridPointInDegrees",
     ],
     "regular_gg": [
-        "Nx",
+        "N",
+        "Ni",
+        "Nj",
         "iDirectionIncrementInDegrees",
         "iScansNegatively",
+        "jScansPositively",
+        "jPointsAreConsecutive",
         "longitudeOfFirstGridPointInDegrees",
         "longitudeOfLastGridPointInDegrees",
-        "N",
-        "Ny",
+        "latitudeOfFirstGridPointInDegrees",
+        "latitudeOfLastGridPointInDegrees",
     ],
     "rotated_gg": [
         "Nx",
@@ -161,8 +165,10 @@ SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 
+HASH_KEYS = ["md5GridSection"]
+
 INDEX_KEYS = sorted(
-    GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS
+    GLOBAL_ATTRIBUTES_KEYS + DATA_ATTRIBUTES_KEYS + DATA_TIME_KEYS + ALL_HEADER_DIMS + HASH_KEYS
 )
 
 COORD_ATTRS = {
@@ -253,6 +259,10 @@ COORD_ATTRS = {
     "forecastMonth": {"units": "1", "long_name": "months since forecast_reference_time"},
 }
 
+GEOCACHE: T.Dict[
+    T.Hashable, T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, "Variable"]]
+] = {}
+
 
 class DatasetBuildError(ValueError):
     def __str__(self) -> str:
@@ -260,10 +270,10 @@ class DatasetBuildError(ValueError):
 
 
 def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
-    # type: (T.Mapping[str, T.Any], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (T.Mapping[str, T.List[T.Any]], T.Sequence[str], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = {}  # type: T.Dict[str, T.Any]
     for key in attributes_keys:
-        values = index[key]
+        values = index.get(key, [])
         if len(values) > 1:
             fbks = []
             for value in values:
@@ -277,7 +287,7 @@ def enforce_unique_attributes(index, attributes_keys, filter_by_keys={}):
 
 
 @attr.attrs(auto_attribs=True, eq=False)
-class Variable(object):
+class Variable:
     dimensions: T.Tuple[str, ...]
     data: np.ndarray
     attributes: T.Dict[str, T.Any] = attr.attrib(default={}, repr=False)
@@ -305,13 +315,26 @@ def expand_item(item, shape):
     return tuple(expanded_item)
 
 
+def get_values_in_order(message, shape):
+    # type: (abc.Field, T.Tuple[int]) -> np.ndarray
+    # inform the data provider to return missing values as missing_value
+    values = message["values"]
+    # for 2D array (lat/lon) re-arrange if alternative row scanning
+    if len(shape) == 2 and message.get("alternativeRowScanning", False):
+        values = values.copy().reshape(shape)
+        values[1::2, :] = values[1::2, ::-1]
+        return values.flatten()
+    else:
+        return values
+
+
 @attr.attrs(auto_attribs=True)
-class OnDiskArray(object):
-    stream: messages.FileStream
+class OnDiskArray:
+    index: abc.Index[T.Any, abc.Field]
     shape: T.Tuple[int, ...]
-    offsets: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = attr.attrib(
-        repr=False
-    )
+    field_id_index: T.Dict[
+        T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
+    ] = attr.attrib(repr=False)
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
@@ -319,12 +342,11 @@ class OnDiskArray(object):
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
         array = np.full(self.shape, fill_value=np.nan, dtype="float32")
-        with open(self.stream.path, "rb") as file:
-            for header_indexes, offset in self.offsets.items():
-                # NOTE: fill a single field as found in the message
-                message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get("values", float)
-                array.__getitem__(header_indexes).flat[:] = values
+        for header_indexes, message_ids in self.field_id_index.items():
+            # NOTE: fill a single field as found in the message
+            message = self.index.get_field(message_ids[0])  # type: ignore
+            values = get_values_in_order(message, array[header_indexes].shape)
+            array.__getitem__(header_indexes).flat[:] = values
         array[array == self.missing_value] = np.nan
         return array
 
@@ -332,20 +354,19 @@ class OnDiskArray(object):
         # type: (T.Tuple[T.Any, ...]) -> np.ndarray
         header_item_list = expand_item(item[: -self.geo_ndim], self.shape)
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
-        array_field_shape = tuple(len(l) for l in header_item_list) + self.shape[-self.geo_ndim :]
+        array_field_shape = tuple(len(i) for i in header_item_list) + self.shape[-self.geo_ndim :]
         array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
-        with open(self.stream.path, "rb") as file:
-            for header_indexes, offset in self.offsets.items():
-                try:
-                    array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
-                except KeyError:
-                    continue
-                # NOTE: fill a single field as found in the message
-                message = self.stream.message_from_file(file, offset=offset[0])
-                values = message.message_get("values", float)
-                array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
+        for header_indexes, message_ids in self.field_id_index.items():
+            try:
+                array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
+            except KeyError:
+                continue
+            # NOTE: fill a single field as found in the message
+            message = self.index.get_field(message_ids[0])  # type: ignore
+            values = get_values_in_order(message, array_field[tuple(array_field_indexes)].shape)
+            array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
 
-        array = array_field[(Ellipsis,) + item[-self.geo_ndim :]]
+        array = np.asarray(array_field[(Ellipsis,) + item[-self.geo_ndim :]])
         array[array == self.missing_value] = np.nan
         for i, it in reversed(list(enumerate(item[: -self.geo_ndim]))):
             if isinstance(it, int):
@@ -365,12 +386,8 @@ GRID_TYPES_2D_NON_DIMENSION_COORDS = {
 
 
 def build_geography_coordinates(
-    first,  # type: messages.Message
-    encode_cf,  # type: T.Sequence[str]
-    errors,  # type: str
-    log=LOG,  # type: logging.Logger
-):
-    # type: (...) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]
+    first: abc.Field, encode_cf: T.Sequence[str], errors: str, log: logging.Logger = LOG
+) -> T.Tuple[T.Tuple[str, ...], T.Tuple[int, ...], T.Dict[str, Variable]]:
     geo_coord_vars = {}  # type: T.Dict[str, Variable]
     grid_type = first["gridType"]
     if "geography" in encode_cf and grid_type in GRID_TYPES_DIMENSION_COORDS:
@@ -451,18 +468,20 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
     return coords_map
 
 
-def read_data_var_attrs(first: messages.Message, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
+def read_data_var_attrs(first: abc.Field, extra_keys: T.List[str]) -> T.Dict[str, T.Any]:
     attributes = {}
     for key in extra_keys:
         try:
-            attributes["GRIB_" + key] = first[key]
-        except:
+            value = first[key]
+            if value is not None:
+                attributes["GRIB_" + key] = value
+        except Exception:
             pass
     return attributes
 
 
 def build_variable_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Field],
     encode_cf: T.Sequence[str] = (),
     filter_by_keys: T.Dict[str, T.Any] = {},
     log: logging.Logger = LOG,
@@ -471,6 +490,7 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -511,7 +531,21 @@ def build_variable_components(
     header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(first, encode_cf, errors)
+    gds_md5sum = index.get("md5GridSection")
+    # If parameter is associated with a single grid definition, try to cache geometry
+    if cache_geo_coords and gds_md5sum and len(gds_md5sum) == 1:
+        md5sum = gds_md5sum[0]
+        cache_key = (md5sum, tuple(encode_cf))
+        if cache_key in GEOCACHE:
+            log.debug(f"cache hit for {cache_key}; using cached geometry")
+            geo_coords = GEOCACHE[cache_key]
+        else:
+            geo_coords = build_geography_coordinates(index.first(), encode_cf, errors)
+            GEOCACHE[cache_key] = geo_coords
+    else:
+        geo_coords = build_geography_coordinates(index.first(), encode_cf, errors)
+
+    geo_dims, geo_shape, geo_coord_vars = geo_coords
     dimensions = header_dimensions + geo_dims
     shape = header_shape + geo_shape
     coord_vars.update(geo_coord_vars)
@@ -521,13 +555,18 @@ def build_variable_components(
     extra_coords_data: T.Dict[str, T.Dict[str, T.Any]] = {
         coord_name: {} for coord_name in extra_coords
     }
-    for dim in header_dimensions:
-        header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
-    for header_values, offset in index.offsets:
+    extra_dims = tuple(extra_coords.values())
+    for dim in header_dimensions + extra_dims:
+        if np.isscalar(coord_vars[dim].data):
+            header_value_index[dim] = {coord_vars[dim].data.item(): 0}
+        else:
+            header_value_index[dim] = {v: i for i, v in enumerate(coord_vars[dim].data.tolist())}
+    for header_values, message_ids in index.iter_index():
         header_indexes = []  # type: T.List[int]
-        for dim in header_dimensions:
+        for dim in header_dimensions + extra_dims:
             header_value = header_values[index.index_keys.index(coord_name_key_map.get(dim, dim))]
-            header_indexes.append(header_value_index[dim][header_value])
+            if dim in header_dimensions:
+                header_indexes.append(header_value_index[dim][header_value])
             for coord_name in extra_coords:
                 coord_value = header_values[
                     index.index_keys.index(coord_name_key_map.get(coord_name, coord_name))
@@ -544,12 +583,12 @@ def build_variable_components(
                         )
 
                     extra_coords_data[coord_name][header_value] = coord_value
-        offsets[tuple(header_indexes)] = offset
-    missing_value = data_var_attrs.get("missingValue", 9999)
-    data = OnDiskArray(
-        stream=index.filestream,
+        offsets[tuple(header_indexes)] = message_ids
+    missing_value = data_var_attrs.get("missingValue", messages.MISSING_VAUE_INDICATOR)
+    on_disk_array = OnDiskArray(
+        index=index,
         shape=shape,
-        offsets=offsets,
+        field_id_index=offsets,
         missing_value=missing_value,
         geo_ndim=len(geo_dims),
     )
@@ -557,18 +596,24 @@ def build_variable_components(
     if "time" in coord_vars and "step" in coord_vars:
         # add the 'valid_time' secondary coordinate
         time_dims, time_data = cfmessage.build_valid_time(
-            coord_vars["time"].data, coord_vars["step"].data,
+            coord_vars["time"].data, coord_vars["step"].data
         )
         attrs = COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dimensions=time_dims, data=time_data, attributes=attrs)
 
     for coord_name in extra_coords:
-        coord_vars[coord_name] = Variable(
-            dimensions=(extra_coords[coord_name],),
-            data=np.array(list(extra_coords_data[coord_name].values())),
-        )
+        coord_data = np.array(list(extra_coords_data[coord_name].values()))
+        if extra_coords[coord_name] not in header_dimensions:
+            coord_dims: T.Tuple[str, ...] = ()
+            coord_data = coord_data.reshape(())
+        else:
+            coord_dims = (extra_coords[coord_name],)
+        attrs = COORD_ATTRS.get(coord_name, {}).copy()
+        coord_vars[coord_name] = Variable(dimensions=coord_dims, data=coord_data, attributes=attrs)
+
     data_var_attrs["coordinates"] = " ".join(coord_vars.keys())
-    data_var = Variable(dimensions=dimensions, data=data, attributes=data_var_attrs)
+    # OnDiskArray is close enough to np.ndarray to work, but not to make mypy happy
+    data_var = Variable(dimensions=dimensions, data=on_disk_array, attributes=data_var_attrs)  # type: ignore
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
     return dims, data_var, coord_vars
 
@@ -588,7 +633,7 @@ def dict_merge(master, update):
 
 
 def build_dataset_attributes(index, filter_by_keys, encoding):
-    # type: (messages.FileIndex, T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
+    # type: (abc.Index[T.Any, abc.Field], T.Dict[str, T.Any], T.Dict[str, T.Any]) -> T.Dict[str, T.Any]
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS, filter_by_keys)
     attributes["Conventions"] = "CF-1.7"
     if "GRIB_centreDescription" in attributes:
@@ -608,7 +653,7 @@ def build_dataset_attributes(index, filter_by_keys, encoding):
 
 
 def build_dataset_components(
-    index: messages.FileIndex,
+    index: abc.Index[T.Any, abc.Field],
     errors: str = "warn",
     encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
     squeeze: bool = True,
@@ -616,11 +661,13 @@ def build_dataset_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
-    for param_id in index["paramId"]:
+
+    for param_id in index.get("paramId", []):
         var_index = index.subindex(paramId=param_id)
         try:
             dims, data_var, coord_vars = build_variable_components(
@@ -632,6 +679,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
+                cache_geo_coords=cache_geo_coords,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
@@ -660,17 +708,13 @@ def build_dataset_components(
                 raise
             else:
                 log.exception("skipping variable: paramId==%r shortName=%r", param_id, short_name)
-    encoding = {
-        "source": index.filestream.path,
-        "filter_by_keys": filter_by_keys,
-        "encode_cf": encode_cf,
-    }
+    encoding = {"source": index.source(), "filter_by_keys": filter_by_keys, "encode_cf": encode_cf}
     attributes = build_dataset_attributes(index, filter_by_keys, encoding)
     return dimensions, variables, attributes, encoding
 
 
 @attr.attrs(auto_attribs=True)
-class Dataset(object):
+class Dataset:
     """
     Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
     """
@@ -681,24 +725,66 @@ class Dataset(object):
     encoding: T.Dict[str, T.Any]
 
 
+def compute_index_keys(
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    filter_by_keys: T.Dict[str, T.Any] = {},
+) -> T.List[str]:
+    return sorted(set(INDEX_KEYS) | set(filter_by_keys) | set(time_dims) | set(extra_coords))
+
+
+def open_from_index(
+    index: abc.Index[T.Any, abc.Field],
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    **kwargs: T.Any,
+) -> Dataset:
+    dimensions, variables, attributes, encoding = build_dataset_components(
+        index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
+    )
+    return Dataset(dimensions, variables, attributes, encoding)
+
+
+def open_fieldset(
+    fieldset: T.Union[abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
+    indexpath: T.Optional[str] = None,
+    filter_by_keys: T.Dict[str, T.Any] = {},
+    read_keys: T.Sequence[str] = (),
+    time_dims: T.Sequence[str] = ("time", "step"),
+    extra_coords: T.Dict[str, str] = {},
+    computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
+    log: logging.Logger = LOG,
+    **kwargs: T.Any,
+) -> Dataset:
+    """Builds a ``cfgrib.Dataset`` form a mapping of mappings."""
+    if indexpath is not None and indexpath is not messages.DEFAULT_INDEXPATH:
+        log.warning(f"indexpath value {indexpath} is ignored")
+
+    index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
+    index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
+    filtered_index = index.subindex(filter_by_keys)
+    return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
+
+
 def open_fileindex(
-    path: T.Union[str, "os.PathLike[str]"],
-    grib_errors: str = "warn",
-    indexpath: str = "{path}.{short_hash}.idx",
+    stream: messages.FileStream,
+    indexpath: str = messages.DEFAULT_INDEXPATH,
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
     filter_by_keys: T.Dict[str, T.Any] = {},
+    computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
 ) -> messages.FileIndex:
-    path = os.fspath(path)
     index_keys = sorted(set(index_keys) | set(filter_by_keys))
-    stream = messages.FileStream(path, message_class=cfmessage.CfMessage, errors=grib_errors)
-    index = stream.index(index_keys, indexpath=indexpath)
+    index = messages.FileIndex.from_indexpath_or_filestream(
+        stream, index_keys, indexpath=indexpath, computed_keys=computed_keys
+    )
     return index.subindex(filter_by_keys)
 
 
 def open_file(
     path: T.Union[str, "os.PathLike[str]"],
-    grib_errors: str = "warn",
-    indexpath: str = "{path}.{short_hash}.idx",
+    errors: str = "warn",
+    indexpath: str = messages.DEFAULT_INDEXPATH,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
@@ -706,10 +792,9 @@ def open_file(
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
-    index_keys = INDEX_KEYS + list(filter_by_keys) + list(time_dims) + list(extra_coords.keys())
-    index = open_fileindex(path, grib_errors, indexpath, index_keys, filter_by_keys=filter_by_keys)
-    return Dataset(
-        *build_dataset_components(
-            index, read_keys=read_keys, time_dims=time_dims, extra_coords=extra_coords, **kwargs
-        )
-    )
+    path = os.fspath(path)
+    stream = messages.FileStream(path, errors=errors)
+    index_keys = compute_index_keys(time_dims, extra_coords)
+    index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
+
+    return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)

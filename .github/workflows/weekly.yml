@@ -6,14 +6,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  environment:
+  weekly:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       max-parallel: 5
       fail-fast: false
       matrix:
         os: [ubuntu]
-        python: [3.6, 3.7, 3.8]
+        python: [3.7, 3.8]
         extras: ['']
         include:
           - os: macos
@@ -23,9 +23,6 @@ jobs:
           - os: ubuntu
             python: 3.9
             extras: -minimal
-          - os: ubuntu
-            python: 3.6
-            extras: -minver
 
     steps:
     - uses: actions/checkout@v2
@@ -41,7 +38,7 @@ jobs:
         conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
         git diff
     - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
         path: tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml

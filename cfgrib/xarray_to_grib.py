@@ -24,7 +24,7 @@ import logging
 import typing as T
 import warnings
 
-import numpy as np  # type: ignore
+import numpy as np
 import xarray as xr
 
 from . import cfmessage, dataset, messages
@@ -50,18 +50,10 @@ GRID_TYPES = [
     "rotated_ll",
     "sh",
 ]
-MESSAGE_DEFINITION_KEYS = [
-    # for the GRIB 2 sample we must set this before setting 'totalNumber'
-    "productDefinitionTemplateNumber",
-    # NO IDEA WHAT IS GOING ON HERE: saving regular_ll_msl.grib results in the wrong `paramId`
-    #   unless `units` is set before some other unknown key, this happens at random and only in
-    #   Python 3.5, so it must be linked to dict key stability.
-    "units",
-]
 
 
 def regular_ll_params(values, min_value=-180.0, max_value=360.0):
-    # type: (T.Sequence[float], float, float) -> T.Tuple[float, float, int]
+    # type: (np.ndarray, float, float) -> T.Tuple[float, float, int]
     start, stop, num = float(values[0]), float(values[-1]), len(values)
     if min(start, stop) < min_value or max(start, stop) > max_value:
         raise ValueError("Unsupported spatial grid: out of bounds (%r, %r)" % (start, stop))
@@ -167,7 +159,11 @@ def merge_grib_keys(grib_keys, detected_grib_keys, default_grib_keys):
 def expand_dims(data_var: xr.DataArray) -> T.Tuple[T.List[str], xr.DataArray]:
     coords_names = []  # type: T.List[str]
     for coord_name in dataset.ALL_HEADER_DIMS + ALL_TYPE_OF_LEVELS + dataset.ALL_REF_TIME_KEYS:
-        if coord_name in data_var.coords and data_var.coords[coord_name].size == 1:
+        if (
+            coord_name in data_var.coords
+            and data_var.coords[coord_name].size == 1
+            and coord_name not in data_var.dims
+        ):
             data_var = data_var.expand_dims(coord_name)
         if coord_name in data_var.dims:
             coords_names.append(coord_name)
@@ -186,11 +182,6 @@ def make_template_message(merged_grib_keys, template_path=None, sample_name=None
         if sample_name is None:
             sample_name = detect_sample_name(merged_grib_keys)
         template_message = cfmessage.CfMessage.from_sample_name(sample_name)
-
-    for key in MESSAGE_DEFINITION_KEYS:
-        if key in list(merged_grib_keys):
-            template_message[key] = merged_grib_keys[key]
-            merged_grib_keys.pop(key)
 
     for key, value in merged_grib_keys.items():
         try:
@@ -211,6 +202,7 @@ def canonical_dataarray_to_grib(
     # validate Dataset keys, DataArray names, and attr keys/values
     detected_keys, suggested_keys = detect_grib_keys(data_var, default_grib_keys, grib_keys)
     merged_grib_keys = merge_grib_keys(grib_keys, detected_keys, suggested_keys)
+    merged_grib_keys["missingValue"] = messages.MISSING_VAUE_INDICATOR
 
     if "gridType" not in merged_grib_keys:
         raise ValueError("required grib_key 'gridType' not passed nor auto-detected")
@@ -219,7 +211,8 @@ def canonical_dataarray_to_grib(
 
     coords_names, data_var = expand_dims(data_var)
 
-    header_coords_values = [data_var.coords[name].values.tolist() for name in coords_names]
+    header_coords_values = [list(data_var.coords[name].values) for name in coords_names]
+
     for items in itertools.product(*header_coords_values):
         select = {n: v for n, v in zip(coords_names, items)}
         field_values = data_var.sel(**select).values.flat[:]
@@ -231,7 +224,7 @@ def canonical_dataarray_to_grib(
         if invalid_field_values.all():
             continue
 
-        missing_value = merged_grib_keys.get("missingValue", 9999)
+        missing_value = merged_grib_keys.get("GRIB_missingValue", messages.MISSING_VAUE_INDICATOR)
         field_values[invalid_field_values] = missing_value
 
         message = cfmessage.CfMessage.from_message(template_message)
@@ -239,6 +232,10 @@ def canonical_dataarray_to_grib(
             if coord_name in ALL_TYPE_OF_LEVELS:
                 coord_name = "level"
             message[coord_name] = coord_value
+
+        if invalid_field_values.any():
+            message["bitmapPresent"] = 1
+        message["missingValue"] = missing_value
 
         # OPTIMIZE: convert to list because Message.message_set doesn't support np.ndarray
         message["values"] = field_values.tolist()

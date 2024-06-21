@@ -24,9 +24,9 @@ import logging
 import typing as T
 
 import attr
-import numpy as np  # type: ignore
+import numpy as np
 
-from . import messages
+from . import abc, messages
 
 LOG = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ DEFAULT_EPOCH = datetime.datetime(1970, 1, 1)
 
 
 def from_grib_date_time(message, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH):
-    # type: (T.Mapping[str, T.Any], str, str, datetime.datetime) -> int
+    # type: (abc.Field, str, str, datetime.datetime) -> int
     """
     Return the number of seconds since the ``epoch`` from the values of the ``message`` keys,
     using datetime.total_seconds().
@@ -79,7 +79,7 @@ def from_grib_date_time(message, date_key="dataDate", time_key="dataTime", epoch
 def to_grib_date_time(
     message, time_ns, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH
 ):
-    # type: (T.MutableMapping[str, T.Any], np.datetime64, str, str, datetime.datetime) -> None
+    # type: (abc.MutableField, int, str, str, datetime.datetime) -> None
     time_s = int(time_ns) * 1e-9
     time = epoch + datetime.timedelta(seconds=time_s)
     datetime_iso = str(time)
@@ -87,8 +87,8 @@ def to_grib_date_time(
     message[time_key] = int(datetime_iso[11:16].replace(":", ""))
 
 
-def from_grib_step(message, step_key="endStep", step_unit_key="stepUnits"):
-    # type: (T.Mapping[str, T.Any], str, str) -> float
+def from_grib_step(message, step_key="endStep:int", step_unit_key="stepUnits:int"):
+    # type: (abc.Field, str, str) -> float
     step_unit = message[step_unit_key]
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
     if to_seconds is None:
@@ -97,18 +97,29 @@ def from_grib_step(message, step_key="endStep", step_unit_key="stepUnits"):
     return int(message[step_key]) * to_seconds / 3600.0
 
 
-def to_grib_step(message, step_ns, step_unit=1, step_key="endStep", step_unit_key="stepUnits"):
-    # type: (T.MutableMapping[str, T.Any], int, int, str, str) -> None
+def to_grib_step(message, step_ns, step_unit=1, step_key="endStep:int", step_unit_key="stepUnits:int"):
+    # type: (abc.MutableField, int, int, str, str) -> None
     step_s = step_ns * 1e-9
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
     if to_seconds is None:
         raise ValueError("unsupported stepUnit %r" % step_unit)
-    message[step_key] = step_s / to_seconds
+    message[step_key] = int(step_s / to_seconds)
+    message[step_unit_key] = step_unit
+
+
+def from_grib_step_units(message):
+    # type: (abc.Field) -> float
+    # we always index steps in hours
+    return 1
+
+
+def to_grib_step_units(message, step_unit=1, step_unit_key="stepUnits:int"):
+    # type: (abc.MutableField, int, str) -> None
     message[step_unit_key] = step_unit
 
 
 def from_grib_month(message, verifying_month_key="verifyingMonth", epoch=DEFAULT_EPOCH):
-    # type: (T.Mapping[str, T.Any], str, datetime.datetime) -> int
+    # type: (abc.Field, str, datetime.datetime) -> int
     date = message[verifying_month_key]
     year = date // 100
     month = date % 100
@@ -117,7 +128,7 @@ def from_grib_month(message, verifying_month_key="verifyingMonth", epoch=DEFAULT
 
 
 def to_grib_dummy(message, value):
-    # type: (T.MutableMapping[str, T.Any], T.Any) -> None
+    # type: (abc.MutableField, T.Any) -> None
     pass
 
 
@@ -149,6 +160,8 @@ def build_valid_time(time, step):
 COMPUTED_KEYS = {
     "time": (from_grib_date_time, to_grib_date_time),
     "step": (from_grib_step, to_grib_step),
+    "endStep": (from_grib_step, to_grib_step),
+    "stepUnits": (from_grib_step_units, to_grib_step_units),
     "valid_time": (
         functools.partial(from_grib_date_time, date_key="validityDate", time_key="validityTime"),
         functools.partial(to_grib_date_time, date_key="validityDate", time_key="validityTime"),

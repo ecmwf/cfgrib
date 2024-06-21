@@ -1,7 +1,8 @@
 import os.path
 import pathlib
+import typing as T
 
-import numpy as np  # type: ignore
+import numpy as np
 import pytest
 
 from cfgrib import cfmessage, dataset, messages
@@ -9,9 +10,12 @@ from cfgrib import cfmessage, dataset, messages
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
+TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
+TEST_DATA_ALTERNATE_ROWS = os.path.join(SAMPLE_DATA_FOLDER, "alternate-scanning.grib")
+TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
 
 
-def test_enforce_unique_attributes():
+def test_enforce_unique_attributes() -> None:
     assert dataset.enforce_unique_attributes({"key": [1]}, ["key"])
     assert not dataset.enforce_unique_attributes({"key": ["undef"]}, ["key"])
 
@@ -19,7 +23,7 @@ def test_enforce_unique_attributes():
         assert dataset.enforce_unique_attributes({"key": [1, 2]}, ["key"])
 
 
-def test_Variable():
+def test_Variable() -> None:
     res = dataset.Variable(dimensions=("lat",), data=np.array([0.0]), attributes={})
 
     assert res == res
@@ -35,16 +39,16 @@ def test_Variable():
         ((1,), (10,), ([1],)),
     ],
 )
-def test_expand_item(item, shape, expected):
+def test_expand_item(item: T.Any, shape: T.Any, expected: T.Any) -> None:
     assert dataset.expand_item(item, shape) == expected
 
 
-def test_expand_item_error():
+def test_expand_item_error() -> None:
     with pytest.raises(TypeError):
         dataset.expand_item((None,), (1,))
 
 
-def test_dict_merge():
+def test_dict_merge() -> None:
     master = {"one": 1}
     dataset.dict_merge(master, {"two": 2})
     assert master == {"one": 1, "two": 2}
@@ -55,13 +59,14 @@ def test_dict_merge():
         dataset.dict_merge(master, {"two": 3})
 
 
-def test_encode_cf_first():
+def test_encode_cf_first() -> None:
     assert dataset.encode_cf_first({})
 
 
-def test_build_data_var_components_no_encode():
+def test_build_data_var_components_no_encode() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = messages.FileStream(path=TEST_DATA).index(index_keys).subindex(paramId=130)
+    stream = messages.FileStream(path=TEST_DATA)
+    index = messages.FileIndex.from_fieldset(stream, index_keys).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(index=index)
     assert dims == {"number": 10, "dataDate": 2, "dataTime": 2, "level": 2, "values": 7320}
     assert data_var.data.shape == (10, 2, 2, 2, 7320)
@@ -70,10 +75,12 @@ def test_build_data_var_components_no_encode():
     assert data_var.data[:, :, :, :, :].mean() > 0.0
 
 
-def test_build_data_var_components_encode_cf_geography():
-    stream = messages.FileStream(path=TEST_DATA, message_class=cfmessage.CfMessage)
+def test_build_data_var_components_encode_cf_geography() -> None:
+    stream = messages.FileStream(path=TEST_DATA)
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = stream.index(index_keys).subindex(paramId=130)
+    index = messages.FieldsetIndex.from_fieldset(
+        stream, index_keys, cfmessage.COMPUTED_KEYS
+    ).subindex(paramId=130)
     dims, data_var, coord_vars = dataset.build_variable_components(
         index=index, encode_cf="geography"
     )
@@ -91,9 +98,10 @@ def test_build_data_var_components_encode_cf_geography():
     assert data_var.data[:, :, :, :, :, :].mean() > 0.0
 
 
-def test_build_dataset_components_time_dims():
+def test_build_dataset_components_time_dims() -> None:
     index_keys = sorted(dataset.INDEX_KEYS + ["time", "step"])
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims = dataset.build_dataset_components(index, read_keys=[])[0]
     assert dims == {
         "latitude": 6,
@@ -104,7 +112,8 @@ def test_build_dataset_components_time_dims():
     }
     time_dims = ["indexing_time", "verifying_time"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {
         "number": 28,
@@ -116,12 +125,13 @@ def test_build_dataset_components_time_dims():
 
     time_dims = ["indexing_time", "step"]
     index_keys = sorted(dataset.INDEX_KEYS + time_dims)
-    index = dataset.open_fileindex(TEST_DATA_UKMO, "warn", "{path}.{short_hash}.idx", index_keys)
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys)
     dims, *_ = dataset.build_dataset_components(index, read_keys=[], time_dims=time_dims)
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
-def test_Dataset():
+def test_Dataset() -> None:
     res = dataset.open_file(TEST_DATA)
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
@@ -141,7 +151,7 @@ def test_Dataset():
     assert res1 == res
 
 
-def test_Dataset_no_encode():
+def test_Dataset_no_encode() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=())
     assert "Conventions" in res.attributes
     assert "institution" in res.attributes
@@ -151,7 +161,7 @@ def test_Dataset_no_encode():
     assert len(res.variables) == 9
 
 
-def test_Dataset_encode_cf_time():
+def test_Dataset_encode_cf_time() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("time",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -162,7 +172,7 @@ def test_Dataset_encode_cf_time():
     assert res.variables["t"].data[:, :, :, :].mean() > 0.0
 
 
-def test_Dataset_encode_cf_geography():
+def test_Dataset_encode_cf_geography() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("geography",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -180,7 +190,7 @@ def test_Dataset_encode_cf_geography():
     assert res.variables["t"].data[:, :, :, :, :, :].mean() > 0.0
 
 
-def test_Dataset_encode_cf_vertical():
+def test_Dataset_encode_cf_vertical() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("vertical",))
     assert "history" in res.attributes
     assert res.attributes["GRIB_edition"] == 1
@@ -192,7 +202,7 @@ def test_Dataset_encode_cf_vertical():
     assert res.variables["t"].data[:, :, :, :, :].mean() > 0.0
 
 
-def test_Dataset_reguler_gg_surface():
+def test_Dataset_reguler_gg_surface() -> None:
     path = os.path.join(SAMPLE_DATA_FOLDER, "regular_gg_sfc.grib")
     res = dataset.open_file(path)
 
@@ -200,18 +210,26 @@ def test_Dataset_reguler_gg_surface():
     assert np.allclose(res.variables["latitude"].data[:2], [88.57216851, 86.72253095])
 
 
-def test_Dataset_extra_coords():
+def test_Dataset_extra_coords() -> None:
     res = dataset.open_file(TEST_DATA, extra_coords={"experimentVersionNumber": "time"})
     assert "experimentVersionNumber" in res.variables
     assert res.variables["experimentVersionNumber"].dimensions == ("time",)
 
 
-def test_Dataet_extra_coords_error():
+def test_Dataset_scalar_extra_coords() -> None:
+    res = dataset.open_file(
+        TEST_DATA_SCALAR_TIME, extra_coords={"experimentVersionNumber": "time"}
+    )
+    assert "experimentVersionNumber" in res.variables
+    assert res.variables["experimentVersionNumber"].dimensions == ()
+
+
+def test_Dataset_extra_coords_error() -> None:
     with pytest.raises(ValueError):
         dataset.open_file(TEST_DATA, extra_coords={"validityDate": "number"})
 
 
-def test_OnDiskArray():
+def test_OnDiskArray() -> None:
     res = dataset.open_file(TEST_DATA).variables["t"]
 
     assert isinstance(res.data, dataset.OnDiskArray)
@@ -220,8 +238,89 @@ def test_OnDiskArray():
     )
 
 
+def test_open_fieldset_dict() -> None:
+    fieldset = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[-10]["values"]))
+
+
+def test_open_fieldset_list() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    ]
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
+
+
+def test_open_fieldset_computed_keys() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "values": [[1, 2], [3, 4], [5, 6]],
+            "dataDate": 20200101,
+            "dataTime": 1200,
+        }
+    ]
+
+    res = dataset.open_fieldset(fieldset)
+
+    assert res.dimensions == {"latitude": 3, "longitude": 2}
+    assert set(res.variables) == {"latitude", "longitude", "time", "2t"}
+    assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
+
+
 def test_open_file() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
     assert "t" in res.variables
     assert "z" not in res.variables
+
+
+def test_alternating_rows() -> None:
+    res = dataset.open_file(TEST_DATA_ALTERNATE_ROWS)
+    # the vals at the east end should be larger than those at the west
+    east_ref = [301.78, 303.78, 305.03]
+    west_ref = [292.03, 291.78, 291.78]
+    assert np.all(np.isclose(res.variables["t2m"].data[84, 288:291], east_ref, 0.0001))
+    assert np.all(np.isclose(res.variables["t2m"].data[85, 0:3], west_ref, 0.0001))
+
+
+def test_missing_field_values() -> None:
+    res = dataset.open_file(TEST_DATA_MISSING_VALS)
+    t2 = res.variables["t2m"]
+    assert np.isclose(np.nanmean(t2.data[0, :, :]), 268.375)
+    assert np.isclose(np.nanmean(t2.data[1, :, :]), 270.716)

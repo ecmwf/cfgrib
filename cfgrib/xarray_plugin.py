@@ -1,21 +1,17 @@
 import os
+import pathlib
 import typing as T
-from distutils.version import LooseVersion
 
-import numpy as np  # type: ignore
+import numpy as np
 import xarray as xr
+from packaging.version import Version
 
-from . import dataset
-
-if LooseVersion(xr.__version__) <= "0.17.0":
+if Version(xr.__version__) <= Version("0.17.0"):
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
-from xarray.backends.common import (
-    BACKEND_ENTRYPOINTS,
-    AbstractDataStore,
-    BackendArray,
-    BackendEntrypoint,
-)
+from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
+
+from . import abc, dataset, messages
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
@@ -30,16 +26,23 @@ class CfGribDataStore(AbstractDataStore):
 
     def __init__(
         self,
-        filename: str,
+        filename: T.Union[str, abc.Fieldset[abc.Field], abc.MappingFieldset[T.Any, abc.Field]],
         lock: T.Union[T.ContextManager[T.Any], None] = None,
         **backend_kwargs: T.Any,
     ):
         if lock is None:
             lock = ECCODES_LOCK
         self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
-        self.ds = dataset.open_file(filename, **backend_kwargs)
+        if isinstance(filename, (str, pathlib.PurePath)):
+            opener = dataset.open_file
+        else:
+            opener = dataset.open_fieldset
+        self.ds = opener(filename, **backend_kwargs)
 
-    def open_store_variable(self, var: dataset.Variable,) -> xr.Variable:
+    def open_store_variable(
+        self,
+        var: dataset.Variable,
+    ) -> xr.Variable:
         if isinstance(var.data, np.ndarray):
             data = var.data
         else:
@@ -68,7 +71,13 @@ class CfGribDataStore(AbstractDataStore):
 
 
 class CfGribBackend(BackendEntrypoint):
-    def guess_can_open(self, store_spec: str,) -> bool:
+    description = "Open GRIB files (.grib, .grib2, .grb and .grb2) in Xarray"
+    url = "https://github.com/ecmwf/cfgrib"
+
+    def guess_can_open(
+        self,
+        store_spec: str,
+    ) -> bool:
         try:
             _, ext = os.path.splitext(store_spec)
         except TypeError:
@@ -77,7 +86,7 @@ class CfGribBackend(BackendEntrypoint):
 
     def open_dataset(
         self,
-        filename_or_obj: str,
+        filename_or_obj: T.Union[str, abc.MappingFieldset[T.Any, abc.Field]],
         *,
         mask_and_scale: bool = True,
         decode_times: bool = True,
@@ -87,15 +96,16 @@ class CfGribBackend(BackendEntrypoint):
         use_cftime: T.Union[bool, None] = None,
         decode_timedelta: T.Union[bool, None] = None,
         lock: T.Union[T.ContextManager[T.Any], None] = None,
-        indexpath: str = "{path}.{short_hash}.idx",
+        indexpath: str = messages.DEFAULT_INDEXPATH,
         filter_by_keys: T.Dict[str, T.Any] = {},
         read_keys: T.Iterable[str] = (),
         encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn",
+        extra_coords: T.Dict[str, str] = {},
+        cache_geo_coords: bool = True,
     ) -> xr.Dataset:
-
         store = CfGribDataStore(
             filename_or_obj,
             indexpath=indexpath,
@@ -106,6 +116,8 @@ class CfGribBackend(BackendEntrypoint):
             time_dims=time_dims,
             lock=lock,
             errors=errors,
+            extra_coords=extra_coords,
+            cache_geo_coords=cache_geo_coords,
         )
         with xr.core.utils.close_on_error(store):
             vars, attrs = store.load()  # type: ignore
@@ -138,11 +150,17 @@ class CfGribArrayWrapper(BackendArray):
         self.dtype = array.dtype
         self.array = array
 
-    def __getitem__(self, key: xr.core.indexing.ExplicitIndexer,) -> np.ndarray:
+    def __getitem__(
+        self,
+        key: xr.core.indexing.ExplicitIndexer,
+    ) -> np.ndarray:
         return xr.core.indexing.explicit_indexing_adapter(
             key, self.shape, xr.core.indexing.IndexingSupport.BASIC, self._getitem
         )
 
-    def _getitem(self, key: T.Tuple[T.Any, ...],) -> np.ndarray:
+    def _getitem(
+        self,
+        key: T.Tuple[T.Any, ...],
+    ) -> np.ndarray:
         with self.datastore.lock:
             return self.array[key]

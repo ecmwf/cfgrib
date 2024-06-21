@@ -32,8 +32,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"cfgrib"
-copyright = u"2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF)."
+project = "cfgrib"
+copyright = "2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF)."
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout

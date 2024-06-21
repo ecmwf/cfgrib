@@ -7,5 +7,7 @@ dependencies:
   - eccodes=2.16.0
   - numpy=1.15.0
   - pandas=0.25.0
-  - python-eccodes=2020.06.0
+  - pytest-cov
+  - python-eccodes=1.4.0
+  - tomli
   - xarray=0.15.0

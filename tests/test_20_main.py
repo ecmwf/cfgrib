@@ -3,7 +3,7 @@ import click.testing
 from cfgrib import __main__
 
 
-def test_cfgrib_cli_selfcheck():
+def test_cfgrib_cli_selfcheck() -> None:
     runner = click.testing.CliRunner()
 
     res = runner.invoke(__main__.cfgrib_cli, ["selfcheck"])

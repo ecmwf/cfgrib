@@ -1,6 +1,8 @@
 import os.path
 
-import numpy as np  # type: ignore
+import eccodes  # type: ignore
+import numpy as np
+import py
 import pytest
 
 from cfgrib import messages
@@ -9,7 +11,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "era5-levels-members.grib")
 
 
-def test_Message_read():
+def test_Message_read() -> None:
     with open(TEST_DATA, "rb") as file:
         res1 = messages.Message.from_file(file)
 
@@ -42,7 +44,7 @@ def test_Message_read():
                 messages.Message.from_file(file)
 
 
-def test_Message_write(tmpdir):
+def test_Message_write(tmpdir: py.path.local) -> None:
     res = messages.Message.from_sample_name("regular_ll_pl_grib2")
     assert res["gridType"] == "regular_ll"
 
@@ -82,7 +84,7 @@ def test_Message_write(tmpdir):
         res.write(file)
 
 
-def test_ComputedKeysMessage_read():
+def test_ComputedKeysMessage_read() -> None:
     computed_keys = {
         "ref_time": (lambda m: str(m["dataDate"]) + str(m["dataTime"]), None),
         "error_key": (lambda m: 1 / 0, None),
@@ -100,7 +102,7 @@ def test_ComputedKeysMessage_read():
         res["error_key"]
 
 
-def test_ComputedKeysMessage_write():
+def test_ComputedKeysMessage_write() -> None:
     computed_keys = {
         "ref_time": (lambda m: "%s%04d" % (m["dataDate"], m["dataTime"]), None),
         "error_key": (lambda m: 1 / 0, None),
@@ -116,7 +118,7 @@ def test_ComputedKeysMessage_write():
     res["centre"] = 1
 
 
-def test_compat_create_exclusive(tmpdir):
+def test_compat_create_exclusive(tmpdir: py.path.local) -> None:
     test_file = tmpdir.join("file.grib.idx")
 
     try:
@@ -133,8 +135,8 @@ def test_compat_create_exclusive(tmpdir):
             pass  # pragma: no cover
 
 
-def test_FileIndex():
-    res = messages.FileIndex.from_filestream(messages.FileStream(TEST_DATA), ["paramId"])
+def test_FileIndex() -> None:
+    res = messages.FileIndex.from_fieldset(messages.FileStream(TEST_DATA), ["paramId"])
     assert res["paramId"] == [129, 130]
     assert len(res) == 1
     assert list(res) == ["paramId"]
@@ -153,7 +155,7 @@ def test_FileIndex():
     assert len(subres) == 1
 
 
-def test_FileIndex_from_indexpath_or_filestream(tmpdir):
+def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
     grib_file = tmpdir.join("file.grib")
 
     with open(TEST_DATA, "rb") as file:
@@ -196,32 +198,24 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir):
     assert isinstance(res, messages.FileIndex)
 
 
-def test_FileIndex_errors():
-    class MyMessage(messages.ComputedKeysMessage):
-        computed_keys = {
-            "error_key": (lambda m: bool(1 / 0), lambda m, v: None)
-        }  # pragma: no branch
+def test_FileIndex_errors() -> None:
+    computed_keys = {"error_key": (lambda m: bool(1 / 0), lambda m, v: None)}  # pragma: no branch
 
-    stream = messages.FileStream(TEST_DATA, message_class=MyMessage)
-    res = messages.FileIndex.from_filestream(stream, ["paramId", "error_key"])
+    stream = messages.FileStream(TEST_DATA)
+    res = messages.FileIndex.from_fieldset(stream, ["paramId", "error_key"], computed_keys)
     assert res["paramId"] == [129, 130]
     assert len(res) == 2
     assert list(res) == ["paramId", "error_key"]
     assert res["error_key"] == ["undef"]
 
 
-def test_FileStream():
+def test_FileStream() -> None:
     res = messages.FileStream(TEST_DATA)
-    leader = res.first()
+    leader = res[0]
     assert len(leader) > 100
-    assert sum(1 for _ in res) == leader["count"]
-    assert len(res.index(["paramId"])) == 1
+    assert sum(1 for _ in res.items()) == leader["count"]
 
     # __file__ is not a GRIB, but contains the "GRIB" string, so it is a very tricky corner case
     res = messages.FileStream(str(__file__))
-    with pytest.raises(EOFError):
-        res.first()
-
-    res = messages.FileStream(str(__file__), errors="ignore")
-    with pytest.raises(EOFError):
-        res.first()
+    with pytest.raises(eccodes.UnsupportedEditionError):
+        res[0]

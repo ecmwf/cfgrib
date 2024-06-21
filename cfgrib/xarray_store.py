@@ -22,6 +22,7 @@ import typing as T
 
 import xarray as xr
 
+from . import cfmessage, messages
 from .dataset import DatasetBuildError, open_fileindex
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ def open_dataset(path, **kwargs):
 def merge_datasets(datasets, **kwargs):
     # type: (T.Sequence[xr.Dataset], T.Any) -> T.List[xr.Dataset]
     merged = []  # type: T.List[xr.Dataset]
+    first = []  # type: T.List[xr.Dataset]
     for ds in datasets:
         ds.attrs.pop("history", None)
         for i, o in enumerate(merged):
@@ -54,6 +56,19 @@ def merge_datasets(datasets, **kwargs):
                     pass
         else:
             merged.append(ds)
+            first.append(ds)
+
+    # Add the important coordinate encoding fields from the first found, to the merged:
+    preserve_encoding_fields = ["source", "units", "calendar", "dtype"]
+    for i, o in enumerate(first):
+        for var in o.coords:
+            out_encoding = {
+                key: o[var].encoding[key]
+                for key in preserve_encoding_fields
+                if key in o[var].encoding
+            }
+            merged[i][var].encoding.update(out_encoding)
+
     return merged
 
 
@@ -78,10 +93,12 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
     # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     fileindex_kwargs = {
         key: backend_kwargs[key]
-        for key in ["filter_by_keys", "indexpath", "grib_errors"]
+        for key in ["filter_by_keys", "indexpath"]
         if key in backend_kwargs
     }
-    index = open_fileindex(path, **fileindex_kwargs)
+    errors = backend_kwargs.get("errors", "warn")
+    stream = messages.FileStream(path, errors=errors)
+    index = open_fileindex(stream, computed_keys=cfmessage.COMPUTED_KEYS, **fileindex_kwargs)
     datasets = []  # type: T.List[xr.Dataset]
     for param_id in sorted(index["paramId"]):
         bk = backend_kwargs.copy()
@@ -94,7 +111,7 @@ def open_variable_datasets(path, backend_kwargs={}, **kwargs):
 def open_datasets(path, backend_kwargs={}, **kwargs):
     # type: (str, T.Dict[str, T.Any], T.Any) -> T.List[xr.Dataset]
     """
-    Open a GRIB file groupping incompatible hypercubes to different datasets via simple heuristics.
+    Open a GRIB file grouping incompatible hypercubes to different datasets via simple heuristics.
     """
     squeeze = backend_kwargs.get("squeeze", True)
     backend_kwargs = backend_kwargs.copy()
@@ -109,6 +126,8 @@ def open_datasets(path, backend_kwargs={}, **kwargs):
 
     merged = []  # type: T.List[xr.Dataset]
     for type_of_level in sorted(type_of_level_datasets):
-        for ds in merge_datasets(type_of_level_datasets[type_of_level], join="exact"):
+        for ds in merge_datasets(
+            type_of_level_datasets[type_of_level], join="exact", combine_attrs="identical"
+        ):
             merged.append(ds.squeeze() if squeeze else ds)
     return merged
