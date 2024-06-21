@@ -179,6 +179,14 @@ def test_Dataset_encode_cf_time() -> None:
     assert res.variables["t"].data[:, :, :, :].mean() > 0.0
 
 
+def test_Dataset_encode_ignore_keys() -> None:
+    res = dataset.open_file(TEST_DATA)
+    assert res.attributes["GRIB_edition"] == 1
+
+    res = dataset.open_file(TEST_DATA, ignore_keys=["edition"])
+    assert "GRIB_edition" not in res.attributes
+
+
 def test_Dataset_encode_cf_geography() -> None:
     res = dataset.open_file(TEST_DATA, encode_cf=("geography",))
     assert "history" in res.attributes
