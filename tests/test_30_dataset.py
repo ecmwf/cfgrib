@@ -131,6 +131,13 @@ def test_build_dataset_components_time_dims() -> None:
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
+def test_build_dataset_components_ignore_keys() -> None:
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, dataset.INDEX_KEYS)
+    assert "subCentre" in index.index_keys
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, index_keys, ignore_keys=["subCentre"])
+    assert "subCentre" not in index.index_keys
+
 def test_Dataset() -> None:
     res = dataset.open_file(TEST_DATA)
     assert "Conventions" in res.attributes
