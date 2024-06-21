@@ -10,6 +10,7 @@ xr = pytest.importorskip(
 SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
 TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
+TEST_DATA_MULTI_PARAMS = os.path.join(SAMPLE_DATA_FOLDER, "multi_param_on_multi_dims.grib")
 
 
 def test_plugin() -> None:
@@ -27,6 +28,27 @@ def test_xr_open_dataset_file() -> None:
     ds = xr.open_dataset(TEST_DATA, engine="cfgrib")
     assert ds.dims == expected
     assert list(ds.data_vars) == ["skt"]
+
+
+def test_xr_open_dataset_file_filter_by_keys() -> None:
+    ds = xr.open_dataset(TEST_DATA_MULTI_PARAMS, engine="cfgrib")
+
+    assert "t" in ds.data_vars
+    assert "z" in ds.data_vars
+    assert "u" in ds.data_vars
+
+    ds = xr.open_dataset(TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": "t"})
+
+    assert "t" in ds.data_vars
+    assert "z" not in ds.data_vars
+    assert "u" not in ds.data_vars
+
+    ds = xr.open_dataset(TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": ["t", "z"]})
+
+    assert "t" in ds.data_vars
+    assert "z" in ds.data_vars
+    assert "u" not in ds.data_vars
+
 
 
 def test_xr_open_dataset_dict() -> None:

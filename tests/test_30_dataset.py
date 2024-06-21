@@ -13,6 +13,7 @@ TEST_DATA_UKMO = os.path.join(SAMPLE_DATA_FOLDER, "forecast_monthly_ukmo.grib")
 TEST_DATA_SCALAR_TIME = os.path.join(SAMPLE_DATA_FOLDER, "era5-single-level-scalar-time.grib")
 TEST_DATA_ALTERNATE_ROWS = os.path.join(SAMPLE_DATA_FOLDER, "alternate-scanning.grib")
 TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
+TEST_DATA_MULTI_PARAMS = os.path.join(SAMPLE_DATA_FOLDER, "multi_param_on_multi_dims.grib")
 
 
 def test_enforce_unique_attributes() -> None:
@@ -304,10 +305,28 @@ def test_open_fieldset_computed_keys() -> None:
 
 
 def test_open_file() -> None:
+    res = dataset.open_file(TEST_DATA)
+
+    assert "t" in res.variables
+    assert "z" in res.variables
+
+def test_open_file_filter_by_keys_list() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
     assert "t" in res.variables
     assert "z" not in res.variables
+    
+    res = dataset.open_file(TEST_DATA_MULTI_PARAMS)
+
+    assert "t" in res.variables
+    assert "z" in res.variables
+    assert "u" in res.variables
+
+    res = dataset.open_file(TEST_DATA_MULTI_PARAMS, filter_by_keys={"shortName": ["t", "z"]})
+
+    assert "t" in res.variables
+    assert "z" in res.variables
+    assert "u" not in res.variables
 
 
 def test_alternating_rows() -> None:
