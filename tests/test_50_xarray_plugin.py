@@ -37,18 +37,21 @@ def test_xr_open_dataset_file_filter_by_keys() -> None:
     assert "z" in ds.data_vars
     assert "u" in ds.data_vars
 
-    ds = xr.open_dataset(TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": "t"})
+    ds = xr.open_dataset(
+        TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": "t"}
+    )
 
     assert "t" in ds.data_vars
     assert "z" not in ds.data_vars
     assert "u" not in ds.data_vars
 
-    ds = xr.open_dataset(TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": ["t", "z"]})
+    ds = xr.open_dataset(
+        TEST_DATA_MULTI_PARAMS, engine="cfgrib", filter_by_keys={"shortName": ["t", "z"]}
+    )
 
     assert "t" in ds.data_vars
     assert "z" in ds.data_vars
     assert "u" not in ds.data_vars
-
 
 
 def test_xr_open_dataset_dict() -> None:

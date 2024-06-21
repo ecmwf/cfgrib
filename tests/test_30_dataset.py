@@ -310,12 +310,13 @@ def test_open_file() -> None:
     assert "t" in res.variables
     assert "z" in res.variables
 
+
 def test_open_file_filter_by_keys_list() -> None:
     res = dataset.open_file(TEST_DATA, filter_by_keys={"shortName": "t"})
 
     assert "t" in res.variables
     assert "z" not in res.variables
-    
+
     res = dataset.open_file(TEST_DATA_MULTI_PARAMS)
 
     assert "t" in res.variables
