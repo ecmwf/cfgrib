@@ -463,8 +463,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
             raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_REF_TIME_KEYS))
     else:
         coords_map.extend(DATA_TIME_KEYS)
-    if "level" in encode_cf:
-        coords_map.extend(VERTICAL_KEYS)
+    coords_map.extend(VERTICAL_KEYS)
     coords_map.extend(SPECTRA_KEYS)
     return coords_map
 
