@@ -29,6 +29,13 @@ def test_xr_open_dataset_file() -> None:
     assert list(ds.data_vars) == ["skt"]
 
 
+def test_xr_open_dataset_file_ignore_keys() -> None:
+    ds = xr.open_dataset(TEST_DATA, engine="cfgrib")
+    assert "GRIB_typeOfLevel" in ds["skt"].attrs
+    ds = xr.open_dataset(TEST_DATA, engine="cfgrib", ignore_keys=["typeOfLevel"])
+    assert "GRIB_typeOfLevel" not in ds["skt"].attrs
+
+
 def test_xr_open_dataset_dict() -> None:
     fieldset = {
         -10: {
@@ -47,6 +54,26 @@ def test_xr_open_dataset_dict() -> None:
 
     assert ds.dims == {"latitude": 3, "longitude": 2}
     assert list(ds.data_vars) == ["2t"]
+
+
+def test_xr_open_dataset_dict_ignore_keys() -> None:
+    fieldset = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "typeOfLevel": "surface",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+    ds = xr.open_dataset(fieldset, engine="cfgrib")
+    assert "GRIB_typeOfLevel" in ds["2t"].attrs
+    ds = xr.open_dataset(fieldset, engine="cfgrib", ignore_keys=["typeOfLevel"])
+    assert "GRIB_typeOfLevel" not in ds["2t"].attrs
 
 
 def test_xr_open_dataset_list() -> None:
@@ -71,6 +98,27 @@ def test_xr_open_dataset_list() -> None:
     ds_empty = xr.open_dataset([], engine="cfgrib")
 
     assert ds_empty.equals(xr.Dataset())
+
+
+def test_xr_open_dataset_list_ignore_keys() -> None:
+    fieldset = [
+        {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "typeOfLevel": "surface",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    ]
+
+    ds = xr.open_dataset(fieldset, engine="cfgrib")
+    assert "GRIB_typeOfLevel" in ds["2t"].attrs
+    ds = xr.open_dataset(fieldset, engine="cfgrib", ignore_keys=["typeOfLevel"])
+    assert "GRIB_typeOfLevel" not in ds["2t"].attrs
 
 
 def test_read() -> None:

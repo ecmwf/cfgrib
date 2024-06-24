@@ -751,6 +751,7 @@ def open_fieldset(
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
+    ignore_keys: T.Sequence[str] = [],
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
@@ -762,6 +763,7 @@ def open_fieldset(
         log.warning(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
+    index_keys = [key for key in index_keys if key not in ignore_keys]
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
@@ -771,10 +773,12 @@ def open_fileindex(
     stream: messages.FileStream,
     indexpath: str = messages.DEFAULT_INDEXPATH,
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
+    ignore_keys: T.Sequence[str] = [],
     filter_by_keys: T.Dict[str, T.Any] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
 ) -> messages.FileIndex:
     index_keys = sorted(set(index_keys) | set(filter_by_keys))
+    index_keys = [key for key in index_keys if key not in ignore_keys]
     index = messages.FileIndex.from_indexpath_or_filestream(
         stream, index_keys, indexpath=indexpath, computed_keys=computed_keys
     )
@@ -789,12 +793,13 @@ def open_file(
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    ignore_keys: T.Sequence[str] = [],
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     path = os.fspath(path)
     stream = messages.FileStream(path, errors=errors)
     index_keys = compute_index_keys(time_dims, extra_coords)
-    index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
+    index = open_fileindex(stream, indexpath, index_keys, ignore_keys=ignore_keys, filter_by_keys=filter_by_keys)
 
     return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)
