@@ -132,6 +132,13 @@ def test_build_dataset_components_time_dims() -> None:
     assert dims == {"number": 28, "indexing_time": 2, "step": 20, "latitude": 6, "longitude": 11}
 
 
+def test_build_dataset_components_ignore_keys() -> None:
+    stream = messages.FileStream(TEST_DATA_UKMO, "warn")
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, dataset.INDEX_KEYS)
+    assert "subCentre" in index.index_keys
+    index = dataset.open_fileindex(stream, messages.DEFAULT_INDEXPATH, dataset.INDEX_KEYS, ignore_keys=["subCentre"])
+    assert "subCentre" not in index.index_keys
+
 def test_Dataset() -> None:
     res = dataset.open_file(TEST_DATA)
     assert "Conventions" in res.attributes
@@ -171,6 +178,14 @@ def test_Dataset_encode_cf_time() -> None:
 
     # equivalent to not np.isnan without importing numpy
     assert res.variables["t"].data[:, :, :, :].mean() > 0.0
+
+
+def test_Dataset_encode_ignore_keys() -> None:
+    res = dataset.open_file(TEST_DATA)
+    assert res.attributes["GRIB_edition"] == 1
+
+    res = dataset.open_file(TEST_DATA, ignore_keys=["edition"])
+    assert "GRIB_edition" not in res.attributes
 
 
 def test_Dataset_encode_cf_geography() -> None:
@@ -303,6 +318,27 @@ def test_open_fieldset_computed_keys() -> None:
     assert set(res.variables) == {"latitude", "longitude", "time", "2t"}
     assert np.array_equal(res.variables["2t"].data[()], np.array(fieldset[0]["values"]))
 
+
+def test_open_fieldset_ignore_keys() -> None:
+    fieldset = {
+        -10: {
+            "gridType": "regular_ll",
+            "Nx": 2,
+            "Ny": 3,
+            "distinctLatitudes": [-10.0, 0.0, 10.0],
+            "distinctLongitudes": [0.0, 10.0],
+            "paramId": 167,
+            "shortName": "2t",
+            "subCentre": "test",
+            "values": [[1, 2], [3, 4], [5, 6]],
+        }
+    }
+
+    res = dataset.open_fieldset(fieldset)
+    assert "GRIB_subCentre" in res.attributes
+
+    res = dataset.open_fieldset(fieldset, ignore_keys="subCentre")
+    assert "GRIB_subCentre" not in res.attributes
 
 def test_open_file() -> None:
     res = dataset.open_file(TEST_DATA)
