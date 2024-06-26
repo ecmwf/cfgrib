@@ -468,7 +468,10 @@ class FieldsetIndex(abc.Index[T.Any, abc.Field]):
         field_ids_index = []
         for header_values, field_ids_values in self.field_ids_index:
             for idx, val in raw_query:
-                if header_values[idx] != val:
+                # Ensure that the values to be tested is a list or tuple
+                if not isinstance(val, (list, tuple)):
+                    val = [val]
+                if header_values[idx] not in val:
                     break
             else:
                 field_ids_index.append((header_values, field_ids_values))

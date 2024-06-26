@@ -332,9 +332,9 @@ def get_values_in_order(message, shape):
 class OnDiskArray:
     index: abc.Index[T.Any, abc.Field]
     shape: T.Tuple[int, ...]
-    field_id_index: T.Dict[
-        T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
-    ] = attr.attrib(repr=False)
+    field_id_index: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = (
+        attr.attrib(repr=False)
+    )
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
