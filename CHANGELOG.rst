@@ -2,6 +2,18 @@
 Changelog for cfgrib
 ====================
 
+0.9.13.0 (2024-06-27)
+---------------------
+
+- Allow users to pass of list of values to filter a key by.
+  See `#384 <https://github.com/ecmwf/cfgrib/pull/384>`_.
+
+- Functionality to ignore keys when reading a grib file
+  See `#382 <https://github.com/ecmwf/cfgrib/pull/382>`_.
+
+- Preserve coordinate encoding in cfgrib.open_datasets
+  See `#381 <https://github.com/ecmwf/cfgrib/pull/381>`_.
+
 0.9.12.0 (2024-05-26)
 ---------------------
 
