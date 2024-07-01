@@ -129,6 +129,16 @@ def test_open_datasets() -> None:
     assert res[0].attrs["GRIB_centre"] == "ecmf"
 
 
+def test_open_filter_heterogeneous() -> None:
+    res = xarray_store.open_dataset(TEST_DATA, backend_kwargs={
+        'filter_heterogeneous': True
+    })
+
+    assert isinstance(res, xr.Dataset)
+    assert "t__isobaricInhPa__instant" in res
+    assert res.attrs["GRIB_centre"] == "ecmf"
+
+
 def test_cached_geo_coords() -> None:
     ds1 = xarray_store.open_dataset(TEST_DATA_MULTIPLE_FIELDS)
     ds2 = xarray_store.open_dataset(
