@@ -36,4 +36,4 @@ six==1.14.0               # via packaging, python-dateutil
 toolz==0.10.0             # via dask
 wcwidth==0.1.9            # via pytest
 xarray==0.15.1
-zipp==3.1.0               # via importlib-metadata
+zipp==3.19.1              # via importlib-metadata
