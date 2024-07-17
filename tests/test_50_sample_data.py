@@ -120,3 +120,12 @@ def test_dataset_missing_field_values() -> None:
     t2 = res.variables["t2m"]
     assert np.isclose(np.nanmean(t2[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2[1, :, :]), 270.716)
+
+
+def test_valid_month_time_dim() -> None:
+    
+    test_file = os.path.join(SAMPLE_DATA_FOLDER, "cams-egg4-monthly.grib")
+    ds = xr.open_dataset(test_file, time_dims=["valid_month"])
+
+    assert "valid_month" in ds.dims
+
