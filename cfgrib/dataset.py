@@ -160,6 +160,7 @@ ALL_REF_TIME_KEYS = [
     "verifying_time",
     "forecastMonth",
     "indexing_time",
+    "valid_month",
 ]
 SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
@@ -245,6 +246,12 @@ COORD_ATTRS = {
         "long_name": "nominal initial time of forecast",
     },
     "valid_time": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "time",
+        "long_name": "time",
+    },
+    "valid_month": {
         "units": "seconds since 1970-01-01T00:00:00",
         "calendar": "proleptic_gregorian",
         "standard_name": "time",
@@ -457,10 +464,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
         if "GRIB_units" in data_var_attrs:
             data_var_attrs["units"] = data_var_attrs["GRIB_units"]
     if "time" in encode_cf:
-        if set(time_dims).issubset(ALL_REF_TIME_KEYS):
-            coords_map.extend(time_dims)
-        else:
-            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_REF_TIME_KEYS))
+        coords_map.extend(time_dims)
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
@@ -498,8 +502,9 @@ def build_variable_components(
     first = index.first()
     extra_attrs = read_data_var_attrs(first, extra_keys)
     data_var_attrs.update(**extra_attrs)
-    coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
-
+    coords_map = encode_cf_first(
+        data_var_attrs, encode_cf, time_dims,
+    )
     coord_name_key_map = {}
     coord_vars = {}
     for coord_key in coords_map:
@@ -667,6 +672,14 @@ def build_dataset_components(
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
 
+    # Warn about time_dims here to prevent repeasted messages in build_variable_components
+    if errors != "ignore" and not set(time_dims).issubset(ALL_REF_TIME_KEYS):
+        log.warning(
+            "Not all time_dimensions are recognised, those which are not in the following list will not "
+            " be decoded as datetime objects:\n"
+            f"{ALL_REF_TIME_KEYS}"
+        )
+    
     for param_id in index.get("paramId", []):
         var_index = index.subindex(paramId=param_id)
         try:
