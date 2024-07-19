@@ -171,6 +171,10 @@ COMPUTED_KEYS = {
         functools.partial(from_grib_date_time, date_key="indexingDate", time_key="indexingTime"),
         functools.partial(to_grib_date_time, date_key="indexingDate", time_key="indexingTime"),
     ),
+    "valid_month": (
+        functools.partial(from_grib_date_time, date_key="monthlyVerificationDate", time_key="validityTime"),
+        functools.partial(to_grib_date_time, date_key="monthlyVerificationDate", time_key="validityTime"),
+    ),
 }  # type: messages.ComputedKeysType
 
 

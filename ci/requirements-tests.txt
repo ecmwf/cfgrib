@@ -19,7 +19,6 @@ packaging==20.3           # via pytest
 pandas==1.0.3             # via xarray
 pep8==1.7.1               # via pytest-pep8
 pluggy==0.13.1            # via pytest
-py==1.10.0                # via pytest
 pycparser==2.20           # via cffi
 pyflakes==2.2.0           # via pytest-flakes
 pyparsing==2.4.7          # via packaging
@@ -29,7 +28,7 @@ pytest-flakes==4.0.0
 pytest-mccabe==1.0
 pytest-pep8==1.0.6
 pytest-runner==5.2
-pytest==5.4.2
+pytest==7.2.0
 python-dateutil==2.8.1    # via pandas
 pytz==2020.1              # via pandas
 scipy==1.8.0
@@ -37,4 +36,4 @@ six==1.14.0               # via packaging, python-dateutil
 toolz==0.10.0             # via dask
 wcwidth==0.1.9            # via pytest
 xarray==0.15.1
-zipp==3.1.0               # via importlib-metadata
+zipp==3.19.1              # via importlib-metadata

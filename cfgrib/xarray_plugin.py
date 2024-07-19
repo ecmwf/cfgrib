@@ -99,11 +99,13 @@ class CfGribBackend(BackendEntrypoint):
         indexpath: str = messages.DEFAULT_INDEXPATH,
         filter_by_keys: T.Dict[str, T.Any] = {},
         read_keys: T.Iterable[str] = (),
+        ignore_keys: T.Iterable[str] = (),
         encode_cf: T.Sequence[str] = ("parameter", "time", "geography", "vertical"),
         squeeze: bool = True,
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn",
         extra_coords: T.Dict[str, str] = {},
+        coords_as_attributes: T.Dict[str, str] = {},
         cache_geo_coords: bool = True,
     ) -> xr.Dataset:
         store = CfGribDataStore(
@@ -111,12 +113,14 @@ class CfGribBackend(BackendEntrypoint):
             indexpath=indexpath,
             filter_by_keys=filter_by_keys,
             read_keys=read_keys,
+            ignore_keys=ignore_keys,
             encode_cf=encode_cf,
             squeeze=squeeze,
             time_dims=time_dims,
             lock=lock,
             errors=errors,
             extra_coords=extra_coords,
+            coords_as_attributes=coords_as_attributes,
             cache_geo_coords=cache_geo_coords,
         )
         with xr.core.utils.close_on_error(store):

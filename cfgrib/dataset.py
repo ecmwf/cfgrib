@@ -161,6 +161,7 @@ ALL_REF_TIME_KEYS = [
     "verifying_time",
     "forecastMonth",
     "indexing_time",
+    "valid_month",
 ]
 SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
 
@@ -251,6 +252,12 @@ COORD_ATTRS = {
         "standard_name": "time",
         "long_name": "time",
     },
+    "valid_month": {
+        "units": "seconds since 1970-01-01T00:00:00",
+        "calendar": "proleptic_gregorian",
+        "standard_name": "time",
+        "long_name": "time",
+    },
     "verifying_time": {
         "units": "seconds since 1970-01-01T00:00:00",
         "calendar": "proleptic_gregorian",
@@ -333,9 +340,9 @@ def get_values_in_order(message, shape):
 class OnDiskArray:
     index: abc.Index[T.Any, abc.Field]
     shape: T.Tuple[int, ...]
-    field_id_index: T.Dict[
-        T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]
-    ] = attr.attrib(repr=False)
+    field_id_index: T.Dict[T.Tuple[T.Any, ...], T.List[T.Union[int, T.Tuple[int, int]]]] = (
+        attr.attrib(repr=False)
+    )
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
     dtype = np.dtype("float32")
@@ -458,10 +465,7 @@ def encode_cf_first(data_var_attrs, encode_cf=("parameter", "time"), time_dims=(
         if "GRIB_units" in data_var_attrs:
             data_var_attrs["units"] = data_var_attrs["GRIB_units"]
     if "time" in encode_cf:
-        if set(time_dims).issubset(ALL_REF_TIME_KEYS):
-            coords_map.extend(time_dims)
-        else:
-            raise ValueError("time_dims %r not a subset of %r" % (time_dims, ALL_REF_TIME_KEYS))
+        coords_map.extend(time_dims)
     else:
         coords_map.extend(DATA_TIME_KEYS)
     coords_map.extend(VERTICAL_KEYS)
@@ -491,6 +495,7 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
@@ -499,8 +504,9 @@ def build_variable_components(
     first = index.first()
     extra_attrs = read_data_var_attrs(first, extra_keys)
     data_var_attrs.update(**extra_attrs)
-    coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
-
+    coords_map = encode_cf_first(
+        data_var_attrs, encode_cf, time_dims,
+    )
     coord_name_key_map = {}
     coord_vars = {}
     for coord_key in coords_map:
@@ -516,6 +522,9 @@ def build_variable_components(
             and "GRIB_typeOfLevel" in data_var_attrs
         ):
             coord_name = data_var_attrs["GRIB_typeOfLevel"]
+        if coord_name in coords_as_attributes and len(values) == 1:
+            data_var_attrs[f"GRIB_{coord_name}"] = values
+            continue
         coord_name_key_map[coord_name] = coord_key
         attributes = {
             "long_name": "original GRIB coordinate for key: %s(%s)" % (orig_name, coord_name),
@@ -662,12 +671,21 @@ def build_dataset_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
     filter_by_keys = index.filter_by_keys
 
+    # Warn about time_dims here to prevent repeasted messages in build_variable_components
+    if errors != "ignore" and not set(time_dims).issubset(ALL_REF_TIME_KEYS):
+        log.warning(
+            "Not all time_dimensions are recognised, those which are not in the following list will not "
+            " be decoded as datetime objects:\n"
+            f"{ALL_REF_TIME_KEYS}"
+        )
+    
     for param_id in index.get("paramId", []):
         var_index = index.subindex(paramId=param_id)
         try:
@@ -680,6 +698,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
+                coords_as_attributes=coords_as_attributes,
                 cache_geo_coords=cache_geo_coords,
             )
         except DatasetBuildError as ex:
@@ -752,6 +771,7 @@ def open_fieldset(
     indexpath: T.Optional[str] = None,
     filter_by_keys: T.Dict[str, T.Any] = {},
     read_keys: T.Sequence[str] = (),
+    ignore_keys: T.Sequence[str] = [],
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
@@ -763,6 +783,7 @@ def open_fieldset(
         log.warning(f"indexpath value {indexpath} is ignored")
 
     index_keys = compute_index_keys(time_dims, extra_coords, filter_by_keys)
+    index_keys = [key for key in index_keys if key not in ignore_keys]
     index = messages.FieldsetIndex.from_fieldset(fieldset, index_keys, computed_keys)
     filtered_index = index.subindex(filter_by_keys)
     return open_from_index(filtered_index, read_keys, time_dims, extra_coords, **kwargs)
@@ -772,10 +793,12 @@ def open_fileindex(
     stream: messages.FileStream,
     indexpath: str = messages.DEFAULT_INDEXPATH,
     index_keys: T.Sequence[str] = INDEX_KEYS + ["time", "step"],
+    ignore_keys: T.Sequence[str] = [],
     filter_by_keys: T.Dict[str, T.Any] = {},
     computed_keys: messages.ComputedKeysType = cfmessage.COMPUTED_KEYS,
 ) -> messages.FileIndex:
     index_keys = sorted(set(index_keys) | set(filter_by_keys))
+    index_keys = [key for key in index_keys if key not in ignore_keys]
     index = messages.FileIndex.from_indexpath_or_filestream(
         stream, index_keys, indexpath=indexpath, computed_keys=computed_keys
     )
@@ -790,12 +813,12 @@ def open_file(
     read_keys: T.Sequence[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    ignore_keys: T.Sequence[str] = [],
     **kwargs: T.Any,
 ) -> Dataset:
     """Open a GRIB file as a ``cfgrib.Dataset``."""
     path = os.fspath(path)
     stream = messages.FileStream(path, errors=errors)
     index_keys = compute_index_keys(time_dims, extra_coords)
-    index = open_fileindex(stream, indexpath, index_keys, filter_by_keys=filter_by_keys)
-
+    index = open_fileindex(stream, indexpath, index_keys, ignore_keys=ignore_keys, filter_by_keys=filter_by_keys)
     return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)
