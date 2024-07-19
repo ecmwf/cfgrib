@@ -45,6 +45,7 @@ DATA_ATTRIBUTES_KEYS = [
     "stepUnits",
     "stepType",
     "gridType",
+    "uvRelativeToGrid"
 ]
 
 EXTRA_DATA_ATTRIBUTES_KEYS = [
