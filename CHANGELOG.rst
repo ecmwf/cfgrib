@@ -2,6 +2,20 @@
 Changelog for cfgrib
 ====================
 
+0.9.14.0 (2024-07-19)
+---------------------
+
+- Added `coords_as_attributes` argument to `open_dataset()` to allow selected dimensions
+  to be stored as attributes rather than dimensions, allowing more heterogeneous data
+  to be encoded as an xarray dataset.
+  See `#394 <https://github.com/ecmwf/cfgrib/pull/394>`_.
+
+- Added valid_month dimension if monthlyVerificationDate and validityTime are available.
+  See `#393 <https://github.com/ecmwf/cfgrib/pull/393>`_.
+
+- Added uvRelativeToGrid to list of GRIB keys read by default.
+  See `#379 <https://github.com/ecmwf/cfgrib/pull/379>`_.
+
 0.9.13.0 (2024-06-27)
 ---------------------
 
