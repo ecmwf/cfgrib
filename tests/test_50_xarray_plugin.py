@@ -11,6 +11,7 @@ SAMPLE_DATA_FOLDER = os.path.join(os.path.dirname(__file__), "sample-data")
 TEST_DATA = os.path.join(SAMPLE_DATA_FOLDER, "regular_ll_sfc.grib")
 TEST_DATA_MISSING_VALS = os.path.join(SAMPLE_DATA_FOLDER, "fields_with_missing_values.grib")
 TEST_DATA_MULTI_PARAMS = os.path.join(SAMPLE_DATA_FOLDER, "multi_param_on_multi_dims.grib")
+TEST_DATA_MULTI_LEVTYPES = os.path.join(SAMPLE_DATA_FOLDER, "soil-surface-level-mix.grib")
 
 
 def test_plugin() -> None:
@@ -164,3 +165,14 @@ def test_xr_open_dataset_file_missing_vals() -> None:
     t2 = ds["t2m"]
     assert np.isclose(np.nanmean(t2.values[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2.values[1, :, :]), 270.716)
+
+
+def test_xr_open_dataset_coords_to_attributes() -> None:
+    ds = xr.open_dataset(
+        TEST_DATA_MULTI_LEVTYPES, engine="cfgrib", coords_as_attributes=["surface", "depthBelowLandLayer"]
+    )
+    assert "surface" not in ds.coords
+    assert "depthBelowLandLayer" not in ds.coords
+
+    assert "GRIB_surface" in ds["t2m"].attrs
+    assert "GRIB_depthBelowLandLayer" in ds["stl1"].attrs

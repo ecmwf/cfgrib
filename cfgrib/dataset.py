@@ -494,6 +494,7 @@ def build_variable_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
@@ -520,6 +521,9 @@ def build_variable_components(
             and "GRIB_typeOfLevel" in data_var_attrs
         ):
             coord_name = data_var_attrs["GRIB_typeOfLevel"]
+        if coord_name in coords_as_attributes and len(values) == 1:
+            data_var_attrs[f"GRIB_{coord_name}"] = values
+            continue
         coord_name_key_map[coord_name] = coord_key
         attributes = {
             "long_name": "original GRIB coordinate for key: %s(%s)" % (orig_name, coord_name),
@@ -666,6 +670,7 @@ def build_dataset_components(
     read_keys: T.Iterable[str] = (),
     time_dims: T.Sequence[str] = ("time", "step"),
     extra_coords: T.Dict[str, str] = {},
+    coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
@@ -692,6 +697,7 @@ def build_dataset_components(
                 read_keys=read_keys,
                 time_dims=time_dims,
                 extra_coords=extra_coords,
+                coords_as_attributes=coords_as_attributes,
                 cache_geo_coords=cache_geo_coords,
             )
         except DatasetBuildError as ex:
@@ -814,5 +820,4 @@ def open_file(
     stream = messages.FileStream(path, errors=errors)
     index_keys = compute_index_keys(time_dims, extra_coords)
     index = open_fileindex(stream, indexpath, index_keys, ignore_keys=ignore_keys, filter_by_keys=filter_by_keys)
-
     return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)

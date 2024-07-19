@@ -105,6 +105,7 @@ class CfGribBackend(BackendEntrypoint):
         time_dims: T.Iterable[str] = ("time", "step"),
         errors: str = "warn",
         extra_coords: T.Dict[str, str] = {},
+        coords_as_attributes: T.Dict[str, str] = {},
         cache_geo_coords: bool = True,
     ) -> xr.Dataset:
         store = CfGribDataStore(
@@ -119,6 +120,7 @@ class CfGribBackend(BackendEntrypoint):
             lock=lock,
             errors=errors,
             extra_coords=extra_coords,
+            coords_as_attributes=coords_as_attributes,
             cache_geo_coords=cache_geo_coords,
         )
         with xr.core.utils.close_on_error(store):
