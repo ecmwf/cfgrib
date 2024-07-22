@@ -380,3 +380,11 @@ def test_missing_field_values() -> None:
     t2 = res.variables["t2m"]
     assert np.isclose(np.nanmean(t2.data[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2.data[1, :, :]), 270.716)
+
+
+def test_get_or_create_index(tmpdir) -> None:
+    index = dataset.get_or_create_index(TEST_DATA, os.path.join(tmpdir, "indexes"))
+    assert isinstance(index, messages.FileIndex)
+
+    index = dataset.get_or_create_index(TEST_DATA, os.path.join(tmpdir, "indexes"), force_index_creation=True)
+    assert isinstance(index, messages.FileIndex)
