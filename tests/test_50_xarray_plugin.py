@@ -164,3 +164,38 @@ def test_xr_open_dataset_file_missing_vals() -> None:
     t2 = ds["t2m"]
     assert np.isclose(np.nanmean(t2.values[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2.values[1, :, :]), 270.716)
+
+
+@pytest.mark.parametrize(
+    'squeeze',
+    [True,
+     False,
+     ['number'],
+     ['number', 'step'],
+     lambda d: d == 'time']
+)
+def test_xr_open_dataset_squeeze(squeeze) -> None:
+
+    # Dimensions of size-1 that can be removed by squeezing
+    size1dims = ['number', 'time', 'step', 'surface']
+
+    # Which do we expect to be removed and which to stay?
+    if isinstance(squeeze, bool):
+        remove = size1dims if squeeze else []
+    elif isinstance(squeeze, list):
+        remove = [d for d in size1dims if d in squeeze]
+    elif callable(squeeze):
+        remove = [d for d in size1dims if squeeze(d)]
+    else:
+        raise Exception('???')
+    expect = [d for d in size1dims if d not in remove]
+
+    ds = xr.open_dataset(TEST_DATA, engine="cfgrib", squeeze=squeeze)
+
+    for d in remove:
+        assert d not in ds.dims
+        assert d not in ds.skt.dims
+    for d in expect:
+        assert d in ds.dims
+        assert d in ds.skt.dims
+
