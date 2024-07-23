@@ -523,12 +523,12 @@ def build_variable_components(
         attributes.update(COORD_ATTRS.get(coord_name, {}).copy())
         data = np.array(sorted(values, reverse=attributes.get("stored_direction") == "decreasing"))
         dimensions = (coord_name,)  # type: T.Tuple[str, ...]
-        if squeeze and len(values) == 1:
+        if sqz(coord_name, squeeze) and len(values) == 1:
             data = data[0]
             dimensions = ()
         coord_vars[coord_name] = Variable(dimensions=dimensions, data=data, attributes=attributes)
 
-    header_dimensions = tuple(d for d, c in coord_vars.items() if not squeeze or c.data.size > 1)
+    header_dimensions = tuple(d for d, c in coord_vars.items() if not sqz(d, squeeze) or c.data.size > 1)
     header_shape = tuple(coord_vars[d].data.size for d in header_dimensions)
 
     gds_md5sum = index.get("md5GridSection")
@@ -616,6 +616,15 @@ def build_variable_components(
     data_var = Variable(dimensions=dimensions, data=on_disk_array, attributes=data_var_attrs)  # type: ignore
     dims = {d: s for d, s in zip(dimensions, data_var.data.shape)}
     return dims, data_var, coord_vars
+
+
+def sqz(coord_name, squeeze):
+    if hasattr(squeeze, '__contains__'):
+        return coord_name in squeeze
+    elif callable(squeeze):
+        return squeeze(coord_name)
+    else:
+        return squeeze
 
 
 def dict_merge(master, update):
