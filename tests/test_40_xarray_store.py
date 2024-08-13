@@ -137,30 +137,30 @@ def test_cached_geo_coords() -> None:
     assert ds2.identical(ds1)
 
 
-def test_open_datasets_differet_step_types() -> None:
+def test_open_datasets_different_step_types() -> None:
     res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES)
 
     assert len(res) == 2
-    assert res[0].cprat.attrs["GRIB_stepType"] == "instant"
+    assert res[0].cpr.attrs["GRIB_stepType"]   == "instant"
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
-    assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
+    assert res[1].cpr.attrs["GRIB_stepType"]   == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
 
 
 # test the case where we have two different step types, but the data values
 # are all zero - we should still separate into differernt datasets
-def test_open_datasets_differet_step_types_zeros() -> None:
+def test_open_datasets_different_step_types_zeros() -> None:
     res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS)
 
     assert len(res) == 2
-    assert res[0].cprat.attrs["GRIB_stepType"] == "instant"
+    assert res[0].cpr.attrs["GRIB_stepType"]   == "instant"
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
-    assert res[1].cprat.attrs["GRIB_stepType"] == "avg"
+    assert res[1].cpr.attrs["GRIB_stepType"]   == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
 
 
 # ensure that the encoding of the coordinates is preserved
-def test_open_datasets_differet_preserve_coordinate_encoding() -> None:
+def test_open_datasets_different_preserve_coordinate_encoding() -> None:
     res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES)
     assert len(res) == 2
     assert "units" in res[0].valid_time.encoding
