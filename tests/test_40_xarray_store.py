@@ -141,9 +141,16 @@ def test_open_datasets_different_step_types() -> None:
     res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES)
 
     assert len(res) == 2
-    assert res[0].cpr.attrs["GRIB_stepType"]   == "instant"
+    try:
+        cpr0 = res[0]["cpr"]
+        cpr1 = res[1]["cpr"]
+    except KeyError:
+        print("Using the old shortName for Convective precipitation rate")
+        cpr0 = res[0]["cprat"]
+        cpr1 = res[1]["cprat"]
+    assert cpr0.attrs["GRIB_stepType"]   == "instant"
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
-    assert res[1].cpr.attrs["GRIB_stepType"]   == "avg"
+    assert cpr1.attrs["GRIB_stepType"]   == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
 
 
@@ -153,9 +160,16 @@ def test_open_datasets_different_step_types_zeros() -> None:
     res = xarray_store.open_datasets(TEST_DATA_DIFFERENT_STEP_TYPES_ZEROS)
 
     assert len(res) == 2
-    assert res[0].cpr.attrs["GRIB_stepType"]   == "instant"
+    try:
+        cpr0 = res[0]["cpr"]
+        cpr1 = res[1]["cpr"]
+    except KeyError:
+        print("Using the old shortName for Convective precipitation rate")
+        cpr0 = res[0]["cprat"]
+        cpr1 = res[1]["cprat"]
+    assert cpr0.attrs["GRIB_stepType"]   == "instant"
     assert res[0].cfrzr.attrs["GRIB_stepType"] == "instant"
-    assert res[1].cpr.attrs["GRIB_stepType"]   == "avg"
+    assert cpr1.attrs["GRIB_stepType"]   == "avg"
     assert res[1].cfrzr.attrs["GRIB_stepType"] == "avg"
 
 
