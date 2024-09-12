@@ -2,6 +2,12 @@
 Changelog for cfgrib
 ====================
 
+0.9.14.1 (2024-09-12)
+---------------------
+
+- Fixed compatibility with xarray 2024.09.0
+  See `#401 <https://github.com/ecmwf/cfgrib/pull/401>`_.
+
 0.9.14.0 (2024-07-19)
 ---------------------
 
