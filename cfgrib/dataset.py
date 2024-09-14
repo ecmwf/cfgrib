@@ -345,11 +345,11 @@ class OnDiskArray:
     )
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
-    dtype = np.dtype("float32")
+    dtype: np.dtype = attr.attrib(default=np.dtype("float32"), repr=False)
 
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
-        array = np.full(self.shape, fill_value=np.nan, dtype="float32")
+        array = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
@@ -363,7 +363,7 @@ class OnDiskArray:
         header_item_list = expand_item(item[: -self.geo_ndim], self.shape)
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
         array_field_shape = tuple(len(i) for i in header_item_list) + self.shape[-self.geo_ndim :]
-        array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
+        array_field = np.full(array_field_shape, fill_value=np.nan, dtype=self.dtype)
         for header_indexes, message_ids in self.field_id_index.items():
             try:
                 array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
@@ -595,12 +595,22 @@ def build_variable_components(
                     extra_coords_data[coord_name][header_value] = coord_value
         offsets[tuple(header_indexes)] = message_ids
     missing_value = data_var_attrs.get("missingValue", messages.MISSING_VAUE_INDICATOR)
+    if len(offsets) > 0:
+        # Infer the dtype from the first data message
+        header_indexes, message_ids = next(iter(offsets.items()))
+        message = index.get_field(message_ids[0])
+        values = get_values_in_order(message, np.empty(shape)[header_indexes].shape)
+        dtype = values.dtype
+    else:
+        # Fall back to a reasonable default dtype
+        dtype = np.dtype("float32")
     on_disk_array = OnDiskArray(
         index=index,
         shape=shape,
         field_id_index=offsets,
         missing_value=missing_value,
         geo_ndim=len(geo_dims),
+        dtype=dtype,
     )
 
     if "time" in coord_vars and "step" in coord_vars:
