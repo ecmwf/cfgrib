@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import typing as T
+from pathlib import Path
 
 import attr
 import numpy as np
@@ -822,3 +823,16 @@ def open_file(
     index_keys = compute_index_keys(time_dims, extra_coords)
     index = open_fileindex(stream, indexpath, index_keys, ignore_keys=ignore_keys, filter_by_keys=filter_by_keys)
     return open_from_index(index, read_keys, time_dims, extra_coords, errors=errors, **kwargs)
+
+
+def get_or_create_index(fp: str | Path, index_basedir: str | Path, force_index_creation: bool=False) -> messages.FileIndex:
+    """ Create a pygrib index file """
+    index_keys = compute_index_keys()
+    stream = messages.FileStream(str(fp))
+    index = messages.FileIndex.from_indexpath_or_filestream(
+        filestream=stream,
+        index_keys=index_keys,
+        indexpath=str(os.path.join(index_basedir, '{path}.idx')),
+        force_index_creation=force_index_creation
+    )
+    return index

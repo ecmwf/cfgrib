@@ -176,5 +176,18 @@ def dump(inpaths, variable, cdm, engine):
     print(ds_or_da)
 
 
+@cfgrib_cli.command("build_index")
+@click.argument("inpaths", nargs=-1, required=True)
+@click.option("--index-basedir", default=None)
+@click.option("--force-index-creation", default=None)
+def build_index(inpaths, index_basedir, force_index_creation):
+    # type: (T.List[str], str, bool) -> None
+    from .dataset import get_or_create_index
+
+    for fp in inpaths:
+        print(f"{fp}: Creating index")
+        get_or_create_index(str(fp), index_basedir, force_index_creation)
+
+
 if __name__ == "__main__":  # pragma: no cover
     cfgrib_cli()
