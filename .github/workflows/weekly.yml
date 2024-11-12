@@ -38,7 +38,7 @@ jobs:
         conda env export --no-build -f tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
         git diff
     - name: Archive environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
         path: tests/environment-${{ matrix.os }}-${{ matrix.python }}${{ matrix.extras }}.yml
