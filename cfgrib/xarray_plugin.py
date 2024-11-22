@@ -107,6 +107,7 @@ class CfGribBackend(BackendEntrypoint):
         extra_coords: T.Dict[str, str] = {},
         coords_as_attributes: T.Dict[str, str] = {},
         cache_geo_coords: bool = True,
+        values_dtype: np.dtype = messages.DEFAULT_VALUES_DTYPE,
     ) -> xr.Dataset:
         store = CfGribDataStore(
             filename_or_obj,
@@ -122,6 +123,7 @@ class CfGribBackend(BackendEntrypoint):
             extra_coords=extra_coords,
             coords_as_attributes=coords_as_attributes,
             cache_geo_coords=cache_geo_coords,
+            values_dtype=values_dtype,
         )
         with xr.core.utils.close_on_error(store):
             vars, attrs = store.load()  # type: ignore

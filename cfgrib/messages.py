@@ -69,6 +69,7 @@ KEY_TYPES = {
 }
 
 DEFAULT_INDEXPATH = "{path}.{short_hash}.idx"
+DEFAULT_VALUES_DTYPE = np.dtype("float32")
 
 OffsetType = T.Union[int, T.Tuple[int, int]]
 
