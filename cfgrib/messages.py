@@ -523,9 +523,10 @@ class FileIndex(FieldsetIndex):
 
     @classmethod
     def from_indexpath_or_filestream(
-        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG
+        cls, filestream, index_keys, indexpath=DEFAULT_INDEXPATH, computed_keys={}, log=LOG,
+            force_index_creation=False
     ):
-        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger) -> FileIndex
+        # type: (FileStream, T.Sequence[str], str, ComputedKeysType, logging.Logger, bool) -> FileIndex
 
         # Reading and writing the index can be explicitly suppressed by passing indexpath==''.
         if not indexpath:
@@ -533,6 +534,10 @@ class FileIndex(FieldsetIndex):
 
         hash = hashlib.md5(repr(index_keys).encode("utf-8")).hexdigest()
         indexpath = indexpath.format(path=filestream.path, hash=hash, short_hash=hash[:5])
+
+        if force_index_creation and os.path.exists(indexpath):
+            os.unlink(indexpath)
+
         try:
             with compat_create_exclusive(indexpath) as new_index_file:
                 self = cls.from_fieldset(filestream, index_keys, computed_keys)
