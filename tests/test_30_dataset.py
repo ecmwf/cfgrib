@@ -380,3 +380,17 @@ def test_missing_field_values() -> None:
     t2 = res.variables["t2m"]
     assert np.isclose(np.nanmean(t2.data[0, :, :]), 268.375)
     assert np.isclose(np.nanmean(t2.data[1, :, :]), 270.716)
+
+
+def test_default_values_dtype() -> None:
+    res = dataset.open_file(TEST_DATA_MISSING_VALS)
+    assert res.variables["t2m"].data.dtype == np.dtype("float32")
+    assert res.variables["latitude"].data.dtype == np.dtype("float64")
+    assert res.variables["longitude"].data.dtype == np.dtype("float64")
+
+
+def test_float64_values_dtype() -> None:
+    res = dataset.open_file(TEST_DATA_MISSING_VALS, values_dtype=np.dtype("float64"))
+    assert res.variables["t2m"].data.dtype == np.dtype("float64")
+    assert res.variables["latitude"].data.dtype == np.dtype("float64")
+    assert res.variables["longitude"].data.dtype == np.dtype("float64")

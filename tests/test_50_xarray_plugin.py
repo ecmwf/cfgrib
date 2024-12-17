@@ -176,3 +176,17 @@ def test_xr_open_dataset_coords_to_attributes() -> None:
 
     assert "GRIB_surface" in ds["t2m"].attrs
     assert "GRIB_depthBelowLandLayer" in ds["stl1"].attrs
+
+
+def test_xr_open_dataset_default_values_dtype() -> None:
+    ds = xr.open_dataset(TEST_DATA_MISSING_VALS, engine="cfgrib")
+    assert ds["t2m"].data.dtype == np.dtype("float32")
+    assert ds["latitude"].data.dtype == np.dtype("float64")
+    assert ds["longitude"].data.dtype == np.dtype("float64")
+
+
+def test_xr_open_dataset_float64_values_dtype() -> None:
+    ds = xr.open_dataset(TEST_DATA_MISSING_VALS, engine="cfgrib", values_dtype=np.dtype("float64"))
+    assert ds["t2m"].data.dtype == np.dtype("float64")
+    assert ds["latitude"].data.dtype == np.dtype("float64")
+    assert ds["longitude"].data.dtype == np.dtype("float64")
