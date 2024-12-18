@@ -2,6 +2,14 @@
 Changelog for cfgrib
 ====================
 
+0.9.15.0 (2024-12-18)
+---------------------
+
+- Added `values_dtype` argument to `open_dataset()` to allow control over the type of numpy
+  array used for the values array (default is `np.dtype("float32")`). Usage:
+  ``ds = xr.open_dataset("data.grib", engine="cfgrib", backend_kwargs={"values_dtype": np.dtype("float64")},)``
+  See `#407 <https://github.com/ecmwf/cfgrib/pull/407>`_.
+
 0.9.14.1 (2024-09-12)
 ---------------------
 
