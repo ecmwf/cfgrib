@@ -345,11 +345,11 @@ class OnDiskArray:
     )
     missing_value: float
     geo_ndim: int = attr.attrib(default=1, repr=False)
-    dtype = np.dtype("float32")
+    dtype: np.dtype = attr.attrib(default=messages.DEFAULT_VALUES_DTYPE, repr=False)
 
     def build_array(self) -> np.ndarray:
         """Helper method used to test __getitem__"""
-        array = np.full(self.shape, fill_value=np.nan, dtype="float32")
+        array = np.full(self.shape, fill_value=np.nan, dtype=self.dtype)
         for header_indexes, message_ids in self.field_id_index.items():
             # NOTE: fill a single field as found in the message
             message = self.index.get_field(message_ids[0])  # type: ignore
@@ -363,7 +363,7 @@ class OnDiskArray:
         header_item_list = expand_item(item[: -self.geo_ndim], self.shape)
         header_item = [{ix: i for i, ix in enumerate(it)} for it in header_item_list]
         array_field_shape = tuple(len(i) for i in header_item_list) + self.shape[-self.geo_ndim :]
-        array_field = np.full(array_field_shape, fill_value=np.nan, dtype="float32")
+        array_field = np.full(array_field_shape, fill_value=np.nan, dtype=self.dtype)
         for header_indexes, message_ids in self.field_id_index.items():
             try:
                 array_field_indexes = [it[ix] for it, ix in zip(header_item, header_indexes)]
@@ -497,6 +497,7 @@ def build_variable_components(
     extra_coords: T.Dict[str, str] = {},
     coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
+    values_dtype: np.dtype = messages.DEFAULT_VALUES_DTYPE,
 ) -> T.Tuple[T.Dict[str, int], Variable, T.Dict[str, Variable]]:
     data_var_attrs = enforce_unique_attributes(index, DATA_ATTRIBUTES_KEYS, filter_by_keys)
     grid_type_keys = GRID_TYPE_MAP.get(index.getone("gridType"), [])
@@ -601,6 +602,7 @@ def build_variable_components(
         field_id_index=offsets,
         missing_value=missing_value,
         geo_ndim=len(geo_dims),
+        dtype=values_dtype,
     )
 
     if "time" in coord_vars and "step" in coord_vars:
@@ -673,6 +675,7 @@ def build_dataset_components(
     extra_coords: T.Dict[str, str] = {},
     coords_as_attributes: T.Dict[str, str] = {},
     cache_geo_coords: bool = True,
+    values_dtype: np.dtype = messages.DEFAULT_VALUES_DTYPE,
 ) -> T.Tuple[T.Dict[str, int], T.Dict[str, Variable], T.Dict[str, T.Any], T.Dict[str, T.Any]]:
     dimensions = {}  # type: T.Dict[str, int]
     variables = {}  # type: T.Dict[str, Variable]
@@ -700,6 +703,7 @@ def build_dataset_components(
                 extra_coords=extra_coords,
                 coords_as_attributes=coords_as_attributes,
                 cache_geo_coords=cache_geo_coords,
+                values_dtype=values_dtype,
             )
         except DatasetBuildError as ex:
             # NOTE: When a variable has more than one value for an attribute we need to raise all
