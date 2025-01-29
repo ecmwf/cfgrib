@@ -6,6 +6,7 @@ internally as an array of *Field*, each *Field* being represented by a file path
 length where the actual GRIB message can be found. Thus, a *Fieldset* can represent an
 ordered collection of *Field* which are at various locations of several files.
 
+
 *cfgrib* now provides the definition of a ``Field`` and ``Fieldset`` types in the ``cfgrib.abc`` module
 and additionally a ``MappingFieldset`` for specialised use.
 The implementations are based on simple python sequences and mappings so that *cfgrib*
