@@ -16,6 +16,7 @@ Classes that implement the ``Fieldset`` and the ``MappingFieldset`` interface
 can use the low-level interface ``cfgrib.open_fielset`` to obtain a ``cfgrib.Dataset``
 or they can be passed directly to *Xarray*.
 
+
 The simplest *Fieldset* is a list of dictionaries:
 
 .. code-block:: python
