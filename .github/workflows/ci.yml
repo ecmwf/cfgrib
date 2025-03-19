@@ -24,7 +24,7 @@ jobs:
   downstream-ci:
     name: downstream-ci
     if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
-    uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci.yml@main
+    uses: ecmwf/downstream-ci/.github/workflows/downstream-ci.yml@main
     with:
       cfgrib: ecmwf/cfgrib@${{ github.event.pull_request.head.sha || github.sha }}
       codecov_upload: true
@@ -40,10 +40,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Dispatch private downstream CI
-        uses: ecmwf-actions/dispatch-private-downstream-ci@v1
+        uses: ecmwf/dispatch-private-downstream-ci@v1
         with:
           token: ${{ secrets.GH_REPO_READ_TOKEN }}
-          owner: ecmwf-actions
+          owner: ecmwf
           repository: private-downstream-ci
           event_type: downstream-ci
           payload: '{"cfgrib": "ecmwf/cfgrib@${{ github.event.pull_request.head.sha || github.sha }}"}'
@@ -52,7 +52,7 @@ jobs:
   downstream-ci-hpc:
     name: downstream-ci-hpc
     if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
-    uses: ecmwf-actions/downstream-ci/.github/workflows/downstream-ci-hpc.yml@main
+    uses: ecmwf/downstream-ci/.github/workflows/downstream-ci-hpc.yml@main
     with:
       cfgrib: ecmwf/cfgrib@${{ github.event.pull_request.head.sha || github.sha }}
     secrets: inherit
@@ -67,10 +67,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Dispatch private downstream CI
-        uses: ecmwf-actions/dispatch-private-downstream-ci@v1
+        uses: ecmwf/dispatch-private-downstream-ci@v1
         with:
           token: ${{ secrets.GH_REPO_READ_TOKEN }}
-          owner: ecmwf-actions
+          owner: ecmwf
           repository: private-downstream-ci
           event_type: downstream-ci-hpc
           payload: '{"cfgrib": "ecmwf/cfgrib@${{ github.event.pull_request.head.sha || github.sha }}"}'

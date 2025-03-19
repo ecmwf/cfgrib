@@ -7,4 +7,4 @@ on:
  
 jobs:
   label:
-    uses: ecmwf-actions/reusable-workflows/.github/workflows/label-pr.yml@v2
+    uses: ecmwf/reusable-workflows/.github/workflows/label-pr.yml@v2
