@@ -9,7 +9,7 @@ attrs==19.3.0
 cffi==1.14.0
 click==7.1.2
 coverage==5.1             # via pytest-cov
-dask[array]==2021.10.0
+dask[array]==2024.8.2
 execnet==1.7.1            # via pytest-cache
 importlib-metadata==1.6.0  # via pluggy, pytest
 mccabe==0.6.1             # via pytest-mccabe
