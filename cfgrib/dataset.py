@@ -222,6 +222,12 @@ COORD_ATTRS = {
         "standard_name": "air_pressure",
         "long_name": "pressure",
     },
+    "potentialVorticity": {
+        "units": "K m^2 kg^-1 s^-1",
+        "standard_name": "ertel_potential_vorticity",
+        "units_metadata": "temperature: difference",
+        "long_name": "potential_vorticity",
+    },
     # ensemble
     "number": {
         "units": "1",
