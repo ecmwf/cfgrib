@@ -227,7 +227,7 @@ COORD_ATTRS = {
         "standard_name": "ertel_potential_vorticity",
         "units_metadata": "temperature: difference",
         "long_name": "potential_vorticity",
-    }
+    },
     # ensemble
     "number": {
         "units": "1",
