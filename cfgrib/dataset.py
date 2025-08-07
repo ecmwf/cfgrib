@@ -233,6 +233,7 @@ COORD_ATTRS = {
         "units": "hours",
         "standard_name": "forecast_period",
         "long_name": "time since forecast_reference_time",
+        "dtype": "timedelta64[ns]",
     },
     "time": {
         "units": "seconds since 1970-01-01T00:00:00",
