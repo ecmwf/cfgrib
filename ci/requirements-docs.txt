@@ -14,7 +14,7 @@ click==7.1.2
 docutils==0.16            # via sphinx
 idna==3.7                 # via requests
 imagesize==1.2.0          # via sphinx
-jinja2==3.1.4             # via sphinx
+jinja2==3.1.6             # via sphinx
 markupsafe==1.1.1         # via jinja2
 numpy==1.22.0
 packaging==20.3           # via sphinx
@@ -25,7 +25,7 @@ pyparsing==2.4.7          # via packaging
 pytest-runner==5.2
 python-dateutil==2.8.1    # via pandas
 pytz==2020.1              # via babel, pandas
-requests==2.32.0          # via sphinx
+requests==2.32.4          # via sphinx
 six==1.14.0               # via packaging, python-dateutil
 snowballstemmer==2.0.0    # via sphinx
 sphinx==3.0.3
