@@ -10,13 +10,14 @@ if Version(xr.__version__) <= Version("0.17.0"):
     raise ImportError("xarray_plugin module needs xarray version >= 0.18+")
 
 from xarray.backends.common import AbstractDataStore, BackendArray, BackendEntrypoint
+from xarray.backends.locks import SerializableLock, ensure_lock
 
 from . import abc, dataset, messages
 
 # FIXME: Add a dedicated lock, even if ecCodes is supposed to be thread-safe
 #   in most circumstances. See:
 #       https://confluence.ecmwf.int/display/ECC/Frequently+Asked+Questions
-ECCODES_LOCK = xr.backends.locks.SerializableLock()  # type: ignore
+ECCODES_LOCK = SerializableLock()  # type: ignore
 
 
 class CfGribDataStore(AbstractDataStore):
@@ -32,7 +33,7 @@ class CfGribDataStore(AbstractDataStore):
     ):
         if lock is None:
             lock = ECCODES_LOCK
-        self.lock = xr.backends.locks.ensure_lock(lock)  # type: ignore
+        self.lock = ensure_lock(lock)  # type: ignore
         if isinstance(filename, (str, pathlib.PurePath)):
             opener = dataset.open_file
         else:
