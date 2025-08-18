@@ -6,4 +6,4 @@ pytest-mccabe
 pytest-pep8
 pytest-runner
 scipy
-xarray>=2025.7.0
+xarray<2025.6.0
