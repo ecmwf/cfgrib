@@ -26,6 +26,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
+from xarray.backends import api as backends_api
 
 from . import cfmessage, dataset, messages
 
@@ -252,12 +253,12 @@ def canonical_dataset_to_grib(dataset, path, mode="wb", no_warn=False, grib_keys
         warnings.warn("GRIB write support is experimental, DO NOT RELY ON IT!", FutureWarning)
 
     # validate Dataset keys, DataArray names, and attr keys/values
-    xr.backends.api._validate_dataset_names(dataset)  # type: ignore
+    backends_api._validate_dataset_names(dataset)  # type: ignore
     # _validate_attrs takes the engine name as its 2nd arg from xarray 2024.09.0
     try:
-        xr.backends.api._validate_attrs(dataset)  # type: ignore
+        backends_api._validate_attrs(dataset)  # type: ignore
     except TypeError:
-        xr.backends.api._validate_attrs(dataset, "cfgrib")  # type: ignore
+        backends_api._validate_attrs(dataset, "cfgrib")  # type: ignore
 
     real_grib_keys = {str(k)[5:]: v for k, v in dataset.attrs.items() if str(k)[:5] == "GRIB_"}
     real_grib_keys.update(grib_keys)
