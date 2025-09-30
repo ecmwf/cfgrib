@@ -6,8 +6,8 @@ Changelog for cfgrib
 ---------------------
 
 - Set default dtype for step to `timedelta64[ns]` for compatibilty with
- future versions of xarray.
- See `#427 <https://github.com/ecmwf/cfgrib/pull/427>`_.
+  future versions of xarray.
+  See `#427 <https://github.com/ecmwf/cfgrib/pull/427>`_.
 
 - Fixed  xarray.backends imports for compatibilty with recent versions of xarray.
   See `#409 <https://github.com/ecmwf/cfgrib/pull/409>`_.
