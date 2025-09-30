@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.9.15.0"
+__version__ = "0.9.15.1"
 
 # cfgrib core API depends on the ECMWF ecCodes C-library only
 from .abc import Field, Fieldset, Index, MappingFieldset

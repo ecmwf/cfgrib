@@ -2,6 +2,17 @@
 Changelog for cfgrib
 ====================
 
+0.9.15.1 (2025-09-30)
+---------------------
+
+- Set default dtype for step to `timedelta64[ns]` for compatibilty with
+ future versions of xarray.
+ See `#427 <https://github.com/ecmwf/cfgrib/pull/427>`_.
+
+- Fixed  xarray.backends imports for compatibilty with recent versions of xarray.
+  See `#409 <https://github.com/ecmwf/cfgrib/pull/409>`_.
+
+
 0.9.15.0 (2024-12-18)
 ---------------------
 
