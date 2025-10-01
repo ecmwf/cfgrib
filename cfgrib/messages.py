@@ -98,8 +98,10 @@ class Message(abc.MutableField):
         else:
             # MULTI-FIELD is enabled only when accessing additional fields
             with multi_enabled(file):
-                for _ in range(field_in_message + 1):
+                for i in range(field_in_message + 1):
                     codes_id = eccodes.codes_grib_new_from_file(file)
+                    if codes_id is not None and i < field_in_message:
+                        eccodes.codes_release(codes_id)
 
         if codes_id is None:
             raise EOFError("End of file: %r" % file)
