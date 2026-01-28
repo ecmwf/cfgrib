@@ -3,8 +3,7 @@
 
 import os
 import sys
-
-import pkg_resources
+from importlib.metadata import version as get_version
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -40,7 +39,7 @@ copyright = "2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF
 # the built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = pkg_resources.get_distribution("cfgrib").version
+release = get_version("cfgrib")
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
 

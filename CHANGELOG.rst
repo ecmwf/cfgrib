@@ -5,6 +5,9 @@ Changelog for cfgrib
 unreleased
 ----------
 
+- Deprecating setuptools in favor of hatchling and pyproject.toml.
+  See `#438 <https://github.com/ecmwf/cfgrib/pull/438>`_.
+
 - Setup and apply linters via pre-commit.
   See `#439 <https://github.com/ecmwf/cfgrib/pull/439>`_.
 
@@ -12,12 +15,12 @@ unreleased
 0.9.15.1 (2025-09-30)
 ---------------------
 
+- Fixed  xarray.backends imports for compatibilty with recent versions of xarray.
+  See `#409 <https://github.com/ecmwf/cfgrib/pull/409>`_.
+
 - Set default dtype for step to `timedelta64[ns]` for compatibilty with
   future versions of xarray.
   See `#427 <https://github.com/ecmwf/cfgrib/pull/427>`_.
-
-- Fixed  xarray.backends imports for compatibilty with recent versions of xarray.
-  See `#409 <https://github.com/ecmwf/cfgrib/pull/409>`_.
 
 
 0.9.15.0 (2024-12-18)

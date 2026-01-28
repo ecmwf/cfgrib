@@ -1,9 +1,0 @@
-dask[array]
-pytest
-pytest-cov
-pytest-flakes
-pytest-mccabe
-pytest-pep8
-pytest-runner
-scipy
-xarray<2025.6.0

@@ -140,6 +140,24 @@ def to_netcdf(
         for var in ds.data_vars:
             netcdf_kwargs["encoding"].setdefault(var, var_encoding)
 
+    # Add default encoding for time variables to avoid int64 casting issues
+    netcdf_kwargs.setdefault("encoding", {})
+    for var_name in ds.variables:
+        if var_name not in netcdf_kwargs["encoding"]:
+            var = ds[var_name]
+            # Check if variable has datetime-like or timedelta-like dtype
+            dtype_str = str(var.dtype)
+            if "datetime64" in dtype_str:
+                netcdf_kwargs["encoding"][var_name] = {
+                    "units": "seconds since 1970-01-01",
+                    "dtype": "int32",
+                }
+            elif "timedelta64" in dtype_str:
+                netcdf_kwargs["encoding"][var_name] = {
+                    "units": "seconds",
+                    "dtype": "int32",
+                }
+
     ds.to_netcdf(outpath, **netcdf_kwargs)
 
 

@@ -1,0 +1,73 @@
+name: Test Package
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-package:
+    name: Build & verify package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: hynek/build-and-inspect-python-package@v2.14.0
+        id: baipp
+
+    outputs:
+      # Used to define the matrix for tests below. The value is based on
+      # packaging metadata (trove classifiers).
+      python-versions: ${{ steps.baipp.outputs.supported_python_classifiers_json_array }}
+
+  tests:
+    name: Tests on ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    needs: build-package
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Created by the build-and-inspect-python-package action above.
+        python-version: ${{ fromJson(needs.build-package.outputs.python-versions) }}
+
+    env:
+      PYTHON: ${{ matrix.python-version }}
+
+    steps:
+      - name: Get tox file
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            tox.ini
+            tests/
+          persist-credentials: false
+      - name: Download pre-built packages
+        uses: actions/download-artifact@v6
+        with:
+          name: Packages
+          path: dist
+      - run: |
+          tar xf dist/*.tar.gz --strip-components=1
+          rm -rf cfgrib
+          rm -rf cf2cdm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+      - uses: hynek/setup-cached-uv@v2
+
+      - name: Run tests against whl
+        run: |
+          uv run --with dist/*.whl --group test --python ${{ matrix.python-version }} \
+            pytest -v --cache-clear
+
+      - name: Run tests against sdist
+        run: |
+          uv run --with dist/*.tar.gz --group test --python ${{ matrix.python-version }} \
+            pytest -v --cache-clear
