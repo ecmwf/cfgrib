@@ -22,7 +22,7 @@ test: unit-test doc-test
 
 code-quality:
 	flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-	ruff check --select C901,E9,W .
+	ruff check .
 	mypy --strict cfgrib tests/test_*py
 
 code-style:
