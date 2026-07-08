@@ -15,6 +15,15 @@ norecursedirs = [
     ".tox",
 ]
 
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+select = ["C901", "E9", "W"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
 [tool.coverage.run]
 branch = true
 omit = ["setup.py"]
