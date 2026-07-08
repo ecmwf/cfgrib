@@ -4,13 +4,11 @@
 #
 #    pip-compile --output-file ci/requirements-tests.txt setup.py ci/requirements-tests.in
 #
-apipkg==1.5               # via execnet
 attrs==19.3.0
 cffi==1.14.0
 click==7.1.2
 coverage==5.1             # via pytest-cov
 dask[array]==2024.8.2
-execnet==1.7.1            # via pytest-cache
 importlib-metadata==1.6.0  # via pluggy, pytest
 more-itertools==8.2.0     # via pytest
 numpy==1.22.0
@@ -22,7 +20,7 @@ pyflakes==2.2.0           # via pytest-flakes
 pyparsing==2.4.7          # via packaging
 pytest-cov==2.8.1
 pytest-flakes==4.0.0
-ruff
+ruff==0.15.20
 pytest-runner==5.2
 pytest==7.2.0
 python-dateutil==2.8.1    # via pandas
