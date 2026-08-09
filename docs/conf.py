@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import sys
 
-import pkg_resources
+try:
+    from importlib import metadata as importlib_metadata
+except ImportError:  # pragma: no cover - Python 3.7 compatibility
+    importlib_metadata = None
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
@@ -14,6 +18,21 @@ project_root = os.path.dirname(cwd)
 # This lets us ensure that the source package is imported, and that its
 # version is used.
 sys.path.insert(0, project_root)
+
+
+def _get_release():
+    if importlib_metadata is not None:
+        try:
+            return importlib_metadata.version("cfgrib")
+        except importlib_metadata.PackageNotFoundError:
+            pass
+
+    version_path = os.path.join(project_root, "cfgrib", "__init__.py")
+    with open(version_path) as version_file:
+        version_match = re.search(r'^__version__ = "(.*)"', version_file.read(), re.M)
+    if version_match is None:
+        raise RuntimeError("cannot determine cfgrib version")
+    return version_match.group(1)
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -40,7 +59,7 @@ copyright = "2017-2021 European Centre for Medium-Range Weather Forecasts (ECMWF
 # the built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = pkg_resources.get_distribution("cfgrib").version
+release = _get_release()
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
 
