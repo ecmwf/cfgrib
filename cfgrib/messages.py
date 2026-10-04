@@ -322,10 +322,15 @@ class FileStream(abc.MappingFieldset[OffsetType, Message]):
     14760.0
     """
 
-    path: str
+    path: T.Union[str, os.PathLike[str]]
     errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
+
+    def __attrs_post_init__(self) -> None:
+        # Keep the path representation stable for index formatting, equality,
+        # and pickling when callers pass pathlib.Path or another PathLike.
+        self.path = os.fspath(self.path)
 
     #
     # NOTE: we implement `.items()`, and not `__iter__()`, as a performance optimisation

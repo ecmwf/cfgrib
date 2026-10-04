@@ -1,4 +1,5 @@
 import os.path
+import pathlib
 
 import eccodes  # type: ignore
 import numpy as np
@@ -163,7 +164,7 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
 
     # create index file
     res = messages.FileIndex.from_indexpath_or_filestream(
-        messages.FileStream(str(grib_file)), ["paramId"]
+        messages.FileStream(grib_file), ["paramId"]
     )
     assert isinstance(res, messages.FileIndex)
 
@@ -219,3 +220,13 @@ def test_FileStream() -> None:
     res = messages.FileStream(str(__file__))
     with pytest.raises(eccodes.UnsupportedEditionError):
         res[0]
+
+
+def test_FileStream_pathlike(tmpdir: py.path.local) -> None:
+    grib_file = pathlib.Path(str(tmpdir.join("file.grib")))
+    grib_file.write_bytes(pathlib.Path(TEST_DATA).read_bytes())
+
+    stream = messages.FileStream(grib_file)
+    assert stream.path == os.fspath(grib_file)
+    assert isinstance(stream.path, str)
+    assert stream[0]["paramId"] == 129
