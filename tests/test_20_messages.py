@@ -135,6 +135,31 @@ def test_compat_create_exclusive(tmpdir: py.path.local) -> None:
             pass  # pragma: no cover
 
 
+def test_compat_replace(tmpdir: py.path.local) -> None:
+    test_file = tmpdir.join("file.grib.idx")
+    test_file.write_binary(b"old")
+
+    with pytest.raises(RuntimeError):
+        with messages.compat_replace(str(test_file)) as file:
+            file.write(b"partial")
+            raise RuntimeError("Test remove")
+    assert test_file.read_binary() == b"old"
+
+    with messages.compat_replace(str(test_file)) as file:
+        file.write(b"new")
+    assert test_file.read_binary() == b"new"
+
+    # can't replace a folder
+    test_folder = tmpdir.join("folder.grib.idx")
+    test_folder.mkdir()
+    with pytest.raises(OSError):
+        with messages.compat_replace(str(test_folder)) as file:
+            file.write(b"new")
+
+    # no temporary file is left behind
+    assert sorted(tmpdir.listdir()) == [test_file, test_folder]
+
+
 def test_FileIndex() -> None:
     res = messages.FileIndex.from_fieldset(messages.FileStream(TEST_DATA), ["paramId"])
     assert res["paramId"] == [129, 130]
@@ -196,6 +221,82 @@ def test_FileIndex_from_indexpath_or_filestream(tmpdir: py.path.local) -> None:
         messages.FileStream(str(grib_file)), ["paramId"]
     )
     assert isinstance(res, messages.FileIndex)
+
+
+def fail_from_fieldset(*args: object, **kwargs: object) -> None:
+    raise AssertionError("the index file was not used")
+
+
+def test_FileIndex_from_indexpath_or_filestream_overwrite_stale(
+    tmpdir: py.path.local, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    grib_file = tmpdir.join("file.grib")
+    with open(TEST_DATA, "rb") as file:
+        grib_file.write_binary(file.read())
+    stream = messages.FileStream(str(grib_file))
+    indexpath = str(tmpdir.join("file.grib.idx"))
+
+    # create an index file older than the GRIB file
+    messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+    grib_mtime = os.path.getmtime(str(grib_file))
+    os.utime(indexpath, (grib_mtime - 10, grib_mtime - 10))
+
+    # the stale index file is overwritten
+    messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+
+    monkeypatch.setattr(messages.FileIndex, "from_fieldset", fail_from_fieldset)
+    res = messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+    assert res["paramId"] == [129, 130]
+    assert sorted(p.basename for p in tmpdir.listdir()) == ["file.grib", "file.grib.idx"]
+
+
+def test_FileIndex_from_indexpath_or_filestream_overwrite_incompatible(
+    tmpdir: py.path.local, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    grib_file = tmpdir.join("file.grib")
+    other_file = tmpdir.join("other.grib")
+    with open(TEST_DATA, "rb") as file:
+        data = file.read()
+    grib_file.write_binary(data)
+    other_file.write_binary(data)
+    stream = messages.FileStream(str(grib_file))
+    indexpath = str(tmpdir.join("file.grib.idx"))
+
+    # create an index file that belongs to a different GRIB file
+    messages.FileIndex.from_indexpath_or_filestream(
+        messages.FileStream(str(other_file)), ["paramId"], indexpath=indexpath
+    )
+
+    # the incompatible index file is overwritten
+    messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+
+    monkeypatch.setattr(messages.FileIndex, "from_fieldset", fail_from_fieldset)
+    res = messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+    assert res.fieldset == stream
+    assert res["paramId"] == [129, 130]
+
+
+def test_FileIndex_from_indexpath_or_filestream_overwrite_fails(
+    tmpdir: py.path.local, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    grib_file = tmpdir.join("file.grib")
+    with open(TEST_DATA, "rb") as file:
+        grib_file.write_binary(file.read())
+    stream = messages.FileStream(str(grib_file))
+    indexpath = str(tmpdir.join("file.grib.idx"))
+
+    messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+    grib_mtime = os.path.getmtime(str(grib_file))
+    os.utime(indexpath, (grib_mtime - 10, grib_mtime - 10))
+
+    def fail_replace(path: str) -> None:
+        raise PermissionError(path)
+
+    # a stale index file that can't be overwritten is ignored, as before
+    monkeypatch.setattr(messages, "compat_replace", fail_replace)
+    res = messages.FileIndex.from_indexpath_or_filestream(stream, ["paramId"], indexpath=indexpath)
+    assert res["paramId"] == [129, 130]
+    assert os.path.getmtime(indexpath) < grib_mtime
 
 
 def test_FileIndex_errors() -> None:
