@@ -79,8 +79,10 @@ def from_grib_date_time(message, date_key="dataDate", time_key="dataTime", epoch
 def to_grib_date_time(
     message, time_ns, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH
 ):
-    # type: (abc.MutableField, int, str, str, datetime.datetime) -> None
-    time_s = time_ns.astype(np.int64) * 1e-9
+    # type: (abc.MutableField, np.datetime64, str, str, datetime.datetime) -> None
+    # integer arithmetic: converting the nanoseconds to a float loses the sub-second
+    # precision needed to land on the right minute near the ends of the datetime64[ns] range
+    time_s = int(time_ns.astype(np.int64)) // 1_000_000_000
     time = epoch + datetime.timedelta(seconds=time_s)
     datetime_iso = str(time)
     message[date_key] = int(datetime_iso[:10].replace("-", ""))
@@ -98,15 +100,39 @@ def from_grib_step(message, step_key="endStep:int", step_unit_key="stepUnits:int
 
 
 def to_grib_step(
-    message, step_ns, step_unit=1, step_key="endStep:int", step_unit_key="stepUnits:int"
+    message, step_ns, step_unit=None, step_key="endStep:int", step_unit_key="stepUnits:int"
 ):
-    # type: (abc.MutableField, int, int, str, str) -> None
-    step_s = step_ns * 1e-9
+    # type: (abc.MutableField, T.Union[int, np.timedelta64], T.Optional[int], str, str) -> None
+    """
+    Set the step keys of the ``message`` from a step given in nanoseconds, as found in
+    the ``step`` coordinate of a cfgrib ``xr.Dataset``.
+
+    :param message: the target GRIB message
+    :param step_ns: the step in nanoseconds, as an integer or a ``np.timedelta64``
+    :param step_unit: the GRIB ``stepUnits`` code to use. By default the coarsest unit
+        among hours, minutes and seconds that represents the step exactly is used,
+        so sub-hourly steps are not truncated to whole hours.
+    :param step_key: the step key, defaults to "endStep:int"
+    :param step_unit_key: the step units key, defaults to "stepUnits:int"
+    """
+    if isinstance(step_ns, np.timedelta64):
+        step_ns_int = int(step_ns.astype("timedelta64[ns]").astype(np.int64))
+    else:
+        step_ns_int = int(step_ns)
+    step_s, step_rest_ns = divmod(step_ns_int, 1_000_000_000)
+    if step_rest_ns:
+        raise ValueError("step %r ns is not a whole number of seconds" % step_ns_int)
+    if step_unit is None:
+        step_unit = 1 if step_s % 3600 == 0 else 0 if step_s % 60 == 0 else 13
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[step_unit]
     if to_seconds is None:
         raise ValueError("unsupported stepUnit %r" % step_unit)
-    message[step_key] = int(step_s / to_seconds)
+    assert isinstance(to_seconds, int)  # mypy misses this
+    if step_s % to_seconds:
+        raise ValueError("step %r s is not a multiple of stepUnit %r" % (step_s, step_unit))
+    # ecCodes interprets the step value in the current step units, so set the units first
     message[step_unit_key] = step_unit
+    message[step_key] = step_s // to_seconds
 
 
 def from_grib_step_units(message):
