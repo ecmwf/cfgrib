@@ -9,7 +9,7 @@ pytest.importorskip("xarray")  # noqa
 
 import xarray as xr
 
-from cfgrib import xarray_to_grib
+from cfgrib import xarray_store, xarray_to_grib
 
 
 # we make sure to test the cases where we have a) multiple dates, and b) a single date
@@ -71,3 +71,27 @@ def test_to_grib(canonic_da: xr.DataArray, tmpdir: py.path.local) -> None:
     canonic_ds = canonic_da.to_dataset(name="t")
     with pytest.warns(FutureWarning):
         xarray_to_grib.to_grib(canonic_ds, str(out_path))
+
+
+def test_to_grib_sub_hourly_steps_round_trip(tmpdir: py.path.local) -> None:
+    out_path = tmpdir.join("res.grib")
+    steps = pd.to_timedelta(["0h", "30min", "1h", "90min", "3h", "3h45s"])
+    da = xr.DataArray(
+        np.zeros((1, len(steps), 5, 6)),
+        coords=[
+            pd.date_range("2018-01-01T00:00", periods=1),
+            steps,
+            np.linspace(90.0, -90.0, 5),
+            np.linspace(0.0, 360.0, 6, endpoint=False),
+        ],
+        dims=["time", "step", "latitude", "longitude"],
+    )
+    canonic_ds = da.to_dataset(name="t")
+
+    xarray_to_grib.canonical_dataset_to_grib(canonic_ds, str(out_path), no_warn=True)
+
+    res = xarray_store.open_dataset(str(out_path), indexpath="")
+
+    step_s = [0, 1800, 3600, 5400, 10800, 10845]
+    assert (res.step.values / np.timedelta64(1, "s")).tolist() == step_s
+    assert ((res.valid_time.values - res.time.values) / np.timedelta64(1, "s")).tolist() == step_s

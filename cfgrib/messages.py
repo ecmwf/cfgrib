@@ -169,8 +169,11 @@ class Message(abc.MutableField):
         return self.message_get(key, key_type=key_type)
 
     def __setitem__(self, item: str, value: T.Any) -> None:
+        key, _, key_type_text = item.partition(":")
+        if key_type_text not in KEY_TYPES:
+            raise ValueError("key type not supported %r" % key_type_text)
         try:
-            return self.message_set(item, value)
+            return self.message_set(key, value)
         except eccodes.GribInternalError as ex:
             if self.errors == "ignore":
                 pass
