@@ -202,3 +202,48 @@ def test_alternating_scanning_mercator() -> None:
     assert np.isnan(values[5])
     assert values[760500] == 1.5
     values_all = ds.variables["shww"].data[:]
+
+
+@pytest.mark.parametrize("channels", [[7, 1, 3], [3, 1, 7]])
+@pytest.mark.parametrize("squeeze", [False, True])
+@pytest.mark.parametrize("filter_channel", [False, True])
+def test_open_dataset_satellite_channels(tmp_path, channels, squeeze, filter_channel):
+    """Satellite channels with the same parameter retain their separate data."""
+    path = tmp_path / "satellite.grib2"
+    with path.open("wb") as stream:
+        for channel in channels:
+            message = gribapi.grib_new_from_samples("regular_ll_sfc_grib2")
+            try:
+                for key, value in [
+                    ("centre", 98),
+                    ("discipline", 3),
+                    ("setLocalDefinition", 1),
+                    ("grib2LocalSectionNumber", 24),
+                    ("productDefinitionTemplateNumber", 32),
+                    ("NB", 1),
+                    ("satelliteSeries", 334),
+                    ("satelliteNumber", 71),
+                    ("instrumentType", 210),
+                    ("parameterCategory", 1),
+                    ("parameterNumber", 31),
+                    ("channelNumber", channel),
+                ]:
+                    gribapi.grib_set(message, key, value)
+                size = gribapi.grib_get(message, "numberOfPoints")
+                gribapi.grib_set_values(message, np.full(size, channel, dtype=float))
+                gribapi.grib_write(message, stream)
+            finally:
+                gribapi.grib_release(message)
+
+    kwargs = {"indexpath": "", "squeeze": squeeze}
+    if filter_channel:
+        kwargs["filter_by_keys"] = {"channelNumber": 3}
+    with xarray_store.open_dataset(str(path), backend_kwargs=kwargs) as result:
+        expected_channels = [3] if filter_channel else [1, 3, 7]
+        np.testing.assert_array_equal(np.atleast_1d(result.channelNumber), expected_channels)
+        assert ("channelNumber" in result.dims) == (not squeeze or not filter_channel)
+        for channel in expected_channels:
+            field = result.cdrfl
+            if "channelNumber" in field.dims:
+                field = field.sel(channelNumber=channel)
+            np.testing.assert_array_equal(field.values, np.full(field.shape, channel))
