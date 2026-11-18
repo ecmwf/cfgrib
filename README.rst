@@ -792,6 +792,41 @@ remove them and try again in case of problems. Index files saving can be disable
 adding ``indexpath=''`` to the ``backend_kwargs`` keyword argument.
 
 
+For heterogeneous GRIB files, ``open_datasets()`` may need to read the same index
+several times while separating the data into compatible datasets. Disabling the
+index with ``indexpath=''`` can therefore cause repeated scans of the GRIB file.
+To reuse the index during a call without leaving index files beside the input,
+put the indexes in a temporary directory instead:
+
+.. code-block:: python
+
+    import os
+    from tempfile import TemporaryDirectory
+
+    import cfgrib
+
+    with TemporaryDirectory(prefix="cfgrib-index-") as cache_dir:
+        datasets = cfgrib.open_datasets(
+            "nam.t00z.awp21100.tm00.grib2",
+            backend_kwargs={
+                "indexpath": os.path.join(cache_dir, "{short_hash}.idx")
+            },
+        )
+        try:
+            for ds in datasets:
+                print(ds.sizes)  # Process each dataset here.
+        finally:
+            for ds in datasets:
+                ds.close()
+
+Use a separate temporary directory for each input GRIB file. The
+``{short_hash}`` placeholder distinguishes indexes with different sets of keys.
+``TemporaryDirectory`` removes the index files when the block exits, including
+when processing raises an exception; the original GRIB file is not removed.
+The index cache does not load the data into memory, so the original GRIB file
+must remain available while lazy data are being read.
+
+
 Geographic Coordinate Caching
 -----------------------------
 
