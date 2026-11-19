@@ -1,5 +1,3 @@
-/.github/workflows/ @iainrussell @mcocdawc
-
 # BEGIN org baseline: maintainers own .github/ and CODEOWNERS (ci-infrastructure scripts/apply-codeowners.sh)
 /.github/ @iainrussell
 /CODEOWNERS @iainrussell
