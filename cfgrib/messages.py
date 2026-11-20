@@ -511,6 +511,21 @@ def compat_create_exclusive(path):
             raise
 
 
+@contextlib.contextmanager
+def compat_replace(path):
+    # type: (str) -> T.Generator[T.IO[bytes], None, None]
+    # write to a temporary file and then atomically move it over `path`,
+    #   so that concurrent readers never see a partially written file
+    tmp_path = "{}.{}.tmp".format(path, os.urandom(4).hex())
+    with compat_create_exclusive(tmp_path) as file:
+        yield file
+    try:
+        os.replace(tmp_path, path)
+    except Exception:
+        os.unlink(tmp_path)
+        raise
+
+
 @attr.attrs(auto_attribs=True)
 class FileIndex(FieldsetIndex):
     fieldset: FileStream
@@ -564,8 +579,16 @@ class FileIndex(FieldsetIndex):
                 log.warning("Ignoring index file %r older than GRIB file", indexpath)
         except Exception:
             log.exception("Can't read index file %r", indexpath)
+            return cls.from_fieldset(filestream, index_keys, computed_keys)
 
-        return cls.from_fieldset(filestream, index_keys, computed_keys)
+        # overwrite the stale or incompatible index file so the next open can use it
+        index = cls.from_fieldset(filestream, index_keys, computed_keys)
+        try:
+            with compat_replace(indexpath) as new_index_file:
+                pickle.dump(index, new_index_file)
+        except Exception as ex:
+            log.warning("Can't overwrite index file %r: %s", indexpath, ex)
+        return index
 
     def source(self) -> str:
         try:
