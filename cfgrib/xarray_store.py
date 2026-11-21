@@ -127,7 +127,7 @@ def open_datasets(path, backend_kwargs={}, **kwargs):
     merged = []  # type: T.List[xr.Dataset]
     for type_of_level in sorted(type_of_level_datasets):
         for ds in merge_datasets(
-            type_of_level_datasets[type_of_level], join="exact", combine_attrs="identical"
+            type_of_level_datasets[type_of_level], join="exact", combine_attrs="identical", compat="no_conflicts"
         ):
             merged.append(ds.squeeze() if squeeze else ds)
     return merged
