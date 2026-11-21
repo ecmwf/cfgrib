@@ -322,7 +322,9 @@ class FileStream(abc.MappingFieldset[OffsetType, Message]):
     14760.0
     """
 
-    path: str
+    path: str = attr.field(
+        converter=os.path.abspath, eq=os.path.abspath, on_setattr=os.path.abspath
+    )
     errors: str = attr.attrib(
         default="warn", validator=attr.validators.in_(["ignore", "warn", "raise"])
     )
