@@ -1,0 +1,41 @@
+[package]
+name = "cfgrib"
+repo = "ecmwf/cfgrib"
+visibility = "public"
+fork-pull-requests = false
+compiler-inputs = []
+ci-pre-commit = false
+full-history = true
+
+[[deps]]
+repo = "ecmwf/eccodes-python"
+package = "eccodes-python"
+ref = "develop"
+compiler-inputs = []
+python-version-input = "python-version"
+
+[[trigger-downstream]]
+repo = "ecmwf/earthkit-data"
+ref = "develop"
+
+[matrix.test]
+triggers = ["upstream-change", "rebuild-request"]
+
+# The container and compiler of eccodes' build, whose library the tests load.
+[matrix.test.defaults]
+job-script = "./.ci/test.sh.j2"
+runs-on = "ubuntu-latest"
+container = "eccr.ecmwf.int/public-ci-images/ubuntu24.04-gcc13-gfortran13"
+platform = "ubuntu-24.04"
+cxx-compiler = "g++-13"
+c-compiler = "gcc-13"
+build-type = "RelWithDebInfo"
+
+[[matrix.test.include]]
+python-version = "3.11"
+
+[[matrix.test.include]]
+python-version = "3.12"
+
+[[matrix.test.include]]
+python-version = "3.13"

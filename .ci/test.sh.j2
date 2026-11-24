@@ -1,0 +1,15 @@
+{% extends "ci-infrastructure/python-runner.sh.j2" %}
+{% block set_environment %}
+# findlibs finds eccodes from ECCODES_HOME; each dep has its own prefix.
+IFS=';:' read -ra dep_prefixes <<<"${CMAKE_PREFIX_PATH:-}"
+for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
+  if compgen -G "$prefix/lib*/libeccodes.*" >/dev/null; then
+    export ECCODES_HOME="$prefix"
+    export ECCODES_DEFINITION_PATH="$prefix/share/eccodes/definitions"
+    export ECCODES_SAMPLES_PATH="$prefix/share/eccodes/samples"
+  fi
+done
+export FINDLIBS_DISABLE_PACKAGE=yes
+export ECCODES_PYTHON_USE_FINDLIBS=1
+{% endblock %}
+{% block test_requirements %}pytest -r "$CI_SOURCE_DIR/ci/requirements-tests.in"{% endblock %}
