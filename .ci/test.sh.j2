@@ -11,5 +11,7 @@ for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
 done
 export FINDLIBS_DISABLE_PACKAGE=yes
 export ECCODES_PYTHON_USE_FINDLIBS=1
+# The checkout belongs to another user than the container's, and setuptools-scm runs git in it.
+export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$CI_SOURCE_DIR"
 {% endblock %}
 {% block test_requirements %}pytest -r "$CI_SOURCE_DIR/ci/requirements-tests.in"{% endblock %}
