@@ -3,6 +3,7 @@ name = "cfgrib"
 repo = "ecmwf/cfgrib"
 visibility = "public"
 fork-pull-requests = false
+allow-stale-deps = true
 compiler-inputs = []
 ci-pre-commit = false
 full-history = true

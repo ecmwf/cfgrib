@@ -1,10 +1,10 @@
 {% extends "ci-infrastructure/python-runner.sh.j2" %}
 {% block set_environment %}
-# findlibs finds eccodes from ECCODES_HOME; each dep has its own prefix.
+# fetch-deps puts each dep's lib dirs on LD_LIBRARY_PATH, where findlibs finds them;
+# eccodes still needs its definitions and samples.
 IFS=';:' read -ra dep_prefixes <<<"${CMAKE_PREFIX_PATH:-}"
 for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
-  if compgen -G "$prefix/lib*/libeccodes.*" >/dev/null; then
-    export ECCODES_HOME="$prefix"
+  if [ -d "$prefix/share/eccodes/definitions" ]; then
     export ECCODES_DEFINITION_PATH="$prefix/share/eccodes/definitions"
     export ECCODES_SAMPLES_PATH="$prefix/share/eccodes/samples"
   fi
