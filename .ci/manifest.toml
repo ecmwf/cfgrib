@@ -24,7 +24,7 @@ triggers = ["upstream-change", "rebuild-request"]
 # The container and compiler of eccodes' build, whose library the tests load.
 [matrix.test.defaults]
 job-script = "./.ci/test.sh.j2"
-runs-on = "ubuntu-latest"
+runs-on = "ubuntu-24.04"
 container = "eccr.ecmwf.int/public-ci-images/ubuntu24.04-gcc13-gfortran13"
 platform = "ubuntu-24.04"
 cxx-compiler = "g++-13"
