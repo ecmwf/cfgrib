@@ -1,0 +1,35 @@
+name: old CI
+
+on:
+  # Trigger the workflow after the new CI succeeded on a push
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches:
+      - "master"
+      - "develop"
+
+  # Trigger the workflow manually
+  workflow_dispatch: ~
+
+jobs:
+  # Run CI including downstream packages on self-hosted runners
+  downstream-ci:
+    name: downstream-ci
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success') }}
+    uses: ecmwf/downstream-ci/.github/workflows/downstream-ci.yml@main
+    with:
+      ci_group: only-self
+      cfgrib: ecmwf/cfgrib@${{ github.event.workflow_run.head_sha || github.sha }}
+      codecov_upload: true
+    secrets: inherit
+
+  # Build downstream packages on HPC
+  downstream-ci-hpc:
+    name: downstream-ci-hpc
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success') }}
+    uses: ecmwf/downstream-ci/.github/workflows/downstream-ci-hpc.yml@main
+    with:
+      ci_group: only-self
+      cfgrib: ecmwf/cfgrib@${{ github.event.workflow_run.head_sha || github.sha }}
+    secrets: inherit

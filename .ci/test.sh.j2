@@ -1,0 +1,18 @@
+{% extends "ci-infrastructure/python-runner.sh.j2" %}
+{% block set_environment %}
+# fetch-deps puts each dep's lib dirs on LD_LIBRARY_PATH, where findlibs finds them;
+# eccodes still needs its definitions and samples.
+IFS=';:' read -ra dep_prefixes <<<"${CMAKE_PREFIX_PATH:-}"
+for prefix in ${dep_prefixes[@]+"${dep_prefixes[@]}"}; do
+  if [ -d "$prefix/share/eccodes/definitions" ]; then
+    export ECCODES_DEFINITION_PATH="$prefix/share/eccodes/definitions"
+    export ECCODES_SAMPLES_PATH="$prefix/share/eccodes/samples"
+  fi
+done
+export FINDLIBS_DISABLE_PACKAGE=yes
+export ECCODES_PYTHON_USE_FINDLIBS=1
+# The checkout belongs to another user than the container's, and setuptools-scm runs git in it
+# without the GIT_CONFIG_* environment, so only a global entry reaches it.
+git config --global --add safe.directory "$CI_SOURCE_DIR"
+{% endblock %}
+{% block test_requirements %}pytest -r "$CI_SOURCE_DIR/ci/requirements-tests.in"{% endblock %}
