@@ -163,7 +163,7 @@ ALL_REF_TIME_KEYS = [
     "indexing_time",
     "valid_month",
 ]
-SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
+SPECTRA_KEYS = ["directionNumber", "frequencyNumber", "channelNumber"]
 
 ALL_HEADER_DIMS = ENSEMBLE_KEYS + VERTICAL_KEYS + SPECTRA_KEYS
 

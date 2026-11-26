@@ -5,6 +5,9 @@ Changelog for cfgrib
 unreleased
 ----------
 
+- Preserve separate satellite channels when messages share the same parameter.
+  See `#405 <https://github.com/ecmwf/cfgrib/issues/405>`_.
+
 - Setup and apply linters via pre-commit.
   See `#439 <https://github.com/ecmwf/cfgrib/pull/439>`_.
 
