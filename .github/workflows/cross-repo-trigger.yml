@@ -1,0 +1,246 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate via the ci-infrastructure-generate CLI.
+# Source of truth: each repo's .ci/manifest.toml.
+name: Cross-repo trigger (cfgrib)
+
+run-name: Cross-repo trigger (${{ inputs.from-repo }}@${{ inputs.from-sha }}) [${{ inputs.dispatch-id }}]
+
+on:
+  workflow_call:
+    inputs:
+      from-repo:
+        description: owner/repo of the dispatcher (upstream producer or downstream consumer)
+        required: true
+        type: string
+      from-sha:
+        description: SHA of the dispatcher commit
+        required: true
+        type: string
+      from-jobs:
+        description: JSON array of package/kinds that triggered us (e.g. '["fortmath/build","fortmath/build-hpc"]') for upstream-change dispatches. '[]' when rebuild-request is true.
+        required: false
+        default: '[]'
+        type: string
+      rebuild-request:
+        description: True when a downstream consumer dispatches us because our artifact was missing. Mutually exclusive with from-jobs.
+        required: false
+        default: false
+        type: boolean
+      branch:
+        description: Dispatcher branch name; we attempt branch-matching against it
+        required: true
+        type: string
+      fallback-ref:
+        description: Ref to check out if branch does not exist in this repo
+        required: false
+        type: string
+        default: main
+      pin:
+        description: 'Space-separated owner/repo@sha to resolve against: those of the downstream runner, or of the consumer that requests a rebuild. Empty pins from-repo@from-sha alone.'
+        required: false
+        default: ''
+        type: string
+      resolved:
+        description: The resolve-deps json output for this repo's kinds, resolved by the downstream runner with the rest of its run. Empty resolves here.
+        required: false
+        default: ''
+        type: string
+      resolved-ref:
+        description: The commit of this repo that `resolved` is for
+        required: false
+        default: ''
+        type: string
+  workflow_dispatch:
+    inputs:
+      dispatch-id:
+        description: Correlation id stamped into run-name so the dispatcher can find this run
+        required: false
+        default: ''
+        type: string
+      from-repo:
+        description: owner/repo of the dispatcher (upstream producer or downstream consumer)
+        required: true
+        type: string
+      from-sha:
+        description: SHA of the dispatcher commit
+        required: true
+        type: string
+      from-jobs:
+        description: JSON array of package/kinds that triggered us (e.g. '["fortmath/build","fortmath/build-hpc"]') for upstream-change dispatches. '[]' when rebuild-request is true.
+        required: false
+        default: '[]'
+        type: string
+      rebuild-request:
+        description: True when a downstream consumer dispatches us because our artifact was missing. Mutually exclusive with from-jobs.
+        required: false
+        default: false
+        type: boolean
+      branch:
+        description: Dispatcher branch name; we attempt branch-matching against it
+        required: true
+        type: string
+      fallback-ref:
+        description: Ref to check out if branch does not exist in this repo
+        required: false
+        type: string
+        default: main
+      pin:
+        description: 'Space-separated owner/repo@sha to resolve against: those of the downstream runner, or of the consumer that requests a rebuild. Empty pins from-repo@from-sha alone.'
+        required: false
+        default: ''
+        type: string
+      resolved:
+        description: The resolve-deps json output for this repo's kinds, resolved by the downstream runner with the rest of its run. Empty resolves here.
+        required: false
+        default: ''
+        type: string
+      resolved-ref:
+        description: The commit of this repo that `resolved` is for
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: cross-repo-trigger-runner-cfgrib-${{ inputs.from-repo }}-${{ inputs.from-sha }}
+  cancel-in-progress: false
+
+env:
+  ARTIFACT_POLL_INTERVAL: ${{ vars.ARTIFACT_POLL_INTERVAL || '60' }}
+  ARTIFACT_WAIT_TIMEOUT: ${{ vars.ARTIFACT_WAIT_TIMEOUT || '1800' }}
+  ARTIFACT_S3_ENDPOINT: ${{ secrets.ARTIFACT_S3_ENDPOINT }}
+  ARTIFACT_S3_BUCKET: ${{ secrets.ARTIFACT_S3_BUCKET }}
+  SCCACHE_BUCKET: ${{ secrets.SCCACHE_BUCKET }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  resolve:
+    if: (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) && !inputs.resolved
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.r.outputs.own-sha }}
+      json: ${{ steps.r.outputs.json }}
+      dispatch-plans: ${{ steps.r.outputs.dispatch-plans }}
+    steps:
+      - id: mint
+        uses: ecmwf/ci-infrastructure/actions/mint-token@main
+        with:
+          client-id: ${{ vars.CI_READER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_READER_APP_PRIVATE_KEY }}
+          repositories: cfgrib,ecbuild,eccodes,eccodes-python,eckit,findlibs,stack-dependencies
+          permissions: contents:read actions:read
+      - id: pick
+        uses: ecmwf/ci-infrastructure/actions/pick-ref@main
+        with:
+          repo: ecmwf/cfgrib
+          try-branch: ${{ inputs.branch }}
+          fallback-ref: ${{ inputs.fallback-ref }}
+          token: ${{ steps.mint.outputs.token }}
+      - uses: actions/checkout@v6
+        with:
+          repository: ecmwf/cfgrib
+          ref: ${{ steps.pick.outputs.ref }}
+          token: ${{ steps.mint.outputs.token }}
+          persist-credentials: false
+      - id: r
+        uses: ecmwf/ci-infrastructure/actions/resolve-deps@main
+        with:
+          current-branch: ${{ steps.pick.outputs.ref }}
+          pin: ${{ !inputs.rebuild-request && (inputs.pin || format('{0}@{1}', inputs.from-repo, inputs.from-sha)) || inputs.pin }}
+          matrix: test
+          token: ${{ steps.mint.outputs.token }}
+          rebuild-missing: 'true'
+
+  rebuild-producers:
+    needs: [resolve]
+    runs-on: ubuntu-latest
+    steps:
+      - if: needs.resolve.outputs.dispatch-plans != '' && needs.resolve.outputs.dispatch-plans != '[]'
+        uses: ecmwf/ci-infrastructure/actions/dispatch-producers@main
+        with:
+          dispatch-plans: ${{ needs.resolve.outputs.dispatch-plans }}
+          repositories: cfgrib,ecbuild,eccodes,eccodes-python,eckit,findlibs,stack-dependencies
+          client-id: ${{ vars.CI_DISPATCHER_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.CI_DISPATCHER_APP_PRIVATE_KEY }}
+
+  cfgrib__test:
+    needs: [resolve, rebuild-producers]
+    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) }}
+    name: cfgrib/test (${{ matrix._resolved['job-name'] }})
+    runs-on: ${{ matrix['runs-on'] }}
+    container:
+      image: ${{ matrix.container || '' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.resolved || needs.resolve.outputs.json)['test'] }}
+    steps:
+      - id: mint
+        uses: ecmwf/ci-infrastructure/actions/mint-token@main
+        with:
+          client-id: ${{ vars.CI_READER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_READER_APP_PRIVATE_KEY }}
+          repositories: cfgrib,ecbuild,eccodes,eccodes-python,eckit,findlibs,stack-dependencies
+          permissions: contents:read actions:read
+      - name: Announce image
+        uses: ecmwf/ci-infrastructure/actions/announce-image@main
+      - uses: actions/checkout@v6
+        with:
+          repository: ecmwf/cfgrib
+          ref: ${{ inputs.resolved-ref || needs.resolve.outputs.ref }}
+          token: ${{ steps.mint.outputs.token }}
+          persist-credentials: false
+      - name: Fetch resolved deps
+        id: deps
+        uses: ecmwf/ci-infrastructure/actions/fetch-deps@main
+        with:
+          deps-json: ${{ toJSON(matrix._resolved.deps) }}
+          token: ${{ steps.mint.outputs.token }}
+      - name: Build
+        id: build
+        uses: ecmwf/ci-infrastructure/actions/run-job-script@main
+        with:
+          job-script: ${{ matrix.job-script }}
+          matrix-leg: ${{ toJSON(matrix) }}
+          package: cfgrib
+          cmake-prefix-path: ${{ steps.deps.outputs.cmake-prefix-path }}
+      - name: Publish
+        uses: ecmwf/ci-infrastructure/actions/publish-artifact@main
+        with:
+          install-path: ${{ steps.build.outputs.install-path }}
+          artifact-name: ${{ matrix._resolved['own-artifact-name'] }}
+
+  check-start__cfgrib__test:
+    needs: [resolve]
+    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) && github.event_name == 'workflow_dispatch' && inputs.from-jobs != '[]' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      check-runs: ${{ steps.report.outputs.check-runs }}
+    steps:
+      - id: report
+        uses: ecmwf/ci-infrastructure/actions/report-check-runs@main
+        with:
+          client-id: ${{ vars.CI_REPORTER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_REPORTER_APP_PRIVATE_KEY }}
+          head-repo: ${{ inputs.from-repo }}
+          head-sha: ${{ inputs.from-sha }}
+          phase: start
+          job-name: cfgrib/test
+          matrix: ${{ toJSON(fromJSON(inputs.resolved || needs.resolve.outputs.json)['test']) }}
+
+  check-finish__cfgrib__test:
+    needs: [check-start__cfgrib__test, cfgrib__test]
+    if: ${{ always() && needs.check-start__cfgrib__test.outputs.check-runs != '' && needs.check-start__cfgrib__test.outputs.check-runs != '{}' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - uses: ecmwf/ci-infrastructure/actions/report-check-runs@main
+        with:
+          client-id: ${{ vars.CI_REPORTER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CI_REPORTER_APP_PRIVATE_KEY }}
+          head-repo: ${{ inputs.from-repo }}
+          head-sha: ${{ inputs.from-sha }}
+          phase: finish
+          check-runs: ${{ needs.check-start__cfgrib__test.outputs.check-runs }}
+          job-result: ${{ needs.cfgrib__test.result }}
