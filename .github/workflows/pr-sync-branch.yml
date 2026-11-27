@@ -1,0 +1,20 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate via the ci-infrastructure-generate CLI.
+# Source of truth: each repo's .ci/manifest.toml.
+name: '[PR] Sync-branch pull requests'
+
+on:
+  pull_request_target:
+    types: [opened, reopened, closed]
+
+permissions: {}
+
+jobs:
+  list:
+    if: (startsWith(github.head_ref, 'sync/') || startsWith(github.head_ref, 'feature/')) && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ecmwf/ci-infrastructure/actions/sync-branch-prs@main
+        with:
+          client-id: ${{ vars.CI_SYNCED_PR_LINKS_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.CI_SYNCED_PR_LINKS_APP_PRIVATE_KEY }}

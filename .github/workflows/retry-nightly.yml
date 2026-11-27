@@ -1,0 +1,22 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate via the ci-infrastructure-generate CLI.
+# Source of truth: each repo's .ci/manifest.toml.
+name: '[Nightly] Retry failed CI'
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  retry:
+    if: github.event.workflow_run.event == 'schedule' && github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt <= 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ecmwf/ci-infrastructure/actions/retry-scheduled-run@main
+        with:
+          client-id: ${{ vars.CI_DISPATCHER_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.CI_DISPATCHER_APP_PRIVATE_KEY }}
