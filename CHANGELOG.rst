@@ -8,6 +8,11 @@ unreleased
 - Setup and apply linters via pre-commit.
   See `#439 <https://github.com/ecmwf/cfgrib/pull/439>`_.
 
+- Fixed writing the ``step`` of a dataset with ``xarray_to_grib``: the step keys were
+  not set at all, and sub-hourly steps were truncated to whole hours. Sub-hourly steps
+  are now written in minutes or seconds with the matching ``stepUnits``.
+  See `#411 <https://github.com/ecmwf/cfgrib/issues/411>`_.
+
 
 0.9.15.1 (2025-09-30)
 ---------------------

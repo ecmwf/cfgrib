@@ -60,6 +60,13 @@ def test_Message_write(tmpdir: py.path.local) -> None:
     res["pl"] = [2.0, 3.0]
     assert np.allclose(res["pl"], [2.0, 3.0])
 
+    # the key type suffix is accepted, as in __getitem__, but it is not passed to ecCodes
+    res["Nj:int"] = 30
+    assert res["Nj"] == 30
+
+    with pytest.raises(ValueError):
+        res["Nj:unknown"] = 40
+
     # warn on errors
     res["centreDescription"] = "DUMMY"
     assert res["centreDescription"] != "DUMMY"
