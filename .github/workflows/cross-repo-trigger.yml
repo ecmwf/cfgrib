@@ -115,7 +115,7 @@ env:
 
 jobs:
   resolve:
-    if: (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) && !inputs.resolved
+    if: (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || contains(fromJSON(inputs.from-jobs), 'eccodes/build') || contains(fromJSON(inputs.from-jobs), 'ecbuild/build') || contains(fromJSON(inputs.from-jobs), 'stack-deps/build') || contains(fromJSON(inputs.from-jobs), 'eckit/build') || contains(fromJSON(inputs.from-jobs), 'findlibs/test') || inputs.rebuild-request) && !inputs.resolved
     runs-on: ubuntu-latest
     outputs:
       ref: ${{ steps.r.outputs.own-sha }}
@@ -165,7 +165,7 @@ jobs:
 
   cfgrib__test:
     needs: [resolve, rebuild-producers]
-    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) }}
+    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || contains(fromJSON(inputs.from-jobs), 'eccodes/build') || contains(fromJSON(inputs.from-jobs), 'ecbuild/build') || contains(fromJSON(inputs.from-jobs), 'stack-deps/build') || contains(fromJSON(inputs.from-jobs), 'eckit/build') || contains(fromJSON(inputs.from-jobs), 'findlibs/test') || inputs.rebuild-request) }}
     name: cfgrib/test (${{ matrix._resolved['job-name'] }})
     runs-on: ${{ matrix['runs-on'] }}
     container:
@@ -211,7 +211,7 @@ jobs:
 
   check-start__cfgrib__test:
     needs: [resolve]
-    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || inputs.rebuild-request) && github.event_name == 'workflow_dispatch' && inputs.from-jobs != '[]' }}
+    if: ${{ !failure() && !cancelled() && (contains(fromJSON(inputs.from-jobs), 'eccodes-python/test') || contains(fromJSON(inputs.from-jobs), 'eccodes/build') || contains(fromJSON(inputs.from-jobs), 'ecbuild/build') || contains(fromJSON(inputs.from-jobs), 'stack-deps/build') || contains(fromJSON(inputs.from-jobs), 'eckit/build') || contains(fromJSON(inputs.from-jobs), 'findlibs/test') || inputs.rebuild-request) && github.event_name == 'workflow_dispatch' && inputs.from-jobs != '[]' }}
     runs-on: ubuntu-latest
     permissions: {}
     outputs:
